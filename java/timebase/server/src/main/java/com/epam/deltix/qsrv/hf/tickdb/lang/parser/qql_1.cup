@@ -1,0 +1,7 @@
+
+    expr:e DOT IDENTIFIER:fieldId
+        {: RESULT = new SelectorExpression (lx (eleft, fieldIdright), e, lx (fieldIdleft, fieldIdright), fieldId); :} |
+
+
+    CAST:c LPAREN expr:e AS IDENTIFIER:typeId RPAREN:rp
+        {: RESULT = new CastExpression (lx (cleft, rpright), e, typeId); :} |

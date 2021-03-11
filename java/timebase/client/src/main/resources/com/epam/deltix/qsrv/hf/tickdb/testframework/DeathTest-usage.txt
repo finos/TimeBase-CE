@@ -1,0 +1,40 @@
+This command runs a long cycle of TimeBase data consistency tests, as follows:
+
+    1) Starts a TimeBase process with a simulated data feed loading data at a 
+        high rate. If TimeBase crashes (very unusual), the test will stop.
+    2) After a few seconds of running, TimeBase is stopped either gracefully or 
+        forcefully.
+    3) The database files are programmatically scanned with the backend of 
+        TB Repair Shop. If shutdown was graceful, we assert that there are no
+        discrepancies whatsoever. If shutdown was forceful, we assert that only
+        MAINTENANCE level discrepancies are reported. If this assertion fails,
+        the test will stop and leave the files untouched for analysis.
+    4) The cycle repeats a specified number of times. TimeBase is normally 
+        preserved, but is cleared once in a few runs to prevent unbounded 
+        data accumulation.
+
+
+Command-line arguments:
+
+-mode <mode>    Test shutdown mode.
+                a - Abnormal shutdown: destroying writer process.
+                c - Clean shutdown: closing all loaders and closing db.
+                g - Graceful shutdown: closing db without closing loaders.
+
+                Default: all modes. Note that the
+                graceful and no-graceful tests are independent tests and should
+                both be run in the process of validating a build.
+
+-at <s>         Aggregation time, in seconds. This is the time TimeBase is 
+                allowed to run before it is terminated. Default: 10.
+
+-rww <n>        Number of times to run without wiping out TimeBase. Default: 5.
+
+-nr <n>         Total number of times to run. Default: 1000.
+
+-w <path>       Work folder. Default: %DELTIX_HOME%/temp/tbdeath
+
+-db <path>      Path to database instance. Can be used to switch among 
+                different types of drives (SSD, HDD), or to run multiple 
+                instances of the test in parallel. Default: <work folder>/db
+                

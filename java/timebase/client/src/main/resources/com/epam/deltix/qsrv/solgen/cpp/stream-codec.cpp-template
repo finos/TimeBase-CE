@@ -1,0 +1,107 @@
+${cpp.streamCodec.header}
+using namespace std;
+using namespace DxApi;
+
+namespace ${cpp.streamCodec.namespace} {
+
+enum MessageTypes {
+    Unknown = -1,
+${cpp.streamCodec.messageTypes}
+    Count
+};
+
+class ${cpp.streamCodec.decoderClassName} {
+private:
+    shared_ptr<TickCursor> cursor = nullptr;
+    DataReader &reader;
+
+    unsigned knownMessages[MessageTypes::Count];
+    std::string guids[MessageTypes::Count];
+
+    InstrumentMessage header;
+
+${cpp.streamCodec.declareMessages}
+    NativeMessage *current;
+
+public:
+    ${cpp.streamCodec.decoderClassName}(TickStream *stream, shared_ptr<TickCursor> cursor) : reader(cursor->getReader()) {
+        this->cursor = cursor;
+        this->header.cursor = cursor.get();
+
+        Nullable<string> md = stream->metadata();
+        if (!md.has_value())
+            throw runtime_error("Stream metadata is empty.");
+
+        vector<Schema::TickDbClassDescriptor> descriptors = Schema::TickDbClassDescriptor::parseDescriptors(md.get(), false);
+        for (int i = 0; i < descriptors.size(); ++i) {
+${cpp.streamCodec.initGuids}
+        }
+
+        memset(knownMessages, MessageTypes::Unknown, sizeof(knownMessages));
+    }
+
+    bool next() {
+        if (!cursor->next(&header))
+            return false;
+
+        if (knownMessages[header.typeId] == MessageTypes::Unknown) {
+            const string * typeName = cursor->getMessageTypeName(header.typeId);
+${cpp.streamCodec.detectType}
+        }
+
+${cpp.streamCodec.decodeMessage}
+        } else {
+            throw runtime_error("Unsupported message!");
+        }
+
+        *(static_cast<MessageHeader *>(current)) = header;
+
+        return true;
+    }
+
+    NativeMessage * getMessage() {
+        return current;
+    }
+};
+
+class ${cpp.streamCodec.encoderClassName} {
+private:
+    shared_ptr<TickLoader> loader = nullptr;
+    DataWriter &writer;
+
+    std::string guids[MessageTypes::Count];
+
+public:
+    ${cpp.streamCodec.encoderClassName}(shared_ptr<TickLoader> loader) : writer(loader->getWriter()) {
+        this->loader = loader;
+
+        Nullable<string> md = loader->stream()->metadata();
+        if (!md.has_value())
+            throw runtime_error("Stream metadata is empty.");
+
+        vector<Schema::TickDbClassDescriptor> descriptors = Schema::TickDbClassDescriptor::parseDescriptors(md.get(), false);
+        for (int i = 0; i < descriptors.size(); ++i) {
+${cpp.streamCodec.initGuids}
+        }
+
+${cpp.streamCodec.registerMessages}
+    }
+
+    void send(NativeMessage &msg) {
+        if (msg.typeId < 0 || msg.typeId >= MessageTypes::Count)
+            throw runtime_error("Unknown message type: " + msg.getTypeName());
+
+        if (guids[msg.typeId].compare(msg.getGuid()))
+            throw runtime_error("Type guid mismatch for type " + msg.getTypeName() +
+                ". Actual: " + msg.getGuid() + ", Expected: " + guids[msg.typeId]);
+
+        loader->beginMessage(msg.typeId, msg.entityId, msg.timestamp);
+        msg.encode(writer);
+        loader->send();
+    }
+
+};
+
+} // namespace ${cpp.streamCodec.namespace}
+
+${cpp.streamCodec.footer}

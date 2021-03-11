@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TimebaseSample": {
+      "commandName": "Project",
+      "commandLineArgs": "${defaultRunArg}"
+    }
+  }
+}

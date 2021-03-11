@@ -1,0 +1,187 @@
+#
+#   Distinct symbol
+#
+set max 100
+test select distinct symbol from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,$SYMBOL
+0,_,,SYSTEM,S0
+1,_,,SYSTEM,S1
+!end
+#
+#   Distinct INTEGER 
+#
+test select distinct int_c_8 from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,int_c_8
+0,_,,SYSTEM,-127
+1,_,,SYSTEM,1
+2,_,,SYSTEM,2
+3,_,,SYSTEM,3
+4,_,,SYSTEM,4
+5,_,,SYSTEM,5
+6,_,,SYSTEM,6
+7,_,,SYSTEM,7
+8,_,,SYSTEM,8
+9,_,,SYSTEM,9
+10,_,,SYSTEM,10
+11,_,,SYSTEM,11
+12,_,,SYSTEM,12
+13,_,,SYSTEM,13
+14,_,,SYSTEM,14
+15,_,,SYSTEM,15
+16,_,,SYSTEM,16
+17,_,,SYSTEM,17
+18,_,,SYSTEM,18
+19,_,,SYSTEM,19
+20,_,,SYSTEM,20
+21,_,,SYSTEM,21
+22,_,,SYSTEM,22
+23,_,,SYSTEM,23
+24,_,,SYSTEM,24
+25,_,,SYSTEM,25
+26,_,,SYSTEM,0
+27,_,,SYSTEM,-1
+28,_,,SYSTEM,-2
+29,_,,SYSTEM,-3
+30,_,,SYSTEM,-4
+31,_,,SYSTEM,-5
+32,_,,SYSTEM,-6
+33,_,,SYSTEM,-7
+34,_,,SYSTEM,-8
+35,_,,SYSTEM,-9
+36,_,,SYSTEM,-10
+37,_,,SYSTEM,-11
+38,_,,SYSTEM,-12
+39,_,,SYSTEM,-13
+40,_,,SYSTEM,-14
+41,_,,SYSTEM,-15
+42,_,,SYSTEM,-16
+43,_,,SYSTEM,-17
+44,_,,SYSTEM,-18
+45,_,,SYSTEM,-19
+46,_,,SYSTEM,-20
+47,_,,SYSTEM,-21
+48,_,,SYSTEM,-22
+49,_,,SYSTEM,-23
+50,_,,SYSTEM,-24
+51,_,,SYSTEM,-25
+52,_,,SYSTEM,127
+!end
+#
+#   Distinct INTEGER where ...
+#
+set max 100
+test select distinct int_c_8 from alltypes where symbol='S1' and int_c_8 < 10 and int_c_8 > -10
+>_,TIMESTAMP,SYMBOL,TYPE,int_c_8
+0,_,,SYSTEM,1
+1,_,,SYSTEM,2
+2,_,,SYSTEM,3
+3,_,,SYSTEM,4
+4,_,,SYSTEM,5
+5,_,,SYSTEM,6
+6,_,,SYSTEM,7
+7,_,,SYSTEM,8
+8,_,,SYSTEM,9
+9,_,,SYSTEM,0
+10,_,,SYSTEM,-1
+11,_,,SYSTEM,-2
+12,_,,SYSTEM,-3
+13,_,,SYSTEM,-4
+14,_,,SYSTEM,-5
+15,_,,SYSTEM,-6
+16,_,,SYSTEM,-7
+17,_,,SYSTEM,-8
+18,_,,SYSTEM,-9
+!end
+#
+#   Clean enum
+#
+test select distinct enum_c from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,enum_c
+0,_,,SYSTEM,RED
+1,_,,SYSTEM,GREEN
+2,_,,SYSTEM,BLUE
+!end
+#
+#   Nullable enum
+#
+test select distinct enum_n from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,enum_n
+0,_,,SYSTEM,RED
+1,_,,SYSTEM,GREEN
+2,_,,SYSTEM,BLUE
+3,_,,SYSTEM,_
+!end
+#
+#   Nullable time of day
+#
+set max 15
+test select distinct tod_n from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,tod_n
+0,_,,SYSTEM,00:00
+1,_,,SYSTEM,00:01
+2,_,,SYSTEM,00:02
+3,_,,SYSTEM,00:03
+4,_,,SYSTEM,00:04
+5,_,,SYSTEM,00:05
+6,_,,SYSTEM,00:06
+7,_,,SYSTEM,00:07
+8,_,,SYSTEM,00:08
+9,_,,SYSTEM,_
+10,_,,SYSTEM,00:10
+11,_,,SYSTEM,00:11
+12,_,,SYSTEM,00:12
+13,_,,SYSTEM,00:13
+14,_,,SYSTEM,00:14
+!end
+#
+#   Bitmask
+#
+set max 100
+test select distinct bitmask_c from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,bitmask_c
+0,_,,SYSTEM,
+1,_,,SYSTEM,BIT0
+2,_,,SYSTEM,BIT1
+3,_,,SYSTEM,BIT0|BIT1
+4,_,,SYSTEM,BIT2
+5,_,,SYSTEM,BIT0|BIT2
+6,_,,SYSTEM,BIT1|BIT2
+7,_,,SYSTEM,BIT0|BIT1|BIT2
+8,_,,SYSTEM,BIT3
+9,_,,SYSTEM,BIT0|BIT3
+10,_,,SYSTEM,BIT1|BIT3
+11,_,,SYSTEM,BIT0|BIT1|BIT3
+12,_,,SYSTEM,BIT2|BIT3
+13,_,,SYSTEM,BIT0|BIT2|BIT3
+14,_,,SYSTEM,BIT1|BIT2|BIT3
+15,_,,SYSTEM,BIT0|BIT1|BIT2|BIT3
+!end
+#
+#   ALPHANUMERIC
+#
+test select distinct varchar_n_alpha10 from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,varchar_n_alpha10
+0,_,,SYSTEM,
+1,_,,SYSTEM,1
+2,_,,SYSTEM,12
+3,_,,SYSTEM,123
+4,_,,SYSTEM,1234
+5,_,,SYSTEM,12345
+6,_,,SYSTEM,123456
+7,_,,SYSTEM,1234567
+8,_,,SYSTEM,12345678
+9,_,,SYSTEM,_
+10,_,,SYSTEM,123456789A
+11,_,,SYSTEM,123456789
+!end
+#
+test select distinct varchar_n_alpha5_s from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,varchar_n_alpha5_s
+0,_,,SYSTEM,
+1,_,,SYSTEM,1
+2,_,,SYSTEM,12
+3,_,,SYSTEM,123
+4,_,,SYSTEM,1234
+5,_,,SYSTEM,12345
+6,_,,SYSTEM,_
+!end

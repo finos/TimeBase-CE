@@ -1,0 +1,84 @@
+// We depend on root project because we use "commitsAfterTag" from it
+evaluationDependsOn(":")
+
+apply plugin: 'java-library'
+
+dependencies {
+    compile project(':java:timebase:pub')
+    //compile project(':java:license:client')
+
+    implementation ('deltix.qsrv:deltix-commons-lang')
+    implementation ('deltix.qsrv:deltix-commons-util')
+    //implementation ('deltix.qsrv:deltix-commons-log')
+    implementation ('deltix.qsrv:deltix-commons-messages')
+
+    implementation project(':java:timebase:snmpagent')
+
+    compile 'org.apache.tomcat.embed:tomcat-embed-core' // Tomcat core
+    implementation 'org.apache.tomcat.embed:tomcat-embed-jasper' // Tomcat JSP support
+    implementation 'org.apache.tomcat.embed:tomcat-embed-logging-juli' // Tomcat Logging
+    compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
+    compileOnly 'org.apache.taglibs:taglibs-standard-impl' // Tomcat JSTL Support
+
+    implementation 'javax.mail:mail'
+    implementation 'commons-collections:commons-collections'
+
+    implementation 'org.apache.commons:commons-text'
+
+    testCompile 'commons-io:commons-io'
+
+//    compile 'org.springframework:spring-beans' // Used by plugins (TODO: Check)
+//    implementation 'org.springframework:spring-context'
+//    implementation 'org.springframework:spring-webmvc'
+
+    implementation 'deltix:deltix-gflog-jul',
+            'deltix:deltix-gflog-dcl',
+            'deltix:deltix-gflog-mail'
+
+    runtimeOnly 'deltix:deltix-gflog-jcl',
+            'deltix:deltix-gflog-slf4j'
+}
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+// TODO: Copy to same folder in not the best idea. We should
+// 1) move template to a separate source set (we don't want it in the output)
+// 2) move generated class to a separate source path
+task versionClass(type: Copy) {
+    inputs.property("version", project.version)
+    inputs.property("revision", rootProject.ext.revision)
+    inputs.property("commitsAfterTag", String.valueOf(rootProject.ext.commitsAfterTag)) // Note: Gradle is supposed to accept null values but as for now (Gradle 5.4.1) it fails if value is null
+    inputs.property("commitTimestamp", rootProject.ext.commitTimestamp)
+
+    def parsedVersion = project.version.split('\\.')
+    //outputs.file("$project.projectDir/src/main/java/deltix/util/Version.java")
+
+    from "$project.projectDir/src/main/java/deltix/util"
+    into "$project.projectDir/src/main/java/deltix/util"
+    include '**/Version-VCS.txt'
+    rename 'Version-VCS.txt', 'Version.java'
+    filter(ReplaceTokens, tokens: [MAJOR: parsedVersion[0], MINOR: parsedVersion[1], BUILDNAME: parsedVersion[2], WCREV: rootProject.ext.revision, COMMITS_AFTER_TAG: String.valueOf(rootProject.ext.commitsAfterTag), BUILD_DATE: rootProject.ext.commitTimestamp])
+}
+
+project.tasks.getByName('compileJava').dependsOn(versionClass)
+// Note: Right now Gradle caches outputs of "compileJava" even if file "Version.java" was changed.
+// TODO: We should explicitly tell Gradle that task "compileJava" depends on outputs of "versionClass" talk.
+
+clean.doFirst {
+    delete file("$project.projectDir/src/main/java/deltix/util/Version.java")
+}
+
+task copyWebapp(type: Copy) {
+    description 'Copy default webapp war file into quantserver pub resources'
+    dependsOn ':java:quantserver:web:war'
+    mustRunAfter clean
+    mustRunAfter processResources
+
+    from (project(':java:quantserver:web').file('build/libs')) {
+        include '*.war'
+        rename 'deltix-quantserver-web(.*).war', 'deltix-quantserver-web.war'
+    }
+    into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
+}
+
+jar.dependsOn copyWebapp

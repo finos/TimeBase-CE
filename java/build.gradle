@@ -1,0 +1,477 @@
+plugins {
+    // Supports functionality similar to Maven BOM.
+    // Helps to avoid re-declaring dependency version in each subproject.
+    // See https://github.com/spring-gradle-plugins/dependency-management-plugin
+    id "io.spring.dependency-management" version "1.0.5.RELEASE"
+    id "com.github.spotbugs" version "2.0.0" apply false
+    id "com.github.hierynomus.license-report" version "0.15.0"
+}
+
+ext {
+    globalWebDir = file("$rootDir/web")
+}
+
+// To enable JavaDoc generation add Gradle property to command line:
+// -PincludeJavaDocs
+def includeJavaDocs = hasProperty("includeJavaDocs")
+
+apply plugin: 'base'
+
+apply plugin: "com.github.hierynomus.license-report"
+apply from: "$rootDir/gradle/License.gradle"
+
+// We don't want to apply plugins and build artifacts for non-leaf (grouping) projects.
+// So we create a list of leaf projects and apply all java-related plugins on them only.
+def leafProjects = subprojects.findAll { subproject ->
+    subproject.subprojects.empty
+}
+leafProjects.remove(project(":java:installer"))
+ext.leafProjects = leafProjects // Publish as external variable
+
+apply from: 'test.gradle'
+
+// Spotbugs
+def enableSpotbugs = hasProperty("spotbugs") || Boolean.getBoolean("spotbugs") || Boolean.parseBoolean(System.getenv('SPOTBUGS'))
+if (enableSpotbugs) {
+    println("Spotbugs is ENABLED")
+}
+
+ext {
+    publisherUser = findProperty('ARTIFACTORY_USER') ?: System.getenv('ARTIFACTORY_USER') ?: "FakeUser"
+    publisherPassword = findProperty('ARTIFACTORY_PASS') ?: System.getenv('ARTIFACTORY_PASS') ?: "FakePassword"
+}
+
+apply from: 'promotion.gradle'
+
+configure(leafProjects) {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: "com.github.spotbugs" // Static Code analysis
+
+    compileJava.options.encoding = 'UTF-8'
+    compileJava.options.compilerArgs += '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED'
+    compileJava.options.compilerArgs += '--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED'
+    compileJava.options.compilerArgs += '--add-exports=java.desktop/sun.swing=ALL-UNNAMED'
+    compileJava.options.compilerArgs += '--add-exports=java.desktop/com.sun.java.swing.plaf.windows=ALL-UNNAMED'
+    compileTestJava.options.compilerArgs += '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED'
+    compileTestJava.options.compilerArgs += '--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED'
+    sourceCompatibility = 11
+    targetCompatibility = 11
+
+    configurations.all {
+        resolutionStrategy {
+            // Disable this line on case of version conflict and then run :dependency task OR execute build with --scan option
+            failOnVersionConflict()
+        }
+    }
+
+    // Defines versions of dependencies to be used by subprojects
+    // https://github.com/spring-gradle-plugins/dependency-management-plugin#dependency-management-dsl
+    dependencyManagement {
+        dependencies {
+            dependencySet(group: 'com.epam.deltix', version: '2.0.40') {
+                entry 'gflog-api'
+                entry 'gflog-core'
+                entry 'gflog-jul'
+                entry 'gflog-dcl'
+                entry 'gflog-jcl'
+                entry 'gflog-slf4j'
+                entry 'gflog-mail'
+            }
+
+            dependency 'deltix:rtmath-containers:2.3.1' //transitive
+
+            dependency 'deltix:deltix-dfp:0.10.12'
+
+            dependency 'deltix:deltix-thread-affinity:1.0.2'
+
+            dependencySet(group: 'com.epam.deltix', version: '6.0.48') {
+                entry 'deltix-commons-collections'
+                entry 'deltix-commons-messages'
+                entry 'deltix-commons-lang'
+                entry 'deltix-commons-log'
+                entry 'deltix-commons-util'
+            }
+
+            dependency 'org.apache.poi:poi:4.1.1'
+            dependency 'org.apache.poi:poi-ooxml:4.1.1'
+
+//            dependency 'java:tools:1.8.0_121'
+            dependency 'com.sun.activation:javax.activation:1.2.0'
+            dependency 'javax.activation:javax.activation-api:1.2.0'
+
+            dependency 'com.sun.codemodel:codemodel:2.6'
+            dependency 'com.sun.codemodel:codemodel-project:2.6'
+
+            dependency 'com.google.guava:guava:20.0'
+            dependency 'com.google.code.gson:gson:2.2.4'
+            dependency 'com.google.code.findbugs:jsr305:3.0.2'
+            dependency 'com.google.code.findbugs:annotations:3.0.1'
+
+
+            dependency 'commons-lang:commons-lang:2.6'
+            dependency 'commons-logging:commons-logging:1.1.1'
+            dependency 'commons-collections:commons-collections:3.2.2'
+            dependency 'commons-io:commons-io:2.5'
+
+            dependency 'net.sf.opencsv:opencsv:1.7'
+
+            dependency 'org.slf4j:slf4j-api:1.7.14'
+
+            dependency 'javax.mail:mail:1.4.7'
+
+            dependency 'javax.servlet.jsp.jstl:jstl-api:1.2' // JSTL Support
+            dependency 'org.owasp.encoder:encoder:1.1.1' // prevent XSS attacks in servlets
+
+            dependency 'org.apache.taglibs:taglibs-standard-impl:1.2.5' // Tomcat JSTL Support
+
+            dependency 'org.codehaus.groovy:groovy:2.5.3'
+
+            dependency 'org.apache.ant:ant:1.9.13'
+
+            dependency 'org.f1x:f1x:0.7.0'
+
+            dependency 'org.hdrhistogram:HdrHistogram:2.1.10'
+
+            dependencySet(group: 'org.springframework', version: '4.3.25.RELEASE') {
+                entry 'spring-context'
+                entry 'spring-web'
+                entry 'spring-webmvc'
+                entry 'spring-context'
+                entry 'spring-beans'
+            }
+
+            dependencySet(group: 'org.apache.hadoop', version: '2.8.5') {
+                entry 'hadoop-annotations'
+                entry 'hadoop-auth'
+                entry 'hadoop-common'
+                entry 'hadoop-mapreduce-client-common'
+                entry 'hadoop-mapreduce-client-core'
+                entry 'hadoop-yarn-api'
+                entry 'hadoop-yarn-client'
+                entry 'hadoop-yarn-common'
+            }
+
+            dependencySet(group: 'org.apache.tomcat.embed', version: '8.0.53') {
+                entry 'tomcat-embed-core' // Tomcat core
+                entry 'tomcat-embed-jasper' // Tomcat JSP support
+                entry 'tomcat-embed-logging-juli' // Tomcat Logging
+            }
+
+            dependencySet(group: 'io.aeron', version: '1.17.0') {
+                entry 'aeron-client'
+                entry 'aeron-driver'
+                entry 'aeron-archive'
+            }
+
+            dependency 'com.lmax:disruptor:3.3.6'
+
+            // JMH
+            dependencySet(group: 'org.openjdk.jmh', version: '1.23') {
+                entry 'jmh-core'
+                entry 'jmh-generator-annprocess'
+            }
+
+            dependency 'com.intellij:annotations:12.0'
+
+            // Fix for conflicting versions
+            // This section enlists only dependencies that are not directly used by our code but used by our dependencies
+            // and cause version conflict. Versions specified here may need to be updated when we update 3rd party dependeiceis.
+            // The project should be buildable without this section but with "failOnVersionConflict" option turned off.
+
+            //dependency 'org.gflogger:gflogger:1.2.0'
+            dependency 'net.java.dev.jna:jna:4.2.1'
+            dependency 'org.hamcrest:hamcrest-core:1.3'
+
+            dependency 'org.apache.commons:commons-compress:1.12'
+            dependency 'org.apache.commons:commons-lang3:3.7'
+            dependency 'org.apache.commons:commons-math3:3.6'
+            dependency 'org.apache.commons:commons-text:1.8'
+            dependency 'org.apache.httpcomponents:httpclient:4.5.10'
+            dependency 'org.apache.httpcomponents:httpcore:4.4.4'
+            dependency 'org.apache.tika:tika-core:1.9'
+            dependency 'org.apache.pdfbox:pdfbox:1.8.10'
+
+            dependency 'org.tukaani:xz:1.6'
+            dependency 'joda-time:joda-time:2.8.1'
+
+            dependency 'org.bouncycastle:bcprov-jdk15on:1.64'
+            dependency 'org.bouncycastle:bcpkix-jdk15on:1.64'
+
+            dependency 'org.jdom:jdom2:2.0.5'
+
+            dependency 'com.google.errorprone:error_prone_annotations:2.0.19'
+
+            dependency 'org.glassfish:javax.json:1.0.4'
+            dependency 'commons-codec:commons-codec:1.10'
+
+            dependency 'org.objenesis:objenesis:2.2'
+
+            dependencySet(group: 'com.fasterxml.jackson.core', version: '2.10.0') {
+                entry 'jackson-core'
+                entry 'jackson-databind'
+                entry 'jackson-annotations'
+            }
+            dependencySet(group: 'com.squareup.okhttp3', version: '3.3.1') {
+                entry 'okhttp'
+            }
+
+            dependencySet(group: 'org.apache.parquet', version: '1.11.0') {
+                entry 'parquet-common'
+                entry 'parquet-column'
+                entry 'parquet-encoding'
+                entry 'parquet-hadoop'
+            }
+            dependency 'log4j:log4j:1.2.17'
+            dependency 'javax.xml.bind:jaxb-api:2.2.2'
+            dependencySet(group: 'org.codehaus.jackson', version: '1.9.13') {
+                entry 'jackson-mapper-asl'
+                entry 'jackson-core-asl'
+            }
+            dependency 'org.xerial.snappy:snappy-java:1.1.2.6'
+            dependency 'org.slf4j:slf4j-log4j12:1.7.10'
+
+            dependency 'com.sun.xml.bind:jaxb-impl:2.3.0'
+            // End of version conflict resolution
+        }
+    }
+
+    ext {
+        vendor = 'Deltix Inc.'
+    }
+
+    group = 'com.epam.deltix'
+    archivesBaseName = project.path.replace(":java:", "").replaceAll(':', '-')
+
+    repositories {
+        mavenCentral()        
+    }
+
+    dependencies {
+        compileOnly 'com.google.code.findbugs:jsr305'
+        compileOnly 'com.google.code.findbugs:annotations'
+
+        spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.9.0'
+
+        testCompileOnly 'com.google.code.findbugs:jsr305'
+        testCompile 'junit:junit:4.12'
+        testCompile 'org.mockito:mockito-core:1.10.19'
+    }
+
+    spotbugs {
+        toolVersion = "3.1.12"
+        effort = "max"
+        reportLevel = "medium"
+        sourceSets = [sourceSets.main] // exclude tests
+        excludeFilter = rootProject.file('spotbugs-excludes.xml')
+    }
+
+    tasks.withType(com.github.spotbugs.SpotBugsTask) {
+        enabled = enableSpotbugs
+
+        reports {
+            xml.enabled = false
+            html.enabled = true
+        }
+    }
+
+    jar {
+        manifest {
+            baseName archivesBaseName
+            attributes 'Manifest-Version': "1.0",
+                    'Created-By': vendor,
+                    'Implementation-Title': archivesBaseName,
+                    'Implementation-Vendor': vendor,
+                    'Implementation-Version': version
+        }
+    }
+
+    processResources {
+        from sourceSets.main.java.srcDirs
+        exclude '**/*.java'
+        includeEmptyDirs = false
+    }
+
+    processTestResources {
+        from sourceSets.test.java.srcDirs
+        exclude '**/*.java'
+        includeEmptyDirs = false
+    }
+
+    afterEvaluate {
+        // populate project classpath after evaluating
+        jar.manifest.attributes 'Class-Path': configurations.runtimeClasspath.collect { it.getName() }.join(' ')
+    }
+
+    // Don't start resource copy if we not finished root "clean"
+    classes.mustRunAfter rootProject.tasks.getByName("clean")
+    // Don't start resource copy if we not finished root "clean"
+    testClasses.mustRunAfter rootProject.tasks.getByName("clean")
+
+    // Contains current project jar and all required dependencies for that project
+    def allJarsPath = 'build/alljars'
+
+    task gatherProjectDependencies(type: Sync) {
+        description 'Copies all project runtime dependencies to ' + allJarsPath
+        from project.configurations.runtimeClasspath
+        into allJarsPath
+    }
+
+    task gatherAllJarsWithDependencies(type: Copy, dependsOn: ['jar', gatherProjectDependencies]) {
+        group 'build'
+        description 'Copies all project JAR and all it\'s runtime dependencies to ' + allJarsPath
+        from jar // Main produced JAR of the subproject
+        into allJarsPath
+    }
+
+    def allTestJarsPath = 'build/alltestjars'
+
+    task gatherProjectTestDependencies(type: Sync) {
+        description 'Copies all project test dependencies to ' + allTestJarsPath
+        from project.configurations.testRuntimeClasspath
+        into allTestJarsPath
+    }
+
+    task generateTestJar(type: Jar) {
+        description 'Generates JAR with test classes'
+        classifier 'tests'
+        from sourceSets.test.output
+    }
+
+    task gatherAllTestJarsWithDependencies(type: Copy, dependsOn: ['jar', generateTestJar, gatherProjectTestDependencies]) {
+        group 'build'
+        description 'Copies all project JAR and all it\'s test dependencies to ' + allTestJarsPath
+        from jar // Main produced JAR of the subproject
+        from generateTestJar // JAR with test classes
+
+        into allTestJarsPath
+    }
+
+    task logJars { doLast { configurations.compile.each { File file -> println '\t' + file.name } } }
+    task logJarFiles { doLast { configurations.compile.each { File file -> println '\t' + file } } }
+    task logTestJarsFiles { doLast { configurations.testCompile.each { File file -> println '\t' + file } } }
+
+    /// Support for publishing -sources.jar and -javadoc.jar artifacts:
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        baseName = archivesBaseName
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        enabled = includeJavaDocs
+        classifier = 'javadoc'
+        baseName = archivesBaseName
+        from javadoc.destinationDir
+    }
+
+    tasks.withType(Javadoc) {
+        // "Xdoclint:all,-reference" - disables fail on missing JavaDoc reference. TODO: Consider removing this.
+        // "-quiet" - skips warning messages (warnings still shown).
+        options.addStringOption('Xdoclint:all,-reference', '-quiet')
+        options.addStringOption('encoding', 'UTF-8')
+    }
+
+    artifacts {
+        archives sourcesJar
+        if (includeJavaDocs) {
+            archives javadocJar
+        }
+    }
+
+    // Publishing
+    publishing {
+        repositories {
+            maven {
+                url javaPublicationUrl
+                credentials {
+                    username publisherUser
+                    password publisherPassword
+                }
+            }
+        }
+
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+                if (includeJavaDocs) {
+                    artifact javadocJar
+                }
+                artifact sourcesJar
+                artifactId = archivesBaseName
+            }
+        }
+    }
+
+    if (!includeJavaDocs) {
+        tasks.withType(Javadoc).all { enabled = false }
+    }
+    tasks.test { enabled = false }
+
+    task copyJarsToLib(type: Copy, dependsOn: jar) {
+        mustRunAfter clean
+        mustRunAfter ':clean' // Root clean
+        from configurations.runtimeClasspath
+        from jar.getOutputs().files.getSingleFile()
+        into "$rootDir/lib"
+        //rename 'tools.*.jar', 'tools.jar'
+    }
+
+    build.dependsOn(copyJarsToLib)
+
+    task printDependencies(type: DependencyReportTask) {
+        description "Prints project dependency tree"
+    }
+}
+
+//def webAbbrs = [':java:quantserver:web': 'default', ':java:timebase:web': 'tb', ':java:aggregator:web': 'agg', ':java:quantserver:mon': 'mon', ':java:license:server': 'ls']
+
+def webAbbrs = [':java:quantserver:web': 'default', ':java:timebase:web': 'tb']
+webAbbrs.each { key, value ->
+    project(key) {
+        clean.doFirst {
+            file("$globalWebDir/$value").deleteDir()
+        }
+
+        classes.doLast {
+            copy {
+                from webAppDir
+                into file("$globalWebDir/$value")
+            }
+        }
+    }
+}
+
+
+def javaDocProjects = [':java:timebase:server', ':java:timebase:aerondirect',':java:timebase:api', ':java:timebase:pub', ':java:timebase:client']
+task aggregatedJavaDoc(type: Javadoc, description: 'Generate javadocs from selected projects', group: 'Documentation') {
+    destinationDir = file("$buildDir/docs/javadoc")
+    title = "$project.name $version API"
+    options.author false
+    options.links 'http://docs.spring.io/spring/docs/4.3.x/javadoc-api/', 'http://docs.oracle.com/javase/8/docs/api/', 'http://docs.spring.io/spring-ws/docs/2.3.0.RELEASE/api/', 'http://docs.spring.io/spring-security/site/docs/4.0.4.RELEASE/apidocs/'
+    options.addStringOption 'Xdoclint:none', '-quiet'
+
+    javaDocProjects.each { name ->
+        project(name).tasks.withType(Javadoc).each { javadocTask ->
+            source += javadocTask.source
+            classpath += javadocTask.classpath
+            excludes += javadocTask.excludes
+            includes += javadocTask.includes
+        }
+    }
+}
+
+build.dependsOn leafProjects.collect { proj -> proj.build }, project.tasks.getByName('downloadLicenses')
+
+task cleanSubprojects {
+    dependsOn leafProjects.collect { proj -> proj.tasks.getByName("clean") }
+    description 'Performs clean on all leaf Java projects'
+}
+
+task cleanJava {
+    dependsOn cleanSubprojects
+}

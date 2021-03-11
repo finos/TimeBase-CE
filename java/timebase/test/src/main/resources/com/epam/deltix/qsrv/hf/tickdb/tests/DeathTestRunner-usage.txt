@@ -1,0 +1,59 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++                                       Death test options                                  +
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-home <homeDir>             QSHome directory. Required.
+
+-filesLog                   Enables logging to different files (except TimeBase, it's logs will
+                            be in standard location).
+                            default: disabled
+
+-port <port>                TimeBase port (TimeBase will be started by this runner in separate process)
+                            default: 8011
+
+-tbVersion <version>        TimeBase version (4.3 or 5.0)
+                            default: 5.0
+
+-stream <key>               Test stream key.
+                            default: testStream
+
+-readers <n>                Number of live readers.
+                            default: 10
+
+-readLog                    Readers log location (used only if -filesLog is present)
+                            default: <workDir>/readers.log
+
+-loadRate <n>               Max load rate for 1 one loader (messages per second).
+                            default: Integer.MAX_VALUE
+
+-loadSymbols <n>            Number of symbols to generate.
+                            default: 100
+
+-loadLog                    Loaders log location (used only if -filesLog is present)
+                            default: <workDir>/loaders.log
+
+-purgePeriod <time>         Purge period in milliseconds.
+                            default: 8 minutes
+
+-purgeInterval <time>       Purge interval in milliseconds.
+                            Purge time will be: System.currentTimeMillis() - purgeInterval
+                            default: 10 minutes
+
+-purgeLog                   Purge log location (used only if -filesLog is present)
+                            default: <workDir>/purge.log
+
+-truncatePeriod <time>      Truncate period in milliseconds.
+                            default: 10 minutes
+
+-truncateInterval <time>    Truncate interval in milliseconds.
+                            Truncate time will be: System.currentTimeMillis() - truncateInterval
+                            default: 2 minutes
+
+-truncateSymbols <n>        Number of symbols to truncate at once. Symbols will be selected
+                            randomly.
+                            default: 10
+
+-truncateLog                Truncate log location (used only if -filesLog is present)
+                            default: <workDir>/truncate.log
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

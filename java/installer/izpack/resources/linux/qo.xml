@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+<pack name="QuantOffice" id="QuantOffice" required="no" preselected="false" condition="qoNoError">
+    <description>Desktop environment for developing, testing and deploying strategies.${qo.error}</description>
+
+    <singlefile src="${izpack.generated.path}/${qo.version}.Linux.jar" target="${INSTALL_PATH}/temp/qo-setup.jar" override="true"/>
+    <singlefile src="${izpack.resources.path}/linux/auto-install.xml" target="${INSTALL_PATH}/temp/auto-install.xml" override="true"/>
+
+    <parsable targetfile="${INSTALL_PATH}/temp/auto-install.xml"/>
+    <executable type="jar" class="com.izforge.izpack.installer.bootstrap.Installer"
+                targetfile="${INSTALL_PATH}/temp/qo-setup.jar" stage="postinstall" keep="true">
+        <args>
+            <arg value="${INSTALL_PATH}/temp/auto-install.xml"/>
+        </args>
+    </executable>
+</pack>

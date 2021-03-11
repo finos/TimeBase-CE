@@ -1,0 +1,9 @@
+Usage: tdbserver <arguments>
+
+-port <n>           Specify port. Defaults to 8010.
+-db <path>          Database folder path.
+-format             Format (create) new database.
+-ro                 Open in read-only mode. Mutually exclusive with -format.
+-nh <n>             Number of concurrent requests that can be handled.
+                    Defaults to 10.
+

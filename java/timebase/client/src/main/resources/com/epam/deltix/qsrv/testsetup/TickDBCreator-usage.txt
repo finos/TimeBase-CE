@@ -1,0 +1,9 @@
+Creates a small test database containing one-minute bars for
+stocks AAPL, ORCL, NSFT and GOOD, for 3 months.
+
+Arguments:
+
+-db <url>       Database URL. Defaults to DELTIX_HOME/temp/qstest/tickdb
+-format         Format the DB. If not specified, the DB will be opened in
+                read-write mode.
+

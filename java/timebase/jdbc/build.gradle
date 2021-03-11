@@ -1,0 +1,12 @@
+group = 'com.epam.deltix'
+
+dependencies {
+    compile project(':java:timebase:pub')
+    compile project(':java:timebase:client')
+    compile project(':java:timebase:api')
+
+    implementation ('deltix.qsrv:deltix-commons-lang')
+    implementation ('deltix.qsrv:deltix-commons-util')
+    implementation ('deltix.qsrv:deltix-commons-messages')
+
+}

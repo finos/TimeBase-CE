@@ -1,0 +1,585 @@
+package com.epam.deltix.qsrv.hf.tickdb.lang.parser;
+
+import java_cup.runtime.*;
+import java.util.*;
+import com.epam.deltix.util.parsers.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.errors.*;
+
+parser code {:
+    @Override
+    public void     syntax_error (Symbol token) {
+        throw new SyntaxErrorException (Location.combine (token.left, token.right));
+    }
+
+    @Override
+    public void     unrecovered_syntax_error (Symbol token) {
+        syntax_error (token);
+    }
+:};
+
+action code {:
+    private static long lx (long a, long b) { return (Location.combine (a, b)); }
+:};
+
+/* Punctuation. */
+terminal            SEMICOLON,  PLUS,       MINUS,      STAR;
+terminal            LPAREN,     RPAREN,     LBRACKET,   RBRACKET;
+terminal            COLON,      SLASH,      PERCENT,    DOT;
+terminal            EQ,         NEQ,        COMMA;
+terminal            LE,         GE,         LT,         GT;
+
+/* Keywords. Please keep UNION first, it is used for range checks... */
+
+terminal            UNION,      SELECT,     WHERE,      FROM;
+terminal            IS,         NOT,        NULL,       AND;
+terminal            OR,         NEW,        FALSE,      TRUE;
+terminal            DISTINCT,   CAST,       IN,         GROUP;
+terminal            BY,         RUNNING,    BETWEEN,    ARRAY,      OBJECT;
+terminal            AS,         CREATE,     STREAM,     OPTIONS;
+terminal            TRANSIENT,  DURABLE,    CLASS,      INSTANTIABLE;
+terminal            RELATIVE,   TO,         COMMENT,    ENUM;
+terminal            FLAGS,      UNDER,      STATIC,     DROP;
+terminal            ALTER,      MODIFY,     DEFAULT,    CONFIRM;
+terminal            LIKE;
+
+/* Please keep IDENTIFIER first, it is used for range checks... */
+
+terminal String     IDENTIFIER;
+terminal String     UINT;
+terminal String     FP;
+terminal String     STRING;
+terminal String     DATE_LITERAL;
+terminal String     TIME_LITERAL;
+terminal String     BIN_LITERAL;
+terminal char       CHAR_LITERAL;
+
+/* Specials */
+
+terminal            X_TYPE;
+
+/* Non terminals; keep identifiers meaningful - they are translated to documentation */
+non terminal Element                Clause;
+non terminal Expression             Expression;
+non terminal Expression             Arithmetic_Expression;
+non terminal CallExpression         Call_Expression;
+non terminal SelectExpression       Select_Expression;
+non terminal TupleExpression        New_Expression;
+non terminal Expression []          Expression_List;
+non terminal ArrayList              Non_Empty_Expression_List;
+non terminal TypeIdentifier         Type_Id;
+non terminal FieldIdentifier        Field_Id;
+non terminal ArrayList              Field_List;
+non terminal Integer                Select_Mode;
+non terminal Statement              Data_Definition_Statement;
+non terminal CreateStreamStatement  Create_Stream_Statement;
+non terminal ModifyStreamStatement  Modify_Stream_Statement;
+non terminal DropStreamStatement    Drop_Stream_Statement;
+non terminal ArrayList              Stream_Member_List;
+non terminal StreamScope            Stream_Scope;
+non terminal ArrayList              Options;
+non terminal ArrayList              Option_List;
+non terminal OptionElement          Option;
+non terminal ClassDef               Stream_Member_Definition;
+non terminal RecordClassDef         Class_Type_Definition;
+non terminal EnumClassDef           Enumerated_Type_Definition;
+non terminal Boolean                Instantiable_Clause;
+non terminal AttributeDef []        Attribute_Definition_List;
+non terminal ArrayList              Non_Empty_Attribute_Definition_List;
+non terminal AttributeDef           Attribute_Definition;
+non terminal StaticAttributeDef     Static_Attribute_Definition;
+non terminal NonStaticAttributeDef  Non_Static_Attribute_Definition;
+non terminal ArrayList              Enumeration;
+non terminal EnumValueDef           Enum_Value;
+non terminal DataTypeSpec           Data_Type;
+non terminal ArrayList              Data_Type_List;
+non terminal ArrayList              Object_Content_DataType_List;
+non terminal Identifier             Identifier;
+non terminal EncodingInfo           Encoding_Info;
+non terminal Expression []          Limits;
+
+/* Precedences */
+precedence left UNION;
+precedence left DISTINCT, SELECT, FROM, WHERE, GROUP;
+precedence left COMMA;
+precedence left OR;
+precedence left BETWEEN, AND;
+precedence right NOT;
+precedence left IN;
+precedence left EQ, NEQ, LE, GE, LT, GT;
+precedence left LIKE;
+precedence left PLUS, MINUS;
+precedence left STAR, SLASH;
+precedence left IS;
+precedence left LPAREN, DOT;
+precedence right AS;
+
+/* The grammar */
+Clause ::=
+    Expression:e    
+        {: RESULT = e; :} |
+    Data_Definition_Statement:ddl
+        {: RESULT = ddl; :} |
+    X_TYPE Data_Type:dt
+        {: RESULT = dt; :};
+
+Data_Definition_Statement ::=
+    Create_Stream_Statement:s 
+        {: RESULT = s; :} |
+    Modify_Stream_Statement:s 
+        {: RESULT = s; :} |
+    Drop_Stream_Statement:s 
+        {: RESULT = s; :};
+
+Expression ::=    
+    Arithmetic_Expression:s
+        {: RESULT = s; :} |
+    Expression:e1 BETWEEN Arithmetic_Expression:e2 AND Arithmetic_Expression:e3
+        {: RESULT = new BetweenExpression (lx (e1left, e3right), e1, e2, e3); :} |
+    Select_Expression:s
+        {: RESULT = s; :} |
+    Expression:e1 OR Expression:e2
+        {: RESULT = new OrExpression (lx (e1left, e2right), e1, e2); :} |
+    Expression:e1 AND Expression:e2
+        {: RESULT = new AndExpression (lx (e1left, e2right), e1, e2); :} |
+    NOT:n Expression:e
+        {: RESULT = new NotExpression (lx (nleft, eright), e); :} |
+    Expression:e1 EQ Expression:e2
+        {: RESULT = new EqualsExpression (lx (e1left, e2right), e1, e2, true); :} |
+    Expression:e1 NEQ Expression:e2
+        {: RESULT = new EqualsExpression (lx (e1left, e2right), e1, e2, false); :} |
+    Expression:e1 GT Expression:e2
+        {: RESULT = new RelationExpression (lx (e1left, e2right), OrderRelation.GT, e1, e2); :} |
+    Expression:e1 GE Expression:e2
+        {: RESULT = new RelationExpression (lx (e1left, e2right), OrderRelation.GE, e1, e2); :} |
+    Expression:e1 LT Expression:e2
+        {: RESULT = new RelationExpression (lx (e1left, e2right), OrderRelation.LT, e1, e2); :} |
+    Expression:e1 LE Expression:e2
+        {: RESULT = new RelationExpression (lx (e1left, e2right), OrderRelation.LE, e1, e2); :} |
+    Expression:e NOT IN LPAREN Expression_List:args RPAREN:rp
+        {: RESULT = new InExpression (lx (eleft, rpright), false, e, args); :} |
+    Expression:e IN LPAREN Expression_List:args RPAREN:rp
+        {: RESULT = new InExpression (lx (eleft, rpright), true, e, args); :} |
+    Expression:e1 LIKE Expression:e2
+        {: RESULT = new LikeExpression (lx (e1left, e2right), e1, e2, false); :} |
+    Expression:e1 NOT LIKE Expression:e2
+        {: RESULT = new LikeExpression (lx (e1left, e2right), e1, e2, true); :} |
+    Expression:q1 UNION Expression:q2
+        {: RESULT = new UnionExpression (lx (q1left, q2right), q1, q2); :};
+
+Arithmetic_Expression ::=    
+    Type_Id:t COLON Field_Id:f
+        {: RESULT = new FieldAccessExpression (lx (tleft, fright), t, f); :} |
+    Arithmetic_Expression:e1 PLUS Arithmetic_Expression:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
+    Arithmetic_Expression:e1 MINUS Arithmetic_Expression:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.SUB, e1, e2); :} |
+    Arithmetic_Expression:e1 STAR Arithmetic_Expression:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MUL, e1, e2); :} |
+    Arithmetic_Expression:e1 SLASH Arithmetic_Expression:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.DIV, e1, e2); :} |
+    New_Expression:t
+        {: RESULT = t; :} |
+    Call_Expression:c
+        {: RESULT = c; :} |
+    MINUS:m Arithmetic_Expression:e
+        {: RESULT = new UnaryMinusExpression (lx (mleft, eright), e); :} |
+    Arithmetic_Expression:e IS Type_Id:t
+        {: RESULT = new TypeCheckExpression (lx (eleft, tright), e, t); :} |
+    Arithmetic_Expression:e IS NULL:n
+        {: RESULT = new NullCheckExpression (lx (eleft, nright), e, true); :} |
+    Arithmetic_Expression:e IS NOT NULL:n
+        {: RESULT = new NullCheckExpression (lx (eleft, nright), e, false); :} |
+    Arithmetic_Expression:e AS IDENTIFIER:id
+        {: RESULT = new NamedExpression (lx (eleft, idright), e, id); :} |
+    NULL:n
+        {: RESULT = new Null (lx (nleft, nright)); :} |
+    UINT:n
+        {: RESULT = new IntegerConstant (lx (nleft, nright), Long.parseLong (n)); :} |
+    FP:n
+        {: RESULT = FloatConstant.parseText (lx (nleft, nright), n); :} |
+    STRING:s
+        {: RESULT = new StringConstant (lx (sleft, sright), s); :} |
+    DATE_LITERAL:s
+        {: RESULT = new DateConstant (lx (sleft, sright), s); :} |
+    TIME_LITERAL:s
+        {: RESULT = new TimeConstant (lx (sleft, sright), s); :} |
+    CHAR_LITERAL:c
+        {: RESULT = new CharConstant (lx (cleft, cright), c); :} |
+    BIN_LITERAL:s
+        {: RESULT = new BinConstant (lx (sleft, sright), s); :} |
+    Identifier:id
+        {: RESULT = id; :} |
+    FALSE:c
+        {: RESULT = new BooleanConstant (lx (cleft, cright), false); :} |
+    TRUE:c
+        {: RESULT = new BooleanConstant (lx (cleft, cright), true); :} |
+    STAR:s
+        {: RESULT = new This (lx (sleft, sright)); :} |
+    LPAREN Expression:e RPAREN
+        {: RESULT = e; :};
+
+Expression_List ::=
+    /* empty */ 
+        {: RESULT = new Expression [0]; :} |
+    Non_Empty_Expression_List:list
+        {: RESULT = (Expression []) list.toArray (new Expression [list.size ()]); :};
+
+Non_Empty_Expression_List ::=
+    Expression:e 
+        {: RESULT = new ArrayList (); RESULT.add (e); :} |
+    Non_Empty_Expression_List:list COMMA Expression:e
+        {: list.add (e); RESULT = list; :};
+
+Field_List ::=
+    Field_Id:id 
+        {: RESULT = new ArrayList (); RESULT.add (id); :} |
+    Field_List:list COMMA Field_Id:id
+        {: list.add (id); RESULT = list; :};
+
+Select_Expression ::=
+    SELECT:s  
+        Select_Mode:m
+        Expression_List:sel        
+        [ FROM Expression:q {: RESULT = q; :} ]:src
+        [ WHERE Expression:e  {: RESULT = e; :} ]:filter
+        [ GROUP BY Field_List:gby {: RESULT = gby; :} ]:gby
+        {: 
+            ArrayList <FieldIdentifier>     gl = (ArrayList <FieldIdentifier>) gby;
+
+            RESULT =
+                new SelectExpression (
+                    lx (sleft, gbyright),
+                    (Expression) src,
+                    (Expression) filter,
+                    m,
+                    gby == null ? null : gl.toArray (new FieldIdentifier [gl.size ()]),
+                    sel
+                );
+        :};
+
+Select_Mode ::=
+    /* empty */ {: RESULT = 0; :} |
+    Select_Mode:m DISTINCT {: RESULT = m | SelectExpression.MODE_DISTINCT; :} |
+    Select_Mode:m RUNNING {: RESULT = m | SelectExpression.MODE_RUNNING; :};
+
+New_Expression ::=
+    NEW:n Type_Id:Type_Id LPAREN Expression_List:t RPAREN:rp
+        {: RESULT = new TupleExpression (lx (nleft, rpright), Type_Id, t); :};
+
+Call_Expression ::=
+    IDENTIFIER:id LPAREN Expression_List:args RPAREN:rp
+        {: RESULT = new CallExpression (lx (idleft, rpright), id, args); :};
+
+Type_Id ::=
+    IDENTIFIER:id
+        {: RESULT = new TypeIdentifier (lx (idleft, idright), id); :} |
+    Type_Id:pack DOT IDENTIFIER:id
+        {: RESULT = new TypeIdentifier (pack, id, idright); :};
+
+Field_Id ::=
+    IDENTIFIER:id
+        {: RESULT = new FieldIdentifier (lx (idleft, idright), id); :};
+
+Create_Stream_Statement ::=
+    CREATE:c Stream_Scope:scope STREAM  Identifier:id 
+    [ STRING:title {: RESULT = title; :} ]:title
+    LPAREN Stream_Member_List:members [ SEMICOLON ] RPAREN
+    [ Options:options {: RESULT = options; :} ]:options
+    [ COMMENT STRING:comment {: RESULT = comment; :} ]:comment
+        {:
+            RESULT = 
+                new CreateStreamStatement (
+                    lx (cleft, commentright), 
+                    id, (String) title, (String) comment, scope, 
+                    OptionElement.toArray ((List) options), 
+                    ClassDef.toArray (members)
+                );
+        :};
+
+Modify_Stream_Statement ::=
+    MODIFY:m STREAM Identifier:id 
+    [ STRING:title {: RESULT = title; :} ]:title
+    LPAREN Stream_Member_List:members [ SEMICOLON ] RPAREN
+    [ Options:options {: RESULT = options; :} ]:options
+    [ COMMENT STRING:comment {: RESULT = comment; :} ]:comment
+    [ CONFIRM Identifier:confirm {: RESULT = confirm; :} ]:confirm
+        {:
+            RESULT = 
+                new ModifyStreamStatement (
+                    lx (mleft, confirmright), 
+                    id, (String) title, (String) comment, 
+                    OptionElement.toArray ((List) options), 
+                    ClassDef.toArray (members),
+                    ConversionConfirmation.fromId ((Identifier) confirm)
+                );
+        :};
+
+Stream_Member_List ::=
+    Stream_Member_Definition:def
+        {: RESULT = new ArrayList (); RESULT.add (def); :} |
+    Stream_Member_List:list SEMICOLON Stream_Member_Definition:def
+        {: list.add (def); RESULT = list; :};
+
+/*
+Alter_Stream_Statement ::=
+    ALTER:a STREAM 
+    IDENTIFIER:id [ STRING:title {: RESULT = title; :} ]:title
+    LPAREN Stream_Member_Change_List:members [ SEMICOLON ] RPAREN:rp
+    [ Options:options {: RESULT = options; :} ]:options
+    [ COMMENT STRING:comment {: RESULT = comment; :} ]:comment
+;
+
+Stream_Member_Change_List ::=
+    Stream_Member_Change:def
+        {: RESULT = new ArrayList (); RESULT.add (def); :} |
+    Stream_Member_Change_List:list SEMICOLON Stream_Member_Change:def
+        {: list.add (def); RESULT = list; :};
+
+Stream_Member_Change ::=
+    DROP 
+    Class_Type_Definition:ctd 
+        {: RESULT = ctd; :} |
+    Enumerated_Type_Definition:etd
+        {: RESULT = etd; :}; 
+*/
+
+Stream_Scope ::=
+    TRANSIENT 
+        {: RESULT = StreamScope.TRANSIENT; :} | 
+    DURABLE
+        {: RESULT = StreamScope.DURABLE; :};
+
+Options ::=
+    OPTIONS LPAREN Option_List:list [ SEMICOLON ] RPAREN
+        {: RESULT = list; :};
+
+Option_List ::=
+    Option:o 
+        {:
+            RESULT = new ArrayList ();
+            RESULT.add (o);
+        :} |
+    Option_List:list SEMICOLON Option:o
+        {:
+            list.add (o);
+            RESULT = list;
+        :};
+
+Option ::= 
+    Identifier:id [ EQ Expression:value {: RESULT = value; :} ]:value
+        {: 
+            RESULT = new OptionElement (lx (idleft, valueright), id, (Expression) value); 
+        :};
+
+Stream_Member_Definition ::=
+    Class_Type_Definition:ctd 
+        {: RESULT = ctd; :} |
+    Enumerated_Type_Definition:etd
+        {: RESULT = etd; :}; 
+
+Class_Type_Definition ::=
+    CLASS:t Type_Id:id
+    [ STRING:title {: RESULT = title; :} ]:title  
+    [ UNDER Type_Id:sup {: RESULT = sup; :} ]:sup  
+    LPAREN Attribute_Definition_List:attrs RPAREN:rp
+    [ Instantiable_Clause:inst {: RESULT = inst; :} ]:inst
+    [ COMMENT STRING:comment {: RESULT = comment; :} ]:comment
+        {:          
+            RESULT = 
+                new RecordClassDef (
+                    lx (tleft, commentright),
+                    id, (String) title, (String) comment,
+                    inst == null, 
+                    (TypeIdentifier) sup,
+                    attrs
+                );
+        :};
+
+Instantiable_Clause ::=
+    INSTANTIABLE 
+        {: RESULT = null; :} | 
+    NOT INSTANTIABLE
+        {: RESULT = Boolean.FALSE; :};
+
+Non_Empty_Attribute_Definition_List ::=
+    Attribute_Definition:adef 
+        {: RESULT = new ArrayList (); RESULT.add (adef); :} |
+    Non_Empty_Attribute_Definition_List:list COMMA Attribute_Definition:adef
+        {: list.add (adef); RESULT = list; :};
+
+Attribute_Definition_List ::=
+    /* */ 
+        {: RESULT = new AttributeDef [0]; :} |
+    Non_Empty_Attribute_Definition_List:list
+        {:
+            RESULT = new AttributeDef [list.size ()];
+            list.toArray (RESULT);            
+        :};
+
+Attribute_Definition ::=
+    Static_Attribute_Definition:ad
+        {: RESULT = ad; :} |
+    Non_Static_Attribute_Definition:ad
+        {: RESULT = ad; :};
+
+Static_Attribute_Definition ::=
+    STATIC:s IDENTIFIER:id 
+    [ STRING:title {: RESULT = title; :} ]:title
+    Type_Id:tid 
+    EQ Expression:e 
+    [ COMMENT STRING:comment  {: RESULT = comment; :} ]:comment
+        {:            
+            RESULT = 
+                new StaticAttributeDef (
+                    lx (sleft, commentright),
+                    id, (String) title, (String) comment, tid, e
+                );
+        :};
+
+Non_Static_Attribute_Definition ::=
+    IDENTIFIER:id 
+    [ STRING:title {: RESULT = title; :} ]:title
+    Data_Type:dt
+    [ RELATIVE TO Identifier:relid {: RESULT = relid; :} ]:relid
+    [ DEFAULT Expression:defval {: RESULT = defval; :} ]:defval
+    [ COMMENT STRING:comment {: RESULT = comment; :} ]:comment
+        {:
+            RESULT = 
+                new NonStaticAttributeDef (
+                    lx (idleft, commentright),
+                    id, (String) title, (String) comment, 
+                    dt,
+                    (Identifier) relid,
+                    (Expression) defval
+                );
+        :};
+
+Limits ::= 
+    /* empty */
+        {: RESULT = new Expression [] { null, null }; :} |
+    BETWEEN Expression:min AND Expression:max
+        {: RESULT = new Expression [] { min, max }; :};
+
+Encoding_Info ::=
+    /* empty */ 
+        {: RESULT = new EncodingInfo (null, SimpleDataTypeSpec.NO_DIMENSION); :} |
+    IDENTIFIER:enc
+        {: RESULT = new EncodingInfo (enc, SimpleDataTypeSpec.NO_DIMENSION); :} |
+    IDENTIFIER:enc LPAREN UINT:dim RPAREN:rp
+        {: RESULT = new EncodingInfo (enc, Integer.parseInt (dim)); :};
+
+Data_Type ::=    
+    Type_Id:tid [ NOT NULL {: RESULT = ""; :} ]:nn Encoding_Info:ei Limits:lim    
+        {: 
+            RESULT = 
+                new SimpleDataTypeSpec (
+                    lx (tidleft, limright), 
+                    tid, 
+                    nn == null,
+                    ei.encoding, 
+                    ei.dimension,
+                    lim [0],
+                    lim [1]
+                ); 
+        :} |
+        ARRAY:a LPAREN Data_Type_List:dtlist RPAREN [ NOT NULL {: RESULT = ""; :} ]:nn1
+        {:
+            RESULT =
+                new ArrayDataTypeSpec(
+                    lx(aleft, nn1right),
+                    (DataTypeSpec[]) dtlist.toArray(new DataTypeSpec[dtlist.size()]),
+                    nn1 == null
+                );
+        :} |
+        OBJECT:o LPAREN Object_Content_DataType_List:objlist RPAREN [ NOT NULL {: RESULT = ""; :} ]:nn2
+        {:
+            RESULT =
+                new ClassDataTypeSpec(
+                    lx(oleft, nn2right),
+                    (DataTypeSpec[]) objlist.toArray(new DataTypeSpec[objlist.size()]),
+                    nn2 == null
+                );
+        :} |
+        Data_Type:dt ARRAY [ NOT NULL {: RESULT = ""; :} ]:nn3
+        {:
+            if (true)
+                throw new SyntaxErrorException(
+                    "Deprecated syntax. Use 'ARRAY (type1, type2, ...)' construction.",
+                    lx (dtleft, nn3right));
+        :};
+
+Data_Type_List ::=
+    Data_Type:dt
+        {: RESULT = new ArrayList(); RESULT.add(dt); :} |
+    Data_Type_List:dtlist COMMA Data_Type:dt
+        {: dtlist.add(dt); RESULT = dtlist; :};
+
+Object_Content_DataType_List ::=
+    Type_Id:tid
+        {:
+            RESULT = new ArrayList();
+            RESULT.add(
+                new SimpleDataTypeSpec(
+                    lx(tidleft, tidright), tid, true, null, SimpleDataTypeSpec.NO_DIMENSION, null, null)
+            );
+        :} |
+    Object_Content_DataType_List:objlist COMMA Type_Id:tid
+        {:
+            objlist.add(
+                new SimpleDataTypeSpec(
+                    lx(tidleft, tidright), tid, true, null, SimpleDataTypeSpec.NO_DIMENSION, null, null)
+            );
+            RESULT = objlist;
+        :};
+
+Enumerated_Type_Definition ::=
+    ENUM:ek Type_Id:id 
+    [ STRING:title {: RESULT = title; :} ]:title
+    LPAREN Enumeration:e RPAREN 
+    [ FLAGS:flags {: RESULT = Boolean.TRUE; :} ]:flags
+    [ COMMENT STRING:comment {: RESULT = comment; :} ]:comment
+        {:
+            EnumValueDef []     values = new EnumValueDef [e.size ()];
+            e.toArray (values);
+
+            RESULT =
+                new EnumClassDef (
+                    lx (ekleft, commentright),
+                    id, (String) title, (String) comment,
+                    flags != null,
+                    values
+                );
+        :};
+
+Enumeration ::=
+    Enum_Value:ev 
+        {:
+            RESULT = new ArrayList ();
+            RESULT.add (ev);
+        :} |
+    Enumeration:e COMMA Enum_Value:ev
+        {:
+            e.add (ev);
+            RESULT = e;
+        :};
+
+Enum_Value ::=
+    Identifier:id 
+    [ EQ Expression:value {: RESULT = value; :} ]:value
+        {: 
+            RESULT = 
+                new EnumValueDef (
+                    lx (idleft, valueright),
+                    id, (Expression) value
+                );
+        :};
+
+Identifier ::= 
+    IDENTIFIER:id 
+        {: RESULT = new Identifier (lx (idleft, idright), id); :};
+
+Drop_Stream_Statement ::=
+    DROP:d STREAM Identifier:id
+        {: RESULT = new DropStreamStatement (lx (dleft, idright), id); :};

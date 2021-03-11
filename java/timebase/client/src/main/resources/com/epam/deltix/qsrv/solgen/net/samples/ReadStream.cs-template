@@ -1,0 +1,42 @@
+using System;
+using System.IO;
+
+using EPAM.Deltix.Timebase.Api.Utilities.Time;
+using EPAM.Deltix.Timebase.Api.Communication;
+using EPAM.Deltix.Timebase.Api;
+using EPAM.Deltix.Timebase.Client;
+
+namespace TimebaseSample
+{
+    /// <summary>
+    /// Prints out the first 100 messages from the specified stream.
+    /// </summary>
+    public class ReadStream
+    {
+        public static void Run()
+        {
+            using (ITickDb db = TickDbFactory.CreateFromUrl("${timebase.url}"))
+            {
+                db.Open(true);
+
+                ITickStream stream = db.GetStream("${timebase.stream}");
+                DateTime time = TimeConstants.TimestampUnknown;
+                SelectionOptions options = new SelectionOptions();
+
+                //options.Raw = true;
+                options.Loader = TypeMap.TYPE_LOADER;
+
+                using (ITickCursor cursor =
+                         stream.Select(time, options, null, null))
+                {
+                    int count = 0;
+
+                    while (cursor.Next() && count++ < 100)
+                    {
+                        Console.WriteLine(cursor.GetMessage());
+                    }
+                }
+            }
+        }
+    }
+}

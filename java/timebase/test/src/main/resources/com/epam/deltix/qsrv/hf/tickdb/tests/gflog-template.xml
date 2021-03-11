@@ -1,0 +1,9 @@
+<config>
+    <appender name="consoleAppender" factory="deltix.gflog.appender.ConsoleAppenderFactory"/>
+    <appender name="fileAppender" factory="deltix.gflog.appender.FileAppenderFactory" file="%s"/>
+
+    <logger>
+        <appender-ref ref="consoleAppender"/>
+        <appender-ref ref="fileAppender"/>
+    </logger>
+</config>

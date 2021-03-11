@@ -1,0 +1,700 @@
+QuantServer DEFINITIONS ::= BEGIN
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, OBJECT-IDENTITY,
+        enterprises,
+        Counter32, Counter64, Gauge32, Integer32, IpAddress, 
+        Opaque, TimeTicks, Unsigned32
+       FROM SNMPv2-SMI
+    DisplayString, TEXTUAL-CONVENTION
+       FROM SNMPv2-TC
+    MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+       FROM SNMPv2-CONF;
+
+-- Module Identity
+
+quantServer MODULE-IDENTITY
+   LAST-UPDATED "201411241440Z"
+   ORGANIZATION "Deltix, Inc"
+   CONTACT-INFO "http://www.deltixlab.com/contact/"
+   DESCRIPTION  "Deltix, Inc - description"
+   ::= { deltix  1 }
+
+deltix         OBJECT IDENTIFIER ::= { enterprises 39977 }
+
+port OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Port # on which this server is listening for inbound connections"
+    ::= { quantServer  1 }
+
+upTime OBJECT-TYPE
+    SYNTAX TimeTicks
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Time since startup"
+    ::= { quantServer  2 }
+
+memory OBJECT IDENTIFIER ::= { quantServer  3 }
+
+currentMemory OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The amount of memory currently held by this process, in MB."
+    ::= { memory  1 }
+
+freeMemory OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The amount of reserve memory currently held by this process, in MB."
+    ::= { memory  2 }
+
+maxMemory OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The maximum amount of memory this process will try to allocate, in MB."
+    ::= { memory  3 }
+
+usedMemory OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The amount of memory actually allocated, in MB.
+        This value is equal to (currentMemory - freeMemory)."
+    ::= { memory  4 }
+
+availableMemory OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The amount of memory available for allocation, in MB.
+        This value is equal to (maxMemory - usedMemory)."
+    ::= { memory  5 }
+
+executorThreads OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "# of Executor threads"
+    ::= { quantServer  4 }
+
+executorRunningThreads OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "# of Executor threads working on a task"
+    ::= { quantServer  5 }
+
+totalThreads OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total # of threads"
+    ::= { quantServer  6 }
+
+timeBase OBJECT IDENTIFIER ::= { quantServer  100 }
+
+dataCache OBJECT IDENTIFIER ::= { timeBase  100 }
+
+cacheSize OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total (maximum) data cache size, in MB"
+    ::= { dataCache  1 }
+
+usedCacheSize OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Used data cache size, in MB"
+    ::= { dataCache  2 }
+
+numPages OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of allocated pages"
+    ::= { dataCache  3 }
+
+numOpenFiles OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of opened files"
+    ::= { dataCache  4 }
+
+numWriteBytes OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of IO write bytes"
+    ::= { dataCache  5 }
+
+numReadBytes OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of IO read bytes"
+    ::= { dataCache  6 }
+
+writeQueueLength OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Write queue length"
+    ::= { dataCache  7 }
+
+writerState OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Writer Thread state"
+    ::= { dataCache  8 }
+
+iOFailures OBJECT-TYPE
+    SYNTAX SEQUENCE OF Failure
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Number of IO failures"
+    ::= { dataCache  9 }
+
+Failure ::= SEQUENCE {
+    index Integer32,
+    message DisplayString
+}
+
+failure OBJECT-TYPE
+    SYNTAX Failure
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Information about failure"
+    INDEX { index }
+    ::= { iOFailures  1 }
+
+index OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Index"
+    ::= { failure  1 }
+
+message OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Error Message"
+    ::= { failure  2 }
+
+cursors OBJECT-TYPE
+    SYNTAX SEQUENCE OF Cursor
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Active Cursors"
+    ::= { timeBase  101 }
+
+Cursor ::= SEQUENCE {
+    cursorId Integer32,
+    cursorLastMessageTime DisplayString
+}
+
+cursor OBJECT-TYPE
+    SYNTAX Cursor
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Information about an open cursor"
+    INDEX { cursorId }
+    ::= { cursors  1 }
+
+cursorId OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Cursor identifier"
+    ::= { cursor  1 }
+
+cursorLastMessageTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The timestamp of the last message returned by this cursor"
+    ::= { cursor  2 }
+
+loaders OBJECT-TYPE
+    SYNTAX SEQUENCE OF Loader
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Active Loaders"
+    ::= { timeBase  102 }
+
+Loader ::= SEQUENCE {
+    loaderId Integer32,
+    source DisplayString,
+    loaderLastMessageTime DisplayString
+}
+
+loader OBJECT-TYPE
+    SYNTAX Loader
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Information about an open loader"
+    INDEX { loaderId }
+    ::= { loaders  1 }
+
+loaderId OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Loader identifier"
+    ::= { loader  1 }
+
+source OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Loader source stream"
+    ::= { loader  2 }
+
+loaderLastMessageTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The timestamp of the last message written by this loader"
+    ::= { loader  3 }
+
+license OBJECT IDENTIFIER ::= { timeBase  103 }
+
+validUtil OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Date until license is valid"
+    ::= { license  1 }
+
+licensee OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Licensee information"
+    ::= { license  2 }
+
+lastValidated OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Last time if license validation"
+    ::= { license  3 }
+
+daysValid OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of days license "
+    ::= { license  4 }
+
+licenseState OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "License state"
+    ::= { license  5 }
+
+type OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "License type"
+    ::= { license  6 }
+
+features OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "License Feature"
+    ::= { license  7 }
+
+aggregator OBJECT IDENTIFIER ::= { quantServer  101 }
+
+activeDCCount OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of connected Data Connectors"
+    ::= { aggregator  1 }
+
+activeProcessCount OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of active processes"
+    ::= { aggregator  2 }
+
+processes OBJECT-TYPE
+    SYNTAX SEQUENCE OF Process
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "List of configured processes"
+    ::= { aggregator  100 }
+
+Process ::= SEQUENCE {
+    processId Integer32,
+    processKey DisplayString,
+    processType INTEGER,
+    processState INTEGER,
+    dCState INTEGER,
+    startTime DisplayString,
+    finishTime DisplayString
+}
+
+process OBJECT-TYPE
+    SYNTAX Process
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Aggregator process information"
+    INDEX { processId }
+    ::= { processes  1 }
+
+processId OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Process Index"
+    ::= { process  1 }
+
+processKey OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Process  Key"
+    ::= { process  2 }
+
+processType OBJECT-TYPE
+    SYNTAX INTEGER { null(-1), live(0), batch(1), hybrid(2), purge(3) }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Process Type"
+    ::= { process  3 }
+
+processState OBJECT-TYPE
+    SYNTAX INTEGER { null(-1), connecting(0), connected(1), disconnecting(2), disconnected(3), aborted(4) }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Process Handler State"
+    ::= { process  4 }
+
+dCState OBJECT-TYPE
+    SYNTAX INTEGER { null(-1), initial(0), connected-by-user(1), automatically-restored(2), disconnected-by-user(3), disconnected-by-completed-batch(4), disconnected-by-vendor-and-reconnecting(5), disconnected-by-vendor-and-halted(6), disconnected-by-error-and-reconnecting(7), disconnected-by-error-and-halted(8), recovering-begin(9), live-begin(10) }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Data Connector state (undefined for non-DC processes)"
+    ::= { process  5 }
+
+startTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Activity Start Time (yyyy-mm-dd hh:mm:ss.sss GMT)"
+    ::= { process  6 }
+
+finishTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Activity Finish Time (yyyy-mm-dd hh:mm:ss.sss GMT)"
+    ::= { process  7 }
+
+hybridProcesses OBJECT-TYPE
+    SYNTAX SEQUENCE OF HybridProcess
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "List of active Hybrid processes"
+    ::= { aggregator  101 }
+
+HybridProcess ::= SEQUENCE {
+    hybridProcessId Integer32,
+    hybridProcessKey DisplayString,
+    livePercentage Gauge32
+}
+
+hybridProcess OBJECT-TYPE
+    SYNTAX HybridProcess
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Hybrid process information"
+    INDEX { hybridProcessId }
+    ::= { hybridProcesses  1 }
+
+hybridProcessId OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Process Index"
+    ::= { hybridProcess  1 }
+
+hybridProcessKey OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Process Key"
+    ::= { hybridProcess  2 }
+
+livePercentage OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Percentage of Live instruments"
+    ::= { hybridProcess  3 }
+
+instruments OBJECT-TYPE
+    SYNTAX SEQUENCE OF Instrument
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "List of subscribed instruments of Hybrid processes"
+    ::= { aggregator  102 }
+
+Instrument ::= SEQUENCE {
+    instrumentProcessId Integer32,
+    instrumentId Integer32,
+    tbSymbol DisplayString,
+    vendorSymbol DisplayString,
+    instrumentType INTEGER,
+    instrumentState INTEGER,
+    lastHistoryMsgTime DisplayString
+}
+
+instrument OBJECT-TYPE
+    SYNTAX Instrument
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Subscribed instrument information"
+    INDEX { instrumentProcessId, instrumentId }
+    ::= { instruments  1 }
+
+instrumentProcessId OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Hybrid process Index"
+    ::= { instrument  1 }
+
+instrumentId OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Instrument Index"
+    ::= { instrument  2 }
+
+tbSymbol OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Timebase Symbol"
+    ::= { instrument  3 }
+
+vendorSymbol OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Vendor Symbol"
+    ::= { instrument  4 }
+
+instrumentType OBJECT-TYPE
+    SYNTAX INTEGER { null(-1), equity(0), option(1), future(2), bond(3), fx(4), index(5), etf(6), custom(7), simple-option(8), exchange(9), trading-session(10), stream(11), data-connector(12), exchange-traded-synthetic(13), system(14) }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Instrument Type"
+    ::= { instrument  5 }
+
+instrumentState OBJECT-TYPE
+    SYNTAX INTEGER { null(-1), idle(0), historic(1), livequeue(2), live(3), error(4), waiting(5), cancelled(6) }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Instrument State"
+    ::= { instrument  6 }
+
+lastHistoryMsgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Timestamp of the last historical message (yyyy-mm-dd hh:mm:ss.sss GMT)"
+    ::= { instrument  7 }
+
+uhfServer OBJECT IDENTIFIER ::= { quantServer  102 }
+
+isTradingEnabled OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "1 if trading enabled; 0 if disabled (halted)."
+    ::= { uhfServer  100 }
+
+strategies OBJECT-TYPE
+    SYNTAX SEQUENCE OF Module
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "List of deployed strategies."
+    ::= { uhfServer  101 }
+
+Module ::= SEQUENCE {
+    moduleId Integer32,
+    moduleKey DisplayString,
+    isTradingHalted Integer32,
+    isSystem Integer32,
+    moduleState INTEGER,
+    numberOfInboundMessages Counter64,
+    numberOfOutboundMessages Counter64,
+    numberOfRPCs Counter64,
+    numberOfOrders Counter64
+}
+
+module OBJECT-TYPE
+    SYNTAX Module
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Information about a deployed module"
+    INDEX { moduleId }
+    ::= { strategies  1 }
+
+moduleId OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Module index"
+    ::= { module  1 }
+
+moduleKey OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Module identifier"
+    ::= { module  2 }
+
+isTradingHalted OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "1 if trading is enabled for this module; 0 if trading is disabled (halted) ."
+    ::= { module  3 }
+
+isSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "1 if this module is a system module; 0 otherwise."
+    ::= { module  4 }
+
+moduleState OBJECT-TYPE
+    SYNTAX INTEGER { null(-1), uninitialized(0), activating(1), warmup(2), standby(3), live(4), livestopped(5), suspended(6), aborted(7), shutdowninprogress(8), undeployed(9) }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "State of this module."
+    ::= { module  5 }
+
+numberOfInboundMessages OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of inbound messages received by module since last deployment or server restart."
+    ::= { module  6 }
+
+numberOfOutboundMessages OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of outbound messages sent by this module since last deployment or server restart."
+    ::= { module  7 }
+
+numberOfRPCs OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of Remote Procedure Calls (RPC) to this module since last deployment or server restart."
+    ::= { module  8 }
+
+numberOfOrders OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of orders submitted by this module since last deployment or server restart."
+    ::= { module  9 }
+
+
+END

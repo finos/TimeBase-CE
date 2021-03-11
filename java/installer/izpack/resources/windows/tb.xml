@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+<pack name="Timebase" id="Timebase" required="yes">
+    <description>Polymorphic Event-Oriented Database and Messaging System.</description>
+
+    <!-- remove old files while update -->
+    <updatecheck>
+        <include name="QuantServer/bin/**" />
+        <include name="QuantServer/lib/**" />
+        <include name="QuantServer/cpp/**" />
+        <include name="QuantServer/python/**" />
+        <include name="QuantServer/web/**" />
+        <include name="QuantServer/docs/**" />
+        <include name="QuantServer/dotnet/**" />
+    </updatecheck>
+
+    <!-- Specific files for Windows -->
+
+    <!-- bin directory -->
+    <fileset dir="${izpack.generated.path}/cmd" targetdir="${INSTALL_PATH}/QuantServer/bin" override="true">
+        <include name="*.cmd"/>
+    </fileset>
+    <parsable type="plain">
+        <fileset targetdir="${INSTALL_PATH}/QuantServer/bin"
+                 includes="*.cmd" />
+    </parsable>
+
+    <!-- Common files for all platform specific versions of installer -->
+
+    <!-- .NET -->
+    <fileset dir="dotnet" targetdir="${INSTALL_PATH}/QuantServer/dotnet" override="true">
+        <include name="**"/>
+        <exclude name="Tools"/>
+    </fileset>
+
+    <!-- lib -->
+    <fileset dir="${izpack.generated.path}/lib" targetdir="${INSTALL_PATH}/QuantServer/lib" override="true">
+        <include name="**"/>
+        <exclude name="deltix-license-server-*"/>
+    </fileset>
+
+    <!-- dxapi -->
+    <fileset dir="cpp" targetdir="${INSTALL_PATH}/QuantServer/cpp" override="true">
+        <include name="dxapi/windows/**"/>
+    </fileset>
+
+    <fileset dir="python" targetdir="${INSTALL_PATH}/QuantServer/python" override="true">
+        <include name="dxapi/windows/**"/>
+        <include name="samples/**"/>
+        <include name="packages/**"/>
+    </fileset>
+	
+	<!-- samples -->
+    <fileset dir="java/quantserver/samples/src/main" targetdir="${INSTALL_PATH}/QuantServer/samples" override="true">
+        <include name="**"/>
+    </fileset>
+
+    <!-- web -->
+    <fileset dir="web" targetdir="${INSTALL_PATH}/QuantServer/web" override="true">
+        <include name="default/**"/>
+        <include name="tb/**"/>
+    </fileset>
+
+    <!-- docs -->
+    <fileset dir="docs" targetdir="${INSTALL_PATH}/QuantServer/docs" override="true">
+        <include name="guide/**"/>
+        <include name="quantserver/**"/>
+    </fileset>
+
+</pack>

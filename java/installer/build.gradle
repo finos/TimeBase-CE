@@ -1,0 +1,140 @@
+apply from: "$rootDir/distribution/scripts.gradle"
+
+apply plugin: 'java'
+apply plugin: 'de.undercouch.download'
+
+//todo: with source compatibility 11 installer won't work
+sourceCompatibility = 8
+targetCompatibility = 8
+
+group = 'com.epam.deltix'
+archivesBaseName = 'deltix-' + project.path.replace(":java:", "").replaceAll(':', '-')
+
+if (!project.hasProperty('instDir'))
+    ext.instDir = "$rootDir/installer"
+
+if (!project.hasProperty('instVersion'))
+    ext.instVersion = new java.text.SimpleDateFormat('yyyyMMdd').format(new java.util.Date())
+
+if (!project.hasProperty('qoVersion'))
+    ext.qoVersion = 'UNDEFINED'
+
+def rUser = findProperty('NEXUS_USER') ?:  System.getenv('NEXUS_USER') ?: "FakeProGetUser"
+def rPass = findProperty('NEXUS_PASS') ?:  System.getenv('NEXUS_PASS') ?: "FakeProGetPass"
+
+def customPacksArray = []
+if (project.hasProperty('customPacks')) {
+    customPacksArray = project.properties['customPacks'].split(';')
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.codehaus.izpack:izpack-compiler:5.1.3'
+    compile 'org.codehaus.izpack:izpack-ant:5.1.3'
+}
+
+//def distDir = "${instDir}/dist"
+//def installerDir = "${distDir}/installer"
+//def distQODir = "${distDir}/qo"
+
+def generatedDir = file('build/generated')
+
+clean.doLast {
+    generatedDir.deleteDir()
+}
+
+// Timebase installer
+['windows', 'linux'].each { installerPlatform ->
+    task("${installerPlatform}TimebaseInstaller", type: deltix.gradle.tasks.installer.BuildTimebaseInstallerTask) {
+        description = "Creates an IzPack based Timebase installer."
+        dependsOn = [':build',
+                     ':java:installer:build',
+                     ':generateSetQsVersionScript',
+                     'generateScriptsTimebase',
+                     'copyTimebaseJars',
+                     'timebaseWebGateway'
+        ]
+
+        platform = installerPlatform
+        classpath = configurations.compile.asPath
+        jarpath = jar.outputs.files[0].absolutePath
+        generatedDirectory = generatedDir
+        instDirectory = instDir
+        instVersion = this.instVersion
+        tbVersion = version
+        customPacks = [
+            file("izpack/timebase/resources/$installerPlatform/tb.xml"),
+            file("izpack/timebase/resources/$installerPlatform/tbwg.xml")
+        ]
+    }
+}
+
+def timebaseJars = []
+task copyTimebaseJars
+['java:timebase:server',
+ 'java:timebase:client',
+ 'java:timebase:s3',
+ 'java:timebase:aerondirect',
+ 'java:timebase:api',
+ 'java:timebase:pub'
+].forEach { projectName ->
+    def projectJar = rootProject.project(projectName).tasks.jar.getOutputs().files.getSingleFile()
+    timebaseJars.add(projectJar)
+    copyTimebaseJars.dependsOn += tasks.create(projectName.replace(':', '-') + "-copyjars", Copy) {
+        mustRunAfter clean
+        mustRunAfter ':clean' // Root clean
+        from rootProject.project(projectName).configurations.runtimeClasspath
+        from projectJar
+        into generatedDir.absolutePath + '/lib'
+        rename 'tools.*.jar', 'tools.jar'
+    }
+}
+
+def cmdDir = file(generatedDir.absolutePath + '/cmd')
+def timebaseScripts = []
+ext.scripts.forEach { script ->
+    if (timebaseJars.any{ jar -> script[2].contains(jar) }) {
+        timebaseScripts.add(script)
+    }
+}
+
+task generateScriptsTimebase
+
+timebaseScripts.each() { row ->
+    def script = row[0]
+    def clazz = row[1]
+    def jar = row[2]
+    def jvmOpts = row[3]
+    def startInNew = row[4]
+
+    generateScriptsTimebase.dependsOn += tasks.create(name: 'make-' + script + '-installer-script', type: CreateStartScripts, dependsOn: tasks.getByPath(":java:build")) {
+        mainClassName = clazz
+        applicationName = script
+
+        defaultJvmOpts = jvmOpts
+
+        outputDir = cmdDir
+        classpath = jar
+
+        unixStartScriptGenerator.template = project(":distribution").resources.text.fromFile('scripts/installer/unixStartScriptTemplate.txt')
+        windowsStartScriptGenerator.template = project(":distribution").resources.text.fromFile('scripts/installer/windowsStartScriptTemplate.txt')
+
+        doLast {
+            windowsScript.text = windowsScript.text.replace('APP_HOME', 'DELTIX_HOME')
+            windowsScript.text = windowsScript.text.replace('DELTIX_INSTALL_PATH/QuantServer', '${INSTALL_PATH}')
+            windowsScript.text = windowsScript.text.replace('START_IN_NEW', startInNew ? 'start "" ': '')
+            windowsScript.text = windowsScript.text.replaceAll('JAVACOMMAND', startInNew ? 'javaw': 'java')
+            unixScript.text = unixScript.text.replace('/QuantServer', '')
+            unixScript.text = unixScript.text.replace('APP_HOME', 'DELTIX_HOME')
+        }
+        doLast {
+            file(cmdDir.absolutePath + "/${script}.bat").renameTo(cmdDir.absolutePath + "/${script}.cmd")
+            file(cmdDir.absolutePath + "/${script}").renameTo(cmdDir.absolutePath + "/${script}.sh")
+        }
+    }
+}
+

@@ -1,0 +1,36 @@
+#
+#   Start with statics
+#
+param add n integer 4
+param add pi float 3.1415
+param add s varchar qql is awesome
+#
+#   First time compile, second time from cache
+#
+test select s
+>_,TIMESTAMP,SYMBOL,TYPE,S
+0,_,,CUSTOM,qql is awesome
+!end
+test select s
+>_,TIMESTAMP,SYMBOL,TYPE,S
+0,_,,CUSTOM,qql is awesome
+!end
+#
+#   Make sure parameter values are not cached
+#
+param set s qql wins
+test select s
+>_,TIMESTAMP,SYMBOL,TYPE,S
+0,_,,CUSTOM,qql wins
+!end
+#
+#   Now try using parameters in dynamic queries
+#
+test select count () from alltypes where sequence > n
+>_,TIMESTAMP,SYMBOL,TYPE,COUNT ()
+0,2011-01-01 00:01:39,S1,CUSTOM,190
+!end
+test select count () from alltypes where sequence > n
+>_,TIMESTAMP,SYMBOL,TYPE,COUNT ()
+0,2011-01-01 00:01:39,S1,CUSTOM,190
+!end

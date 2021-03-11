@@ -1,0 +1,52 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides: ${process}
+# Default-Start: ${level.start}
+# Default-Stop: ${level.stop}
+# Required-Start: ${required.start}
+# Required-Stop: ${required.stop}
+# Short-Description: ${process.description}
+# Description: ${process.description.long}
+### END INIT INFO
+
+
+start() {
+    echo -n "Starting ${process.name}..."
+    export DELTIX_HOME=${deltix.home}
+    start-stop-daemon --start --background --user=${process.user} --make-pidfile --pidfile ${process.pid.file} --exec ${java.cmd} -- ${process.java.options}
+}	
+
+stop() {
+    echo -n "Shutting down ${process.name}..."
+    start-stop-daemon --stop --pidfile ${process.pid.file} 
+}	
+
+restart() {
+    echo -n "Restarting ${process.name}:"
+    stop
+    start
+}	
+
+status() {        
+    export DELTIX_HOME=${deltix.home}
+    ${java.cmd} ${process.java.status.options}
+}	
+
+case "$1" in
+    start)
+        start
+            ;;
+    stop)
+        stop
+            ;;
+    restart)
+        restart
+            ;;
+    status)
+        status
+            ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+esac
+exit $?

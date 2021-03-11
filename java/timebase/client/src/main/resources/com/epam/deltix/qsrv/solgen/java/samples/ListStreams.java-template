@@ -1,0 +1,45 @@
+package ${java.samples.liststreams.packageName};
+
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.timebase.messages.IdentityKey;
+import com.epam.deltix.util.time.Periodicity;
+
+public class ${java.samples.liststreams.className} {
+    public static void main(String[] args) throws Exception {
+        try (DXTickDB db = TickDBFactory.createFromUrl("${timebase.url}")) {
+            db.open(true);
+            //
+            //  Iterate over all streams
+            //
+            for (DXTickStream stream : db.listStreams()) {
+                System.out.printf(
+                        "STREAM  key: %s; name: %s; description: %s\n",
+                        stream.getKey(),
+                        stream.getName(),
+                        stream.getDescription()
+                );
+
+                Periodicity periodicity = stream.getPeriodicity();
+
+                System.out.print("    Periodicity: ");
+
+                if (periodicity.getType() != Periodicity.Type.REGULAR)
+                    System.out.println(periodicity.toString());
+                else
+                    System.out.println(periodicity.getInterval().getNumUnits() + " " + periodicity.getInterval().getUnit());
+
+                long[] tr = stream.getTimeRange();
+
+                if (tr != null)
+                    System.out.printf("    TIME RANGE: %tF .. %tF\n", tr[0], tr[1]);
+
+                for (IdentityKey id : stream.listEntities()) {
+                    System.out.printf("    ENTITY  symbol: %s\n", id.getSymbol().toString());
+                }
+            }
+        }
+
+        if (args.length == 0 || args[args.length - 1].compareTo("-force") != 0)
+            System.in.read();
+    }
+}

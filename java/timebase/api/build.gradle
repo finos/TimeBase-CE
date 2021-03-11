@@ -1,0 +1,25 @@
+group = 'com.epam.deltix'
+
+dependencies {
+    implementation project(':java:timebase:pub')
+    implementation ('deltix.qsrv:deltix-commons-lang')
+    implementation ('deltix.qsrv:deltix-commons-util')
+    implementation ('deltix.qsrv:deltix-commons-messages')
+
+    implementation('deltix:rtmath-containers')
+
+    implementation ('deltix:deltix-thread-affinity')
+
+    implementation ('com.google.guava:guava')
+    implementation ('com.google.code.gson:gson')
+
+    implementation ('commons-io:commons-io')
+
+    implementation ('com.fasterxml.jackson.core:jackson-core')
+
+    implementation 'org.apache.commons:commons-lang3'
+
+    // TODO: Move to client and server?
+    compile('io.aeron:aeron-client')
+    compile('io.aeron:aeron-driver')
+}

@@ -1,0 +1,19 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++               TimeBase Migrator Command-Line Options              +
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-home <qshome>  Path to QuantServer Home. Required.
+
+-streams <stream1,..,streamN>
+                Comma-separated list of streams. Optional.
+                If omitted then all streams will be migrated.
+
+-streamsRegexp <streamsRegexp>
+                Regular expression to lookup streams for migration.
+                Optional. If defined -streams arg will be ignored.
+
+-compare        If defined streams will be compared after migration.
+
+-transient      If defined transient streams will be migrated (created).
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

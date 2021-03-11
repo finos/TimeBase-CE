@@ -1,0 +1,50 @@
+#include <iostream>
+#include <vector>
+#include <ctime>
+#include <chrono>
+
+#include "dxapi/dxapi.h"
+
+${cpp.codec.include}
+
+using namespace std;
+using namespace DxApi;
+
+static int64_t now_ns();
+
+void writestream() {
+    try {
+        // Create timebase connection
+        unique_ptr<TickDb> db(TickDb::createFromUrl("${timebase.url}"));
+
+        // Open in read-write mode
+        db->open(false);
+
+        // Get stream
+        TickStream *stream = db->getStream("${timebase.stream}");
+
+        // Create stream loader
+        LoadingOptions opt;
+        shared_ptr<TickLoader> loader(stream->createLoader(opt));
+        ${cpp.codec.className} encoder(loader);
+
+${cpp.WriteStream.messages}
+        // Create instruments
+        auto instrument = loader->getInstrumentId("DLTX");
+
+        for (int sent = 0; sent < 10; ++sent) {
+${cpp.WriteStream.sendMessages}
+        }
+
+        // Close loader after send
+        loader->close();
+    } catch (exception &e) {
+        cout << e.what() << endl;
+    } catch (...) {
+        cout << "System exception" << endl;
+    }
+}
+
+static int64_t now_ns() {
+    return chrono::duration_cast<chrono::nanoseconds>(chrono::system_clock::now().time_since_epoch()).count();
+}

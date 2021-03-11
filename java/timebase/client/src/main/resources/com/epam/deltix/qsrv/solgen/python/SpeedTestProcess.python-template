@@ -1,0 +1,63 @@
+#imports
+from multiprocessing import Process, Value, Event
+
+import time 
+import sys
+import dxapi
+
+NUM_PROCESS = ${python.SpeedTest.numProcess}
+
+class Dummy(object):
+    def __str__(self):
+        return str(vars(self))
+
+def init_types(*types):
+    return {i: m for i, m in enumerate(types)}, {i: Dummy() for i, m in enumerate(types)}
+
+class Reader(Process):
+    def __init__(self):
+        Process.__init__(self)
+        self.counter = Value('I', 0)
+        self.done = Event()
+
+    def run(self):
+        db = dxapi.TickDb.createFromUrl("${timebase.url}")
+        db.open(False)
+        stream = db.getStream("${timebase.stream}")
+        cursor = stream.select(0, dxapi.SelectionOptions(), None, None)
+        while cursor.next():
+            message = cursor.getMessage()
+            self.counter.value += 1
+
+        cursor.close()
+        cursor = None
+        db.close()
+        self.done.set()
+
+def speedtest():
+    print('Creating %d readers...' % NUM_PROCESS)
+    readers = [Reader() for i in range(0, NUM_PROCESS)]
+    for r in readers:
+        r.start()
+    one_is_alive = True
+
+    start = time.time()
+    while one_is_alive:
+        try:
+            time.sleep(1)
+            messages_count = 0
+            one_is_alive = False
+            for r in readers:
+
+                messages_count += r.counter.value
+                if not r.done.is_set():
+                    one_is_alive = True
+            end = time.time()
+            secs = end - start
+            msecs = secs * 1000  # millisecs
+            sys.stdout.write("\rCount: {:.4f} msg/sec (total: {})".format(messages_count * 1000 / msecs, messages_count))  # fixed width, todo
+        except KeyboardInterrupt:  # doesnt finish child threads on windows
+            break
+
+if __name__=='__main__':
+    speedtest()

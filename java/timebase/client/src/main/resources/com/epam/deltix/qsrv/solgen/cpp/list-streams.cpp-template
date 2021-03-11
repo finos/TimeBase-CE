@@ -1,0 +1,58 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>
+
+#include "dxapi/dxapi.h"
+
+using namespace std;
+using namespace DxApi;
+
+char * timeMsToStr(time_t msTime, char *str, int strSize);
+
+void liststreams() {
+    try {
+        // Create timebase connection
+        unique_ptr<TickDb> db(TickDb::createFromUrl("${timebase.url}"));
+
+        // Open in read-write mode
+        db->open(false);
+
+        // Get streams
+        vector<TickStream *> streams = db->listStreams();
+        for (int i = 0; i < streams.size(); i++) {
+            TickStream *stream = streams[i];
+            cout << "STREAM  key: " << stream->key() << endl;
+            cout << "        Name: " << stream->name().get() << endl;
+            cout << "        Description: " << stream->description().get() << endl;
+            cout << "        PERIODICITY: " << stream->periodicity() << endl;
+
+            TimestampMs range[2];
+            if (stream->getTimeRange(range)) {
+                if (range[0] <= range[1]) {
+                    char tmp[64];
+                    cout << "        TIME RANGE: "
+                         << timeMsToStr(range[0], tmp, sizeof(tmp)) << " .. "
+                         << timeMsToStr(range[1], tmp, sizeof(tmp)) << endl;
+                }
+            }
+
+            std::vector<std::string> entities = stream->listEntities();
+            for (int j = 0; j < entities.size(); j++) {
+                cout << "        ENTITY  symbol: " << entities[j] << endl;
+            }
+        }
+    }
+    catch (exception &e) {
+        cout << e.what() << endl;
+    }
+    catch (...) {
+        cout << "System exception" << endl;
+    }
+}
+
+char * timeMsToStr(time_t msTime, char *str, int strSize) {
+    time_t sTime = msTime / 1000;
+    strftime(str, strSize, "%Y-%m-%d %H:%M:%S", gmtime(&sTime));
+    return str;
+}

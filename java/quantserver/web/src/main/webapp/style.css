@@ -1,0 +1,91 @@
+body {
+
+}
+
+table {
+    background-color:   #FFFFF0; 
+    border-color:       #803030; 
+}
+
+td {
+    border-color:       #803030; 
+}
+
+th {
+    background-color:   #E0E0E0;
+    border-color:       #803030;
+}
+
+td.even {
+    background-color:   #FFFFF0;
+    /* word-break:         break-all; */
+    font-size:          11pt;
+}
+
+td.odd {
+    background-color:   #F8F8E8;
+    /*word-break:         break-all; */
+    font-size:          11pt;
+}
+
+div.title {
+    font-family:        Arial, Helvetica, Sans-serif;
+    font-size:          24pt;
+    font-weight:        bold;
+    text-align:         center;
+    margin-bottom:      15pt;
+}
+
+h1 {
+    font-family:        Arial, Helvetica, Sans-serif;
+    font-size:          20pt;
+    font-weight:        bold;
+    margin-left:        24pt;
+}
+
+h2 {
+    font-family:        Arial, Helvetica, Sans-serif;
+    font-size:          18pt;
+    font-weight:        bold;
+    margin-left:        24pt;
+}
+
+h3 {
+    font-family:        Arial, Helvetica, Sans-serif;
+    font-size:          16pt;
+    font-weight:        bold;
+    margin-left:        24pt;
+}
+
+h4 {
+    font-family:        Arial, Helvetica, Sans-serif;
+    font-size:          12pt;
+    font-weight:        bold;
+    margin-left:        24pt;
+}
+
+h5 {
+    font-family:        Arial, Helvetica, Sans-serif;
+    font-size:          10pt;
+    font-weight:        bold;
+    margin-left:        24pt;
+}
+
+a.action {
+    font-family:        Arial, Helvetica, Sans-serif;
+    font-size:          12pt;
+    font-weight:        bold;
+}
+
+pre.box {
+    padding:            8pt;
+    border:             solid thin black;
+    background-color:   #FFFFFF; 
+}
+
+div.help {
+    font-family:        Arial, Helvetica, Sans-serif;
+    font-size:          12pt;
+    margin-left:        20pt;
+    margin-bottom:      15pt;
+}

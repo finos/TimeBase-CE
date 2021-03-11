@@ -1,0 +1,33 @@
+package ${java.samples.writestream.packageName};
+
+import data.TypeMap;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.pub.*;
+
+// imports
+
+public class ${java.samples.writestream.className} {
+    public static void main(String[] args) throws Exception {
+        try (DXTickDB db = TickDBFactory.createFromUrl("${timebase.url}")) {
+            db.open(false);
+
+            DXTickStream stream = db.getStream("${timebase.stream}");
+            LoadingOptions options = new LoadingOptions();
+
+            options.typeLoader = TypeMap.TYPE_LOADER;
+
+            // init messages
+
+            try (TickLoader loader = stream.createLoader(options)) {
+                for (int ii = 0; ii < 10; ii++) {
+                    // send messages
+                    Thread.sleep(100);
+                }
+            }
+        }
+
+        if (args.length == 0 || args[args.length - 1].compareTo("-force") != 0)
+            System.in.read();
+    }
+}

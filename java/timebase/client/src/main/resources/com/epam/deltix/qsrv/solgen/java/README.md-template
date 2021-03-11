@@ -1,0 +1,18 @@
+## Timebase sample Java project ##
+
+### How to build ###
+
+2. Put Deltix repository credentials (`DELTIX_REPOSITORY_USER` and `DELTIX_REPOSITORY_PASS`) into `~/.gradle/gradle.properties`
+or define as environment variables;
+
+3. Run `./gradlew clean build`
+
+### How to change Repository ###
+
+In order to switch Timebase artifacts repository (eg. use Epam artifactory instead of Nexus),
+change `deltix.repository` and `deltix.repository.name` properties in `gradle.properties` file, for example:
+
+```
+deltix.repository=https\://artifactory.epam.com/artifactory
+deltix.repository.name=EPM-RTC-java
+```

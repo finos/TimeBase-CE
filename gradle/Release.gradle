@@ -1,0 +1,85 @@
+// v0.2
+allprojects { prj ->
+    prj.ext.parseVersion = { ->
+        def semanticVersion = getVersionFromProperties()
+        def matcher = semanticVersion =~ "^(\\d+)\\.(\\d+)\\.(\\d+)(-.*)?\$"
+        if (!matcher.matches() || !matcher[0][1].isInteger() || !matcher[0][2].isInteger() || !matcher[0][3].isInteger())
+            throw new GradleException("Version '$semanticVersion' is invalid.")
+        return [matcher[0][1] as Integer, matcher[0][2] as Integer, matcher[0][3] as Integer, matcher[0][4]]
+    }
+}
+
+project.rootProject.task('prepareReleaseVersion') {
+    doLast {
+        def (Properties properties, snapshotVersion) = getPropertiesAndVersion()
+
+        def releaseVersion = snapshotVersionToReleaseVersion(snapshotVersion)
+        logger.lifecycle("Changing version from '$snapshotVersion' to '$releaseVersion'")
+
+        storeVersion(properties, releaseVersion)
+    }
+}
+
+project.rootProject.task('pushVersion') {
+    doLast {
+        def version = getVersionFromProperties()
+        exec { commandLine 'git', 'tag', version }
+        exec { commandLine 'git', 'push', 'origin', version }
+    }
+}
+
+project.rootProject.task('prepareSnapshotVersion') {
+    doLast {
+        def (Properties properties, releaseVersion) = getPropertiesAndVersion()
+
+        def snapshotVersion = releaseVersionToNextSnapshotVersion(releaseVersion)
+        logger.lifecycle("Changing version from '$releaseVersion' to '$snapshotVersion'")
+
+        storeVersion(properties, snapshotVersion)
+    }
+}
+
+private Tuple2<Properties, String> getPropertiesAndVersion() {
+    def properties = new Properties()
+    properties.load(new FileInputStream("$rootDir/gradle.properties"))
+    def version = properties["version"]
+    if (version == null) {
+        throw new GradleException("File 'gradle.properties' does not contain property 'version'.")
+    }
+    return new Tuple2(properties, version)
+}
+
+private String getVersionFromProperties() {
+    return getPropertiesAndVersion()[1]
+}
+
+private storeVersion(Properties properties, version) {
+    properties["version"] = version.toString()
+    properties.store(new FileOutputStream("$rootDir/gradle.properties"), null)
+}
+
+/**
+ * Converts "6.0.12-SNAPSHOT" to "6.0.12"
+ */
+private static String snapshotVersionToReleaseVersion(snapshotVersion) {
+    def matcher = snapshotVersion =~ "^(\\d+)\\.(\\d+)\\.(\\d+)-SNAPSHOT\$"
+    if (!matcher.matches())
+        throw new GradleException("Version '$snapshotVersion' is invalid for snapshot.")
+    def releaseVersion = "${matcher[0][1]}.${matcher[0][2]}.${matcher[0][3]}"
+    return releaseVersion.toString()
+}
+
+/**
+ * Converts "6.0.12" to "6.0.13-SNAPSHOT"
+ */
+private static String releaseVersionToNextSnapshotVersion(releaseVersion) {
+    def matcher = releaseVersion =~ "^(\\d+)\\.(\\d+)\\.(\\d+)\$"
+    if (!matcher.matches())
+        throw new GradleException("Version '$releaseVersion' is invalid for release.")
+    def snapshotVersion = "${matcher[0][1]}.${matcher[0][2]}.${Integer.parseInt(matcher[0][3]) + 1}-SNAPSHOT"
+    return snapshotVersion.toString()
+}
+
+// Export some functions for global usage
+rootProject.ext.getVersionFromProperties = this.&getVersionFromProperties
+rootProject.ext.snapshotVersionToReleaseVersion = this.&snapshotVersionToReleaseVersion

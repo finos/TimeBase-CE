@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+export CC=clang
+make
+read -p \"Press enter to exit\" nothing

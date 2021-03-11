@@ -1,0 +1,52 @@
+import dxapi
+from datetime import datetime
+
+def toTimeString(timestamp):
+    # Message timestamp is Epoch time in nanoseconds
+    s = int(timestamp/1e9)
+    nanoseconds = int(timestamp % 1e6)
+
+    time = ""
+    while nanoseconds > 0:
+        r = nanoseconds % 1000
+        if r > 0:
+            time = str(r) + time
+        nanoseconds = int(nanoseconds/1000)
+
+    return str(datetime.utcfromtimestamp(s)) + ("." if len(time) > 0 else "") + time
+
+# Timebase URL specification, pattern is "dxtick://<host>:<port>"
+timebase = '${timebase.url}'
+stream = '${timebase.stream}'
+
+try:
+    # Create timebase connection
+    db = dxapi.TickDb.createFromUrl(timebase)
+
+    # Open in read-only mode
+    db.open(True)
+    print('Connected to ' + timebase)
+
+    # Get the data stream
+    stream = db.getStream(stream)
+    if stream == None:
+        raise "Stream " + stream + " not found"
+
+    # Create cursor using defined "ALL" subscription
+    cursor = stream.select(0, dxapi.SelectionOptions(), None, None)
+
+    # Iterate first 100 messages in available in cursor
+    for num in range(0,100):
+        if cursor.next():
+            message = cursor.getMessage()
+            print(toTimeString(message.timestamp) + ": " + str(message))
+
+    # cursor should be closed after use
+    cursor.close()
+    cursor = None
+
+finally:
+    # database connection should be closed anyway
+    if (db.isOpen()):
+        db.close()
+    print("Connection " + timebase + " closed.")

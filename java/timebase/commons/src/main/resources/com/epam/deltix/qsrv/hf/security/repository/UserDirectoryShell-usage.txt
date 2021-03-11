@@ -1,0 +1,54 @@
+User Directory Shell Commands:
+
+set                     List current options
+set home                Set QuantServer home directory
+
+connect                 Connect to LDAP server.
+disconnect              Disconnect from LDAP server.
+
+list                    List all directory users and groups
+listusers               List all directory users.
+listgroups              List all directory groups.
+
+
+newuser <userid>;<password>;[<comma-separated list of user's groups>];[<first-name>];<second-name>[;<description>]
+    Description:        Creates new user in directory. Disabled for Microsoft Active Directory
+    Example: ==> newuser JohnD;John;London Traders,NY Traders;John;Doe;Trader
+    Example: ==> newuser JohnD;John;;;;
+
+modifyuser <userid>;[<password>];[<comma-separated list of user's groups>];[<first-name>];<second-name>;[<description>]
+    Description:        Modify attributes of existing user in directory.If attribute is skipped it just not modified.
+                        If list of groups is specified it removes old memberships and create new.
+    Example: ==> modifyuser JohnD;Secret;NY Traders;John;Doe;Trader
+    Example: ==> modifyuser JohnD;John;;;;
+
+deleteuser <userid>     Delete existing user from directory.
+
+getuser <userid>        Retrieve existing user info from directory.
+
+
+newgroup <groupid>;<comma-separated list of users or groups>[;<description>]
+    Description:        Creates new group in directory.
+                        Group should contain at least one member.
+    Example: ==> newgroup NY Traders;JohnD,Nick,USA Traders;Traders in NY
+
+
+modifygroup <groupid>;[<comma-separated list of users or groups>][;<description>]
+    Description:        Modify attributes of existing group in directory.If attribute is skipped it just not modified. If users or
+                        groups is specified it replace existing members.
+    Example: ==> modifygroup Managers;NY Managers;
+
+deletegroup <groupid>   Delete existing group from directory.
+
+getgroup <groupid>      Retrieve existing group info from directory.
+
+addgroupmembers <groupid>;<comma-separated list of users or groups>
+    Description:        add new members to specified group
+    Example: ==> addgroupmembers Managers;NY Managers,Traders
+
+removegroupmembers <groupid>;<comma-separated list of users or groups>
+    Description:        remove members from specified group
+    Example: ==> removegroupmembers Managers;NY Managers,Traders
+
+set usernode <userNodeId>           Set specified user node as working.Full distinguished name is required
+

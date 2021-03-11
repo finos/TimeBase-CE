@@ -1,0 +1,163 @@
+project.evaluationDependsOn(":java")
+
+apply from: 'scripts.gradle'
+
+// dirs
+def distDirectory = new File(buildDir, 'distributions')
+def tempDirectory = new File(buildDir, 'tmp/distribution')
+def binDirectory = new File(rootDir, "bin")
+def libDirectory = new File(rootDir, 'lib')
+def tempLibDirectory = new File(tempDirectory, 'lib')
+def tempBinDirectory = new File(tempDirectory, "bin")
+def installerDir = new File(buildDir, 'installer')
+def customLibDirectory = new File(tempLibDirectory, 'custom')
+
+task clean(type: Delete) {
+    delete buildDir
+}
+
+task copyLibs(type: Sync, dependsOn: tasks.getByPath(":java:build")) {
+    from libDirectory
+
+    into tempLibDirectory
+
+    doLast {
+        mkdir(customLibDirectory)
+    }
+}
+
+task makeInstallerScripts
+
+task makeScripts
+ext.scripts.each() { row ->
+    def script = row[0]
+    def clazz = row[1]
+    def jar = row[2]
+    def jvmOpts = row[3]
+    def startInNew = row[4]
+
+    def task = tasks.create(name: 'make-' + script + '-script', type: CreateStartScripts, dependsOn: tasks.findByPath(":java:build")) {
+
+
+//        def windowsScriptText = windowsStartScriptGenerator.template.asString().replace('set CLASSPATH=$classpath', 'set CLASSPATH=$classpath;%APP_HOME%\\\\lib\\\\custom\\\\*')
+//        def unixScriptText = unixStartScriptGenerator.template.asString().replace('CLASSPATH=$classpath', 'CLASSPATH=$classpath:\\$APP_HOME/lib/custom/*')
+
+        mainClassName = clazz
+        applicationName = script
+
+        defaultJvmOpts = jvmOpts
+
+        outputDir = tempBinDirectory
+        classpath = jar
+
+        unixStartScriptGenerator.template = resources.text.fromFile('scripts/simple/unixStartScriptTemplate.txt')
+        windowsStartScriptGenerator.template = resources.text.fromFile('scripts/simple/windowsStartScriptTemplate.txt')
+
+        doLast({
+            windowsScript.text = windowsScript.text.replace('APP_HOME', 'DELTIX_HOME')
+            windowsScript.text = windowsScript.text.replace('START_IN_NEW', startInNew ? 'start "" ': '')
+            windowsScript.text = windowsScript.text.replaceAll('JAVACOMMAND', startInNew ? 'javaw': 'java')
+            unixScript.text = unixScript.text.replace('APP_HOME', 'DELTIX_HOME')
+        })
+
+    }
+
+    makeScripts.dependsOn += task
+
+    def installerTask = tasks.create(name: 'make-' + script + '-installer-script', type: CreateStartScripts, dependsOn: tasks.getByPath(":java:build")) {
+
+
+//        def windowsScriptText = windowsStartScriptGenerator.template.asString().replace('set CLASSPATH=$classpath', 'set CLASSPATH=$classpath;%APP_HOME%\\\\lib\\\\custom\\\\*')
+//        def unixScriptText = unixStartScriptGenerator.template.asString().replace('CLASSPATH=$classpath', 'CLASSPATH=$classpath:\\$APP_HOME/lib/custom/*')
+
+        mainClassName = clazz
+        applicationName = script
+
+        defaultJvmOpts = jvmOpts
+
+        outputDir = installerDir
+        classpath = jar
+
+        unixStartScriptGenerator.template = resources.text.fromFile('scripts/installer/unixStartScriptTemplate.txt')
+        windowsStartScriptGenerator.template = resources.text.fromFile('scripts/installer/windowsStartScriptTemplate.txt')
+
+        doLast({
+            windowsScript.text = windowsScript.text.replace('APP_HOME', 'DELTIX_HOME')
+            windowsScript.text = windowsScript.text.replace('DELTIX_INSTALL_PATH', '${INSTALL_PATH}')
+            windowsScript.text = windowsScript.text.replace('START_IN_NEW', startInNew ? 'start "" ': '')
+            windowsScript.text = windowsScript.text.replaceAll('JAVACOMMAND', startInNew ? 'javaw': 'java')
+            unixScript.text = unixScript.text.replace('APP_HOME', 'DELTIX_HOME')
+        })
+
+    }
+
+    makeInstallerScripts.dependsOn += installerTask
+}
+
+task renameFiles(dependsOn: makeScripts) {
+    doFirst {
+        tempBinDirectory.listFiles().each {
+            if (it.name.endsWith(".bat")) {
+                def absPath = it.getAbsolutePath()
+                def newFile = new File(absPath.substring(0, absPath.size() - 3) + 'cmd')
+                if (newFile.exists()) {
+                    newFile.delete()
+                }
+                it.renameTo(new File(absPath.substring(0, absPath.size() - 3) + 'cmd'))
+            } else if (!it.name.contains(".")) {
+                def absPath = it.getAbsolutePath()
+                def newFile = new File(absPath + '.sh')
+                if (newFile.exists()) {
+                    newFile.delete()
+                }
+                it.renameTo(new File(absPath + '.sh'))
+            }
+        }
+    }
+}
+
+task renameInstallerFiles(dependsOn: makeInstallerScripts) {
+    doFirst {
+        installerDir.listFiles().each {
+            if (it.name.endsWith(".bat")) {
+                def absPath = it.getAbsolutePath()
+                def newFile = new File(absPath.substring(0, absPath.size() - 3) + 'cmd')
+                if (newFile.exists()) {
+                    newFile.delete()
+                }
+                it.renameTo(new File(absPath.substring(0, absPath.size() - 3) + 'cmd'))
+            } else if (!it.name.contains(".")) {
+                def absPath = it.getAbsolutePath()
+                def newFile = new File(absPath + '.sh')
+                if (newFile.exists()) {
+                    newFile.delete()
+                }
+                it.renameTo(new File(absPath + '.sh'))
+            }
+        }
+    }
+}
+
+task copyBins(type: Copy, dependsOn: renameFiles) {
+    from tempBinDirectory
+    into binDirectory
+}
+
+task zip(type: Zip, dependsOn: [copyLibs, renameFiles]) {
+    baseName = 'deltix-quantserver'
+    version = project.version
+    destinationDir = distDirectory
+    fileMode = 0444
+
+    from(tempDirectory) {
+        include 'bin/*'
+        exclude 'bin/*.bat'
+        fileMode = 0555
+    }
+
+    from(tempDirectory) { include 'bin/*.bat' }
+    from(tempDirectory) { exclude 'bin/*' }
+}
+
+task build(dependsOn: [zip, copyBins])
+

@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+pip install --index-url ${python.pip.repository} -r requirements.txt

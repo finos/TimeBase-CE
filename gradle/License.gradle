@@ -1,0 +1,59 @@
+downloadLicenses {
+    ext.apache2 = license('Apache License, Version 2.0', 'https://opensource.org/licenses/Apache-2.0')
+    ext.cc0 = license('Public Domain', 'https://creativecommons.org/publicdomain/zero/1.0/')
+    ext.cddl = license('CDDL', 'https://opensource.org/licenses/CDDL-1.0')
+    ext.cddl11 = license('CDDL 1.1', 'https://oss.oracle.com/licenses/CDDL-1.1')
+    ext.cddl11_gpl2ce = license('CDDL 1.1 + GPL 2 with CE', 'https://oss.oracle.com/licenses/CDDL+GPL-1.1')
+    ext.bsd2 = license('BSD 2-Clause License', 'https://opensource.org/licenses/BSD-2-Clause')
+    ext.bsd3 = license('BSD 3-Clause License', 'https://opensource.org/licenses/BSD-3-Clause')
+    ext.epl = license('Eclipse Public License v1.0', 'http://www.eclipse.org/legal/epl-v10.html')
+    ext.gpl2 = license('GPL 2', 'https://opensource.org/licenses/GPL-2.0')
+    ext.gpl2ce = license('GPL 2 with CE', 'https://openjdk.java.net/legal/gplv2+ce.html')
+    ext.gpl3 = license('GPL 3', 'https://opensource.org/licenses/GPL-3.0')
+    ext.lgpl2 = license('LGPL 2', 'https://opensource.org/licenses/LGPL-2.0')
+    ext.lgpl21 = license('LGPL 2.1', 'https://opensource.org/licenses/LGPL-2.1')
+    ext.lgpl3 = license('LGPL 3', 'https://opensource.org/licenses/LGPL-3.0')
+    ext.mit = license('The MIT License', 'https://opensource.org/licenses/mit-license.php')
+    ext.moz = license('Mozilla Public License v1.1', 'https://opensource.org/licenses/mozilla1.1')
+
+    includeProjectDependencies = true
+
+    aliases = [
+            (apache2) : ['The Apache Software License, Version 2.0', 'Apache License',
+                         'Apache 2.0 License',
+                         'Apache 2', 'Apache 2.0', 'Apache License Version 2.0',
+                         'Apache License, Version 2.0', 'Apache License 2.0', 'Apache License v2.0', 'Apache License 2',
+                         'The Apache License, Version 2.0',
+                         'Apache License, version 2.0', 'ASL, version 2', 'Apache Software License - Version 2.0', 'Apache License, 2.0',
+                         license('Apache License', 'http://www.apache.org/licenses/LICENSE-2.0')],
+            (cc0) : ['CC0', 'Public Domain, per Creative Commons CC0', 'Public Domain', 'WTFPL'],
+            (cddl) : ['CDDL', 'CDDL, v1.0', 'Common Development and Distribution License (CDDL) v1.0',
+                      'COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0', license('CDDL', 'https://opensource.org/licenses/CDDL-1.0')],
+            (cddl11) : ['Common Development and Distribution License (CDDL), Version 1.1'],
+            (cddl11_gpl2ce) : ['CDDL + GPLv2 with classpath exception', 'Dual license consisting of the CDDL v1.1 and GPL v2', 'CDDL/GPLv2+CE',
+                               license('CDDL 1.1', 'https://oss.oracle.com/licenses/CDDL+GPL-1.1'),
+                               license('CDDL 1.1', 'https://glassfish.java.net/public/CDDL+GPL_1_1.html'),
+                               license('CDDL+GPL License', 'http://glassfish.java.net/public/CDDL+GPL_1_1.html')],
+            (bsd2) : ['The BSD License', 'BSD', 'BSD License', 'BSD licence', 'BSD-2-Clause',
+                      license('The New BSD License', 'https://opensource.org/licenses/bsd-license.html')],
+            (bsd3) : ['BSD 3-Clause License', 'BSD License 2.0', 'Revised BSD', 'Revised BSD License', 'New BSD License', 'New BSD license', 'Modified BSD License', 'The BSD 3-Clause License', 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)', 'BSD 3','BSD 3-clause New License'],
+            (epl) : ['Eclipse Public License - Version 1.0', 'Eclipse Public License', 'Eclipse Public License 1.0', 'Eclipse Public License v1.0', 'Eclipse Public License - v 1.0'],
+            (gpl2) : ['GNU General Public License, version 2'],
+            (gpl2ce) : ['GPLv2+CE', 'GPL2 w/ CPE', 'The GNU General Public License (GPL), Version 2, With Classpath Exception', 'GPL 2 + CE'],
+            (gpl3) : [],
+            (lgpl2) : ['GNU LESSER GENERAL PUBLIC LICENSE', 'LGPL 2',
+                       'Lesser General Public License', 'GNU Lesser General Public License', 'Lesser General Public License (LGPL)',
+                       license('GNU Lesser General Public License', 'https://www.gnu.org/licenses/old-licenses/lgpl-2.0.txt')],
+            (lgpl21) : ['LGPL-2.1', 'LGPL 2.1', 'LGPL, version 2.1', 'LGPL, v2.1 or later',
+                        'GNU Lesser General Public License v2.1 or later',
+                        'GNU General Lesser Public License (LGPL) version 2.1',
+                        license('GNU Library General Public License v2.1 or later', 'https://opensource.org/licenses/LGPL-2.1'),
+                        license('GNU Library General Public License v2.1 or later', 'http://www.opensource.org/licenses/LGPL-2.1'),
+                        license('GNU Lesser General Public License', 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt')],
+            (lgpl3) : ['GNU General Lesser Public License (LGPL) version 3.0', license('GNU LESSER GENERAL PUBLIC LICENSE', 'https://www.gnu.org/licenses/lgpl-3.0.txt')],
+            (mit) : ['MIT License', 'The MIT License', 'MIT', 'The MIT License (MIT)', 'MIT License (MIT)', 'Bouncy Castle Licence'],
+            (moz) : ['Mozilla Public License', 'Mozilla Public License 1.1', 'Mozilla Public License Version 1.1', 'Mozilla Public License 1.1 (MPL 1.1)', 'MPL 1.1']
+    ]
+
+    dependencyConfiguration = 'runtimeClasspath' // work-around for https://github.com/hierynomus/license-gradle-plugin/issues/113
+}

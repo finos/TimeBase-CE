@@ -1,0 +1,16 @@
+#include <stdio.h>
+#include <string.h>
+
+${cpp.main.declarations}
+
+int main(int argc, char** argv) {
+
+${cpp.main.dispatch}
+
+    if (strcmp(argv[argc - 1], "-force") != 0) {
+        puts("Press any key...");
+        getchar();
+    }
+
+    return 0;
+}

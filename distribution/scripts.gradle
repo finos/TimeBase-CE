@@ -1,0 +1,22 @@
+// jars
+//def aggregatorClientJar =     files(project(':java:aggregator:client').jar.outputs.files)
+//def aggregatorServerJar =     files(project(':java:aggregator:server').jar.outputs.files)
+//def licenseClientJar =        files(project(':java:license:client').jar.outputs.files)
+//def licenseServerJar =        files(project(':java:license:server').jar.outputs.files)
+def timebaseClientJar =       files(project(':java:timebase:client').jar.outputs.files)
+def timebaseParquetJar =      files(project(':java:timebase:parquet').jar.outputs.files)
+def timebaseServerJar =       files(project(':java:timebase:server').jar.outputs.files)
+def timebaseServerAndClient = files(timebaseClientJar, timebaseServerJar)
+
+def defaultJVMArgs = []
+
+ext.scripts = [
+        ['dtb',             'com.epam.deltix.qsrv.dtb.store.tools.shell.DTBShell',           timebaseServerJar,      defaultJVMArgs,     false],
+        ['parquet-export',  'com.epam.deltix.util.parquet.ParquetReplicator',                timebaseParquetJar,     defaultJVMArgs,     false],
+        ['s3replica',       'com.epam.deltix.qsrv.hf.tickdb.tool.TBS3Replicator',            timebaseClientJar,      defaultJVMArgs,     false],
+        ['tbmigrator',      'com.epam.deltix.qsrv.hf.tickdb.tool.TBMigrator',                timebaseServerAndClient,defaultJVMArgs,     false],
+        ['tdbfeedsim',      'com.epam.deltix.qsrv.hf.tickdb.tool.SimpleFeedSimulator',       timebaseClientJar,      defaultJVMArgs,     false],
+        ['tdbserver',       'com.epam.deltix.qsrv.comm.cat.TBServerCmd',                     timebaseServerJar,      defaultJVMArgs,     false],
+        ['tickdb',          'com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.TickDBShell',         timebaseClientJar,      defaultJVMArgs,     false],
+        ['solgen',          'com.epam.deltix.qsrv.solgen.SolutionGenerator',                 timebaseClientJar,      defaultJVMArgs,     false]
+]

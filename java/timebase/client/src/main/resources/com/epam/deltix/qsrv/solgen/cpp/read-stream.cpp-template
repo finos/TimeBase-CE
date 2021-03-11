@@ -1,0 +1,47 @@
+#include <iostream>
+#include <vector>
+#include <ctime>
+#include <chrono>
+
+#include "dxapi/dxapi.h"
+
+${cpp.codec.include}
+
+using namespace std;
+using namespace DxApi;
+
+void readstream() {
+    try {
+        // Create timebase connection
+        unique_ptr<TickDb> db(TickDb::createFromUrl("${timebase.url}"));
+
+        // Open in read-write mode
+        db->open(false);
+
+        // Get stream
+        TickStream *stream = db->getStream("${timebase.stream}");
+
+        // Create stream cursor
+        SelectionOptions opt;
+        shared_ptr<TickCursor> cursor(stream->select(TIMESTAMP_NULL, opt, NULL, NULL));
+        ${cpp.codec.className} decoder(stream, cursor);
+
+        int read = 0;
+        while (decoder.next()) {
+            NativeMessage *message = decoder.getMessage();
+            cout << message->toString() << endl;
+
+            if (++read >= 100)
+                break;
+        }
+
+        cout << "Read " << read << " messages" << endl;
+
+        // Close cursor after reading
+        cursor->close();
+    } catch (exception &e) {
+        cout << e.what() << endl;
+    } catch (...) {
+        cout << "System exception" << endl;
+    }
+}

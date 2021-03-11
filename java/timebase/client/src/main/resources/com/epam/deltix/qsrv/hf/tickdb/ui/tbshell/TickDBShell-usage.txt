@@ -1,0 +1,706 @@
+tickdb Shell Commands:
+
+*******************************************************************************
+Note: it is often convenient to specify the set db and open commands
+on the command line:
+
+tickdb -db d:\MyDB -exec open ro
+
+Sometimes you do not want to enter the interactive mode at all, here is
+an example:
+
+tickdb -db d:\MyDB -time "2004-01-01 12:45:00.0" -exec open ro -exec select -exit
+*******************************************************************************
+
+*******************************************************************************
+*                      Global Options                                         *
+*******************************************************************************
+set max <n>                 Set number of messages printed at once.
+    Example: ==> set max 20
+                            
+set tz <time zone>          Set time zone for parsing and displaying time
+    Example: ==> set tz GMT
+             ==> set tz America/New_York
+
+set timeformat <format>     Set time format for parsing and displaying time
+                            (see appendix for more info).
+    Example: ==> set timeformat yyyy-MM-dd HH:mm:ss
+
+*******************************************************************************
+*                      Database Management Commands                           *
+*******************************************************************************
+set db <path>               Set database path. Must call open separately.
+    Example: ==> set db d:/MyDB
+             ==> set db c:\home\tickdb
+             ==> set db dxtick://myhost:8043
+             ==> set db dxtick://<user>:<password> at myhost:8043 (according to RFC 1738)
+
+set user <user> <password>  Sets user credentials.
+    
+open [ro]                   Open database, optionally in read-only mode.
+    Example: ==> open ro
+
+format                      Format new database at the specified location.
+
+close                       Close the database.
+
+showsize                    Print approximate database size.
+
+mkfilestream <key> <file>   Create a new stream mounted to the data file in the
+                            database. The new stream becomes current.
+    Parameters:
+        <key>               The stream identifier. May not contain spaces.
+        <file>              Data file (*.qsmsg).
+                          
+delete                      Delete current stream.
+
+remove <stream|channel>     Delete given streams or channels
+  
+warmup                      Warm up the memory indexes.
+
+cooldown                    Free all memory indexes (will be rebuilt on demand).
+
+rename <newkey>             Renames the current stream.
+
+trim                        Trim all files to size (DB must be open in 
+                            read-write mode).
+
+streams                     List streams
+
+channels                    List channels
+
+entities                    List entities with data in current stream
+
+entity change <src> <trg>   Add entity to list for renaming.
+                            <src> and <trg> must be in format SYMBOL:TYPE.
+    Example: ==> entity change A1:EQUITY A2:BOND
+             ==> entity change "AA 1:EQUITY" A3:EQUITY
+
+entity clear                Clear list for renaming of entities.
+
+entity list                 Prints list for renaming.
+
+entity rename               Renames instruments of stream from using list of
+                            entities for renaming.
+
+set stream <key> ...        Set current stream key(s). DB must be open.
+                            See also the 'streams' command. Multiple streams can
+                            be separated by spaces and/or commas and semicolons.
+    Example: ==> set stream oneMinuteBars
+                 set stream bbo, trade
+
+set channel <key> ...       Set current channels key(s). DB must be open.
+                            See also the 'channels' command. Only single channels selection allowed
+
+    Example: ==> set channel trades
+
+set src <file>              Set source .qsmsg file for subsequent import 
+                            and filtering.
+
+truncate <time>            Truncates active streams by given time.
+    Example: ==> truncate 2009-01-01 09:30:00.00
+
+delete [start];[end]    Deletes data in stream using specified time range (inclusive).
+                            Left or right limit can be omitted. (Supported for 5.0 streams only)
+
+    Example (Delete time range from selected streams):
+             ==> delete 2009-01-02 09:31:00.0;2009-01-02 09:59:00.0
+
+    Example (Delete all data before specified date):
+             ==> delete ;2009-01-02 09:59:00.0
+
+    Example (Delete all data older than specified date)
+             ==> delete 2009-01-02 09:31:00.0;
+
+purge                       Purges selected streams by given time.
+    Example: ==> purge 2009-01-01 09:30:00.00
+
+mkstream <key>              Make a stream with the specified key, using the 
+                            currently selected stream as a template. The newly
+                            created stream becomes current. It is possible to
+                            override the DF of the newly created stream by using
+                            set targetDF (see below).
+
+mktopic <key>               Make a topic with the specified key, using the
+                            currently selected stream as a template. The newly
+                            created topic becomes current channel selection.
+
+    Example: ==> set stream template_key
+             ==> mkstream new_key
+
+cleanup                     Remove entities with no data from the specified stream.
+
+    Example: ==> set stream example
+             ==> cleanup
+
+send <JSON array>           Write messages to the specified stream.
+
+    Example: ==> set stream bars
+             ==> send [{"type":"deltix.timebase.api.messages.BarMessage","symbol":"BTC/USD","instrumentType":"CUSTOM","timestamp":"2019-11-12T13:39:46.118Z","currencyCode":999,"close":"42.4","exchangeId":"","high":"66.0","low":"13.5","open":"12.8","volume":"200.0"}]
+
+set targetDF keep           mkstream command will copy DF from template.
+
+set targetDF max            mkstream command will create a fully distributed 
+                            stream.
+
+set targetDF <n>            mkstream command will use the specified distribution
+                            factor.
+
+lock [r|w]                  Acquire lock on the active stream.
+                            WRITE lock acquired by default.
+
+unlock                      Release active lock.
+
+    Example: ==>  set stream securities
+             ==>  lock
+             ==>  import
+             ==>  unlock
+
+    Example: ==>  set stream ticks
+             ==>  lock r
+             ==>  select
+             ==>  unlock
+
+downgrade                  Downgrade all streams meatadata to previous minor version
+                           by replacing stream schema files with previous backups.
+                           Command available for local and not opened timebase only.
+
+    Example: ==> set db c:\qshome\tickdb
+             ==> downgrade
+             ==> open
+
+*******************************************************************************
+*                      Data Selection Commands                                *
+*******************************************************************************
+set longtime <n>            Set selection time as Java milliseconds.
+    Example: ==> set longtime 1033470230200
+
+set time <text>             Set selection time by parsing text (text must
+                            match the current format precisely).
+    Example: ==> set time 2002-10-01 07:03:50.0
+
+set longendtime <n>         Set selection end time as Java milliseconds.
+    Example: ==> set longendtime 1033470230200
+
+set endtime <text>          Set selection end time by parsing text (text must
+                            match the current format precisely).
+    Example: ==> set endtime 2002-10-01 07:03:50.0
+
+set raw <on|off>            Set raw selection on or off.
+
+set decode <on|off>         Set raw message decoding on or off.
+
+set history <on|off>        Set stream version history selection on or off.
+
+set qos <MAX_THROUGHPUT | MIN_INIT_TIME>
+                            Set quality of service for selection.
+
+set compression <on|off>    Enables/disables compressed communication (only for remote mode).
+
+set forward                 Scan forward in time
+
+set reverse                 Scan backward in time
+
+symbols all                 Subscribe for all symbols
+
+symbols show                Print subscribed symbols
+
+symbols clear               Clear subscribed symbol list
+
+symbols add <type> <symbol> Add specified symbol to list
+
+symbols remove <type> <symbol>
+                            Remove the specified symbol from list.
+
+symbols filter <qql>
+                            Add symbols which is returned by given query.
+     Example: ==> symbols filter select * from securities
+
+types all                   Subscribe for all message types
+
+types show                  Print subscribed message types
+
+types clear                 Clear subscribed message types list
+
+types add <type>            Add specified message type to list
+
+     Example: ==> types add deltix.qsrv.hf.pub.BarMessage
+              ==> types add deltix.qsrv.hf.pub.TradeMessage
+
+types remove <type>
+                            Remove the specified message type from list.
+
+
+desc [<stream key>]         Describe all types found in the current streams 
+                            (if no argument specified), or in the specified 
+                            stream. This command prints out the exact syntax
+                            that needs to be used to recreate the stream via the
+                            QQL CREATE STREAM statement.
+
+select                      Based on current selection time and filter,
+                            display first <max> messages.
+
+read                        Read the current selected streams|channel
+
+monitor                     Based on current selection time and filter, begin
+                            monitoring live feed coming via the tick db.
+                            This command ignores the selection end time.
+                            Monitoring can be interrupted by hitting the 
+                            <Enter> key.
+
+readrate                    Read the current selected streams|channel,
+                            discard message content but print message rate.
+                            This command ignores the selection end time.
+                            Reading can be interrupted by hitting the
+                            <Enter> key.
+
+latency                     Monitor live feed and periodically print out the
+                            minimum and maximum message latency. Monitoring
+                            can be interrupted by hitting the <Enter> key.
+
+latency test [<msglen=20> [<warmupcount= 500000> [<msgcount=100000>
+             [<consumers=1> [<tp=20000> [<launches=1> [force]]]]]]
+                            Run latency test for current stream.
+                            WARNING: all data from stream will be truncated!
+    Examples: ==> latency test
+              ==> latency test 100 500000 100000 1 20000 3 force
+
+tptime                      Time throughput by selecting everything in the
+                            current filter from current time until stop time.
+
+*******************************************************************************
+*                       Replication                                           *
+*******************************************************************************
+
+set timeoffset <interval>       Set selection start time as offset from end
+                                time (in time interval)
+            Example: ==> set timeoffset 1D   // 1 day
+            Example: ==> set timeoffset 2M   // 2 month
+            Example: ==> set timeoffset 1Y   // 1 year
+
+set endtimeoffset <interval>    Set selection end time as offset from start
+                                time (in time interval)
+            Example: ==> set endtimeoffset 1D
+
+set bkpath <path>               Set path to backup folder
+set srcdb <uri>                 Set source database to replicate from
+set srcstream 	<stream>        Set source stream to replicate/restore from
+
+set bkcommitsize <count>        Set number of messages for the single
+                                transaction when writing into back-up file
+                                (100000 by default)
+        Example: ==> set bkcommitsize 500000
+
+set bkfilesize <size>           Set size in MB of the single backup file,
+                                100MB by default
+        Example: ==> set bkfilesize 50
+
+set cpmode  <live|batch>        Enable/disables live replication
+set reload  <allow|truncate|prohibit>
+                                Set 'reload' mode for replication/backup
+                                In prohibit mode, copy processes will NEVER
+                                change target data, new data can be appended.
+                                In truncate mode, when data replicated or
+                                restored, target stream can be truncated.
+                                In reload mode, target data can (and will) be
+                                wiped out due to schema incompatibility,
+                                no matter what caused it.
+                                'prohibit' mode is used by default.
+
+set retries <count>             Set number of attempts to retry
+                                replication/backup/restore procedure
+                                in case of any error. Default value is 0.
+
+set retrytimeout <count>        Period of time in milliseconds between reconnect attempts
+                                for replication/backup/restore procedure
+                                in case of any error. Default value equals to 5 seconds.
+
+backup [format]                 Replicate from selected stream into external
+                                files to the specified <bkpath>. if "format"
+                                option specified - will clear previous saved
+                                data in <bkpath>, otherwise incremental backup
+                                will be done.
+
+        Example: ==> set bkpath C:\Deltix\backups\trade
+                 ==> set stream trade
+                 ==> backup
+
+restore	<stream>                restore from <bkpath> or <sourcedb> into
+                                specified <stream>. if <stream> does not exists,
+                                it will be created. All data from <bkpath>
+                                is restored, no filters applied.
+
+        Example: ==> set bkpath C:\Deltix\backups\bars
+                 ==> set srcstream bars
+                 ==> set reload allow
+                 ==> restore bars
+
+replicate <stream>              replicate from source db and source stream
+                                into specified <stream>. if <stream> does not
+                                exists, it will be created.
+
+        All stream data replication example:
+                ==> set srcdb dxtick://localhost:8011
+                ==> set srcstream trades
+                ==> set reload allow
+                ==> replicate trade
+
+        Replication using specified symbols example:
+                ==> set srcdb dxtick://localhost:8011
+                ==> set srcstream trades
+                ==> set reload truncate
+                ==> symbols add EQUITY ORCL
+                ==> replicate trade
+
+*******************************************************************************
+*                       Background Jobs                                       *
+*******************************************************************************
+
+start <command>             Starts execution of <command> in background thread.
+jobs                        Display list of currently executing background jobs
+kill <job_id>               Interrupts job with given <job_id>
+
+*******************************************************************************
+*                      Data Copy/Import/Export                                *
+*******************************************************************************
+msgfilter <dest>            Read the source .qsmsg file, apply current filter,
+                            and write output to the destination .qsmsg file.
+
+import [name]               Load the source .qsmsg file into the stream with
+                            specified name. If name is empty, active stream
+                            will be used. Use 'set src' and 'set stream' commands
+                            to specify a source file and an active stream
+                            respectively. if specified stream is not exists, then
+                            it will created with schema defined in message file.
+
+export <dest>               Export active streams to the specified message file.
+                            Use 'set stream' command to specify active streams.
+    Example: ==> export d:\temp\exp.qsmsg.gz
+
+copyfrom <src stream> ...   Copy all data from the specified streams to the
+                            current stream, using the currently set time range
+                            and current filter.
+
+*******************************************************************************
+*                      QuantQuery Language                                    *
+*******************************************************************************
+
+? <qql>                     Run a QQL query or command
+    Example: ==> ? select * from mystream
+             ==> ? drop stream mystream
+
+select ...                  Equivalent to ? select ...
+             ==> select * from mystream
+
+drop ...                    Equivalent to ? drop ...
+    Example: ==> drop stream mystream
+
+?? <qql>                    Run a multi-line QQL query or command. End 
+                            with / on a separate line.
+    Example: ==> ??
+             create durable stream mystream (
+             ...
+             )
+             /
+             
+create ...                  Equivalent to ?? create ...
+    Example: ==> create durable stream mystream (
+             ...
+             )
+             /
+param show                  Show QQL parameters
+
+param add <type> <name> [ <value> ]
+                            Add a new QQL parameter, and set it optionally to a value.
+                            Question mark after a type name marks it as nullable.
+    Example: ==> param add S varchar? this is all one string value
+             ==> param add S2 varchar
+             ==> param add F float?
+
+param clear                 Clear all QQL parameters
+
+param set <name> <value>    Set specified QQL parameter to the specified value
+
+*******************************************************************************
+*                      Level 2 Processor Commands                             *
+*******************************************************************************
+
+l2go                        Process a level 2 data stream and print errors
+                            to the console. The "max" parameter controls the
+                            maximum number of lines that will be printed.
+
+l2go -print                 Process a level 2 data stream and print the result
+                            of processing to the console. The "max" parameter 
+                            controls the maximum number of lines that will be 
+                            printed.
+
+l2go <stream key>           Process a level 2 data stream and output the result
+                            of processing into the specified stream.
+
+set l2depth <n>             Set L2 maximum depth to the specified number.                            
+
+set l2od <n>                Set the output L2 depth to the specified number.
+                            If this number is higher than input book depth,
+                            the setting has no effect. If the book exceeds the
+                            specified output depth, it will get correctly 
+                            compressed:
+                                - Updates above the specified limit will be
+                                    filtered out;
+                                - When the actual book depth is higher than the 
+                                    limit, a DELETE will be followed by
+                                    an INSERT in the same transaction, filling 
+                                    in the bottom level of the book.
+                            
+set l2l1 on|off             When on, the processor will emit L1 data extracted 
+                            from the incoming L2 stream.     
+
+set l2ord off|<tolerance>   Turns the price ordering check off or on. The rule:
+
+                            offer price [n] + tolerance <= offer price [n+1]
+                            bid price [n] - tolerance >= bid price [n+1]
+
+                            A positive tolerance ensures that price levels are
+                            at the specified distance. A negative tolerance 
+                            allows price levels to cross within the absolute 
+                            value of the tolerance.
+                            
+set l2bod off|<tolerance>   Turns the Bid/Offer Distance (BOD) check off or on.
+                            The rule is:
+
+                            best bid + tolerance <= best offer
+
+                            A positive distance value requires that top offer 
+                            be higher than the top bid by the specified value. 
+                            A negative distance value allows best bid to cross
+                            best offer within the the absolute value of the
+                            tolerance.
+                            
+set l2si <interval, ms>     Set expected or generated snapshot interval to the
+                            specified value, in milliseconds. The L2 processor
+                            can either validate or augment the incoming data 
+                            to ensure that snapshots are present at the minimum
+                            specified frequency. See the l2csf option below.
+
+set l2csf FIX|IGNORE|DIAGNOSE
+                            Configures the snapshot frequency check. In order
+                            for a L2 stream to be usable for backtesting and 
+                            trading, it must contain periodic snapshots so that
+                            a strategy can initialize its books within a finite
+                            amount of time. In IGNORE mode this check is not 
+                            performed. In DIAGNOSE mode, input data is validated 
+                            and errors are generated if a snapshot is missing 
+                            the amount of time specified by the l2si parameter.
+                            In FIX mode additional snapshot messages are 
+                            inserted to make the output stream comply.
+
+set l2cso on|off            Configures the shapshot order check. The ordering
+                            rule requires that the offer snapshot always follow 
+                            the bid snapshot for any given book. In other words, 
+                            snapshots must come in ordered pairs, with 
+                            no L2 increment messages in-between snapshots. 
+                            By default, this check is not performed and 
+                            snapshots pairs are output on input order snapshots.
+                            Input bid snapshots are internally recorded but 
+                            never passed to the output. When on, input messages
+                            are validated, and errors are generated as necessary.
+
+set l2cda on <price tolerance> <size tolerance>
+                            Turns on the augmentation check. This checks
+                            that the price and size supplied with the DELETE 
+                            command match the book state, and that the price
+                            supplied with the UPDATE command matches the book.
+                            Even if you set the tolerance to 0, this form of the
+                            check uses internal decimal representation and will
+                            not catch very small numeric deviations. Use
+                            'set l2cda exact' to check for bitwise equivalence 
+                            of numbers.                            
+
+set l2cda exact             Turns on the augmentation check and requires bitwise
+                            equality of prices and sizes, as does QuantOffice.
+                            
+set l2cda off               Do not check the augmentation rule.
+
+set l2fd on|off             Configures the Fix Depth mode. When this mode is on,
+                            the processor will ignore the action and depth
+                            in incoming messages, as follows:
+                                - For all messages, it will ignore the supplied 
+                                    depth value, and instead find it by 
+                                    searching the (ordered) price array.
+                                - For INSERT and UPDATE messages, it will also
+                                    ignore the supplied action type. If a price 
+                                    is found, the action is automatically reset 
+                                    to UPDATE, otherwise INSERT.
+
+set l2sv NONE|CHECK|DEBUG   Configures self-validation. Setting this mode to 
+                            CHECK or DEBUG causes the processor to double-check 
+                            its own output, using a second copy of itself in
+                            diagnostic mode, with the same tolerances as 
+                            the primary processor. In DEBUG mode, every book 
+                            keeps an internal activity log, reset on every 
+                            snapshot, which is attached to self-validation 
+                            diagnostics, if any.
+
+*******************************************************************************
+*                      Playback Commands                                      *
+*******************************************************************************
+Playback allows to re-play data from one or several streams and store it into another stream.
+There are two distinct modes: realtime and virtual.
+
+"Realtime" mode:
+Messages are played in real-time from one or multiple stream to one.
+All message timestamps are updated to current time.
+
+"Virtual" mode
+Playback is executed according to virtual clock.
+Playback starts at specified moment of virtual time (see "set vtime").
+Virtual clock speed and update interval can be adjusted (see "set speed" and "set frequency").
+Market activity is simulated by copying market messages from source streams to target streams in appliance with virtual time flow.
+Time flow is simulated by writing a time message with specified speed and frequency to a dedicated stream (see "set timer").
+In virtual mode stream mappings expected in form of source destination pairs (from A to B, from C to D).
+Multiple mappings to same destination are not supported (from A to B and from C to B).
+All messages are copied as is, without any changes.
+
+
+// Define/change market streams
+playback add <from> <to>             Adds new stream mapping.
+playback remove <from> <to>          Removes existing stream mapping.
+playback clear                       Clears all mappings.
+
+set player virtual|realtime          Selects player mode. "realtime" is used by default.
+    Example: ==> set player virtual
+
+set timer <stream>                   Sets transient stream name for virtual mode time messages.
+                                     If there is no stream with given name then new transient stream with that name will be created.
+                                     Defaults to "timer".
+    Example: ==> set timer transient-time
+
+set time <date-time>                 Defines start timestamp for "from" streams.
+    Example: ==> set time 2002-10-01 07:03:50
+
+set vtime <time>                     Sets start time for clock in "virtual" mode. Time in format with format like "2002-10-01 07:03:50".
+                                     If that value greater than value in "set time" then in very first tick of virtual clock
+                                     all messages that has timestamps in the range between those two values will be copied to
+                                     target streams. Defaults to value set by "time" option.
+
+set destvtime <time>                 Defines start timestamp for "to" streams (virtual player only). Time in format with format like "2002-10-01 07:03:50".
+                                     If not set then message timestamp in "to" streams are exactly same as timestamp of message in "from" stream.
+                                     If then them timestamp on messages in "to" streams will be updated according to this rule:
+                                     time that was N seconds away from "vtime" will become N/"speed" seconds away from "destvtime".
+
+                                     Example:
+                                     * Time at "vtime" is always converted to "destvtime".
+                                     * If speed is 5, then message with timestamp "vtime" + 10 seconds will get timestamp "destvtime" + 2 seconds.
+
+                                     If speed is greater than 1 then messages become more "dense".
+                                     If speed is lower than 1 then messages become more "sparse".
+
+
+set endtime                          Sets end time for player. Player will switch to "paused" state upon reaching messages with this timestamp.
+                                     In case "virtual" mode this is virtual time. In case of "realtime" this is time of messages in source stream.
+
+set speed <value>                    Sets virtual time speed. "2" means 2x faster time on virtual clock. Default value is "1".
+                                     Speed 100 means that we are writing 100 virtual seconds in one real second.
+
+set frequency <value>                Sets virtual time update period in milliseconds. Default value is "1000" (one second of virtual time).
+                                     Real time update interval can be calculated as virtual time update period divided by speed.
+
+set timebuffer                       Sets number of time messages that should fit in buffer for timer stream.
+    Example: ==> set timebuffer 5
+
+
+set playlog off|time|data            Controls the output while playing data for "realtime" mode.
+                                        off - no output
+                                        time - log # of messages and historical time
+                                        data - log all played messages entirely
+    Example: ==> set playlog off
+
+set cyclic true|false                Enables cyclic playback mode. In cyclic mode if source stream ends (depletes)
+                                     it will be restarted.
+
+// commands to control playback
+play                        Starts playing the currently selected data into
+                            the specified stream(s).
+                            The playback process starts in the background
+                            and can be controlled by the following commands.
+
+pause                       Suspends playback
+
+resume                      Resumes playback
+
+next                        Immediately skips to the next message. This command
+                            is useful to skip over a time gap in the data.
+                            (relatime player only).
+
+stop                        Completely terminates playback
+
+
+Example for virtual playback:
+    set player virtual
+    set timer transient-time
+    playback add ticks temp-ticks
+    playback add bars temp-bars
+    playback add news temp-news
+    set speed 20
+    set frequency 500
+    set time 2004-01-01 12:50:00
+    set vtime 2004-01-01 12:45:00
+    set timebuffer 5
+    play
+    ...
+    pause
+    ...
+    resume
+    ...
+    set speed 2.5
+    ...
+    stop
+
+Example for realtime playback:
+    set player realtime
+
+    playback add ticks temp-ticks
+    set time 2016-11-01 9:30:00.000
+    set playlog time
+    set cyclic true
+    play
+    ...
+    stop
+
+*******************************************************************************
+*                      Benchmark Commands                                     *
+*******************************************************************************
+Benchmark command allows you to get general idea on channel performance between client located on the machine with
+the shell and chosen TickDB instance.
+
+Please keep in mind that this benchmark is quite "rough" and may not correctly represent behavior of a an actual
+business application. Your mileage may vary.
+
+benchmark thr - runs throughput benchmark using current settings.
+benchmark lat - runs lat benchmark using current settings.
+
+set warmup <value> - sets warmup time (in seconds) before making measurement (applied before each iteration)
+set duration <value> - sets duration (in seconds) of single measurement iteration
+set iterations <value> - sets number of benchmark iterations
+set rate <value> - sets target message rate (number of messages per second), affects only latency benchmark
+set payloadsize <value> - sets size of *additional* payload (in bytes), defaults to 0.
+set channeltype <value1,value2> - sets channel types to benchmark. Valid values:
+    dstream - Durable stream
+    tstream - Transient stream
+    ipctopic - Topic IPC
+    udpsingletopic - Topic UDP Single Producer
+
+
+Example 1:
+    set warmup 20
+    set duration 100
+    set iterations 3
+    set rate 1000000
+    set payloadsize 100
+    benchmark thr
+
+Example 2:
+    set warmup 30
+    set duration 30
+    set rate 200000
+    set channeltype tstream,udpsingletopic
+    benchmark lat

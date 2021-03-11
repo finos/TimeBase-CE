@@ -1,0 +1,16 @@
+EnumDataType
+BooleanDataType
+CharDataType
+IntegerDataType
+FloatDataType
+VarcharDataType
+DateTimeDataType
+TimeOfDayDataType
+BinaryDataType
+ClassDataType
+ArrayDataType
+RecordClassDescriptor
+RecordClassSet
+ClassDescriptorArray
+StaticDataField
+NonStaticDataField

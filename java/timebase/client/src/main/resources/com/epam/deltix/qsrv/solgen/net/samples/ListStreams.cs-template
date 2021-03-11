@@ -1,0 +1,63 @@
+using System;
+using System.IO;
+
+using EPAM.Deltix.Timebase.Api;
+using EPAM.Deltix.Timebase.Api.Communication;
+using EPAM.Deltix.Timebase.Client;
+
+namespace TimebaseSample
+{
+    /// <summary>
+    /// In order for this sample to produce something meaningful, the
+    /// TimeBase instance should not be empty.
+    /// </summary>
+    public class ListStreams
+    {
+        public static void Run()
+        {
+            using (ITickDb db = TickDbFactory.CreateFromUrl("${timebase.url}"))
+            {
+                db.Open(true);
+                //
+                //  Iterate over all streams
+                //
+                foreach (ITickStream stream in db.ListStreams())
+                {
+                    Console.WriteLine(
+                        "STREAM  key: " + stream.Key +
+                        "; name: " + stream.Name +
+                        "; description: " +
+                        stream.Description
+                    );
+
+                    Interval periodicity = stream.GetPeriodicity().GetInterval();
+
+                    Console.Write("    Periodicity: ");
+
+                    if (periodicity == null)
+                        Console.WriteLine("Irregular");
+                    else
+                        Console.WriteLine(periodicity.GetNumUnits() + " " + periodicity.GetUnit());
+
+                    DateTime[] tr = stream.GetTimeRange();
+
+                    if (tr != null)
+                        Console.WriteLine(
+                            "    TIME RANGE: " +
+                            (tr[0]) + " .. " +
+                            (tr[1])
+                        );
+
+                    foreach (IInstrumentIdentity id in stream.ListEntities())
+                    {
+                        Console.WriteLine(
+                            "    ENTITY  type: " + id.InstrumentType +
+                            "; symbol: " + id.Symbol.ToString()
+                        );
+                    }
+                }
+
+            }
+        }
+    }
+}

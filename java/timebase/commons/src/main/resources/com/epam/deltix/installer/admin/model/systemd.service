@@ -1,0 +1,17 @@
+[Unit]
+Description=${description}
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+LimitNOFILE=65536
+User=${user}
+WorkingDirectory=${workingDir}
+Environment="DELTIX_HOME=${DELTIX_HOME}"
+Environment="JAVA_OPTS=${JAVA_OPTS}"
+ExecStart=${executable}
+
+[Install]
+WantedBy=multi-user.target

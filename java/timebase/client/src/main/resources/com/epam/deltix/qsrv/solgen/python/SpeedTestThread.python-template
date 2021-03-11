@@ -1,0 +1,45 @@
+#imports
+from threading import Thread
+
+import time 
+import sys
+import dxapi
+
+class Reader(Thread):
+    counter = 0
+
+    def __init__(self):
+        Thread.__init__(self)
+
+    def run(self):
+        db = dxapi.TickDb.createFromUrl("${timebase.url}")
+        db.open(False)
+        stream = db.getStream("${timebase.stream}")
+        cursor = stream.select(0, dxapi.SelectionOptions(), None, None)
+
+        while cursor.next():
+            message = cursor.getMessage()
+            self.counter += 1
+
+        # cursor should be closed after use
+        cursor.close()
+        cursor = None
+
+        db.close()
+
+def speedtest():
+    print('Creating single thread reader...')
+    reader = Reader()
+    start = time.time()
+    reader.start()
+    while True:
+        time.sleep(1)
+        end = time.time()
+        secs = end - start
+        msecs = secs * 1000  # millisecs
+        sys.stdout.write("\rCount: {:,.0f} msg/sec (total: {:,d} msg)".format(reader.counter * 1000 / msecs, reader.counter))
+        if not reader.is_alive():
+            break
+
+if __name__=='__main__':
+    speedtest()

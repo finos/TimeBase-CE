@@ -1,0 +1,57 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++                                       Purge test options                                  +
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-home <homeDir>             QSHome directory. Required.
+
+-reports <reportsDir>       Directory, where json-reports will be saved.
+
+-logs <logsDir>             Directory, where logs will be saved.
+
+-port <port>                TimeBase port (TimeBase will be started by this runner in separate process)
+                            default: 8011
+
+-tbVersion <version>        TimeBase version (4.3 or 5.0)
+                            default: 5.0
+
+-tbHeap <heapSize>          Literal, that will be passed to java -Xmx arg in TB process.
+                            default: 4G
+
+-cleanReports               Marks if reports directory should be cleaned up.
+
+-cleanLogs               Marks if logs directory should be cleaned up.
+
+-db <dbUrl>                 TimeBase url. Warning! TimeBase on db url must be started!
+                            default: dxtick://localhost:8011
+
+-stream <key>               Test stream key.
+                            default: testStream
+
+-loadRate <n>               Max load rate for 1 one loader (messages per second).
+                            default: Integer.MAX_VALUE
+
+-loadBytes <n>              Size of each message body in bytes.
+
+-readers <n>                Number of live readers.
+                            default: 10
+
+-readLog                    Readers log location (used only if -filesLog is present)
+                            default: <workDir>/readers.log
+
+-symbols <n>                Number of symbols to generate.
+                            default: 100
+
+-purgePeriod <time>         Purge period in milliseconds. Defines how often we execute "purge" operation.
+                            default: 8 minutes
+
+-purgeInterval <time>       Purge interval in milliseconds. Defines how much data we retain in the stream.
+                            Purge time will be: System.currentTimeMillis() - purgeInterval
+                            default: 10 minutes
+
+-readersHeap <heapSize>     Literal, that will be passed to java -Xmx arg in each reader process.
+                            default: 128m
+
+-loadersHeap <heapSize>     Literal, that will be passed to java -Xmx arg in each loader process.
+                            default: 128m
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

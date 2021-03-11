@@ -1,0 +1,51 @@
+root_include_dir := . ./dxapi/include ./dfp/include
+root_source_dir  := src
+output_dir	 := bin
+object_dir	 := obj
+compile_flags    := -Wall -MD -pipe
+program_name	 := sample
+ifdef debug
+link_flags	  = -pipe
+build_flags	  = -O0 -g3 -D_DEBUG
+libraries	  = -L./dxapi/lib -ldxapi-x64 -L./dfp/lib -lDecimalNative
+else
+link_flags	  = -s -pipe
+build_flags	  = -O2 -fomit-frame-pointer
+libraries	  = -L./dxapi/lib -ldxapi-x64 -L./dfp/lib -lDecimalNative
+endif
+
+relative_include_dirs  := $(addprefix , $(root_include_dir))
+sources                := $(wildcard $(addsuffix /*.c*, $(root_source_dir)))
+objects                := $(addprefix $(object_dir)/, $(patsubst $(root_source_dir)/%, %, $(sources)))
+objects                := $(objects:.cpp=.o)
+objects                := $(objects:.c=.o)
+
+all : | clean build
+
+CC?=clang
+
+ifeq ($(CC),gcc)
+	CXX=g++
+endif
+ifeq ($(CC),clang)
+	CXX=clang++
+endif
+
+obj_dirs :
+	mkdir -p $(output_dir) $(object_dir)
+
+$(object_dir)/%.o : $(root_source_dir)/%.cpp
+	${CXX} -m64 -pthread -std=c++0x -o $@ -c $< $(compile_flags) $(build_flags) $(addprefix -I, $(relative_include_dirs))
+
+$(object_dir)/%.o : $(root_source_dir)/%.c
+	${CC} -m64 -pthread -std=c++0x -o $@ -c $< $(compile_flags) $(build_flags) $(addprefix -I, $(relative_include_dirs))
+
+.PHONY: clean
+
+build: obj_dirs $(objects)
+	${CXX} -m64 -pthread -o $(output_dir)/$(program_name) $(objects) $(link_flags) $(libraries)
+
+clean :
+	rm -rf bin obj
+
+include $(wildcard $(addsuffix /*.d, $(object_dir)))

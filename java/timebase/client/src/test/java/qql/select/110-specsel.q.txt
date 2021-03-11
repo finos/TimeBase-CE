@@ -1,0 +1,24 @@
+#
+#   Address instrument type constant with prefix
+#
+test select count() from securities where type="deltix.timebase.api.messages.InstrumentType":FUTURE
+!shellmatch
+>_,TIMESTAMP,SYMBOL,TYPE,COUNT ()
+0,*,*,*,4
+!end
+#
+#   Make sure the constant can also be used directly
+#
+test select count() from securities where type=FUTURE
+!shellmatch
+>_,TIMESTAMP,SYMBOL,TYPE,COUNT ()
+0,*,*,*,4
+!end
+#
+#   Just in case, test !=
+#
+test select count() from securities where type != FUTURE
+!shellmatch
+>_,TIMESTAMP,SYMBOL,TYPE,COUNT ()
+0,*,*,*,2
+!end

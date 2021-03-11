@@ -1,0 +1,7 @@
+CloseRequest
+CursorRequest
+CursorResponse
+EntitiesRequest
+ResetRequest
+StreamsRequest
+TypesRequest

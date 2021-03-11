@@ -1,0 +1,2 @@
+source demo_env.sh
+taskset 0x3C "$TEST_JAVA" -cp "$TEST_JARS" -DmarkedFraction=1 deltix.qsrv.hf.tickdb.topicdemo.LatencyExperimentMain -mode loader -mr 20 -lt 200 -ct topic -gen nanos-yield -af 2,3,4,5

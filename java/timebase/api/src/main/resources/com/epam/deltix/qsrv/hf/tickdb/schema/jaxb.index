@@ -1,0 +1,15 @@
+AbstractFieldChange
+ClassDescriptorChange
+CreateFieldChange
+DeleteFieldChange
+FieldModifierChange
+FieldRelationChange
+FieldTypeChange
+FieldValueChange
+FieldChange
+StaticFieldChange
+FieldPositionChange
+StreamMetaDataChange
+SimpleClassSet
+SchemaMapping
+ErrorResolution

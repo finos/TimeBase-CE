@@ -1,0 +1,30 @@
+import dxapi
+
+# Timebase URL specification, pattern is "dxtick://<host>:<port>"
+timebase = '${timebase.url}'
+stream = '${timebase.stream}'
+
+try:
+    # Create timebase connection
+    db = dxapi.TickDb.createFromUrl(timebase)
+
+    # Open in read-write mode
+    db.open(False)
+
+    # Get the data stream
+    stream = db.getStream(stream)
+    if stream == None:
+        raise "Stream " + stream + " not found"
+
+    # Create stream loader
+    loader = stream.createLoader(dxapi.LoadingOptions())
+
+${python.WriteStream.messages}
+    for i in range(10):
+${python.WriteStream.sendMessages}
+    loader.close()
+finally:
+    # database connection should be closed anyway
+    if (db.isOpen()):
+        db.close()
+    print("Connection " + timebase + " closed.")

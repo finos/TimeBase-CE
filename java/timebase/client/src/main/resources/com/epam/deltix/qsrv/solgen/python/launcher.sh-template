@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+python src/${python.script.name}
+if [ -z ${1+x} ] || [ "$1" != "-force" ]; then
+read -p "Press enter to exit" nothing
+
+fi

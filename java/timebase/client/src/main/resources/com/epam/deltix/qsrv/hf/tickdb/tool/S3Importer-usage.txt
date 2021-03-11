@@ -1,0 +1,30 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++             S3 to TimeBase import Command-Line Options            +
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-stream <stream_key>            Target stream. Required.
+
+-timebase <timebase_url>        Timebase URL. By default: dxtick://localhost:8011
+
+-startTime <start_time>         Start time in date-time format according to -tf argument. By default Long.MIN_VALUE.
+
+-endTime <end_time>             End time in date-time format according to -tf argument. By default Long.MAX_VALUE.
+
+-importMode <mode>              INSERT - all loaders will be created with WriteMode.INSERT option;
+                                APPEND - all loaders will be created with WriteMode.APPEND option;
+                                REPLACE (default):
+                                    1) Firstly, importer will delete data from the given stream with given time range.
+                                       If time range is not specified, then it will use data range from S3 metadata.
+                                    2) All loaders will be created with WriteMode.INSERT option.
+
+-bucket <bucket>                AWS bucket name where stream data is stored. Required.
+
+-region <region>                AWS bucket region. Required.
+
+-accessKeyId <access_key_id>    AWS access key ID. Can be specified in environment variable:
+                                AWS_ACCESS_KEY_ID
+
+-accessKey <access_key>         AWS secret access key. Can be specified in environment variable:
+                                AWS_SECRET_ACCESS_KEY
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

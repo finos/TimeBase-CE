@@ -1,0 +1,46 @@
+apply plugin: 'war'
+
+group = 'com.epam.deltix'
+
+dependencies {
+    compileOnly 'org.apache.tomcat.embed:tomcat-embed-jasper' // Tomcat JSP support
+    compileOnly 'org.apache.tomcat.embed:tomcat-embed-logging-juli' // Tomcat Logging
+
+    compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
+    compileOnly 'org.apache.taglibs:taglibs-standard-impl' // Tomcat JSTL Support
+}
+
+def webappDir = file('src/main/webapp')
+def generatedJsps = file("$buildDir/generated-jsp")
+
+def webappXml = file("$webappDir/WEB-INF/web.xml")
+def generatedXml = file("$generatedJsps/generated_web.xml")
+def mergedXml = file("$generatedJsps/web.xml")
+
+task compileJsps {
+    description 'Build java classes from jsp webapp'
+
+    doFirst {
+        generatedJsps.mkdirs()
+        mergedXml.createNewFile()
+    }
+
+    doLast {
+        ant.taskdef(classname: 'org.apache.jasper.JspC', name: 'jasper', classpath: configurations.compileOnly.asPath)
+        ant.jasper(validateXml: false, uriroot: webappDir, webXmlFragment: generatedXml, outputDir: generatedJsps)
+    }
+
+    doLast {
+        // Merge the generated XML with the original
+        mergedXml.text = webappXml.text.replaceFirst('(?s)(<web-app.*?>)', '$1' + generatedXml.text)
+    }
+}
+
+war {
+    duplicatesStrategy = "EXCLUDE"
+    webXml mergedXml
+}
+
+sourceSets.main.java.srcDirs generatedJsps
+compileJava.dependsOn compileJsps
+war.dependsOn jar

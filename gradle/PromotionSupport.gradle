@@ -1,0 +1,298 @@
+// v0.4
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.Callable
+
+/**
+ * Usage notes:
+ *
+ * 1) Set "javaSrc" and "javaDst" if you use "promoteJava". Set "dockerSrc" and "dockerDst" if you use "promoteDocker".
+ * 2) rootProject must export (with "ext") methods getVersionFromProperties() and snapshotVersionToReleaseVersion(version)
+ * 3) It's expected that project that uses this task OR rootProject has defined ext.publisherUser and ext.publisherPassword
+ */
+class PromotionTask extends DefaultTask {
+    String javaSrc
+    String javaDst
+    String nugetSrc
+    String nugetDst
+    String dockerSrc
+    String dockerDst
+
+    String artifactoryUrl = project.findProperty('publishRepositoryUrl') ?: System.getenv('ARTIFACTORY_URL')
+    String artifactoryUser = project.ext.publisherUser ?: rootProject.project.ext.publisherUser
+    String artifactoryPass = project.ext.publisherPassword ?: rootProject.project.ext.publisherPassword
+
+    /**
+     * Set to true if project uses "SNAPSHOTS" in the versions and promotion task is expected to remove "-SNAPSHOTS" suffix from version number.
+     */
+    boolean usesSnapshots = true
+
+    /**
+     * Version that will be promoted
+     */
+    @Internal
+    private final Provider<String> promoteVersionInternal = project.provider(new Callable<String>() {
+        @Override
+        String call() throws Exception {
+            return (String) project.findProperty('PROMOTE_VERSION') ?: getDefaultVersionForPromotion()
+        }
+    })
+
+    PromotionTask() {
+        setGroup("publishing")
+        setDescription("Promotes artifacts (jars, docker images) to public repositories")
+    }
+
+    String getPromoteVersion() {
+        return promoteVersionInternal.get()
+    }
+
+    private String getDefaultVersionForPromotion() {
+        // We expect that root project has some exported methods
+        def version = project.rootProject.ext.getVersionFromProperties()
+        if (usesSnapshots) {
+            return project.rootProject.ext.snapshotVersionToReleaseVersion(version)
+        } else {
+            return version
+        }
+    }
+
+    def copyNuget(from, to, pack, version, url, user, password) {
+        println("Promoting ${from} -> ${to}: ${pack}.${version}.nupkg")
+
+        def fullUrl = "$url/api/copy/$from/${pack}/${pack}.${version}.nupkg?to=/$to/${pack}/${pack}.${version}.nupkg"
+
+        doPost(fullUrl, user, password)
+    }
+
+    def copyFolder(from, to, String path, version, url, user, password) {
+        println("Promoting ${from} -> ${to}: ${path}:${version}")
+
+        def fullUrl = "$url/api/copy/$from/$path/$version?to=/$to/$path/$version"
+
+        doPost(fullUrl, user, password)
+    }
+
+    def copyFile(from, to, String path, url, user, password) {
+        println("Promoting ${from} -> ${to}: ${path}")
+
+        def fullUrl = "$url/api/copy/$from/$path?to=/$to/$path"
+
+        doPost(fullUrl, user, password)
+    }
+
+    def copyMavenFolder(from, to, String group, artifact, version, url, user, password) {
+        println("Promoting ${from} -> ${to}: ${group}:${artifact}:${version}")
+
+        def groupPart = group.replace('.','/')
+        def fullUrl = "$url/api/copy/$from/$groupPart/$artifact/$version?to=/$to/$groupPart/$artifact/$version"
+
+        doPost(fullUrl, user, password)
+    }
+
+    def copyMavenFile(from, to, group, artifact, version, url, user, password, extension) {
+        def groupPart = group.replace('.','/')
+
+        println("Promoting ${from} -> ${to}: ${group}:${artifact}:${version}:${extension}")
+
+        def fullUrl = "$url/api/copy/$from/$groupPart/$artifact/$version/$artifact-$version.${extension}?to=/$to/$groupPart/$artifact/$version/$artifact-$version.${extension}"
+
+        doPost(fullUrl, user, password)
+    }
+
+    def copyJarAndPom(from, to, group, artifact, version, artifactoryUrl, user, password) {
+        copyMavenFile(from, to, group, artifact, version, artifactoryUrl, user, password, 'jar')
+        copyMavenFile(from, to, group, artifact, version, artifactoryUrl, user, password, 'pom')
+    }
+
+    private static void doPost(String fullUrl, String user, String password) {
+        def baseUrl = new URL(fullUrl)
+
+        HttpURLConnection connection = (HttpURLConnection) baseUrl.openConnection()
+        connection.requestMethod = 'POST'
+
+        String auth = user + ":" + password
+        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8))
+        String authHeaderValue = "Basic " + encodedAuth
+        connection.setRequestProperty("Authorization", authHeaderValue)
+
+        try {
+            int responseCode = connection.getResponseCode()
+            if (responseCode >= 400) {
+                throw new RuntimeException("Invalid response code: ${responseCode}")
+            }
+        } catch (Exception e) {
+            println("Response:\n" + getErrorBody(connection) + "\n")
+            throw new RuntimeException("Failed to execute POST ${fullUrl}: ${e.getMessage()}", e)
+        }
+    }
+
+    private static String getErrorBody(HttpURLConnection connection) {
+        def stream = connection.getErrorStream()
+        if (stream == null) {
+            return "no content"
+        }
+        StringBuilder builder = new StringBuilder()
+        BufferedReader inp = new BufferedReader(new InputStreamReader(stream))
+
+        String line
+        while ((line = inp.readLine()) != null) {
+            builder.append(line).append("\n")
+        }
+        inp.close()
+
+        return builder.toString()
+    }
+
+
+    void promoteJava(from, to, String group, String artifactId) {
+        checkRepositorySettings()
+        copyJarAndPom(from, to, group, artifactId, promoteVersion, artifactoryUrl, artifactoryUser, artifactoryPass)
+    }
+
+    void promoteJava(String group, String artifactId) {
+        checkJavaSettings()
+        promoteJava(javaSrc, javaDst, group, artifactId)
+    }
+
+    /**
+     * Promotes Java artifact.
+     *
+     * Example: promoteJava("deltix.qsrv.timebase:deltix-timebase-server")
+     *
+     * @param groupAndId artifact group and id separated by ":".
+     */
+    void promoteJava(String groupAndId) {
+        def parts = groupAndId.split(':')
+        promoteJava(parts[0], parts[1])
+    }
+
+
+    void promoteNuget(from, to, String pack) {
+        checkRepositorySettings()
+        copyNuget(from, to, pack, promoteVersion, artifactoryUrl, artifactoryUser, artifactoryPass)
+    }
+
+    /**
+     * Promotes Nuget artifact.
+     *
+     * Example: promoteNuget('Deltix.Timebase.Messages')
+     *
+     * @param pack package name
+     */
+    void promoteNuget(String pack) {
+        checkNugetSettings()
+        promoteNuget(nugetSrc, nugetDst, pack)
+    }
+
+    void promoteDocker(from, to, path) {
+        checkRepositorySettings()
+        copyFolder(from, to, path, promoteVersion, artifactoryUrl, artifactoryUser, artifactoryPass)
+    }
+
+    /**
+     * Promotes Docker image.
+     *
+     * Example: promoteDocker('quantserver.docker/timebase/server')
+     *
+     * @param path image path in the repository, with path parts separated by "/".
+     */
+    void promoteDocker(String path) {
+        checkDockerSettings()
+        promoteDocker(dockerSrc, dockerDst, path)
+    }
+
+    /**
+     * Promotes a file defined by full path.
+     */
+    void promoteFile(from, to, path) {
+        checkRepositorySettings()
+        copyFile(from, to, path, artifactoryUrl, artifactoryUser, artifactoryPass)
+    }
+
+    private checkJavaSettings() {
+        if (javaSrc == null) {
+            throw new IllegalArgumentException("Property javaSrc for task \"" + name + "\" is not set")
+        }
+        if (javaDst == null) {
+            throw new IllegalArgumentException("Property javaDst for task \"" + name + "\" is not set")
+        }
+    }
+
+    private checkNugetSettings() {
+        if (nugetSrc == null) {
+            throw new IllegalArgumentException("Property nugetSrc for task \"" + name + "\" is not set")
+        }
+        if (nugetDst == null) {
+            throw new IllegalArgumentException("Property nugetDst for task \"" + name + "\" is not set")
+        }
+    }
+
+    private checkDockerSettings() {
+        if (dockerSrc == null) {
+            throw new IllegalArgumentException("Property dockerSrc for task \"" + name + "\" is not set")
+        }
+        if (dockerDst == null) {
+            throw new IllegalArgumentException("Property dockerDst for task \"" + name + "\" is not set")
+        }
+    }
+
+    private checkRepositorySettings() {
+        if (artifactoryUrl == null || artifactoryUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("Property artifactoryUrl for task \"" + name + "\" or ENV variable ARTIFACTORY_URL is not set")
+        }
+    }
+
+    void printPromotionSettings() {
+        print("Promoting artifacts using:\nartifactoryUrl=${artifactoryUrl}\nartifactoryUser=${artifactoryUser}\npromoteVersion=${promoteVersion}\n")
+    }
+}
+
+// Makes task class accessible outside this file
+ext.PromotionTask = PromotionTask
+
+task listPublishableMavenArtifacts {
+    description "Prints list of publishable artifacts for all projects"
+    group 'info'
+
+    doFirst {
+        println("Artifacts:")
+        allprojects.each {
+            printPublishableMavenArtifactsForProject(it)
+        }
+        println()
+    }
+}
+
+/**
+ * Usage:
+ * gradlew listArtifactsForTasks -PtaskList=":java:timebase:aerondirect:publish :java:timebase:pub:publish"
+ * taskList is space separated list of task names
+ *
+ * IMPORTANT: It does not prints artifacts produced by specific tasks. Instead, it prints artifacts for PROJECTS that contain such tasks.
+ */
+task listArtifactsForTasks {
+    description "Prints list of publishable artifacts for specific projects"
+    group 'info'
+
+    doFirst {
+        String taskList = findProperty('taskList')
+        if (taskList == null) {
+            throw new GradleException("Define task list using \"taskList\" property")
+        }
+        println("Artifacts:")
+        taskList.split('\\s').each {
+            taskPath ->
+                Task taskObj = rootProject.tasks.getByPath(taskPath)
+                printPublishableMavenArtifactsForProject(taskObj.project)
+        }
+        println()
+    }
+}
+
+private static printPublishableMavenArtifactsForProject(Project proj) {
+    // https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.tasks.PublishToMavenRepository.html
+    proj.tasks.withType(PublishToMavenRepository).each { t ->
+        def p = t.publication
+        println p.groupId + ':' + p.artifactId
+    }
+}

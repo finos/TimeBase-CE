@@ -1,0 +1,94 @@
+#!/bin/sh
+#
+# chkconfig:   ${chkconfig.level.start} ${SS} ${KK}
+# description: ${process.description}
+# processname: ${process}
+#
+### BEGIN INIT INFO
+# Provides: ${process}
+# Default-Start: ${level.start}
+# Default-Stop: ${level.stop}
+# Required-Start: ${required.start}
+# Required-Stop: ${required.stop}
+# Short-Description: ${process.description}
+# Description: ${process.description.long}
+### END INIT INFO
+
+# Source function library.
+if [ -f /etc/init.d/functions ] ; then
+    . /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ] ; then
+    . /etc/rc.d/init.d/functions
+else
+    echo -n "Cannot find int.d functions!"    
+    exit 1
+fi
+
+kill_process_tree() {
+    __kill_processes_deep 1 $1
+}
+
+__kill_processes_deep() {
+    is_topmost=$1
+    cur_pid=$2
+    child_pids=`ps -o pid --no-headers --ppid ${cur_pid}`
+    for child_pid in $child_pids
+    do
+        __kill_processes_deep 0 $child_pid
+    done
+    if [ $is_topmost -eq 0 ]; then
+        kill -s TERM $cur_pid 2> /dev/null
+    fi
+}
+
+start() {
+    echo -n "Starting ${process.name}..."    
+    if [ -f ${process.pid.file} ] ; then
+        if ! ps -p $(cat ${process.pid.file}) > /dev/null 2>&1
+        then
+            rm -f ${process.pid.file}
+        fi
+    fi 
+    export DELTIX_HOME=${deltix.home}
+    if daemon --user=${process.user} --check=${process.name} ${java.cmd} ${process.java.options} &>/dev/null &
+    then
+        echo $! > ${process.pid.file}
+        chown ${process.user} ${process.pid.file}
+    fi
+}	
+
+stop() {
+    echo -n "Shutting down ${process.name}..."
+    kill_process_tree $(cat ${process.pid.file})
+    rm -f ${process.pid.file}
+}	
+
+restart() {
+    echo -n "Restarting ${process.name}:"
+    stop
+    start
+}	
+
+status() {        
+    export DELTIX_HOME=${deltix.home}
+    ${java.cmd} ${process.java.status.options}
+}	
+
+case "$1" in
+    start)
+        start
+            ;;
+    stop)
+        stop
+            ;;
+    restart)
+        restart
+            ;;
+    status)
+        status
+            ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+esac
+exit $?

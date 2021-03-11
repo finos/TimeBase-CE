@@ -1,0 +1,12 @@
+## Timebase sample Python project ##
+
+### How to build ###
+
+1. Define Deltix repository credentials (`DELTIX_REPOSITORY_USER` and `DELTIX_REPOSITORY_PASS`) as environment variables;
+
+2. Run `./init.sh` (or `init.cmd`) script.
+
+### How to change Repository ###
+
+In order to change Timebase artifacts repository (eg. use Epam artifactory instead of Nexus),
+change repository url in init script.

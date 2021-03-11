@@ -1,0 +1,7 @@
+#
+#   Preparation
+#
+set db ${home}/temp/ddltestdb
+format
+set confirm off
+set exitOnError off

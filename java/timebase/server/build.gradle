@@ -1,0 +1,150 @@
+evaluationDependsOn(':java')
+
+apply plugin: 'java-library'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+group = 'com.epam.deltix'
+
+ext {
+    dockerImageName = 'timebase/server'
+}
+
+shadowJar {
+    zip64 = true
+    mergeServiceFiles('META-INF/spring.*')
+    mergeServiceFiles('META-INF/services/javax.servlet.ServletContainerInitializer') // for tomcat
+}
+
+dependencies {
+    //compile project(':java:plugins:data')
+    implementation project(':java:timebase:commons')
+
+    implementation ('deltix.qsrv:deltix-commons-lang')
+    implementation ('deltix.qsrv:deltix-commons-util')
+    implementation ('deltix.qsrv:deltix-commons-messages')
+
+    implementation('deltix:rtmath-containers')
+
+    compile project(':java:timebase:api')
+    compile project(':java:timebase:aerondirect')
+
+    implementation project(':java:timebase:snmpagent')
+
+    // web application
+
+    implementation 'org.springframework:spring-webmvc'
+    implementation 'org.springframework:spring-web'
+
+    implementation 'org.apache.taglibs:taglibs-standard-impl' // JSTL Support
+    implementation 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
+//
+//    implementation 'org.springframework:spring-context'
+
+    // Hadoop API
+    implementation('org.apache.hadoop:hadoop-annotations'){ transitive = false}
+    implementation('org.apache.hadoop:hadoop-auth'){ transitive = false }
+    compile('org.apache.hadoop:hadoop-common'){ transitive = false } // TODO: Should be "implementation"
+    implementation('org.apache.hadoop:hadoop-mapreduce-client-common'){ transitive = false } // TODO: Should be "implementation"
+    compile('org.apache.hadoop:hadoop-mapreduce-client-core'){ transitive = false }   //have hadoop-yarn-common.jar v in dependency // TODO: Should be "implementation"
+    implementation('org.apache.hadoop:hadoop-yarn-api'){ transitive = false }
+    implementation('org.apache.hadoop:hadoop-yarn-client'){ transitive = false }
+    implementation('org.apache.hadoop:hadoop-yarn-common'){ transitive = false }
+
+    // JMS Api
+    // compile('org.apache.qpid:qpid-jms-client:0.11.1') { transitive = false } // TODO: Should be "implementation"
+    // compile 'org.glassfish.main.javaee-api:javax.jms:3.1.2.2' // TODO: Should be "implementation"
+
+    // AMQP API
+    // compile('org.apache.qpid:qpid-amqp-1-0-client:0.32') // TODO: Should be "implementation"
+
+//    implementation('org.apache.qpid:proton-j:0.15.0') { transitive = false }
+//    implementation('org.bouncycastle:bcpkix-jdk15on') { transitive = false } //using proton-j for read cert
+
+    implementation('net.jpountz.lz4:lz4:1.3.0') { transitive = false }
+    implementation('org.xerial.snappy:snappy-java')
+
+    implementation('org.glassfish:javax.json')
+
+    implementation 'com.google.guava:guava'
+
+    implementation group: 'com.microsoft.azure', name: 'azure-data-lake-store-sdk', version: '2.1.5'
+    implementation group: 'com.microsoft.azure', name: 'azure-mgmt-datalake-store', version: '1.0.0-beta1.2'
+    implementation group: 'com.microsoft.azure', name: 'azure-mgmt-datalake-store-uploader', version: '1.0.0-beta1.2'
+    implementation group: 'com.microsoft.azure', name: 'azure-client-authentication', version: '1.0.0-beta2'
+
+    implementation 'com.github.ben-manes.caffeine:caffeine:2.5.6' // Cache implementation
+    implementation 'com.lmax:disruptor'
+    implementation 'commons-io:commons-io'
+
+    // TODO: Replace by JSR305
+    compileOnly 'com.intellij:annotations'
+
+    //implementation 'uk.co.real-logic:aeron-all:0.9.4'
+
+    // For JMH-based tests
+    testCompile 'org.openjdk.jmh:jmh-core'
+    testCompile 'org.openjdk.jmh:jmh-generator-annprocess'
+
+    compile 'org.owasp.encoder:encoder'
+}
+
+// Docker
+
+// Use :java:timebase:server:dockerPublishImage to publish the image
+task copyTimebaseServerContainerDependensies(type: Copy) {
+    group 'docker'
+    description 'Copy all timebase server dependencies'
+    //dependsOn ':java:cleanSubprojects' // This is necessary to force clean build.
+    dependsOn 'build'
+    dependsOn ':java:timebase:server:copyWebapp'
+    dependsOn ':java:timebase:commons:copyWebapp'
+    dependsOn ':java:timebase:s3:build'
+    dependsOn ':distribution:build'
+    dependsOn ':generateSetQsVersionScript'
+    //dependsOn ':java:timebase:client:jar'
+
+    into project.file("$buildDir/docker/timebase")
+
+    //from "$rootDir/inst.properties"
+    into ("web") {
+        from "$rootDir/web" // TODO: Avoid sharing resources thought global folder. Use explicit task outputs instead.
+        include 'tb/**'
+        include 'default/**'
+    }
+    into ("bin") {
+        from "$rootDir/bin" // TODO: Avoid sharing resources thought global folder. Use explicit task outputs instead.
+    }
+    into ("lib") {
+        // Runtime dependencies
+        from configurations.runtimeClasspath
+        // Main TimeBase server jar
+        from jar
+
+        from project(':java:timebase:client').configurations.runtimeClasspath
+        from project(':java:timebase:client').tasks.findByName('jar')
+
+        from project(':java:timebase:s3').configurations.runtimeClasspath
+        from project(':java:timebase:s3').tasks.findByName('jar')
+    }
+}
+
+// New docker task
+// Right now this task re-uses old task later the content of copyTimebaseServerContainerDependensies whold be moved to prepareFilesForDocker
+task prepareFilesForDocker {
+    dependsOn copyTimebaseServerContainerDependensies
+}
+
+task copyWebapp(type: Copy) {
+    description 'Copy timebase webapp war file into timebase server resources'
+    dependsOn ':java:timebase:web:war'
+    mustRunAfter processResources
+    mustRunAfter clean
+
+    from (project(':java:timebase:web').file('build/libs')) {
+        include '*.war'
+        rename 'deltix-timebase-web(.*).war', 'deltix-timebase-web.war'
+    }
+    into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
+}
+
+shadowJar.dependsOn copyWebapp

@@ -1,0 +1,48 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++                                       Stress test options                                 +
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-home <homeDir>             QSHome directory. Required.
+
+-reports <reportsDir>       Directory, where reports will be saved.
+
+-cleanReports               Marks if reports directory should be cleaned up.
+
+-port <port>                TimeBase port (TimeBase will be started by this runner in separate process)
+                            default: 8011
+
+-tbVersion <version>        TimeBase version (4.3 or 5.0)
+                            default: 5.0
+
+-tbHeap <heapSize>          Literal, that will be passed to java -Xmx arg in TB process.
+                            default: 4G
+
+-stream <key>               Test stream key.
+                            default: testStream
+
+-readers <n>                Number of live readers for each stream.
+                            default: 1
+
+-readersHeap <heapSize>     Literal, that will be passed to java -Xmx arg in each reader process.
+                            default: 128m
+
+-loaders <n>                Number of loaders. Equal number of streams will be created.
+                            default: 1
+
+-loadersHeap <heapSize>     Literal, that will be passed to java -Xmx arg in each loader process.
+                            default: 128m
+
+-loadRate <n>               Max load rate for 1 one loader (messages per second).
+                            default: 100000
+
+-loadSymbols <n>            Number of symbols to generate.
+                            default:
+
+-loadBytes <n>              Size of each message body in bytes.
+
+-distributionFactor <n>     Stream distribution factor.
+                            default: 0 (MAX_DISTRIBUTION)
+
+-withoutTomcat              Run without Tomcat.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

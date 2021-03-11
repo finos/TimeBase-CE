@@ -1,0 +1,140 @@
+// Usage:
+
+// Run tests only for TickDBFast and TickDBCodecs categories:
+// gradlew junitTest -Pcategories=TickDBFast,TickDBQQL,TickDBCodecs
+
+// Run tests using TB engine 5.0:
+// gradlew junitTest -PtestTimeBaseEngineVersion=5.0
+
+// Also you can add "generateTestReport" to produce aggregate report.
+// Full example:
+// gradlew junitTest generateTestReport -Pcategories=TickDBFast,TickDBCodecs -PtestTimeBaseEngineVersion=5.0
+
+
+String categories = project.findProperty("categories") ?: 'ALL'
+Set<String> categorySet = project.hasProperty("categories") ? categories.split(',').collect { "deltix.util.JUnitCategories\$${it}".toString() } as Set : null
+
+def forks = project.hasProperty("forks") ? Integer.valueOf((String) project.property("forks")) : 1  // Note: `0` is permitted value and means automatic detection
+def testTimeBaseEngineVersion = project.findProperty("testTimeBaseEngineVersion") ?: null
+
+if (forks < 0) {
+    throw new InvalidUserDataException("\"forks\" parameter must not be negative");
+}
+def forksToUse = forks == 0 ? Runtime.runtime.availableProcessors() / 2 : forks
+
+task prepareEnvironment() {
+    doLast {
+        file("$rootDir/testdata/qsrv/setups/daily/db").deleteDir()
+        file("$rootDir/testdata/qsrv/setups/regtests/db").deleteDir()
+
+        file("$rootDir/temp/parallel").deleteDir()
+
+        file("$rootDir/temp/testhome").deleteDir()
+        file("$rootDir/temp/testhome").mkdirs()
+        file("$rootDir/build/reports/junit").deleteDir()
+
+//        copy {
+//            from project(':java:quantserver:all').sourceSets.main.resources.srcDirs
+//            into "$rootDir/temp/testhome"
+//            include 'config/*.properties', 'config/gflog.xml'
+//        }
+    }
+}
+
+// A dedicated task to print test settings only once
+task printTestSettings {
+    description 'Prints common configuration options that used to run tests'
+
+    doFirst {
+        println("======")
+        println("Processors available: " + Runtime.runtime.availableProcessors())
+        println("Running java tests using " + forksToUse + " parallel forks")
+        println("Running java tests with " + (testTimeBaseEngineVersion ?: "default") + " engine version")
+        println("Test categories: " + categories)
+        println("======")
+    }
+}
+
+configure(ext.leafProjects) {
+
+    task junitTest(type: Test, dependsOn: [prepareEnvironment, printTestSettings]) {
+        maxHeapSize = "1024m"
+        minHeapSize = "512m"
+
+        systemProperty 'quiet', 'true'
+        systemProperty 'deltix.test.mode', 'true'
+
+        systemProperty 'deltix.home', rootDir
+        systemProperty 'deltix.qsrv.home', "$rootDir/temp/testhome"
+
+        maxHeapSize = "2048m"
+        minHeapSize = "1024m"
+
+        include '**/*Test_*'
+        ignoreFailures = true
+
+        testLogging.showStandardStreams = true
+        reports.html.enabled = true;
+        reports.html.setDestination(new File("$rootDir/build/reports/junit/html/${project.path.substring(6).replaceAll(':','.')}"))
+        reports.junitXml.enabled = true;
+        def xmlpath = new File("$rootDir/build/reports/junit/xml/${project.path.substring(6).replaceAll(':','.')}")
+        reports.junitXml.setDestination(xmlpath)
+
+        maxParallelForks = (Integer) forksToUse
+        if (maxParallelForks > 1) {
+            systemProperty 'unique.qsrv.home', 'true'
+        }
+
+        if (testTimeBaseEngineVersion) {
+            systemProperty 'TimeBase.version', testTimeBaseEngineVersion
+        }
+        
+        if (categorySet != null) {
+            afterEvaluate {
+                boolean hasCategoriesJar = isProjectHasCategories(project)
+                if (!hasCategoriesJar) {
+                    // We disable execution for this project because it has no test categories (deltix.util.JUnitCategories is not in classpath)
+                    enabled = false
+                    //println("Skipping test execution for project " + project.getIdentityPath() + " because it has no test categories")
+                }
+            }
+        }
+
+        useJUnit {
+            if (categorySet != null) {
+                setIncludeCategories categorySet
+            } else {
+                includeCategories 'java.lang.Object'
+            }
+        }
+    }
+
+    junitTest.doLast {
+        def xmlpath = new File("$rootDir/build/reports/junit/xml/${project.path.substring(6).replaceAll(':','.')}")
+        copy {
+            from xmlpath include {"*.xml"}
+            into file("$rootDir/build/reports/junit/xml")
+        }
+    }
+}
+
+private static boolean isProjectHasCategories(Project project) {
+    if (project.group == "deltix.qsrv.quantserver" && project.name == "pub") {
+        return true
+    }    
+    if (project.configurations.findByName("testRuntimeClasspath") == null) {
+        return false
+    }
+    ResolvedConfiguration configuration = project.configurations.testRuntimeClasspath.resolvedConfiguration
+    Set<ResolvedDependency> deps = configuration.lenientConfiguration.getAllModuleDependencies()
+    return deps.any { it.moduleGroup == "deltix.qsrv.quantserver" && it.moduleName == "pub" }
+}
+
+def testTasks = ext.leafProjects*.junitTest
+
+task generateTestReport(type: TestReport) {
+    reportOn testTasks
+    description "Executes tests for all Java projects and generates merged test report"
+    destinationDir = file("$rootDir/build/reports/junit/html/all_reports_merged") // TODO: Pick better name for merged report
+}
+task allJunitTests(dependsOn: generateTestReport)

@@ -1,0 +1,158 @@
+/* Main tags */
+
+html body { padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */ }
+
+/* box around Stripes messages and errors */
+.messagebox {
+	margin: 24px;
+} 
+ 
+/* box around Stripes messages and errors */
+.bodybox {
+    margin-bottom: 40px;
+} 
+
+#push {
+	height: 60px;
+}
+
+#footer {
+    padding:  8px 8px 1px 8px;
+	height: 40px;
+	background-color: rgb(224, 241, 251);
+	text-align: center;
+	margin: auto;
+}
+
+.toolbar {
+	margin: 10px 0px 4px 0px;
+}
+
+/* Displaytag tables */
+
+div.exportlinks {
+  color: #6699AA;
+  text-align: right;
+	padding: 2px 4px 2px 4px;
+	margin: 2px 0 10px 0;
+}
+
+span.export {
+  color: #6699AA;
+  background-color: #FFFFFF;
+	padding: 0 4px 1px 20px;
+	display: inline;
+	display: inline-block;
+	cursor: pointer;
+}
+
+/* Progress bars */
+
+div.progessbox {
+    margin: 0px;
+    padding: 2px;
+    display: inline-block;
+    width: 190px;
+    min-height: 50px;
+    text-align:center;
+}
+
+div.progressdiv {
+  position:relative;
+  width:180px;
+  border:1px solid #99AABB;
+  background: #BBBBCC;
+  border-radius: 3px;  
+  -moz-border-radius: 3px;  
+  -webkit-border-radius: 3px; 
+}
+
+div.bar{
+  background-color:#00ff00;
+  width:23%;
+  padding: 3px 0px 3px 0px;
+  height:1.2em;
+  border-radius: 3px;  
+  -moz-border-radius: 3px;  
+  -webkit-border-radius: 3px; 
+  /* gradient fill: */
+  box-shadow: 0 5px 5px rgba(255,255,255,0.6) inset, 0 -5px 7px rgba(0, 0, 0, 0.4) inset;  
+  -moz-box-shadow: 0 5px 5px rgba(255,255,255,0.6) inset, 0 -5px 7px rgba(0, 0, 0, 0.4) inset;  
+  -webkit-box-shadow: 0 5px 5px rgba(255,255,255,0.6) inset, 0 -5px 7px rgba(0, 0, 0, 0.4) inset;  
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#33ffffff',  endColorstr='#33000000',  GradientType=0 );      
+}
+
+   
+div.percent{
+    position:absolute;
+    width:100%;
+    text-align:center;
+    top:0.2em;
+    font-size:80%;
+}
+
+label.error,  span.error, input.error, select.error {
+    color: #b94a48;
+}
+
+input.error , select.error{
+    border-color: #b94a48;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+input.error:focus, select.error {
+    border-color: #953b39;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;
+}
+
+.form-large .control-label {
+    width: 240px;
+}
+
+.form-large .controls {
+    margin-left: 260px;
+}
+
+.form-large .form-actions {
+   padding-left: 260px;
+}
+
+td.text-center {
+    text-align: center;
+}
+
+td {
+empty-cells: show;
+}
+
+.no-margin {
+    margin: 0!important;
+}
+
+td.details-control {
+    background: url('../img/details_open.png') no-repeat center center;
+    cursor: pointer;
+}
+tr.shown td.details-control {
+    background: url('../img/details_close.png') no-repeat center center;
+}
+
+table.dataTable thead .sorting_asc {
+    background-image: url('../img/sort-down.png') ;
+    background-size: 18px 18px;
+    min-width: 20px;
+}
+table.dataTable thead .sorting_desc {
+    background-image: url('../img/sort-up.png') ;
+    background-size: 18px 18px;
+    min-width: 20px;
+}
+table.dataTable thead .sorting {
+    background-image: url('../img/sort.png') ;
+    background-size: 18px 18px;
+    min-width: 20px;
+}

@@ -1,0 +1,4 @@
+SchemaChangeTask
+SchemaUpdateTask
+StreamChangeTask
+StreamCopyTask

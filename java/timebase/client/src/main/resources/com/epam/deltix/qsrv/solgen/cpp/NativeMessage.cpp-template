@@ -1,0 +1,43 @@
+#ifndef _NATIVE_MESSAGE_INC
+#define _NATIVE_MESSAGE_INC
+
+#include <string>
+#include <stdint.h>
+#include <ctime>
+
+#include "dxapi/dxapi.h"
+
+using namespace std;
+using namespace DxApi;
+
+class NativeMessage : public InstrumentMessage {
+private:
+    std::string __class_type__ = "NativeMessage";
+    std::string __class_guid__ = "NativeMessage";
+
+public:
+    virtual std::string & getTypeName() { return __class_type__; }
+    virtual std::string & getGuid() { return __class_guid__; }
+
+    virtual void decode(DataReader &reader) = 0;
+    virtual void encode(DataWriter &writer) = 0;
+
+    virtual string toString() {
+        stringstream ss;
+
+        time_t sTime = timestamp / 1000000000;
+        strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", gmtime(&sTime));
+
+        ss << "timestamp: " << timeBuffer;
+        ss << ", entityId: " << entityId;
+        ss << ", typeId: " << typeId;
+
+        return ss.str();
+    }
+
+private:
+    char timeBuffer[64];
+
+};
+
+#endif /* _NATIVE_MESSAGE_INC */

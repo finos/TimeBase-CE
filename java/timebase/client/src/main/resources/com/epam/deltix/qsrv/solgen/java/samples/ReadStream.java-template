@@ -1,0 +1,33 @@
+package ${java.samples.readstream.packageName};
+
+import data.TypeMap;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
+
+/**
+ * Prints out the first 100 messages from the specified stream.
+ */
+public class ${java.samples.readstream.className} {
+    public static void main(String[] args) throws Exception {
+        try (DXTickDB db = TickDBFactory.createFromUrl("${timebase.url}")) {
+            db.open(true);
+
+            DXTickStream stream = db.getStream("${timebase.stream}");
+            long time = TimeConstants.TIMESTAMP_UNKNOWN;
+            SelectionOptions options = new SelectionOptions();
+
+            options.typeLoader = TypeMap.TYPE_LOADER;
+
+            try (InstrumentMessageSource cursor = stream.select(time, options)) {
+                int count = 0;
+
+                while (cursor.next() && count++ < 100) {
+                    System.out.println(cursor.getMessage());
+                }
+            }
+        }
+
+        if (args.length == 0 || args[args.length - 1].compareTo("-force") != 0)
+            System.in.read();
+    }
+}

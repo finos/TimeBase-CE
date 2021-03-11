@@ -1,0 +1,23 @@
+﻿using System;
+
+namespace TimebaseSample
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            if (args.Length == 0 || args[0] == "ListStreams")
+                ListStreams.Run();
+            else if (args[0] == "IntrospectClass")
+                IntrospectClass.Run();
+            else if (args[0] == "ReadStream")
+                ReadStream.Run();
+            else if (args[0] == "WriteStream")
+                WriteStream.Run();
+
+
+            if (args.Length == 0 || !args[args.Length - 1].Equals("-force"))
+                Console.ReadLine();
+        }
+    }
+}

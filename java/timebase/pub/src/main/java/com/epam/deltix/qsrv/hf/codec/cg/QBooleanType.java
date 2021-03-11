@@ -1,0 +1,74 @@
+package com.epam.deltix.qsrv.hf.codec.cg;
+
+import com.epam.deltix.qsrv.hf.pub.md.BooleanDataType;
+import com.epam.deltix.util.jcg.*;
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.*;
+
+/**
+ *
+ */
+public class QBooleanType extends QPrimitiveType <BooleanDataType> {
+    public static final QBooleanType     NON_NULLABLE =
+        new QBooleanType (new BooleanDataType (false));
+
+    public static final QBooleanType     NULLABLE =
+        new QBooleanType (new BooleanDataType (true));
+
+    public static final JExpr      N_TRUE = CTXT.intLiteral (1).cast(byte.class);
+    public static final JExpr      N_FALSE = CTXT.intLiteral (0).cast(byte.class);
+    public static final JExpr      NULL = CTXT.staticVarRef(BooleanDataType.class, "NULL").cast(byte.class);
+
+    protected QBooleanType (BooleanDataType dt) {
+        super (dt);
+    }
+
+    @Override
+    public Class <?>            getJavaClass () {
+        return (isNullable () ? byte.class : boolean.class);
+    }
+
+    public JExpr                getLiteral (boolean test) {
+        return (
+            isNullable () ?
+                test ? N_TRUE : N_FALSE :
+                CTXT.booleanLiteral (test)
+        );
+    }
+
+    @Override
+    public JExpr                getNullLiteral () {
+        return (NULL);
+    }
+
+    @Override
+    public int                  getEncodedFixedSize () {
+        return (1);
+    }
+
+    @Override
+    protected void encodeNullImpl(JExpr output, JCompoundStatement addTo) {
+        addTo.add (output.call ("writeByte", getNullLiteral ()));
+    }
+
+    @Override
+    protected JExpr decodeExpr(JExpr input) {
+        if (isNullable ())
+            return input.call("readByte");
+        else
+            return input.call("readBoolean");
+    }
+
+    @Override
+    protected void encodeExpr(JExpr output, JExpr value, JCompoundStatement addTo) {
+        if (isNullable ())
+            addTo.add(output.call("writeByte", value));
+        else
+            addTo.add(output.call("writeBoolean", value));
+    }
+
+    @Override
+    public JExpr makeConstantExpr(Object obj) {
+        // TODO: should I use getLiteral here?
+        return CTXT.booleanLiteral((Boolean) obj);
+    }
+}

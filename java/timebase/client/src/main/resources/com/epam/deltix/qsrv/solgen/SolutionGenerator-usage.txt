@@ -1,0 +1,181 @@
+****************************************************************************************
+Solution Generator
+****************************************************************************************
+
+Solution generator has two modes for now: cmd args and interactive. Options listed below
+under each language title are common for cmd args and options in interactive mode.
+
+Default mode (without any cmd args) is interactive.
+To enable cmd mode you should use cmd options that listed below.
+
+// ToDo read-write to one sample and read to separate, list-streams by default as function
+
+****************************************************************************************
+Java, cmd arg: -java, project type cmd arg: -java.projectType <projectType>
+****************************************************************************************
+Projects:
+*************************************
+1. Gradle
+
+java.project.root - Directory, where project will be stored
+Default value: C:\Users\dyarm\Deltix\samples\java
+
+java.project.group - Project group, like com.google.collections
+Default value: org.sample
+
+java.project.name - Project name, like google-collections
+Default value: sample-project
+
+*************************************
+Samples:
+*************************************
+Common properties:
+
+timebase.url - The URL of TimeBase location, in the form of dxtick://<host>:<port>
+Default value: dxtick://localhost:8011
+
+1. ListStreams, cmd arg: -java.ListStreams
+
+No specific properties for this sample type.
+
+2. SpeedTest, cmd arg: -java.SpeedTest
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+3. ReadStream, cmd arg: -java.ReadStream
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+4. WriteStream, cmd arg: -java.WriteStream
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+****************************************************************************************
+.NET, cmd arg: -net, project type cmd arg: -net.projectType <projectType>
+****************************************************************************************
+Projects:
+*************************************
+1. vs2010+
+
+net.project.root - Directory, where project will be stored
+Default value: C:\Users\dyarm\Deltix\samples\NET
+
+net.project.name - Project name
+Default value: TimebaseSample
+
+*************************************
+Samples:
+*************************************
+Common properties:
+
+timebase.url - The URL of TimeBase location, in the form of dxtick://<host>:<port>
+Default value: dxtick://localhost:8011
+
+1. ReadStream, cmd arg: -net.ReadStream
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+2. WriteStream, cmd arg: -net.WriteStream
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+****************************************************************************************
+Python, cmd arg: -python, project type cmd arg: -python.projectType <projectType>
+****************************************************************************************
+Projects:
+*************************************
+1. pip
+
+python.project.root - Directory, where project will be stored
+Default value: C:\Users\dyarm\Deltix\samples\python
+
+python.project.name - Project name, like google-collections
+Default value: sample
+
+*************************************
+Samples:
+*************************************
+Common properties:
+
+timebase.url - The URL of TimeBase location, in the form of dxtick://<host>:<port>
+Default value: dxtick://localhost:8011
+
+1. ListStreams, cmd arg: -python.ListStreams
+
+No specific properties for this sample type.
+
+2. SpeedTest, cmd arg: -python.SpeedTest
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+python.SpeedTest.numProcess - Num processes (number)
+Default value: 4
+
+3. ReadStream, cmd arg: -python.ReadStream
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+4. WriteStream, cmd arg: -python.WriteStream
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+****************************************************************************************
+c++, cmd arg: -cpp, project type cmd arg: -cpp.projectType <projectType>
+****************************************************************************************
+Projects:
+*************************************
+1. vs2015
+
+cpp.project.root - Directory, where project will be stored
+Default value: C:\Users\dyarm\Deltix\samples\cpp
+
+cpp.project.name - Project name, like google-collections
+Default value: sample-project
+
+2. make
+
+cpp.project.root - Directory, where project will be stored
+Default value: C:\Users\dyarm\Deltix\samples\cpp
+
+cpp.project.name - Project name, like google-collections
+Default value: sample-project
+
+*************************************
+Samples:
+*************************************
+Common properties:
+
+timebase.url - The URL of TimeBase location, in the form of dxtick://<host>:<port>
+Default value: dxtick://localhost:8011
+
+1. ListStreams, cmd arg: -cpp.ListStreams
+
+No specific properties for this sample type.
+
+2. SpeedTest, cmd arg: -cpp.SpeedTest
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+cpp.SpeedTest.numThreads - Num threads (number)
+Default value: 4
+
+3. ReadStream, cmd arg: -cpp.ReadStream
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+4. WriteStream, cmd arg: -cpp.WriteStream
+
+timebase.stream - TimeBase stream key.
+Default value: null
+
+****************************************************************************************

@@ -1,0 +1,9 @@
+-db <url>       DB URL. Defaults to dxtick://localhost
+-ne <n>         Number of entities. Defaults to 6.
+-rate <n>       Approximate total rate in messages per second. Defaults to 1.
+                Number can be fractional.
+-stream <id>    Tick DB stream. Defaults to "default". Stream will be created
+                if not found.
+-si <s>         Save interval (for calling saveChanges ()), in seconds. 
+                Defaults to 1. Number can be fractional.
+

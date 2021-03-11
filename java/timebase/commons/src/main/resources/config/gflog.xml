@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config>
+
+    <appender name="consoleAppender" factory="deltix.gflog.appender.ConsoleAppenderFactory" wrap="true">
+        <layout template="%d{yyyy-MM-dd HH:mm:ss.SSS} %p: %m%n" zoneId="UTC"/>
+    </appender>
+
+    <appender name="fileAppender" factory="deltix.gflog.appender.DailyRollingFileAppenderFactory"
+              file="${qshome}/logs/deltix_${type}.log">
+        <layout template="%d{d MMM HH:mm:ss} %p %m%n"/>
+    </appender>
+
+    <appender name="safeAppender" factory="deltix.gflog.appender.SafeAppenderFactory">
+        <appender-ref ref="consoleAppender"/>
+        <appender-ref ref="fileAppender"/>
+    </appender>
+
+    <logger>
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="org.snmp4j" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="org.springframework" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="org.apache.xbean.spring" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="org.apache.http.client" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="org.apache.coyote" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="org.apache.catalina" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="net.sourceforge.stripes" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="flx" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="xstream" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+    <logger name="deltix.qsrv.util.rpc.http.server.UhfWebApplicationContext" level="WARN">
+        <appender-ref ref="safeAppender"/>
+    </logger>
+
+</config>

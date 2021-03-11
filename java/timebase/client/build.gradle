@@ -1,0 +1,80 @@
+evaluationDependsOn(':java')
+
+group = 'com.epam.deltix'
+apply plugin: 'java-library'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+ext {
+    dockerImageName = 'timebase/client'
+}
+
+dependencies {
+    compile project(':java:timebase:aerondirect')
+    compile project(':java:timebase:api')
+    compile project(':java:timebase:pub')
+    compile project(':java:timebase:s3')
+
+    implementation ('deltix.qsrv:deltix-commons-lang')
+    implementation ('deltix.qsrv:deltix-commons-util')
+    implementation ('deltix.qsrv:deltix-commons-messages')
+
+
+    api 'deltix:deltix-thread-affinity'
+
+    implementation 'com.google.guava:guava'
+    implementation 'com.google.code.gson:gson'
+    implementation 'org.hdrhistogram:HdrHistogram'
+    implementation 'org.apache.commons:commons-text'
+
+    implementation 'org.apache.commons:commons-lang3'
+
+    // TODO: Replace by JSR305
+    compileOnly 'com.intellij:annotations'
+    testCompile 'com.intellij:annotations'
+
+    // For JMH-based tests
+    testCompile 'org.openjdk.jmh:jmh-core'
+    testCompile 'org.openjdk.jmh:jmh-generator-annprocess'
+
+    testRuntimeOnly 'deltix:deltix-gflog-slf4j'
+    testImplementation 'deltix:deltix-gflog-jul'
+}
+
+task buildTestJar(type: Jar, dependsOn: testClasses) {
+
+    description 'Generates JAR with test classes'
+    classifier 'tests'
+    from sourceSets.test.output
+
+    manifest {
+        attributes.putAt('Class-Path', configurations.testRuntime.collect {it.getName()}.join(' '))
+    }
+}
+
+task copyTestJar(type: Copy) {
+    println("$project.buildDir\\libs");
+    from "$project.buildDir\\libs"
+    into "$rootDir/lib"
+    include '*tests.jar'
+}
+
+task prepareFilesForDocker(type: Copy) {
+    group 'docker'
+    description 'Copy all timebase client dependencies'
+    //dependsOn ':java:cleanSubprojects' // This is necessary to force clean build.
+    dependsOn 'build'
+    dependsOn ':distribution:build'
+    dependsOn ':generateSetQsVersionScript'
+
+    into project.file("$buildDir/docker/timebase")
+
+    into ("bin") {
+        from "$rootDir/bin" // TODO: Avoid sharing resources thought global folder. Use explicit task outputs instead.
+    }
+    into ("lib") {
+        // Runtime dependencies
+        from configurations.runtimeClasspath
+        exclude("tools-*")
+        from jar
+    }
+}

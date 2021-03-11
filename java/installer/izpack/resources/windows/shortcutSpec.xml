@@ -1,0 +1,72 @@
+<izpack:shortcuts version="5.0"
+                  xmlns:izpack="http://izpack.org/schema/shortcuts"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://izpack.org/schema/shortcuts http://izpack.org/schema/5.0/izpack-shortcuts-5.0.xsd">
+
+    <programGroup defaultName="${defaultGroupName}"/>
+
+    <!-- QuantServer shortcuts -->
+    <shortcut name="QuantServer Architect"
+              target="${INSTALL_PATH}/QuantServer/bin/qsadmin.cmd"
+              workingDirectory="${INSTALL_PATH}/QuantServer/bin"
+              desktop="true" programGroup="true"
+              runAsAdministrator="true"
+              iconFile="${INSTALL_PATH}/QuantServer/bin/Deltix.ico">
+        <createForPack name="QuantServer"/>
+    </shortcut>
+    <shortcut name="TimeBase Administrator"
+              target="${INSTALL_PATH}/QuantServer/bin/tdbmgr.cmd"
+              workingDirectory="${INSTALL_PATH}/QuantServer/bin"
+              desktop="true" programGroup="true"
+              runAsAdministrator="true"
+              iconFile="${INSTALL_PATH}/QuantServer/bin/Deltix.ico">
+        <createForPack name="QuantServer"/>
+    </shortcut>
+    <shortcut name="TimeBase Repair Shop"
+              target="${INSTALL_PATH}/QuantServer/bin/tbrep.cmd"
+              workingDirectory="${INSTALL_PATH}/QuantServer/bin"
+              desktop="true" programGroup="true"
+              runAsAdministrator="true"
+              iconFile="${INSTALL_PATH}/QuantServer/bin/Deltix.ico">
+        <os family="windows"/>
+        <createForPack name="QuantServer"/>
+    </shortcut>
+    <shortcut name="TimeBase Solution Generator"
+              target="${INSTALL_PATH}/QuantServer/bin/qsol.cmd"
+              workingDirectory="${INSTALL_PATH}/QuantServer/bin"
+              desktop="true" programGroup="true"
+              runAsAdministrator="true"
+              iconFile="${INSTALL_PATH}/QuantServer/bin/Deltix.ico">
+        <createForPack name="QuantServer"/>
+    </shortcut>
+    <shortcut name="Offline License Installer"
+              target="${INSTALL_PATH}/QuantServer/bin/oli.cmd"
+              workingDirectory="${INSTALL_PATH}/QuantServer/bin"
+              desktop="true" programGroup="true"
+              runAsAdministrator="true"
+              iconFile="${INSTALL_PATH}/QuantServer/bin/Deltix.ico">
+        <createForPack name="QuantServer"/>
+    </shortcut>
+
+    <!-- QuantServer Documentation -->
+    <shortcut name="QuantServer Documentation"
+              target="${INSTALL_PATH}/QuantServer/docs/guide/index.html"
+              type="link"
+              desktop="true" programGroup="true"
+              runAsAdministrator="true">
+        <createForPack name="QuantServer"/>
+    </shortcut>
+
+    <!-- uninstaller
+    <shortcut name="QuantServer Uninstaller"
+            programGroup="yes" desktop="yes" applications="no" startMenu="no" startup="no"
+            target="${INSTALL_PATH}\Uninstaller\uninstaller.jar"
+            commandLine=""
+            iconFile="%SystemRoot%\system32\SHELL32.dll"
+            iconIndex="31"
+            description="This uninstalls QuantServer">
+        <createForPack name="QuantServer" />
+    </shortcut>
+    -->
+
+</izpack:shortcuts>

@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+}
+
+allprojects {
+    apply from: "$rootDir/gradle/repository.gradle"
+}
+
+group '${PROJECT_GROUP}'
+
+def repositoryName = project.findProperty("deltix.repository.name")
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    mavenDeltixProxy(repositoryName)
+}
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+def tbVersion = project.findProperty("deltix.timebase.version")
+def commonsVersion = project.findProperty("deltix.commons.version")
+def gflogVersion = project.findProperty("deltix.gflog.version")
+def commonslangVersion = project.findProperty("commonslang.version")
+
+dependencies {
+    implementation "deltix.qsrv.timebase:deltix-timebase-client:$tbVersion",
+            "deltix.qsrv.timebase:deltix-timebase-api:$tbVersion",
+            "deltix.qsrv.timebase:deltix-timebase-pub:$tbVersion"
+
+    implementation "deltix.qsrv:deltix-commons-messages:$commonsVersion",
+            "deltix.qsrv:deltix-commons-util:$commonsVersion"
+
+    implementation "deltix:deltix-gflog-api:$gflogVersion",
+                "deltix:deltix-gflog-core:$gflogVersion",
+                "deltix:deltix-gflog-dcl:$gflogVersion",
+                "deltix:deltix-gflog-api:$gflogVersion"
+
+    implementation "commons-lang:commons-lang:$commonslangVersion"
+
+    testImplementation 'junit:junit:4.12'
+}

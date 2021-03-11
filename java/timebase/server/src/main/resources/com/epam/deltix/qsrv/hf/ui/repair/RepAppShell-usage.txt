@@ -1,0 +1,66 @@
+tbrepshell [-db <folder>]           
+
+*******************************************************************************
+*                            Repair Shell Commands                            *
+*******************************************************************************
+
+open <folder>                   Open TimeBase to manipulate. Folder should be 
+                                exactly folder of TimeBase, not QS_HOME.
+                                Usually it's QS_HOME/tickdb.
+
+scan                            Scan and print structure of TimeBase.
+
+scan full                       Scan and check the health of all elements of
+                                TimeBase.
+
+scan stream <stream>            Scan and check the health of the specified
+                                stream.
+
+scan mfile <stream>/<mfile>     Scan and check the health of the specified
+                                MFile of the specified stream.
+
+resolve                         Fix if possible all problems found by last 
+                               'scan full|stream|mfile' command.
+
+show                            Print structure of the current TimeBase and
+                                last scan diagnostics.
+
+show db                         The same as the 'show' command.
+
+show report                     Prints the last detailed report of the
+                                'scan full|stream|mfile' command.
+
+set rebuildIndexes true|false   false by default. When set to true,              
+                                the command 'scan full|stream|mfile' will 
+                                rebuild the indexes.
+
+set ri true|false               The same as "set rebuildIndexes".
+
+set checkContent true|false     false by default. When set to true,              
+                                the command 'scan full|stream|mfile' will 
+                                check content of messages.
+
+set cc true|false               The same as "set checkContent".            
+
+set autoResolve true|false      false by default. When set to true,              
+                                the command 'scan full|stream|mfile' will 
+                                automatically try to resolve found problems.
+
+set ar true|false               The same as "set autoResolve".
+
+set detailedReport true|false   false by default. When set to true,              
+                                the command 'scan full|stream|mfile' will 
+                                prepare detailed report.
+
+set dr true|false               The same as "set detailedReport".
+
+
+Examples:
+
+    open /home/user/QS_HOME_A/tickdb
+
+    scan stream securities
+
+    scan mfile securities/0000
+
+*******************************************************************************

@@ -1,0 +1,8 @@
+update accessors on insert
+
+recovery for root and inter moves
+
+unrecoverable exception - emergency shutdown root
+
+live
+

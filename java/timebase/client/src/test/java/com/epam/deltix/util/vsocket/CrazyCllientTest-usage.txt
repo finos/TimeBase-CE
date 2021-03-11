@@ -1,0 +1,10 @@
+Usage: CrazyClientTest <options>
+
+Options:
+
+-tickdb <url>       URL of TimeBase server (default is dxtick://localhost:8011)
+-stream <key>       Stream to read (stream key)
+-count <n>          Number of parallel readers (default is 1)
+-interval <t>       Time range of random interval during which reader's socket will be closed, in millseconds (default is 500)
+
+

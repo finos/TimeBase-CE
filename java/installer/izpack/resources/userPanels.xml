@@ -1,0 +1,55 @@
+<izpack:userinput version="5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:izpack="http://izpack.org/schema/userinput"
+                  xsi:schemaLocation="http://izpack.org/schema/userinput http://izpack.org/schema/5.0/izpack-userinput-5.0.xsd">
+    <panel id="serialPanel" rigid="true" topBuffer="25">
+        <field type="text" variable="SerialProperties.serial" align="left" size="26">
+            <spec id="SerialProperties.serial.spec" size="26" />
+            <validator class="deltix.izpack.SerialValidator" id="SerialProperties.serial.invalid"/>
+        </field>
+
+        <field type="space"/>
+        <field type="check" variable="SerialProperties.useProxy" align="right">
+            <spec id="SerialProperties.useProxy.spec"/>
+        </field>
+
+        <field type="text" variable="SerialProperties.proxyHost" align="left" size="26" conditionid="useHTTPProxy">
+            <spec id="SerialProperties.proxyHost.spec" size="26"/>
+            <validator class="com.izforge.izpack.panels.userinput.validator.NotEmptyValidator" id="SerialProperties.proxyHost.invalid"/>
+        </field>
+
+        <field type="text" variable="SerialProperties.proxyPort" align="left" size="26" conditionid="useHTTPProxy">
+            <spec id="SerialProperties.proxyPort.spec" size="26"/>
+            <validator class="com.izforge.izpack.panels.userinput.validator.NotEmptyValidator" id="SerialProperties.proxyPort.invalid"/>
+            <validator class="com.izforge.izpack.panels.userinput.validator.IsPortValidator" id="SerialProperties.proxyPort.invalid"/>
+        </field>
+
+        <field type="space"/>
+        <field type="check" variable="SerialProperties.proxyAuth" align="right" conditionid="useHTTPProxy">
+            <spec id="SerialProperties.proxyAuth.spec"/>
+        </field>
+
+        <field type="text" variable="SerialProperties.proxyUsername" align="left"  size="26" conditionid="useHTTPProxyAuthentication">
+            <spec id="SerialProperties.proxyUsername.spec"  size="26"/>
+            <validator class="com.izforge.izpack.panels.userinput.validator.NotEmptyValidator" id="SerialProperties.proxyUsername.invalid"/>
+        </field>
+
+        <field type="password" variable="SerialProperties.proxyPassword" align="left" size="26" conditionid="useHTTPProxyAuthentication">
+            <spec>
+                <pwd id="SerialProperties.proxyPassword.spec" size="26"/>
+            </spec>
+            <validator class="com.izforge.izpack.panels.userinput.validator.NotEmptyValidator" id="SerialProperties.proxyPassword.invalid"/>
+        </field>
+    </panel>
+
+    <panel id="installationNamePanel" rigid="true" topBuffer="28">
+        <field type="staticText" align="left" id="installationName.text"/>
+
+        <field type="text" variable="InstallationNameProperties.instName" align="left" size="30">
+            <spec id="InstallationNameProperties.instName.spec" size="30"/>
+            <validator class="deltix.izpack.InstallationNameValidator" id="InstallationNameValidator.instName.invalid"/>
+        </field>
+
+        <field type="staticText" align="left" id="installationName.text2"/>
+        <field type="staticText" align="left" id="installationName.text3"/>
+    </panel>
+</izpack:userinput>

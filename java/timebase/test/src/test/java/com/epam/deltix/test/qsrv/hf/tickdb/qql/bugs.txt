@@ -1,0 +1,34 @@
+select * from alltypes where enum_n is null
+
+select * from alltypes where enum_n = enum_n  (thinks types are not compatible)
+
+= const ??
+
+
+
+select this from tickquerydemo
+
+
+========================
+
+
+select new mytype (sequence) from alltypes
+
+between
+
+---------------
+
+UNION
+
+date interval
+
+
+as of??
+
+
+does closing the cursor stop the query, if it is COUNT, LAST, etc.?
+
+working with instrument TYPE
+
+commented outs in test
+

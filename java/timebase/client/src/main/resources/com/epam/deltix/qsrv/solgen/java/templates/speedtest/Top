@@ -1,0 +1,89 @@
+package com.epam.deltix.qsrv.cg.java.templates.speedtest;
+
+import com.epam.deltix.qsrv.hf.pub.InstrumentMessage;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
+
+public class Top {
+    public static final int             NUM_THREADS = 4;
+    public static final long            REPORT_INTERVAL = 1000;
+    
+    static class Reader extends Thread {
+        private final DXTickStream      stream;
+        volatile long                   numMessagesRead = 0;
+        
+        public Reader (int n, DXTickStream stream) {
+            super ("Reader Thread #" + n);
+            this.stream = stream;
+        }
+
+        @Override
+        public void         run () {            
+            long                time = TimeConstants.TIMESTAMP_UNKNOWN;
+            SelectionOptions    options = new SelectionOptions ();
+            
+            // options.typeLoader = TypeMap.TYPE_LOADER;
+            
+            try (InstrumentMessageSource cursor = 
+                    stream.select (time, options, null, null)) 
+            {                
+                while (cursor.next ()) {
+                    InstrumentMessage unusedMessage = cursor.getMessage ();
+                    //
+                    //  Here one would normally process [unusedMessage].
+                    //  For the purpose of this test, we are just going to 
+                    //  increase the volatile counter.
+                    //
+                    numMessagesRead++;
+                }
+            }
+        }
+    }
+    
+    public static void main (String [] args) throws Exception {
+        try (DXTickDB db = TickDBFactory.createFromUrl ("dxtick://localhost")) {
+            db.open (true);
+        
+            DXTickStream        stream = db.getStream ("streamKey");            
+            Reader []           readers = new Reader [NUM_THREADS];
+            
+            for (int ii = 0; ii < NUM_THREADS; ii++) {
+                readers [ii] = new Reader (ii, stream);
+                readers [ii].start ();
+            }
+            
+            long                lastReportTime = System.currentTimeMillis ();
+            long                lastReportedCount = 0;
+            
+            System.out.println ();
+            
+            for (;;) {
+                Thread.sleep (REPORT_INTERVAL);
+                
+                long            newCount = 0;
+                long            now = System.currentTimeMillis ();
+                boolean         oneIsAlive = false;
+                
+                for (Reader r : readers) {
+                    newCount += r.numMessagesRead;
+                    
+                    if (r.isAlive ())
+                        oneIsAlive = true;
+                }
+                
+                System.out.printf (
+                    "Total rate: %,12d messages/s\r", 
+                    (newCount - lastReportedCount) * 1000L / (now - lastReportTime)
+                );      
+                
+                if (!oneIsAlive) {
+                    System.out.println ("\n\nAll done.");
+                    break;
+                }                    
+            }
+        }
+
+        if (args.length == 0 || args[args.length - 1].compareTo("-force") != 0)
+            System.in.read();
+    }
+}

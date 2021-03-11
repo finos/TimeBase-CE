@@ -1,0 +1,15 @@
+Dumps codecs code either for a single stream or the whole tickdb.
+
+Arguments:
+    -xml <file>     File name of a stream metadata file
+    -src <path>     Tickdb directory
+    -out <path>     Output directory
+
+Usage samples:
+1. Dump codecs for a single stream:
+runjava deltix.qsrv.hf.tickdb.impl.DumpCodecs -xml c:\temp\tickdb.Gene\TradeData.uhfq.xml -out c:\temp\codecs
+2. Dump codecs for all streams:
+runjava deltix.qsrv.hf.tickdb.impl.DumpCodecs -src C:\temp\tickdb.Gene -out c:\temp\codecs
+
+Note: md.xml file is ignored.
+

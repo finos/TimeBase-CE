@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<izpack:installation version="5.0"
+                     xmlns:izpack="http://izpack.org/schema/installation"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xsi:schemaLocation="http://izpack.org/schema/installation http://izpack.org/schema/5.0/izpack-installation-5.0.xsd">
+
+    <info>
+        <appname>@{appname}</appname>
+        <appversion>@{version}</appversion>
+        <javaversion>1.11</javaversion>
+        <requiresjdk>false</requiresjdk>
+        <appsubpath>Deltix</appsubpath>
+        <summarylogfilepath>${INSTALL_PATH}/installinfo/summary.htm</summarylogfilepath>
+        <readinstallationinformation>false</readinstallationinformation>
+        <writeinstallationinformation>false</writeinstallationinformation>
+        <run-privileged condition="izpack.windowsinstall"/>
+    </info>
+
+    <logging>
+        <log-file pattern="${INSTALL_PATH}/install.log" level="ALL" append="true" count="100"/>
+    </logging>
+
+    <guiprefs height="470" width="630" resizable="yes">
+        <!-- TODO: do we need plashscreen for installer -->
+        <!--<modifier key="useSplashScreen" value="2000"/>-->
+
+        <modifier key="useButtonIcons" value="no"/>
+        <modifier key="useLabelIcons" value="no"/>
+        <modifier key="layoutAnchor" value="EAST"/>
+        <modifier key="useHeadingPanel" value="yes"/>
+        <modifier key="headingImageOnLeft" value="yes"/>
+        <modifier key="headingLineCount" value="1"/>
+        <modifier key="headingFontSize" value="1.5"/>
+        <modifier key="headingForegroundColor" value="0x00ffffff"/>
+        <modifier key="headingBackgroundColor" value="0x0014217c"/>
+        <modifier key="showDebugWindow" value="true"/>
+    </guiprefs>
+
+    <locale>
+        <langpack iso3="eng"/>
+    </locale>
+
+    <resources>
+<!--        <res id="Splash.image" src="@{izpack.resources.path}/splash.png"/>-->
+        <res id="Installer.image" src="@{izpack.resources.path}/deltix_logo.png"/>
+        <res id="customicons.xml" src="@{izpack.resources.path}/icons.xml"/>
+        <res id="JFrameIcon.png" src="@{izpack.resources.path}/install.png"/>
+        <res id="UninstallService.png" src="@{izpack.resources.path}/UninstallService.png"/>
+
+        <res id="CustomLangPack.xml_eng" src="@{izpack.resources.path}/langpack.xml_eng"/>
+        <res id="HTMLHelloPanel.welcome" src="@{izpack.resources.path}/welcome.html"/>
+        <res id="HTMLLicencePanel.license" src="@{izpack.resources.path}/license.html"/>
+
+        <res id="packsLang.xml_eng" src="@{izpack.resources.path}/packsLang.xml_eng"/>
+
+        <res id="windscamd64.dll" src="@{izpack.resources.path}/windscamd64.dll"/>
+        <res id="windscx86.dll" src="@{izpack.resources.path}/windscx86.dll"/>
+
+        <res id="samples.zip" src="testdata/samples/samples.zip"/>
+    </resources>
+
+    <!-- default variables -->
+    <variables>
+        <variable name="TargetPanel.dir.unix" value="/opt/timebase"/>
+
+        <variable name="compiledPlatform" value="@{compiledPlatform}"/>
+        <variable name="version" value="@{version}"/>
+        <variable name="instVersion" value="@{instVersion}"/>
+        <variable name="tb.appname" value="@{tb.appname}"/>
+        <variable name="tb.version" value="@{tb.version}"/>
+        <variable name="izpack.resources.path" value="@{izpack.resources.path}"/>
+        <variable name="izpack.generated.path" value="@{izpack.generated.path}"/>
+
+
+        <variable name="tb.error" value=""/>
+        <variable name="tb.license.error" value=""/>
+        <variable name="tb.requirements.error" value=""/>
+
+        <!-- default install.properties -->
+        <!-- other vars -->
+        <variable name="SERVER_JAVA_OPTIONS" value="-Xmx1000m"/>
+        <variable name="CLIENT_JAVA_OPTIONS" value="-Xmx1000m"/>
+
+    </variables>
+
+    <dynamicvariables>
+        <variable name="platform" value="windows" condition="izpack.windowsinstall"/>
+        <variable name="platform" value="linux" condition="izpack.linuxinstall"/>
+        <variable name="platform" value="macOS" condition="izpack.macinstall"/>
+        <variable name="platform" value="solaris" condition="izpack.solarisinstall"/>
+        <variable name="platform" value="aix" condition="izpack.aixinstall"/>
+        <variable name="isPlatform64" value="true"/>
+
+        <!-- group name properties -->
+        <!-- install and inst properties -->
+        <variable name="InstDataProperties.instFolder" value="${INSTALL_PATH}"/>
+
+        <variable name="SERVER_JAVA_OPTIONS" value="-Xmx3072m" condition="platform64"/>
+        <variable name="SERVER_JAVA_OPTIONS" value="-Xmx512m" condition="vista32"/>
+        <variable name="SERVER_JAVA_OPTIONS" value="-Xmx1024m" condition="platform32"/>
+        <variable name="CLIENT_JAVA_OPTIONS" value="-Xmx1500m" condition="platform64"/>
+        <variable name="CLIENT_JAVA_OPTIONS" value="-Xmx512m" condition="platform32"/>
+    </dynamicvariables>
+
+    <conditions>
+        <!-- OS conditions -->
+        <condition type="variable" id="platform64">
+            <name>isPlatform64</name>
+            <value>true</value>
+        </condition>
+        <condition type="variable" id="platform32">
+            <name>isPlatform64</name>
+            <value>false</value>
+        </condition>
+        <condition type="and" id="vista32">
+            <condition type="ref" refid="platform32"/>
+            <condition type="ref" refid="izpack.windowsinstall.vista"/>
+        </condition>
+
+        <condition type="empty" id="emptyTbError">
+            <variable>tb.error</variable>
+        </condition>
+
+        <condition type="packselection" id="webGatewayPackIsSelected">
+            <name>WebGateway</name>
+        </condition>
+    </conditions>
+
+    <!-- jars with custom panels logic -->
+    <jar src="@{panels.jar}" stage="both"/>
+
+    <!-- external dll for shortcuts logic -->
+    <natives>
+        <native type="izpack" name="ShellLink.dll"/>
+        <native type="izpack" name="ShellLink_x64.dll"/>
+    </natives>
+
+    <listeners>
+        <listener stage="uninstall" classname="deltix.izpack.uninstaller.UninstallServiceAction" />
+    </listeners>
+
+    <!-- list of panels -->
+    <panels>
+        <panel classname="deltix.izpack.panels.properties.InitPanel" id="welcome"/>
+        <panel classname="deltix.izpack.panels.license.HTMLLicencePanel" id="license"/>
+        <panel classname="deltix.izpack.panels.target.CheckedTargetPanel" id="install_dir"/>
+
+        <panel classname="PacksPanel" id="packsSelection"/>
+        <panel classname="InstallPanel" id="install"/>
+        <panel classname="deltix.izpack.panels.timebase.TimebasePanel" id="timebase"/>
+        <panel classname="deltix.izpack.panels.tbwg.WebGatewayPanel" id="webGateway" condition="webGatewayPackIsSelected"/>
+        <panel classname="deltix.izpack.panels.finish.FinishPanel" id="fakeFinish"/>
+    </panels>
+
+    <!-- modules to install -->
+    <packs>
+        @{packs}
+    </packs>
+</izpack:installation>

@@ -1,0 +1,228 @@
+// v2.0
+
+/**
+ * Adds docker support for the repository.
+ *
+ * To use this script:
+ * 1) Add task "prepareFilesForDocker" for each subproject that will prepare files (at "src/main/docker") that have to be included into the docker image
+ * 2) Add "dockerImageName" ext property with desired image name to each subproject
+ * 3) Place Dockerfile to "src/main/docker/Dockerfile" for each subproject
+ * 4) Define "docker.dockerCommonPath" property for root project
+ *
+ * Execution: gradlew dockerPublishImage
+ *
+ * Created tasks:
+ * :dockerLogin
+ * :dockerLogout
+ * :SUBPROJECT:dockerRemoveExistingImage[flavor] - remove existing image from local docker registry
+ * :SUBPROJECT:copyDockerfile[flavor] - prepare Dockerfile
+ * :SUBPROJECT:dockerBuildImage[flavor] - build Docker image
+ * :SUBPROJECT:dockerPublishImage[flavor] - publish Docker image
+ * :SUBPROJECT:dockerBuildImageAll - build Docker images for all flavors
+ * :SUBPROJECT:dockerPublishImageAll - publish Docker images for all flavors
+ * 
+ * You can print debug information using this command line option:
+ * -PdebugDockerBuild=true
+ */
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+String DOCKER_REGISTRY_USERNAME=findProperty('ARTIFACTORY_USER') ?: System.getenv('ARTIFACTORY_USER') ?: "FakeProGetUser"
+String DOCKER_REGISTRY_PASSWORD=findProperty('ARTIFACTORY_PASS') ?: System.getenv('ARTIFACTORY_PASS') ?: "FakeProGetPass"
+String DOCKER_REGISTRY_URL=System.getenv('ARTIFACTORY_DOCKER_DEV_REPOSITORY')
+
+def dockerCommonPath = rootProject.properties['docker.dockerCommonPath']
+def dockerFullCommonPath = DOCKER_REGISTRY_URL + dockerCommonPath
+
+ext.dockerFullCommonPath = dockerFullCommonPath
+
+def debugDockerBuild = Boolean.parseBoolean(project.findProperty("debugDockerBuild") ?: 'false')
+
+task dockerLogin(type: Exec) {
+    commandLine "docker", "login", "--username=$DOCKER_REGISTRY_USERNAME", "--password=$DOCKER_REGISTRY_PASSWORD", "$DOCKER_REGISTRY_URL"
+
+    if (debugDockerBuild) {
+        doFirst {
+            println "Exec: " + commandLine.toString().replace(DOCKER_REGISTRY_PASSWORD, "HIDDEN_PASSWORD")
+        }
+    }
+}
+
+task dockerLogout(type: Exec) {
+    commandLine "docker", "logout", "$DOCKER_REGISTRY_URL"
+
+    if (debugDockerBuild) {
+        doFirst {
+            println "Exec: " + commandLine
+        }
+    }
+}
+
+// Always do a logout if login was executed
+dockerLogin.finalizedBy dockerLogout
+
+// Example: 5.3.21
+def dockerFullTagVersion = rootProject.properties['version'].toString()
+ext.dockerFullTagVersion = dockerFullTagVersion
+
+// Example: 5.3
+def dockerShortTagVersion = dockerFullTagVersion.substring(0, version.lastIndexOf('.'))
+
+def defaultDockerImages = [
+        main   : 'src/main/docker/Dockerfile',
+        openjdk: 'src/main/docker/openjdk/Dockerfile'
+]
+
+task printDockerTagVersion {
+    doLast {
+        println "Docker full tag version: " + dockerFullTagVersion
+        println "Docker short tag version: " + dockerShortTagVersion
+    }
+}
+dockerLogin.dependsOn printDockerTagVersion
+
+allprojects {
+
+    // We have to do that only after all evaluation is finished because otherwise we will not see other tasks
+    afterEvaluate {
+
+        def prepareFilesForDockerTask = tasks.findByName('prepareFilesForDocker')
+        //println "Tasks: " + project.tasks
+        //println "Task: " + prepareFilesForDockerTask
+        if (prepareFilesForDockerTask) {
+            // This project has Docker task
+
+            def flavors = (findProperty('dockerImages') ?: defaultDockerImages)
+
+            def dockerBuildAllImagesTask = tasks.create('dockerBuildImageAll', DefaultTask) {
+                group 'docker'
+                description 'Build all docker images'
+            }
+            def dockerPublishAllImagesTask = tasks.create('dockerPublishImageAll', DefaultTask) {
+                group 'docker'
+                description 'Upload all docker images to the repository'
+            }
+
+
+            flavors.each { flavor, dockerFileLocation ->
+                String flavorTagSuffix = flavor == "main" ? '' : "-" + flavor
+                String flavorTaskSuffix = flavor == "main" ? '' : flavor.capitalize()
+
+                def dockerImageName = project.ext['dockerImageName']
+                def imageUrl = dockerFullCommonPath + dockerImageName
+                def urlWithFullVersion = imageUrl + ":" + dockerFullTagVersion + flavorTagSuffix
+                def urlWithShortVersion = imageUrl + ":" + dockerShortTagVersion + flavorTagSuffix
+                def urlWithLatestTag = imageUrl + ":latest" + flavorTagSuffix
+                def dockerfileSrc = project.file(dockerFileLocation)
+                def dockerDestDir = project.file("$buildDir/docker")
+                def dockerfileDestDir = project.file("$buildDir/docker/dockerfile/$flavor")
+                java.nio.file.Path dockerfileDest = dockerfileDestDir.toPath().resolve(dockerfileSrc.getName())
+                project.ext.dockerUrlWithLatestTag = urlWithLatestTag
+
+                if (debugDockerBuild) {
+                    println "flavor: " + flavor
+                    println "dockerFileLocation: " + dockerFileLocation
+                    println "dockerImageName: " + dockerImageName
+                    println "urlWithFullVersion: " + urlWithFullVersion
+                    println "urlWithShortVersion: " + urlWithShortVersion
+                    println "urlWithLatestTag: " + urlWithLatestTag
+                    println "dockerfileSrc.path: " + dockerfileSrc.path
+                    println "dockerDestDir.path: " + dockerDestDir.path
+                    println "dockerfileDestDir.path: " + dockerfileDestDir.path
+                    println "dockerfileDest: " + dockerfileDest
+                }
+
+                def cleanTask = tasks.findByName('clean')
+                prepareFilesForDockerTask.mustRunAfter(cleanTask)
+                // Configure original task to be executed after clean if clean requested
+
+                // dockerRemoveExistingImage
+                def dockerRemoveExistingImageTask = tasks.create('dockerRemoveExistingImage' + flavorTaskSuffix, Exec) {
+                    group 'docker'
+                    dependsOn dockerLogin
+                    description 'Removes existing docker image tags if it\'s has same tags as image we going to create'
+
+                    workingDir rootDir
+                    ignoreExitValue true
+
+                    // You can change list of tags/branches to be deleted
+                    // TODO: Make this a configuration option
+                    commandLine "docker", "rmi", urlWithShortVersion, urlWithFullVersion
+
+                    if (debugDockerBuild) {
+                        doFirst {
+                            println "Exec: " + commandLine
+                        }
+                    }
+                }
+                dockerLogout.mustRunAfter dockerRemoveExistingImageTask
+
+                def dockerFileReplaceTokens = project.ext.has('dockerFileReplaceTokens') ? project.ext['dockerFileReplaceTokens'] : null
+
+                // copyDockerfile
+                def copyDockerfileTask = tasks.create('copyDockerfile' + flavorTaskSuffix, Copy) {
+                    group 'docker'
+                    from dockerfileSrc
+                    into dockerfileDestDir
+                    mustRunAfter cleanTask
+
+                    if (dockerFileReplaceTokens != null) {
+                        filter(ReplaceTokens, tokens: dockerFileReplaceTokens)
+                    }
+
+                    if (debugDockerBuild) {
+                        doLast {
+                            println "From: " + dockerfileSrc.path
+                            println "Into: " + dockerDestDir.path
+                            println "dockerFileReplaceTokens: " + dockerFileReplaceTokens
+                        }
+                    }
+                }
+
+                // dockerBuildImage
+                def dockerBuildImageTask = tasks.create('dockerBuildImage' + flavorTaskSuffix, Exec) {
+                    group 'docker'
+                    description 'Build docker image and apply two tags on it: tag with full current version and "short" version tag'
+
+                    dependsOn prepareFilesForDockerTask
+                    dependsOn copyDockerfileTask
+                    dependsOn dockerLogin
+                    dependsOn dockerRemoveExistingImageTask
+
+
+                    workingDir dockerDestDir
+                    // You can change list of tags/branches to be created
+                    // TODO: Make this a configuration option
+                    commandLine "docker", "build", "-t", urlWithShortVersion, "-t", urlWithFullVersion, "-f", dockerfileDest.toAbsolutePath().toString(), "--rm", "."
+
+                    if (debugDockerBuild) {
+                        doFirst {
+                            println "Exec: " + commandLine
+                        }
+                    }
+                }
+                dockerLogout.mustRunAfter dockerBuildImageTask
+                dockerBuildAllImagesTask.dependsOn dockerBuildImageTask
+
+                // dockerPublishImage
+                def dockerPublishImageTask = tasks.create('dockerPublishImage' + flavorTaskSuffix, Exec) {
+                    group 'docker'
+                    description 'Upload docker image to the repository'
+
+                    dependsOn dockerBuildImageTask
+
+                    workingDir rootDir
+                    commandLine "docker", "push", imageUrl
+
+                    if (debugDockerBuild) {
+                        doFirst {
+                            println "Exec: " + commandLine
+                        }
+                    }
+                }
+                dockerLogout.mustRunAfter dockerPublishImageTask
+                dockerPublishAllImagesTask.dependsOn dockerPublishImageTask
+            }
+        }
+    }
+}

@@ -1,0 +1,70 @@
+using System;
+using System.IO;
+using System.Threading;
+
+using EPAM.Deltix.Timebase.Api;
+using EPAM.Deltix.Timebase.Api.Communication;
+using EPAM.Deltix.Timebase.Api.Messages;
+using EPAM.Deltix.Timebase.Api.Schema.Types;
+using EPAM.Deltix.Timebase.Client;
+
+namespace TimebaseSample
+{
+    /// <summary>
+    /// Prints out the first 100 messages from the specified stream.
+    /// </summary>
+    public class WriteStream
+    {
+        public static void Run()
+        {
+            using (ITickDb db = TickDbFactory.CreateFromUrl("${timebase.url}"))
+            {
+                db.Open(false);
+                var stream = db.GetStream("${timebase.stream}");
+                var options = new LoadingOptions() { Loader = TypeMap.TYPE_LOADER };
+
+                var msg_Activity = new Activity();
+
+
+                ITickLoader loader = stream.CreateLoader(options);
+                for (int ii = 0; ii < 10; ii++)
+                {
+
+                    msg_Activity.InstrumentType = InstrumentType.Equity;
+                    msg_Activity.Symbol = "DLTX";
+                    // Initialize the fields of hubstaff.Activity:
+                    msg_Activity.ClientInvoiced = BooleanDataType.Null;
+                    msg_Activity.TaskId = 1;
+                    msg_Activity.Tracked = 1;
+                    msg_Activity.Immutable = BooleanDataType.Null;
+                    msg_Activity.UserId = 1;
+                    msg_Activity.TimesheetId = 1;
+                    msg_Activity.TimeType = "This is a string";
+                    msg_Activity.Client = "This is a string";
+                    msg_Activity.Keyboard = 1;
+                    msg_Activity.Date = new DateTime(2013, 07, 08, 22, 13, 24).AddMilliseconds(447) /* = 2013-07-08 22:13:27.447 GMT */;
+                    msg_Activity.Overall = 1;
+                    msg_Activity.Mouse = 1;
+                    msg_Activity.TeamInvoiced = BooleanDataType.Null;
+                    msg_Activity.Id = 1;
+                    msg_Activity.Paid = BooleanDataType.Null;
+                    msg_Activity.TimesheetLocked = BooleanDataType.Null;
+                    msg_Activity.TimeSlot = new DateTime(2013, 07, 08, 22, 13, 24).AddMilliseconds(447) /* = 2013-07-08 22:13:27.447 GMT */;
+                    msg_Activity.ProjectId = 1;
+                    msg_Activity.StartsAt = new DateTime(2013, 07, 08, 22, 13, 24).AddMilliseconds(447) /* = 2013-07-08 22:13:27.447 GMT */;
+                    msg_Activity.Partition = 1;
+                    msg_Activity.Offset = 1;
+                    msg_Activity.OriginalTimestamp = new DateTime(2013, 07, 08, 22, 13, 24).AddMilliseconds(447) /* = 2013-07-08 22:13:27.447 GMT */;
+
+                    loader.Send(msg_Activity);
+                    Console.WriteLine("Sent: " + msg_Activity.ToString());
+
+
+                    Thread.Sleep(100);
+                }
+
+                loader.Close();
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+<pack name="QuantOffice" id="QuantOffice" required="no" preselected="false" condition="qoNoError">
+    <description>Desktop environment for developing, testing and deploying strategies.${qo.error}</description>
+
+    <singlefile src="${izpack.generated.path}/${qo.version}.exe" target="${INSTALL_PATH}/temp/qo-setup.exe" override="true"/>
+    <singlefile src="${izpack.generated.path}/Prerequisites.zip" target="${INSTALL_PATH}/temp/Prerequisites.zip" override="true"/>
+    <singlefile src="${izpack.resources.path}/windows/qo-setup.bat" target="${INSTALL_PATH}/temp/qo-setup.bat" override="true"/>
+    <singlefile src="${izpack.resources.path}/windows/qo-setup.ini" target="${INSTALL_PATH}/temp/setup.ini" override="true"/>
+
+    <parsable targetfile="${INSTALL_PATH}/temp/qo-setup.bat"/>
+    <parsable targetfile="${INSTALL_PATH}/temp/setup.ini"/>
+    <executable type="bin" targetfile="${INSTALL_PATH}/temp/qo-setup.bat" stage="postinstall" keep="true"/>
+</pack>

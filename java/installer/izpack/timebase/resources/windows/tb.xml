@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+<pack name="Timebase" id="Timebase" required="yes">
+    <description>Polymorphic Event-Oriented Database and Messaging System.</description>
+
+    <!-- remove old files while update -->
+    <updatecheck>
+        <include name="bin/**" />
+        <include name="lib/**" />
+        <include name="cpp/**" />
+        <include name="python/**" />
+        <include name="web/**" />
+        <include name="docs/**" />
+        <include name="dotnet/**" />
+    </updatecheck>
+
+    <!-- Specific files for Windows -->
+
+    <!-- bin directory -->
+    <fileset dir="${izpack.generated.path}/cmd" targetdir="${INSTALL_PATH}/bin" override="true">
+        <include name="*.cmd"/>
+    </fileset>
+    <parsable type="plain">
+        <fileset targetdir="${INSTALL_PATH}/bin"
+                 includes="*.cmd" />
+    </parsable>
+    <fileset dir="bin" targetdir="${INSTALL_PATH}/bin" override="true">
+        <include name="windscamd64.dll"/>
+        <include name="windscx86.dll"/>
+        <include name="winsvcx86.dll"/>
+        <include name="winsvcamd64.dll"/>
+        <include name="launcherx86.exe"/>
+        <include name="launcheramd64.exe"/>
+    </fileset>
+
+    <!-- Common files for all platform specific versions of installer -->
+
+    <!-- .NET -->
+    <fileset dir="dotnet" targetdir="${INSTALL_PATH}/dotnet" override="true">
+        <include name="**"/>
+        <exclude name="Tools"/>
+    </fileset>
+
+    <!-- lib -->
+    <fileset dir="${izpack.generated.path}/lib" targetdir="${INSTALL_PATH}/lib" override="true">
+        <include name="**"/>
+    </fileset>
+
+    <!-- dxapi -->
+    <fileset dir="cpp" targetdir="${INSTALL_PATH}/cpp" override="true">
+        <include name="dxapi/windows/**"/>
+        <include name="dxapi/linux/**"/>
+    </fileset>
+
+    <fileset dir="python" targetdir="${INSTALL_PATH}/python" override="true">
+        <include name="dxapi/**"/>
+        <include name="samples/**"/>
+    </fileset>
+
+    <!-- dfp -->
+    <fileset dir="cpp" targetdir="${INSTALL_PATH}/cpp" override="true">
+        <include name="dfp/**"/>
+    </fileset>
+
+    <!-- samples -->
+    <fileset dir="java/quantserver/samples/src/main" targetdir="${INSTALL_PATH}/samples" override="true">
+        <include name="**"/>
+    </fileset>
+
+    <!-- web -->
+    <fileset dir="web" targetdir="${INSTALL_PATH}/web" override="true">
+        <include name="default/**"/>
+        <include name="tb/**"/>
+    </fileset>
+
+    <!-- docs -->
+    <fileset dir="docs" targetdir="${INSTALL_PATH}/docs" override="true">
+        <include name="guide/**"/>
+        <include name="quantserver/**"/>
+    </fileset>
+
+    <!-- License -->
+    <fileset dir="java/installer/izpack/timebase/resources" targetdir="${INSTALL_PATH}" override="true">
+        <include name="LICENSE"/>
+    </fileset>
+
+</pack>

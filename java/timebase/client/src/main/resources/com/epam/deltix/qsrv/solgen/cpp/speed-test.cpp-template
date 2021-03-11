@@ -1,0 +1,94 @@
+#include <iostream>
+#include <vector>
+#include <ctime>
+#include <chrono>
+#include <thread>
+#include <string>
+
+#include "dxapi/dxapi.h"
+
+${cpp.codec.include}
+
+using namespace std;
+using namespace DxApi;
+
+class Reader  {
+public:
+Reader() : reader(&Reader::run, this) {
+}
+
+inline uint64_t getCount() {
+    return counter;
+}
+inline bool isAlive() {
+    return alive;
+}
+
+private:
+void run() {
+    try {
+        unique_ptr<TickDb> db(TickDb::createFromUrl("${timebase.url}"));
+        db->open(false);
+        TickStream *stream = db->getStream("${timebase.stream}");
+
+        SelectionOptions opt;
+        shared_ptr<TickCursor> cursor(stream->select(TIMESTAMP_NULL, opt, NULL, NULL));
+        ${cpp.codec.className} decoder(stream, cursor);
+
+        while (decoder.next()) {
+            counter++;
+        }
+
+        cursor->close();
+    } catch (exception &e) {
+        cout << e.what() << endl;
+    } catch (...) {
+        cout << "System exception" << endl;
+    }
+
+    alive = false;
+}
+
+private:
+    volatile uint64_t	counter = 0;
+    volatile bool		alive = true;
+    std::thread         reader;
+};
+
+void speedtest()
+{
+	const int NUM_THREADS = ${cpp.SpeedTest.numThreads};
+	const int REPORT_INTERVAL = 1000;
+    
+	Reader* readers[NUM_THREADS];
+	for (int ii = 0; ii < NUM_THREADS; ii++) {
+		readers [ii] = new Reader();
+	}
+    
+	clock_t		lastReportTime		= clock();
+	uint64_t	lastReportedCount	= 0;
+
+	while(true) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(REPORT_INTERVAL));
+
+		uint64_t	newCount		= 0;
+		bool		oneIsAlive		= false;
+
+		for(int i = 0; i < NUM_THREADS; i++) {
+			Reader* r = readers[i];
+			newCount += r->getCount();
+
+			if (r->isAlive())
+				oneIsAlive = true;
+		}
+		clock_t endTime = clock();
+		clock_t timeDiff = (endTime - lastReportTime);
+
+		cout << "Working time: " << timeDiff << "ms. " << "Messages count: " << newCount << " (" << ((newCount-lastReportedCount)*1.0)/(timeDiff/1000.0) << " msgs/second)." << endl;
+
+		if (!oneIsAlive) {
+			cout << endl << "done." << endl;
+			break;
+		}  
+	}    
+}

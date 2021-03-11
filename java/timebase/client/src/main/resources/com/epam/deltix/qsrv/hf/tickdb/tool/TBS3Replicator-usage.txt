@@ -1,0 +1,30 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++          TimeBase To S3 Replicator Command-Line Options           +
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-streams <stream1,..,streamN>   Comma-separated list of streams. Required.
+
+-timebase <timebase_url>        Timebase URL. By default: dxtick://localhost:8011
+
+-live                           If defined stream will be read in live mode instead of default batch mode.
+
+-retain <num_of_days>           Number of days timebase data should be retained after replication.
+                                When negative or not specified, timebase data will not be purged.
+
+-bucket <bucket>                AWS bucket name where stream data will be uploaded. Required.
+
+-region <region>                AWS bucket region. Required.
+
+-accessKeyId <access_key_id>    AWS access key ID. Can be specified in environment variable:
+                                AWS_ACCESS_KEY_ID
+
+-accessKey <access_key>         AWS secret access key. Can be specified in environment variable:
+                                AWS_SECRET_ACCESS_KEY
+
+-maxBatchSize <num_of_records>  Max number of records in uploaded batch. Use 0 for no limit.
+                                Default 100000.
+
+-maxBatchTime <period_in_ms>    Max time period in milliseconds spanned by records in uploaded batch. Use 0 for no limit.
+                                Default 15 min.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

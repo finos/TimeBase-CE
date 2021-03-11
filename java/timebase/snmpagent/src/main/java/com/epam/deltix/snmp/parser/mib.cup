@@ -1,0 +1,680 @@
+package com.epam.deltix.snmp.parser;
+
+import java.util.*;
+import java_cup.runtime.*;
+import com.epam.deltix.util.parsers.*;
+import com.epam.deltix.util.lang.*;
+
+parser code {:
+    @Override
+    public void     syntax_error (Symbol token) {
+        throw new SyntaxErrorException (Location.combine (token.left, token.right));
+    }
+
+    @Override
+    public void     unrecovered_syntax_error (Symbol token) {
+        syntax_error (token);
+    }
+:};
+
+action code {:
+    private static class IndexColumns {
+        final ArrayList <String> names = new ArrayList <String> ();
+        final boolean lastIsImplied;
+
+        IndexColumns (String name, boolean lastIsImplied) {
+            this.lastIsImplied = lastIsImplied;
+            names.add (name);
+        }
+
+        String []       getColumns () {
+            return (names.toArray (new String [names.size ()]));
+        }
+    }
+
+    private static long lx (long a, long b) { return (Location.combine (a, b)); }
+:};
+
+terminal String             TypeId;
+terminal String             ValueId;
+terminal Number             Number;
+terminal String             CharString;
+
+/* Punctuation */
+
+terminal ASSIGN;
+terminal RANGESEP;
+terminal ELLIPSIS;
+terminal LVB;
+terminal RVB;
+terminal LCB;
+terminal RCB;
+terminal LT;
+terminal GT;
+terminal COMMA;
+terminal DOT;
+terminal LP;
+terminal RP;
+terminal LBKT;
+terminal RBKT;
+terminal HYPHEN;
+terminal COLON;
+terminal EQ;
+terminal DQUOT;
+terminal SQUOT;
+terminal SEMIC;
+terminal AT;
+terminal PIPE;
+terminal EXC;
+terminal CARET;
+
+/* rfc2578 Keywords */
+
+terminal ABSENT;
+terminal ACCESS;
+terminal String             AGENT_CAPABILITIES;
+terminal ANY;
+terminal APPLICATION;
+terminal AUGMENTS;
+terminal BEGIN;
+terminal BIT;
+terminal BITS;
+terminal BOOLEAN;
+terminal BY;
+terminal CHOICE;
+terminal COMPONENT;
+terminal COMPONENTS;
+terminal CONTACT_INFO;
+terminal CREATION_REQUIRES;
+terminal DEFAULT;
+terminal DEFINED;
+terminal DEFINITIONS;
+terminal DEFVAL;
+terminal DESCRIPTION;
+terminal DISPLAY_HINT;
+terminal END;
+terminal ENUMERATED;
+terminal ENTERPRISE;
+terminal EXPLICIT;
+terminal EXPORTS;
+terminal EXTERNAL;
+terminal FALSE;
+terminal FROM;
+terminal GROUP;
+terminal IDENTIFIER;
+terminal IMPLICIT;
+terminal IMPLIED;
+terminal IMPORTS;
+terminal INCLUDES;
+terminal INDEX;
+terminal INTEGER;
+terminal LAST_UPDATED;
+terminal MACRO;
+terminal MANDATORY_GROUPS;
+terminal MAX;
+terminal MAX_ACCESS;
+terminal MIN;
+terminal MIN_ACCESS;
+terminal MINUS_INFINITY;
+terminal MODULE;
+terminal String             MODULE_COMPLIANCE;
+terminal String             MODULE_IDENTITY;
+terminal String             NOTIFICATION_GROUP;
+terminal String             NOTIFICATION_TYPE;
+terminal NOTIFICATIONS;
+terminal NULL;
+terminal OBJECT;
+terminal String             OBJECT_GROUP;
+terminal String             OBJECT_IDENTITY;
+terminal String             OBJECT_TYPE;
+terminal OBJECTS;
+terminal OCTET;
+terminal OF;
+terminal OPTIONAL;
+terminal ORGANIZATION;
+terminal PLUS_INFINITY;
+terminal PRESENT;
+terminal PRIVATE;
+terminal PRODUCT_RELEASE;
+terminal REAL;
+terminal REFERENCE;
+terminal REVISION;
+terminal SEQUENCE;
+terminal SET;
+terminal SIZE;
+terminal STATUS;
+terminal STRING;
+terminal SUPPORTS;
+terminal SYNTAX;
+terminal TAGS;
+terminal String             TEXTUAL_CONVENTION;
+terminal TRAP_TYPE;
+terminal TRUE;
+terminal UNITS;
+terminal UNIVERSAL;
+terminal VARIABLES;
+terminal VARIATION;
+terminal WITH;
+terminal WRITE_SYNTAX;
+
+/* Non-terminals */
+
+non terminal String                         MacroName;
+non terminal Module                         ASNModule;
+non terminal Import []                      Imports;
+non terminal Import                         SymbolsFromModule;
+non terminal ArrayList <String>             SymbolList;
+non terminal String                         Symbol;
+non terminal ModuleIdentityDefinition       ModuleIdentityDefinition;
+non terminal Revision                       Revision;
+non terminal Definition                     Definition;
+non terminal ObjectIdDefinition             ObjectIdDefinition;
+non terminal ObjectTypeDefinition           ObjectTypeDefinition;
+non terminal IndexInfo                      IndexPart;
+non terminal IndexColumns                   IndexTypes;
+non terminal Type                           Syntax;
+non terminal ArrayList <NameNumberPair>     NamedBits;
+non terminal NameNumberPair                 NamedBit;
+non terminal TypeAssignment                 TypeAssignment;
+non terminal Type                           Type;
+/* non terminal ArrayList <Constraint>         ConstraintList; */
+non terminal Constraint                     Constraint;
+non terminal Constraint                     NumConstraint;
+non terminal Number                         LowerEnd;
+non terminal Number                         UpperEnd;
+non terminal ArrayList <NameNumberPair>     NamedNumberList;
+non terminal NameNumberPair                 NamedNumber;
+non terminal Number                         SignedNumber;
+non terminal ArrayList <Field>              SequenceElementList;
+non terminal NameNumberPair                 ObjIdComponents;
+non terminal OIDValue                       ObjectIdentifierValue;
+non terminal TextualConvention              TextualConvention;
+non terminal MacroDefinition                MacroDefinition;
+non terminal Object                         MacroContent;
+non terminal Type                           TaggedType;
+non terminal Element                        Tag;
+non terminal Element                        TagClass;
+
+non terminal Definition            ObjectGroupDefinition;
+non terminal Definition            NotificationTypeDefinition;
+non terminal Definition            NotificationGroupDefinition;
+non terminal Definition            ModuleComplianceDefinition;
+non terminal Definition            AgentCapabilitiesDefinition;
+non terminal Element            ComplianceGroup;
+non terminal Element            ComplianceObject;
+non terminal Element            ValueIdList;
+non terminal Element            ComplianceModule;
+non terminal Element            Compliance;
+non terminal Element            ACModule;
+non terminal Element            Variation;
+
+precedence right LP;
+precedence left RBKT;
+
+/* The grammar */
+
+/* X680-0207 Section 12.1 */
+
+ASNModule ::=
+    TypeId:tid DEFINITIONS ASSIGN BEGIN 
+    [ Imports:imps {: RESULT = imps; :} ]:imps 
+    { Definition:d {: if (d != null) _list_.add (d); :} }:defs 
+    END:e
+        {:
+            RESULT = 
+                new Module (
+                    lx (tidleft, eright), tid, (Import []) imps, 
+                    defs.toArray (new Definition [defs.size ()])
+                );
+        :};
+
+Imports ::=
+    IMPORTS 
+    { SymbolsFromModule:s {: _list_.add (s); :} }:s 
+    SEMIC
+        {: RESULT = s.toArray (new Import [s.size ()]); :};
+
+SymbolsFromModule ::=
+    SymbolList:sl FROM TypeId:tid
+        {: RESULT = new Import (lx (slleft, tidright), tid, sl); :};
+
+SymbolList ::=
+    Symbol:s
+        {: RESULT = new ArrayList (); RESULT.add (s); :} | 
+    SymbolList:sl COMMA Symbol:sym
+        {: sl.add (sym); RESULT = sl; :};
+
+Symbol ::= 
+    ValueId:v 
+        {: RESULT = v; :} | 
+    TypeId:v 
+        {: RESULT = v; :} | 
+    MacroName:v 
+        {: RESULT = v; :};
+
+MacroName ::=
+    OBJECT_TYPE:v
+        {: RESULT = v; :} | 
+    MODULE_IDENTITY:v
+        {: RESULT = v; :} | 
+    NOTIFICATION_TYPE:v
+        {: RESULT = v; :} | 
+    OBJECT_GROUP:v
+        {: RESULT = v; :} | 
+    OBJECT_IDENTITY:v
+        {: RESULT = v; :} | 
+    NOTIFICATION_GROUP:v
+        {: RESULT = v; :} | 
+    MODULE_COMPLIANCE:v
+        {: RESULT = v; :} | 
+    AGENT_CAPABILITIES:v
+        {: RESULT = v; :} |
+    TEXTUAL_CONVENTION:v
+        {: RESULT = v; :};
+
+Definition ::= 
+    ModuleIdentityDefinition:v {: RESULT = v; :} |
+    ObjectTypeDefinition:v {: RESULT = v; :} |
+    ObjectIdDefinition:v {: RESULT = v; :} |
+    TypeAssignment:v {: RESULT = v; :} |
+    ObjectGroupDefinition:v {: RESULT = v; :} |
+    NotificationTypeDefinition:v {: RESULT = v; :} |
+    NotificationGroupDefinition:v {: RESULT = v; :} |
+    ModuleComplianceDefinition:v {: RESULT = v; :} |
+    AgentCapabilitiesDefinition:v {: RESULT = v; :} |
+    MacroDefinition:v {: RESULT = v; :};
+
+ModuleIdentityDefinition ::=
+    ValueId:id MODULE_IDENTITY 
+    LAST_UPDATED CharString:lu
+    ORGANIZATION CharString:org
+    CONTACT_INFO CharString:cinfo 
+    DESCRIPTION CharString:desc
+    { Revision:r {: _list_.add (r); :} }:revs
+    ASSIGN ObjectIdentifierValue:oid
+        {:
+            RESULT = 
+                new ModuleIdentityDefinition (
+                    lx (idleft, oidright),
+                    id, lu, org, cinfo, desc, 
+                    revs.toArray (new Revision [revs.size ()]), 
+                    oid
+                );
+        :};
+   
+Revision ::=
+    REVISION:r CharString:date
+    DESCRIPTION CharString:desc
+        {: RESULT = new Revision (lx (rleft, descright), date, desc); :};
+
+ObjectIdDefinition ::=
+    ValueId:id OBJECT IDENTIFIER ASSIGN ObjectIdentifierValue:oid
+        {: 
+            RESULT = 
+                new ObjectIdDefinition (
+                    lx (idleft, oidright), 
+                    id, null, null, null, oid
+                ); 
+        :} |
+    ValueId:id OBJECT_IDENTITY
+    STATUS ValueId:status
+    DESCRIPTION CharString:desc
+    [ REFERENCE CharString:ref {: RESULT = ref; :} ]:ref
+    ASSIGN ObjectIdentifierValue:oid
+        {: 
+            RESULT = 
+                new ObjectIdDefinition (
+                    lx (idleft, oidright), 
+                    id, status, desc, (String) ref, oid
+                ); 
+        :};
+
+ObjectIdentifierValue ::=
+    LCB:a { ObjIdComponents:c {: _list_.add (c); :} }:cc RCB:b
+        {: 
+            RESULT = 
+                new OIDValue (
+                    lx (aleft, bright), 
+                    cc.toArray (new NameNumberPair [cc.size ()])
+                ); 
+        :};
+
+ObjIdComponents ::=
+    ValueId:id 
+        {: RESULT = new NameNumberPair (lx (idleft, idright), id, null); :} |
+    Number:n
+        {: RESULT = new NameNumberPair (lx (nleft, nright), null, n); :} |
+    ValueId:id LP Number:n RP:p
+        {: RESULT = new NameNumberPair (lx (idleft, pright), id, null); :};
+    
+/* RFC2578 Page 8 */
+
+ObjectTypeDefinition ::= 
+    ValueId:id OBJECT_TYPE 
+    SYNTAX Syntax:syn
+    [ UNITS CharString:u {: RESULT = u; :} ]:u
+    MAX_ACCESS ValueId:max
+    STATUS ValueId:status
+    DESCRIPTION CharString:desc
+    [ REFERENCE CharString:ref {: RESULT = ref; :} ]:ref
+    [ IndexPart:ip {: RESULT = ip; :} ]:ip
+    /* [ DefValPart ] */
+    ASSIGN ObjectIdentifierValue:oid
+        {:   
+            RESULT = 
+                new ObjectTypeDefinition (
+                    lx (idleft, oidright),
+                    id, syn, (String) u, max, status, 
+                    desc, (String) ref, (IndexInfo) ip, oid
+                );
+        :};
+
+IndexPart ::=
+    INDEX:a LCB IndexTypes:it RCB:b
+        {: 
+            RESULT = 
+                new PrimaryIndexInfo (
+                    lx (aleft, bright), 
+                    it.getColumns (),
+                    it.lastIsImplied
+                );
+        :} | 
+    AUGMENTS:a LCB ValueId:id RCB:b
+        {: RESULT = new AugmentedIndexInfo (lx (aleft, bright), id); :};
+
+IndexTypes ::=
+    ValueId:id  
+        {: RESULT = new IndexColumns (id, false); :} | 
+    IMPLIED ValueId:id 
+        {: RESULT = new IndexColumns (id, true); :} | 
+    ValueId:id COMMA IndexTypes:it
+        {: it.names.add (0, id); RESULT = it; :};
+
+Syntax ::=
+    Type:t
+        {: RESULT = t; :} |
+    SEQUENCE:s OF TypeId:id 
+        {: RESULT = new SequenceOfType (lx (sleft, idright), id); :} |
+    BITS:a LCB NamedBits:bits RCB:b
+        {: 
+            RESULT = 
+                new BitsType (
+                    lx (aleft, bright), 
+                    bits.toArray (new NameNumberPair [bits.size ()])
+                ); 
+        :};
+
+NamedBits ::= 
+    NamedBit:b 
+        {: RESULT = new ArrayList (); RESULT.add (b); :} | 
+    NamedBits:a COMMA NamedBit:b
+        {: a.add (b); RESULT = a; :};
+
+NamedBit ::=  
+    ValueId:name LCB Number:num RCB:e
+        {: RESULT = new NameNumberPair (lx (nameleft, eleft), name, num); :};
+
+TypeAssignment ::=
+    TypeId:id ASSIGN Type:t
+        {: RESULT = new TypeAssignment (lx (idleft, tright), id, t); :};
+
+Type ::=
+    /* INTEGER: X680-0207 Section 18 */
+    INTEGER:t
+        {: RESULT = new NamedType (lx (tleft, tright), "INTEGER"); :} |
+    INTEGER:a LCB NamedNumberList:list RCB:b
+        {:
+            RESULT = 
+                new EnumeratedType (
+                    lx (aleft, bright),
+                    list.toArray (new NameNumberPair [list.size ()])
+                );
+        :} |
+    TaggedType:t
+        {: RESULT = t; :} |
+    OCTET:a STRING:b
+        {: RESULT = new NamedType (lx (aleft, bright), "OCTET STRING"); :} |
+    OBJECT:a IDENTIFIER:b
+        {: RESULT = new NamedType (lx (aleft, bright), "OBJECT IDENTIFIER"); :} |
+    TypeId:t
+        {: RESULT = new NamedType (lx (tleft, tright), t); :} |
+    /* Type:t LP ConstraintList:cons RP:e
+        {: 
+            RESULT = 
+                new ConstrainedType (
+                    lx (tleft, eright), 
+                    t,
+                    cons.toArray (new Constraint [cons.size ()])
+                ); 
+        :} |   */
+    Type:t LP Constraint:cons RP:e
+        {: 
+            RESULT = new ConstrainedType (lx (tleft, eright), t, cons ); 
+        :} |   
+    TextualConvention:tc
+        {: RESULT = tc; :} |
+    SEQUENCE:a LCB SequenceElementList:list RCB:b
+        {:
+            RESULT =
+                new StructureType (
+                    lx (aleft, bright),
+                    list.toArray (new Field [list.size ()])
+                );
+        :}  |
+    CHOICE:a LCB SequenceElementList:list RCB:b
+        {:
+            RESULT =
+                new ChoiceType (
+                    lx (aleft, bright),
+                    list.toArray (new Field [list.size ()])
+                );
+        :};
+
+TextualConvention ::=
+    TEXTUAL_CONVENTION:t
+    [ DISPLAY_HINT CharString:h {: RESULT = h; :}  ]:hint
+    STATUS ValueId:status
+    DESCRIPTION CharString:desc
+    [ REFERENCE CharString:r {: RESULT = r; :} ]:ref
+    SYNTAX Syntax:syntax
+        {:
+            RESULT = 
+                new TextualConvention (
+                    lx (tleft, syntaxright),
+                    (String) hint, status, desc, (String) ref, syntax
+                );
+        :};
+
+/* Section 30.1 */
+TaggedType ::=
+    Tag Type:t
+        {: RESULT = t; :} | 
+    Tag IMPLICIT Type:t
+        {: RESULT = t; :} | 
+    Tag EXPLICIT Type:t
+        {: RESULT = t; :};
+
+Tag ::= 
+    LBKT TagClass Number RBKT;
+
+TagClass ::=
+    UNIVERSAL | APPLICATION | PRIVATE | ;
+
+/*
+ConstraintList ::= 
+    Constraint:c
+        {: RESULT = new ArrayList (); RESULT.add (c); :} |
+    ConstraintList:list COMMA Constraint:c
+        {: list.add (c); RESULT = list; :};
+*/
+
+Constraint ::=
+    SIZE:a LP NumConstraint:c RP:b
+        {: RESULT = new SizeConstraint (lx (aleft, bright), c); :} |
+    NumConstraint:c
+        {: RESULT = c; :};
+    
+NumConstraint ::=
+    Number:n { PIPE Number:n {: _list_.add (n); :} }:t
+        {: 
+            t.add (0, n); 
+            RESULT = 
+                new ValueListConstraint (
+                    lx (nleft, tright),
+                    t.toArray (new Number [t.size ()])
+                ); 
+        :} |
+    LowerEnd:lo RANGESEP UpperEnd:hi
+        {: RESULT = new RangeConstraint (lx (loleft, hiright), lo, hi); :};
+
+LowerEnd ::=
+    SignedNumber:n
+        {: RESULT = n; :} | 
+    MIN
+        {: RESULT = null; :};
+
+UpperEnd ::=
+    SignedNumber:n
+        {: RESULT = n; :} | 
+    MAX
+        {: RESULT = null; :};
+
+NamedNumberList ::=
+    NamedNumber:nn 
+        {: RESULT = new ArrayList (); RESULT.add (nn); :} |
+    NamedNumberList:list COMMA NamedNumber:nn
+        {: list.add (nn); RESULT = list; :} ;
+
+NamedNumber ::=
+    ValueId:id LP SignedNumber:n RP:e
+        {: RESULT = new NameNumberPair (lx (idleft, eright), id, n); :}
+    /* | ValueId "(" DefinedValue ")" */;
+
+SignedNumber ::=
+    Number:n 
+        {: RESULT = n; :} | 
+    HYPHEN Number:n
+        {: RESULT = MathUtil.negate (n); :};
+
+SequenceElementList ::= 
+    SequenceElementList:list COMMA ValueId:id Type:t 
+        {:
+            list.add (new Field (lx (idleft, tright), id, t));
+            RESULT = list;
+        :} | 
+    ValueId:id Type:t
+        {: 
+            RESULT = new ArrayList (); 
+            RESULT.add (new Field (lx (idleft, tright), id, t)); 
+        :};
+
+ObjectGroupDefinition ::=
+    ValueId OBJECT_GROUP
+    OBJECTS LCB ValueIdList RCB
+    STATUS ValueId
+    DESCRIPTION CharString
+    [ REFERENCE CharString ] 
+    ASSIGN ObjectIdentifierValue;
+
+ValueIdList ::=
+    ValueId |
+    ValueIdList COMMA ValueId;
+
+NotificationTypeDefinition ::=
+    ValueId NOTIFICATION_TYPE
+    [ OBJECTS LCB ValueIdList RCB ]
+    STATUS ValueId
+    DESCRIPTION CharString
+    [ REFERENCE CharString ]
+    ASSIGN ObjectIdentifierValue;
+
+NotificationGroupDefinition ::=
+    ValueId NOTIFICATION_GROUP
+    NOTIFICATIONS LCB ValueIdList RCB
+    STATUS ValueId
+    DESCRIPTION CharString
+    [ REFERENCE CharString ]
+    ASSIGN ObjectIdentifierValue;
+
+ModuleComplianceDefinition ::=
+    ValueId MODULE_COMPLIANCE
+    STATUS ValueId
+    DESCRIPTION CharString
+    [ REFERENCE CharString ]
+    { ComplianceModule }
+    ASSIGN ObjectIdentifierValue;
+
+ComplianceModule ::=
+    MODULE
+    [ MANDATORY_GROUPS LCB ValueIdList RCB ]
+    { Compliance };
+
+Compliance ::=
+    ComplianceGroup | 
+    ComplianceObject;
+
+ComplianceGroup ::=
+    GROUP ValueId
+    DESCRIPTION CharString;
+
+ComplianceObject ::=
+    OBJECT ValueId
+    [ SYNTAX Syntax ]
+    [ WRITE_SYNTAX Syntax ]
+    [ MIN_ACCESS ValueId ]
+    DESCRIPTION CharString;
+
+AgentCapabilitiesDefinition ::=
+    ValueId AGENT_CAPABILITIES
+    PRODUCT_RELEASE CharString
+    STATUS ValueId
+    DESCRIPTION CharString
+    [ REFERENCE CharString ]
+    { ACModule }
+    ASSIGN ObjectIdentifierValue;
+
+ACModule ::=
+    SUPPORTS TypeId
+    INCLUDES LCB ValueIdList RCB
+    { Variation };
+
+Variation ::=    
+    VARIATION ValueId
+    [ SYNTAX Syntax ]
+    [ WRITE_SYNTAX Syntax ]
+    [ MIN_ACCESS ValueId ]
+    [ CREATION_REQUIRES LCB ValueIdList RCB ]
+    /* DefValPart */
+    DESCRIPTION CharString;
+
+MacroDefinition ::=
+    MacroName:id MACRO ASSIGN BEGIN { MacroContent } END:e
+        {: 
+            RESULT = new MacroDefinition (lx (idleft, eright), id); 
+        :};
+
+MacroContent ::= 
+    ValueId | TypeId | LP | RP | PIPE | ASSIGN | CharString | 
+    OBJECT | IDENTIFIER;
+
+/*
+    UNIMPLEMENTED
+
+    DefValPart ::= 
+        DEFVAL LCB Defvalue RCB;
+
+
+    Defvalue ::=  -- must be valid for the type specified in
+                      -- SYNTAX clause of same OBJECT-TYPE macro
+                      value(ObjectSyntax)
+                    | "{" BitsValue "}"
+
+    BitsValue ::= BitNames
+                | empty
+
+    BitNames ::=  BitName
+                | BitNames "," BitName
+
+    BitName ::= identifier
+*/
+

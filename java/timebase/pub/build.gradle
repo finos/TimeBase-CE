@@ -1,0 +1,21 @@
+group = 'com.epam.deltix'
+apply plugin: 'java-library'
+
+dependencies {
+    implementation ('deltix.qsrv:deltix-commons-lang')
+    implementation ('deltix.qsrv:deltix-commons-util')
+    implementation ('deltix.qsrv:deltix-commons-messages')
+
+    implementation ('org.apache.commons:commons-lang3')
+
+    implementation('deltix:rtmath-containers')
+
+    //api ('deltix.qsrv:deltix-timebase-api-messages')
+//    implementation 'java:tools'
+    implementation 'com.sun.activation:javax.activation'
+    implementation 'com.sun.codemodel:codemodel'
+    implementation 'com.sun.codemodel:codemodel-project'
+    implementation 'javax.activation:javax.activation-api'
+
+    compileOnly 'com.google.code.findbugs:jsr305'
+}

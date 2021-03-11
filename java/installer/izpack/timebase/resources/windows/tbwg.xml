@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+<pack name="WebGateway" id="WebGateway" required="no">
+    <description>Timebase Web Gateway</description>
+
+    <!-- remove old files while update -->
+    <updatecheck>
+        <include name="tbwg/**" />
+    </updatecheck>
+
+    <!-- bin directory -->
+    <fileset dir="${izpack.generated.path}/tbwg" targetdir="${INSTALL_PATH}/bin" override="true">
+        <include name="*.cmd"/>
+    </fileset>
+    <parsable type="plain">
+        <fileset targetdir="${INSTALL_PATH}/bin"
+                 includes="*.cmd" />
+    </parsable>
+
+    <file src="${izpack.generated.path}/tbwg/deltix-timebase-ws-server-distribution.zip"
+          targetdir="${INSTALL_PATH}/tbwg"
+          unpack="true"/>
+
+</pack>

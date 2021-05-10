@@ -18,7 +18,7 @@ public class SystemdServiceBuilder {
 
     static {
         InputStream systemdStream = SystemdServiceBuilder.class.getClassLoader()
-                .getResourceAsStream("deltix/installer/admin/model/systemd.service");
+                .getResourceAsStream("com/epam/deltix/installer/admin/model/systemd.service");
         assert systemdStream != null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(systemdStream));
         systemdTemplate = reader.lines().reduce((x, y) -> String.join("\n", x, y)).get();

@@ -168,7 +168,7 @@ class EvalGenerator {
 
         Class<?> collection = null;
         try {
-            collection = Class.forName("deltix.util.collections.generated." + primitiveWrapper(clazz).getSimpleName() + (n > 10 ? "HashSet" : "ArrayList"));
+            collection = Class.forName("com.epam.deltix.util.collections.generated." + primitiveWrapper(clazz).getSimpleName() + (n > 10 ? "HashSet" : "ArrayList"));
         } catch (ClassNotFoundException ex) {
             throw new RuntimeException(ex);
         }

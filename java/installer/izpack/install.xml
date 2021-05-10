@@ -199,19 +199,19 @@
 
     <!-- list of panels -->
     <panels>
-        <panel classname="deltix.izpack.panels.properties.InitPanel" id="welcome"/>
-        <panel classname="deltix.izpack.panels.license.HTMLLicencePanel" id="license"/>
-        <panel classname="deltix.izpack.panels.target.CheckedTargetPanel" id="install_dir"/>
+        <panel classname="com.epam.deltix.izpack.panels.properties.InitPanel" id="welcome"/>
+        <panel classname="com.epam.deltix.izpack.panels.license.HTMLLicencePanel" id="license"/>
+        <panel classname="com.epam.deltix.izpack.panels.target.CheckedTargetPanel" id="install_dir"/>
 
-        <panel classname="deltix.izpack.panels.license.CheckLicensePanel" id="serialPanel" condition="checkLicense"/>
+        <panel classname="com.epam.deltix.izpack.panels.license.CheckLicensePanel" id="serialPanel" condition="checkLicense"/>
         <panel classname="UserInputPanel" id="installationNamePanel"/>
         <panel classname="deltix.izpack.panels.requirements.RequirementsPanel" id="checkRequirements"/>
 
         <panel classname="PacksPanel" id="packsSelection"/>
-        <panel classname="deltix.izpack.panels.properties.StorePropertiesPanel" id="storeProperties"/>
+        <panel classname="com.epam.deltix.izpack.panels.properties.StorePropertiesPanel" id="storeProperties"/>
         <panel classname="InstallPanel" id="install"/>
-        <panel classname="deltix.izpack.panels.shortcuts.ShortcutPanel" id="shortcuts"/>
-        <panel classname="deltix.izpack.panels.finish.FinishPanel" id="finish"/>
+        <panel classname="com.epam.deltix.izpack.panels.shortcuts.ShortcutPanel" id="shortcuts"/>
+        <panel classname="com.epam.deltix.izpack.panels.finish.FinishPanel" id="finish"/>
     </panels>
 
     <!-- modules to install -->

@@ -338,7 +338,7 @@ public class JavaBeanGenerator extends BeanGenerator {
         if (lang == Language.JAVA)
             cimpl.addAnnotation (cgx.annotation (SchemaElement.class, "name", ecd.getName ()));
         else
-            cimpl.addAnnotation (cgx.annotation (((JTypeImpl) () -> "Deltix.Timebase.Api.SchemaElement"), "Name", ecd.getName ()));
+            cimpl.addAnnotation (cgx.annotation (((JTypeImpl) () -> "EPAM.Deltix.Timebase.Api.SchemaElement"), "Name", ecd.getName ()));
 
         return cimpl;
     }
@@ -368,7 +368,7 @@ public class JavaBeanGenerator extends BeanGenerator {
         if (lang == Language.JAVA)
             cimpl.addAnnotation (cgx.annotation (SchemaElement.class, "name", rcd.getName ()));
         else
-            cimpl.addAnnotation (cgx.annotation (((JTypeImpl) () -> "Deltix.Timebase.Api.SchemaElement"), "Name", rcd.getName ()));
+            cimpl.addAnnotation (cgx.annotation (((JTypeImpl) () -> "EPAM.Deltix.Timebase.Api.SchemaElement"), "Name", rcd.getName ()));
 
 //        if (rcd.isConvertibleTo (GenericInstrument.class.getName ())) {
 //            final String javaClassName = getName (rcd);
@@ -439,7 +439,7 @@ public class JavaBeanGenerator extends BeanGenerator {
                 if (lang == Language.JAVA)
                     variable.addAnnotation (cgx.annotation (SchemaElement.class, "name", fname));
                 else
-                    variable.addAnnotation (cgx.annotation (((JTypeImpl) () -> "Deltix.Timebase.Api.SchemaElement"), "Name", fname));
+                    variable.addAnnotation (cgx.annotation (((JTypeImpl) () -> "EPAM.Deltix.Timebase.Api.SchemaElement"), "Name", fname));
             }
         }
 
@@ -451,13 +451,13 @@ public class JavaBeanGenerator extends BeanGenerator {
             if (lang == Language.JAVA)
                 copyFrom = cimpl.addMethod (Modifier.PUBLIC, InstrumentMessage.class, "copyFrom");
             else
-                copyFrom = cimpl.addMethod(Modifier.PROTECTED, ((JTypeImpl) () -> "Deltix.Timebase.Api.Messages.IRecordInterface"), "CopyFromImpl");
+                copyFrom = cimpl.addMethod(Modifier.PROTECTED, ((JTypeImpl) () -> "EPAM.Deltix.Timebase.Api.Messages.IRecordInterface"), "CopyFromImpl");
 
             copyFrom.addAnnotation(cgx.annotation(Override.class));
 
             JMethodArgument     source = (lang == Language.JAVA) ?
                     copyFrom.addArg(0, RecordInfo.class, "source") :
-                    copyFrom.addArg(0, ((JTypeImpl) () -> "Deltix.Timebase.Api.Messages.IRecordInfo"), "source");
+                    copyFrom.addArg(0, ((JTypeImpl) () -> "EPAM.Deltix.Timebase.Api.Messages.IRecordInfo"), "source");
 
             JMethod             toString =
                 cimpl.addMethod (Modifier.PUBLIC, String.class, (lang == Language.JAVA) ? "toString" : "ToString");

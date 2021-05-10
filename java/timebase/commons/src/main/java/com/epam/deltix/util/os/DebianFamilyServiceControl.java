@@ -15,9 +15,9 @@ public class DebianFamilyServiceControl extends LinuxServiceControl {
     @Override
     public String getServiceLauncherTemplatePath(boolean mono) {
         if (mono)
-            return "deltix/util/os/debian-mono-service-launcher";
+            return "com/epam/deltix/util/os/debian-mono-service-launcher";
         else
-            return "deltix/util/os/debian-linux-service-launcher";
+            return "com/epam/deltix/util/os/debian-linux-service-launcher";
     }  
         
     @Override

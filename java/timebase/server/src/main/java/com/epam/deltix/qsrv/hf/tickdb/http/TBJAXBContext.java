@@ -20,10 +20,9 @@ import java.util.Map;
 @Depends ({ "../jaxb.index", "../download/jaxb.index", "../stream/jaxb.index" })
 public class TBJAXBContext {
     private static final String PACKAGE_PATH =
-            "deltix.qsrv.hf.tickdb.http:" +
-            "deltix.qsrv.hf.tickdb.http.download:" +
-            "deltix.qsrv.hf.tickdb.http.stream:";
-
+            "com.epam.deltix.qsrv.hf.tickdb.http:" +
+            "com.epam.deltix.qsrv.hf.tickdb.http.download:" +
+            "com.epam.deltix.qsrv.hf.tickdb.http.stream:";
 
     private static final JAXBContext INSTANCE;
 

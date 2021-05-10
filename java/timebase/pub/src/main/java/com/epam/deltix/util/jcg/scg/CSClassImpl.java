@@ -54,7 +54,7 @@ final class CSClassImpl extends ClassImpl {
         out.print ("class ", name ());
 
         if (parentName != null)
-            out.print (" : ", parentName.equals(InstrumentMessage.class.getName()) ? "Deltix.Timebase.Api.Messages.InstrumentMessage" : parentName);
+            out.print (" : ", parentName.equals(InstrumentMessage.class.getName()) ? "EPAM.Deltix.Timebase.Api.Messages.InstrumentMessage" : parentName);
 
         int             n = interfaceNames.size ();
 

@@ -119,7 +119,7 @@ public class ParquetReplicator extends DefaultApplication {
     }
 
     public static void main(String[] args) {
-        PropertyConfigurator.configure(ParquetReplicator.class.getClassLoader().getResource("deltix/util/parquet/log4j.properties"));
+        PropertyConfigurator.configure(ParquetReplicator.class.getClassLoader().getResource("com/epam/deltix/util/parquet/log4j.properties"));
         new ParquetReplicator(args).start();
     }
 }

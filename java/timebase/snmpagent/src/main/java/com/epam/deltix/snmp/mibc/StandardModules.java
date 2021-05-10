@@ -14,12 +14,12 @@ import java.io.Reader;
  *
  */
 @Depends ({ 
-    "deltix/snmp/mibs-v2/SNMPv2-SMI.txt",
-    "deltix/snmp/mibs-v2/SNMPv2-TC.txt",
-    "deltix/snmp/mibs-v2/SNMPv2-CONF.txt",
-    "deltix/snmp/mibs-v2/SNMPv2-MIB.txt",
-    "deltix/snmp/mibs-v2/IANAifType-MIB.txt",
-    "deltix/snmp/mibs-v2/IF-MIB.txt"
+    "com/epam/deltix/snmp/mibs-v2/SNMPv2-SMI.txt",
+    "com/epam/deltix/snmp/mibs-v2/SNMPv2-TC.txt",
+    "com/epam/deltix/snmp/mibs-v2/SNMPv2-CONF.txt",
+    "com/epam/deltix/snmp/mibs-v2/SNMPv2-MIB.txt",
+    "com/epam/deltix/snmp/mibs-v2/IANAifType-MIB.txt",
+    "com/epam/deltix/snmp/mibs-v2/IF-MIB.txt"
 })
 public class StandardModules {
     private static ModuleRegistry       sysRegistry = new ModuleRegistry ();
@@ -48,7 +48,7 @@ public class StandardModules {
             
         
         try {
-            rd = IOUtil.openResourceAsReader ("deltix/snmp/mibs-v2/" + name);
+            rd = IOUtil.openResourceAsReader ("com/epam/deltix/snmp/mibs-v2/" + name);
             pmod = MIBParser.parse (rd);
         } catch (IOException iox) {
             throw new IllegalStateException ("Could not load " + name, iox);

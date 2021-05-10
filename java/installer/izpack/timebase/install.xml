@@ -136,20 +136,20 @@
     </natives>
 
     <listeners>
-        <listener stage="uninstall" classname="deltix.izpack.uninstaller.UninstallServiceAction" />
+        <listener stage="uninstall" classname="com.epam.deltix.izpack.uninstaller.UninstallServiceAction" />
     </listeners>
 
     <!-- list of panels -->
     <panels>
-        <panel classname="deltix.izpack.panels.properties.InitPanel" id="welcome"/>
-        <panel classname="deltix.izpack.panels.license.HTMLLicencePanel" id="license"/>
-        <panel classname="deltix.izpack.panels.target.CheckedTargetPanel" id="install_dir"/>
+        <panel classname="com.epam.deltix.izpack.panels.properties.InitPanel" id="welcome"/>
+        <panel classname="com.epam.deltix.izpack.panels.license.HTMLLicencePanel" id="license"/>
+        <panel classname="com.epam.deltix.izpack.panels.target.CheckedTargetPanel" id="install_dir"/>
 
         <panel classname="PacksPanel" id="packsSelection"/>
         <panel classname="InstallPanel" id="install"/>
-        <panel classname="deltix.izpack.panels.timebase.TimebasePanel" id="timebase"/>
-        <panel classname="deltix.izpack.panels.tbwg.WebGatewayPanel" id="webGateway" condition="webGatewayPackIsSelected"/>
-        <panel classname="deltix.izpack.panels.finish.FinishPanel" id="fakeFinish"/>
+        <panel classname="com.epam.deltix.izpack.panels.timebase.TimebasePanel" id="timebase"/>
+        <panel classname="com.epam.deltix.izpack.panels.tbwg.WebGatewayPanel" id="webGateway" condition="webGatewayPackIsSelected"/>
+        <panel classname="com.epam.deltix.izpack.panels.finish.FinishPanel" id="fakeFinish"/>
     </panels>
 
     <!-- modules to install -->

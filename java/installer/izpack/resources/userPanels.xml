@@ -4,7 +4,7 @@
     <panel id="serialPanel" rigid="true" topBuffer="25">
         <field type="text" variable="SerialProperties.serial" align="left" size="26">
             <spec id="SerialProperties.serial.spec" size="26" />
-            <validator class="deltix.izpack.SerialValidator" id="SerialProperties.serial.invalid"/>
+            <validator class="com.epam.deltix.izpack.SerialValidator" id="SerialProperties.serial.invalid"/>
         </field>
 
         <field type="space"/>
@@ -46,7 +46,7 @@
 
         <field type="text" variable="InstallationNameProperties.instName" align="left" size="30">
             <spec id="InstallationNameProperties.instName.spec" size="30"/>
-            <validator class="deltix.izpack.InstallationNameValidator" id="InstallationNameValidator.instName.invalid"/>
+            <validator class="com.epam.deltix.izpack.InstallationNameValidator" id="InstallationNameValidator.instName.invalid"/>
         </field>
 
         <field type="staticText" align="left" id="installationName.text2"/>

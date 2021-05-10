@@ -17,7 +17,7 @@ public class SNMPTransportFactory {
     protected static final Logger LOGGER = Logger.getLogger ("deltix.util.tomcat");
 
     private static final Level LEVEL_STARTUP = new Level ("STARTUP", Level.SEVERE.intValue() - 10) { };
-    public static final String TOP_SNMP_DATA_OBJECT_CLASS_NAME = "deltix.qsrv.snmp.modimpl.QuantServerImpl";
+    public static final String TOP_SNMP_DATA_OBJECT_CLASS_NAME = "com.epam.deltix.qsrv.snmp.modimpl.QuantServerImpl";
 
     public static ExternalSocketTransportMapping initializeSNMP(int port, QuantServerSnmpObjectContainer objectContainer) {
         try {

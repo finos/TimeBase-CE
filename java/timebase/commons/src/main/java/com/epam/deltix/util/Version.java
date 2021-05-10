@@ -80,6 +80,6 @@ public abstract class Version {
     }
 
     public static void                  main (String [] args) {
-        System.out.println ("Deltix Software - Version " + VERSION_STRING);
+        System.out.println ("EPAM Software - Version " + VERSION_STRING);
     }
 }

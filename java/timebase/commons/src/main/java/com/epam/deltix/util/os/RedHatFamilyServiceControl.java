@@ -16,7 +16,7 @@ public class RedHatFamilyServiceControl extends LinuxServiceControl {
 
     @Override
     public String getServiceLauncherTemplatePath(boolean mono) {
-        return "deltix/util/os/redhat-linux-service-launcher";
+        return "com/epam/deltix/util/os/redhat-linux-service-launcher";
     }  
         
     @Override

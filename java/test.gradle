@@ -119,7 +119,7 @@ configure(ext.leafProjects) {
 }
 
 private static boolean isProjectHasCategories(Project project) {
-    if (project.group == "deltix.qsrv.quantserver" && project.name == "pub") {
+    if (project.group == "com.epam.deltix" && project.name == "pub") {
         return true
     }    
     if (project.configurations.findByName("testRuntimeClasspath") == null) {

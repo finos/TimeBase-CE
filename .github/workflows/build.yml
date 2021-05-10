@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ '8' ]
+        java: [ '11' ]
         os: [ 'ubuntu-latest', 'windows-latest']
     steps:
       - name: Checkout code
@@ -40,7 +40,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Build with gradle
-        run: ./gradlew build test
+        run: ./gradlew build
       - name: Upload test results
         if: ${{ failure() }}
         uses: actions/upload-artifact@v2

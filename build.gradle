@@ -82,7 +82,7 @@ clean.dependsOn(cleanBuildSrc)
 task cleanJava(dependsOn: [':java:cleanSubprojects', cleanBuildSrc]) {
 }
 
-task buildJava(dependsOn: ':java:build')
+//task buildJava(dependsOn: ':java:build')
 //task buildDotNet(dependsOn: ':dotnet:build')
 
 task testJava(dependsOn: 'java:allJunitTests')
@@ -153,7 +153,7 @@ task generateSetQsVersionScript() {
 }
 
 //build.dependsOn buildJava, buildDotNet, license, generateSetQsVersionScript
-build.dependsOn buildJava, license, generateSetQsVersionScript
+build.dependsOn license, generateSetQsVersionScript
 
 def currentJvm = org.gradle.internal.jvm.Jvm.current()
 

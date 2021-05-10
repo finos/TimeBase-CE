@@ -1,6 +1,6 @@
 apply from: "$rootDir/distribution/scripts.gradle"
 
-apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'de.undercouch.download'
 
 //todo: with source compatibility 11 installer won't work
@@ -18,9 +18,6 @@ if (!project.hasProperty('instVersion'))
 
 if (!project.hasProperty('qoVersion'))
     ext.qoVersion = 'UNDEFINED'
-
-def rUser = findProperty('NEXUS_USER') ?:  System.getenv('NEXUS_USER') ?: "FakeProGetUser"
-def rPass = findProperty('NEXUS_PASS') ?:  System.getenv('NEXUS_PASS') ?: "FakeProGetPass"
 
 def customPacksArray = []
 if (project.hasProperty('customPacks')) {

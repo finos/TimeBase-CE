@@ -1,0 +1,49 @@
+name: Build CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+jobs:
+  build:
+    name: Build Java ${{ matrix.java }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [ '8' ]
+        os: [ 'ubuntu-latest', 'windows-latest']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Cache gradle dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-caches-
+      - name: Cache gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+      - name: Setup java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Build with gradle
+        run: ./gradlew build test
+      - name: Upload test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with:
+          path: build/reports/tests/test
+          name: Test Report

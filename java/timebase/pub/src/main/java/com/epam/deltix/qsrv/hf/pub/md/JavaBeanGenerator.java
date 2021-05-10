@@ -710,9 +710,9 @@ public class JavaBeanGenerator extends BeanGenerator {
             variable = cimpl.addVar(
                     Modifier.PUBLIC,// | Modifier.FINAL,
                     isArray ? ObjectArrayList.class :
-                            deltix.util.collections.generated.ByteArrayList.class,
+                            com.epam.deltix.util.collections.generated.ByteArrayList.class,
                     fjname,
-                    isArray ? null : cgx.newExpr(deltix.util.collections.generated.ByteArrayList.class)
+                    isArray ? null : cgx.newExpr(com.epam.deltix.util.collections.generated.ByteArrayList.class)
             );
         }
 

@@ -5,8 +5,8 @@ dependencies {
     compile project(':java:timebase:client')
     compile project(':java:timebase:api')
 
-    implementation ('deltix.qsrv:deltix-commons-lang')
-    implementation ('deltix.qsrv:deltix-commons-util')
-    implementation ('deltix.qsrv:deltix-commons-messages')
+    implementation ('com.epam.deltix:timebase-lang')
+    implementation ('com.epam.deltix:timebase-util')
+    implementation ('com.epam.deltix:timebase-messages')
 
 }

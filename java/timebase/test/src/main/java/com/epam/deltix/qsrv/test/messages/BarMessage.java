@@ -120,7 +120,7 @@ public class BarMessage extends MarketMessage {
      * Opening price for the bar interval.
      */
     public void nullifyOpen() {
-        this.open = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        this.open = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
     }
 
     /**
@@ -159,7 +159,7 @@ public class BarMessage extends MarketMessage {
      * Highest price for the bar interval.
      */
     public void nullifyHigh() {
-        this.high = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        this.high = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
     }
 
     /**
@@ -198,7 +198,7 @@ public class BarMessage extends MarketMessage {
      * Lowest price for the bar interval.
      */
     public void nullifyLow() {
-        this.low = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        this.low = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
     }
 
     /**
@@ -236,7 +236,7 @@ public class BarMessage extends MarketMessage {
      * Closing price for the bar interval.
      */
     public void nullifyClose() {
-        this.close = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        this.close = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
     }
 
     /**
@@ -274,7 +274,7 @@ public class BarMessage extends MarketMessage {
      * Trade volume.
      */
     public void nullifyVolume() {
-        this.volume = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        this.volume = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
     }
 
     /**
@@ -306,14 +306,14 @@ public class BarMessage extends MarketMessage {
      * @return true if Exchange Code is not null
      */
     public boolean hasExchangeId() {
-        return exchangeId != deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
+        return exchangeId != com.epam.deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
     }
 
     /**
      * Vendor-specific market code.
      */
     public void nullifyExchangeId() {
-        this.exchangeId = deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
+        this.exchangeId = com.epam.deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
     }
 
     /**
@@ -346,12 +346,12 @@ public class BarMessage extends MarketMessage {
     @Override
     public BarMessage reset() {
         super.reset();
-        open = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
-        high = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
-        low = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
-        close = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
-        volume = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
-        exchangeId = deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
+        open = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        high = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        low = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        close = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        volume = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        exchangeId = com.epam.deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
         return this;
     }
 

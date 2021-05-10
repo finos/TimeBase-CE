@@ -14,6 +14,6 @@ public class Test_StreamOptions {
 
         assertNotNull(schemaChangeMessageDescriptor);
         assertEquals(4, schemaChangeMessageDescriptor.getFields().length);
-        assertEquals("deltix.timebase.messages.schema.SchemaChangeMessage", schemaChangeMessageDescriptor.getName());
+        assertEquals("com.epam.deltix.timebase.messages.schema.SchemaChangeMessage", schemaChangeMessageDescriptor.getName());
     }
 }

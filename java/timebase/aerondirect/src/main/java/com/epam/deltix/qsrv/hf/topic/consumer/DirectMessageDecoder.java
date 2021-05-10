@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.hf.topic.consumer;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;

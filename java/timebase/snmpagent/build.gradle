@@ -3,8 +3,12 @@ apply plugin: 'java-library'
 group = 'deltix.epam.deltix'
 
 dependencies {
-    implementation 'deltix.qsrv:deltix-commons-collections'
-    implementation 'deltix.qsrv:deltix-commons-util'
+    api 'com.epam.deltix:timebase-collections'
+    api 'com.epam.deltix:timebase-util'
+    api 'com.epam.deltix:timebase-lang'
+
+    implementation 'com.epam.deltix:gflog-api',
+            'com.epam.deltix:gflog-jul'
 
     // SNMP Support
     api('org.snmp4j:snmp4j:2.5.8') { transitive = false }   //change from version 2.1.0

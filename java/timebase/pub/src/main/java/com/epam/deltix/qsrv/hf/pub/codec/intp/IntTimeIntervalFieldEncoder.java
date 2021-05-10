@@ -29,6 +29,6 @@ class IntTimeIntervalFieldEncoder extends IntegerFieldEncoder {
 
     @Override
     void        setLongImpl (long value, EncodingContext ctxt) {
-        deltix.qsrv.hf.pub.codec.TimeIntervalCodec.write(value, ctxt.out);
+        TimeIntervalCodec.write(value, ctxt.out);
     }    
 }

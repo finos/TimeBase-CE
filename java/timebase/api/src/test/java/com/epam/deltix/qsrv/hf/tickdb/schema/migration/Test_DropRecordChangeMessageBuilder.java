@@ -30,13 +30,13 @@ public class Test_DropRecordChangeMessageBuilder {
     private StreamMetaDataChange getStreamMetaDataChange() {
         StreamMetaDataChange streamMetaDataChange = new StreamMetaDataChange();
 
-        deltix.qsrv.hf.pub.md.DataField newFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.IntegerDataType("INT32", false));
+        com.epam.deltix.qsrv.hf.pub.md.DataField newFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.IntegerDataType("INT32", false));
 
-        deltix.qsrv.hf.pub.md.RecordClassDescriptor targetDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState);
+        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor targetDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState);
 
-        deltix.qsrv.hf.pub.md.DataField oldFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.IntegerDataType("INT64", false));
+        com.epam.deltix.qsrv.hf.pub.md.DataField oldFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.IntegerDataType("INT64", false));
 
-        deltix.qsrv.hf.pub.md.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState);
+        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState);
 
         RecordClassSet targetClassSet = new RecordClassSet();
         targetClassSet.setClassDescriptors(targetDescriptor);
@@ -71,18 +71,18 @@ public class Test_DropRecordChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.IntegerDataType int32DataType = new com.epam.deltix.timebase.messages.schema.IntegerDataType();
+        com.epam.deltix.timebase.messages.schema.IntegerDataType int32DataType = new com.epam.deltix.timebase.messages.schema.IntegerDataType();
         int32DataType.setEncoding("INT32");
         int32DataType.setIsNullable(false);
 
-        deltix.timebase.messages.schema.IntegerDataType int64DataType = new com.epam.deltix.timebase.messages.schema.IntegerDataType();
+        com.epam.deltix.timebase.messages.schema.IntegerDataType int64DataType = new com.epam.deltix.timebase.messages.schema.IntegerDataType();
         int64DataType.setEncoding("INT64");
         int64DataType.setIsNullable(false);
 
-        deltix.timebase.messages.schema.DataField previousFieldState = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField previousFieldState = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         previousFieldState.setTitle("title");
         previousFieldState.setName("field");
         previousFieldState.setDataType(int64DataType);
@@ -99,14 +99,14 @@ public class Test_DropRecordChangeMessageBuilder {
         schemaChangeMessage.setPreviousState(previousState);
 
         ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
 
         ObjectArrayList<DataFieldInfo> targetDescriptorFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.DataField targetField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField targetField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         targetField.setTitle("title");
         targetField.setName("field");
         targetField.setDataType(int32DataType);

@@ -2,9 +2,9 @@ group = 'com.epam.deltix'
 
 dependencies {
     implementation 'com.amazonaws:aws-java-sdk-s3:1.11.696'
-    implementation 'deltix.qsrv:deltix-commons-collections'
-    implementation 'deltix:deltix-gflog-jul',
-            'deltix:deltix-gflog-dcl',
-            'deltix:deltix-gflog-mail'
+    implementation 'com.epam.deltix:timebase-collections'
+    implementation 'com.epam.deltix:timebase-lang'
+    implementation 'com.epam.deltix:gflog-jul',            
+            'com.epam.deltix:gflog-mail'
     implementation 'org.apache.commons:commons-lang3'
 }

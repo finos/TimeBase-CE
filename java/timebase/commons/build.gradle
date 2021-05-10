@@ -4,17 +4,16 @@ evaluationDependsOn(":")
 apply plugin: 'java-library'
 
 dependencies {
-    compile project(':java:timebase:pub')
-    //compile project(':java:license:client')
+    api project(':java:timebase:pub')
+    api project(':java:timebase:snmpagent')
 
-    implementation ('deltix.qsrv:deltix-commons-lang')
-    implementation ('deltix.qsrv:deltix-commons-util')
-    //implementation ('deltix.qsrv:deltix-commons-log')
-    implementation ('deltix.qsrv:deltix-commons-messages')
+    api ('com.epam.deltix:timebase-lang')
+    api ('com.epam.deltix:timebase-util')
+    api ('com.epam.deltix:timebase-messages')
 
-    implementation project(':java:timebase:snmpagent')
+    implementation 'javax.xml.bind:jaxb-api'
 
-    compile 'org.apache.tomcat.embed:tomcat-embed-core' // Tomcat core
+    api 'org.apache.tomcat.embed:tomcat-embed-core' // Tomcat core
     implementation 'org.apache.tomcat.embed:tomcat-embed-jasper' // Tomcat JSP support
     implementation 'org.apache.tomcat.embed:tomcat-embed-logging-juli' // Tomcat Logging
     compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
@@ -25,18 +24,20 @@ dependencies {
 
     implementation 'org.apache.commons:commons-text'
 
-    testCompile 'commons-io:commons-io'
+    testImplementation 'commons-io:commons-io'
+
+    implementation 'com.github.sarxos:windows-registry-util:0.3'
 
 //    compile 'org.springframework:spring-beans' // Used by plugins (TODO: Check)
 //    implementation 'org.springframework:spring-context'
 //    implementation 'org.springframework:spring-webmvc'
 
-    implementation 'deltix:deltix-gflog-jul',
-            'deltix:deltix-gflog-dcl',
-            'deltix:deltix-gflog-mail'
-
-    runtimeOnly 'deltix:deltix-gflog-jcl',
-            'deltix:deltix-gflog-slf4j'
+    implementation 'com.epam.deltix:gflog-api',
+            'com.epam.deltix:gflog-core',
+            'com.epam.deltix:gflog-jul',
+            'com.epam.deltix:gflog-jcl',
+            'com.epam.deltix:gflog-slf4j',
+            'com.epam.deltix:gflog-mail'
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens

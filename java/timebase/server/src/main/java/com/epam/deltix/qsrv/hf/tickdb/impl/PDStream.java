@@ -2,8 +2,8 @@ package com.epam.deltix.qsrv.hf.tickdb.impl;
 
 import com.epam.deltix.qsrv.hf.tickdb.schema.migration.SchemaChangeMessageBuilder;
 import com.epam.deltix.streaming.MessageChannel;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.dtb.fs.hdfs.DistributedFS;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractFileSystem;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
@@ -636,7 +636,7 @@ public class PDStream extends TickStreamImpl {
     @Override
     public long[]           getTimeRange(IdentityKey... entities) {
 
-        deltix.qsrv.dtb.store.pub.TimeRange all = new com.epam.deltix.qsrv.dtb.store.pub.TimeRange();
+        com.epam.deltix.qsrv.dtb.store.pub.TimeRange all = new com.epam.deltix.qsrv.dtb.store.pub.TimeRange();
 
         TSRoot[] active = getActiveRoots();
         for (TSRoot tsr : active)
@@ -645,17 +645,17 @@ public class PDStream extends TickStreamImpl {
         return !all.isUndefined() ? new long[] {TimeStamp.getMilliseconds(all.from), TimeStamp.getMilliseconds(all.to)} : null;
     }
 
-    public void           getTimeRange(TSRoot root, deltix.qsrv.dtb.store.pub.TimeRange all, IdentityKey... entities) {
+    public void           getTimeRange(TSRoot root, com.epam.deltix.qsrv.dtb.store.pub.TimeRange all, IdentityKey... entities) {
 
         if (entities.length == 0) {
-            deltix.qsrv.dtb.store.pub.TimeRange next = new com.epam.deltix.qsrv.dtb.store.pub.TimeRange();
+            com.epam.deltix.qsrv.dtb.store.pub.TimeRange next = new com.epam.deltix.qsrv.dtb.store.pub.TimeRange();
             root.getTimeRange(next);
             if (!next.isUndefined())
                 all.unionInPlace(next.from, next.to);
 
         } else {
             SymbolRegistry sr = root.getSymbolRegistry();
-            deltix.qsrv.dtb.store.pub.TimeRange range = new com.epam.deltix.qsrv.dtb.store.pub.TimeRange();
+            com.epam.deltix.qsrv.dtb.store.pub.TimeRange range = new com.epam.deltix.qsrv.dtb.store.pub.TimeRange();
 
             for (IdentityKey entity : entities) {
                 int id = sr.symbolToId(entity.getSymbol());

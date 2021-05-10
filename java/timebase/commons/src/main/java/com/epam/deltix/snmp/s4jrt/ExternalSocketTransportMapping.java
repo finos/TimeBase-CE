@@ -7,7 +7,6 @@ import java.io.BufferedInputStream;
 import java.net.*;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
 
 import com.epam.deltix.util.tomcat.ConnectionHandshakeHandler;
 import org.snmp4j.*;

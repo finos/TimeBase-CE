@@ -1,11 +1,18 @@
 dependencies {
-    compile project(':java:timebase:pub')
-    compile project(':java:timebase:client')
-    compile project(':java:timebase:api')
+    api project(':java:timebase:pub')
+    api project(':java:timebase:client')
+    api project(':java:timebase:api')
 
-    implementation ('deltix.qsrv:deltix-commons-lang')
-    implementation ('deltix.qsrv:deltix-commons-util')
-    implementation ('deltix.qsrv:deltix-commons-messages')
+    api ('com.epam.deltix:timebase-lang')
+    api ('com.epam.deltix:timebase-util')
+    api ('com.epam.deltix:timebase-messages')
+
+    implementation ('com.epam.deltix:dfp')
+
+    implementation 'javax.xml.bind:jaxb-api'
+
+    implementation 'com.epam.deltix:gflog-api',
+            'com.epam.deltix:gflog-jul'
 
     implementation 'org.apache.parquet:parquet-common',
             'org.apache.parquet:parquet-column',

@@ -3,9 +3,12 @@ group = 'com.epam.deltix'
 dependencies {
     implementation project(':java:timebase:api') // Depends on classes: RawMessage,  TypeSet, ChannelPerformance
     implementation project(':java:timebase:pub')
-    implementation ('deltix.qsrv:deltix-commons-lang')
-    implementation ('deltix.qsrv:deltix-commons-util')
-    implementation ('deltix.qsrv:deltix-commons-messages')
+    implementation ('com.epam.deltix:timebase-lang')
+    implementation ('com.epam.deltix:timebase-util')
+    implementation ('com.epam.deltix:timebase-messages')
+
+    implementation 'com.epam.deltix:gflog-api',
+            'com.epam.deltix:gflog-jul'
 
     implementation 'com.lmax:disruptor'
 

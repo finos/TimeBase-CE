@@ -8,7 +8,7 @@ import com.epam.deltix.util.collections.generated.ByteArrayList;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.lang.Util;
-import rtmath.containers.interfaces.BinaryArrayReadOnly;
+import com.epam.deltix.containers.interfaces.BinaryArrayReadOnly;
 
 import java.lang.reflect.*;
 import java.util.*;

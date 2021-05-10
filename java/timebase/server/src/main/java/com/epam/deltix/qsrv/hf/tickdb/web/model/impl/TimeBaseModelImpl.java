@@ -48,7 +48,7 @@ public class TimeBaseModelImpl implements TimeBaseModel {
 
     @Override
     public TBMonitor getMonitor() {
-        return (TBMonitor) deltix.qsrv.hf.tickdb.http.AbstractHandler.TDB;
+        return (TBMonitor) com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler.TDB;
     }
 
 }

@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.comm.server;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.util.time.TimeKeeper;
 
 import java.io.*;
@@ -31,7 +31,7 @@ public class UserLogger {
 
     private static final String PATTERN               = "[user=%s, ip=%s, app=%s] %s";
 
-    private static Log logger = deltix.gflog.LogFactory.getLog("deltix.user.logger");
+    private static Log logger = com.epam.deltix.gflog.api.LogFactory.getLog("deltix.user.logger");
 
 //    public static boolean   isEnabled(Principal user) {
 //        return user != null && logger != null;

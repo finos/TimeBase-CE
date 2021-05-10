@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.parser;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.hf.codec.ClassCodecFactory;
 import com.epam.deltix.util.parsers.Location;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;

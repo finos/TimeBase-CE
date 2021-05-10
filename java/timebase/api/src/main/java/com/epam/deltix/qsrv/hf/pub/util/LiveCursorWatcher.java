@@ -66,7 +66,7 @@ public class LiveCursorWatcher extends Thread implements Disposable {
                     }
                 } catch (CursorIsClosedException ie) {
                     return;
-                } catch (deltix.util.io.UncheckedIOException ex) {
+                } catch (com.epam.deltix.util.io.UncheckedIOException ex) {
                     if (ex.getCause() instanceof EOFException)
                         return;
                     else

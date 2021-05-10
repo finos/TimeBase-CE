@@ -8,7 +8,7 @@ import com.epam.deltix.qsrv.hf.tickdb.schema.*;
 import com.epam.deltix.timebase.messages.schema.*;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.collections.generated.ObjectList;
-import rtmath.containers.ObjObjPair;
+import com.epam.deltix.containers.ObjObjPair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -110,11 +110,11 @@ public class SchemaChangeMessageBuilder {
         ObjectArrayList<ClassDescriptorInfo> descriptors = new ObjectArrayList<>();
 
         if (recordClassSet != null && recordClassSet.getClassDescriptors() != null) {
-            deltix.qsrv.hf.pub.md.ClassDescriptor[] contentClasses = recordClassSet.getClassDescriptors();
+            com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor[] contentClasses = recordClassSet.getClassDescriptors();
             for (int i = 0; i < contentClasses.length; i++) {
                 ClassDescriptor contentClass = contentClasses[i];
                 if (contentClass instanceof RecordClassDescriptor) {
-                    deltix.timebase.messages.schema.RecordClassDescriptor recordClassDescriptor = map((RecordClassDescriptor) contentClass);
+                    com.epam.deltix.timebase.messages.schema.RecordClassDescriptor recordClassDescriptor = map((RecordClassDescriptor) contentClass);
 
                     if (recordClassSet.getContentClass(contentClass.getGuid()) != null) {
                         recordClassDescriptor.setIsContentClass(true);
@@ -187,10 +187,10 @@ public class SchemaChangeMessageBuilder {
             ClassDescriptorInfo newState = pair.getFirst();
             ClassDescriptorInfo previousState = pair.getSecond();
 
-            if (newState instanceof deltix.timebase.messages.schema.RecordClassDescriptor
-                    && previousState instanceof deltix.timebase.messages.schema.RecordClassDescriptor) {
-                deltix.timebase.messages.schema.RecordClassDescriptor newRCD = (deltix.timebase.messages.schema.RecordClassDescriptor) newState;
-                deltix.timebase.messages.schema.RecordClassDescriptor prevRCD = (deltix.timebase.messages.schema.RecordClassDescriptor) previousState;
+            if (newState instanceof com.epam.deltix.timebase.messages.schema.RecordClassDescriptor
+                    && previousState instanceof com.epam.deltix.timebase.messages.schema.RecordClassDescriptor) {
+                com.epam.deltix.timebase.messages.schema.RecordClassDescriptor newRCD = (com.epam.deltix.timebase.messages.schema.RecordClassDescriptor) newState;
+                com.epam.deltix.timebase.messages.schema.RecordClassDescriptor prevRCD = (com.epam.deltix.timebase.messages.schema.RecordClassDescriptor) previousState;
 
                 if (!newRCD.isContentClass() && prevRCD.isContentClass()) {
                     result.add(new ObjObjPair<>(newRCD, prevRCD));

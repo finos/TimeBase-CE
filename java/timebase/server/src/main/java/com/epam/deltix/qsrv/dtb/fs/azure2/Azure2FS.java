@@ -2,8 +2,8 @@ package com.epam.deltix.qsrv.dtb.fs.azure2;
 
 import com.microsoft.azure.datalake.store.ADLStoreClient;
 import com.microsoft.azure.datalake.store.oauth2.ClientCredsTokenProvider;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 import com.epam.deltix.util.lang.Util;
 

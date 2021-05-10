@@ -1,8 +1,8 @@
 package com.epam.deltix.util.s3;
 
 import com.amazonaws.util.StringInputStream;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.util.collections.KeyEntry;
 import com.epam.deltix.util.collections.Visitor;
 import org.apache.http.client.utils.DateUtils;

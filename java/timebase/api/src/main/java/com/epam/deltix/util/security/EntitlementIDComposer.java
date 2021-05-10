@@ -1,7 +1,7 @@
 package com.epam.deltix.util.security;
 
 import com.epam.deltix.util.lang.StringUtils;
-import rtmath.containers.BinaryArray;
+import com.epam.deltix.containers.BinaryArray;
 
 public class EntitlementIDComposer<T extends EntitlementIDComposer> implements EntitlementID {
     

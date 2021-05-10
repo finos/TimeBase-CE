@@ -25,6 +25,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -64,6 +65,7 @@ public class TDBRunner {
 
     public static String        getTemporaryLocation(String subpath) {
         File random = Home.getFile("temp" + File.separator + new GUID().toString() + File.separator + subpath);
+
         if (random.mkdirs())
             random.deleteOnExit();
 

@@ -1,9 +1,9 @@
 package com.epam.deltix.qsrv.dtb.store.impl;
 
-import com.epam.deltix.gflog.AppendableEntry;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogLevel;
-import com.epam.deltix.gflog.Loggable;
+import com.epam.deltix.gflog.api.AppendableEntry;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogLevel;
+import com.epam.deltix.gflog.api.Loggable;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 import com.epam.deltix.util.lang.MathUtil;
 

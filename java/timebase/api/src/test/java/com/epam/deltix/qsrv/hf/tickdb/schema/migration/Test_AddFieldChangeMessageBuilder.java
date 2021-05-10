@@ -104,17 +104,17 @@ public class Test_AddFieldChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        deltix.timebase.messages.schema.DataField sourceField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField sourceField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         sourceField.setTitle("title");
         sourceField.setName("field");
         sourceField.setDataType(varcharDataType);
@@ -131,14 +131,14 @@ public class Test_AddFieldChangeMessageBuilder {
         schemaChangeMessage.setPreviousState(previousState);
 
         ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
 
         ObjectArrayList<DataFieldInfo> targetDescriptorFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.DataField newField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField newField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         newField.setTitle("title");
         newField.setName("field2");
         newField.setDataType(varcharDataType);

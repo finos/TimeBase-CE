@@ -3,7 +3,7 @@ package com.epam.deltix.qsrv.hf.tickdb.tests;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.timebase.messages.service.BinaryMessage;
-import rtmath.containers.BinaryArray;
+import com.epam.deltix.containers.BinaryArray;
 
 import java.util.ArrayList;
 import java.util.Random;

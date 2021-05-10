@@ -1,15 +1,17 @@
 group = 'com.epam.deltix'
 
 dependencies {
-    implementation project(':java:timebase:client'),
-            project(':java:timebase:server')
+    api project(':java:timebase:client')
+    api project(':java:timebase:server')
+    api project(':java:timebase:pub')
 
-    implementation project(':java:timebase:pub')
-    implementation ('deltix.qsrv:deltix-commons-lang')
-    implementation ('deltix.qsrv:deltix-commons-util')
-    implementation ('deltix.qsrv:deltix-commons-messages')
-
-    implementation ('deltix:rtmath-containers')
+    implementation ('com.epam.deltix:timebase-lang')
+    implementation ('com.epam.deltix:timebase-util')
+    implementation ('com.epam.deltix:timebase-messages')
+    implementation ('com.epam.deltix:timebase-collections')
+    implementation ('com.epam.deltix:dfp')
+    implementation('com.epam.deltix:containers')
+    implementation ('com.epam.deltix:thread-affinity')
 
     implementation 'io.github.resilience4j:resilience4j-ratelimiter:1.3.1' // for TestLoader
     implementation 'junit:junit:4.12'
@@ -20,9 +22,12 @@ dependencies {
 
     implementation 'com.google.guava:guava'
 
-    implementation 'deltix:deltix-gflog-jul',
-            'deltix:deltix-gflog-dcl',
-            'deltix:deltix-gflog-mail'
+        implementation 'com.epam.deltix:gflog-jul',
+                'com.epam.deltix:gflog-mail'
+
+    implementation 'javax.xml.bind:jaxb-api'
+    implementation 'com.sun.xml.bind:jaxb-impl'
+    implementation 'com.sun.xml.bind:jaxb-core'
 
     compileOnly 'com.intellij:annotations'
 
@@ -38,6 +43,6 @@ dependencies {
 
     testImplementation 'net.sourceforge.stripes:stripes:1.5.6'
 
-    testImplementation 'org.f1x:f1x'
+    //testImplementation 'org.f1x:f1x'
     testCompile 'com.intellij:annotations'
 }

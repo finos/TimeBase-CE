@@ -74,14 +74,14 @@ public class MarketMessage extends InstrumentMessage {
      * @return true if Original Timestamp is not null
      */
     public boolean hasOriginalTimestamp() {
-        return originalTimestamp != deltix.timebase.messages.TypeConstants.TIMESTAMP_UNKNOWN;
+        return originalTimestamp != com.epam.deltix.timebase.messages.TypeConstants.TIMESTAMP_UNKNOWN;
     }
 
     /**
      * Exchange Time is measured in milliseconds that passed since January 1, 1970 UTC
      */
     public void nullifyOriginalTimestamp() {
-        this.originalTimestamp = deltix.timebase.messages.TypeConstants.TIMESTAMP_UNKNOWN;
+        this.originalTimestamp = com.epam.deltix.timebase.messages.TypeConstants.TIMESTAMP_UNKNOWN;
     }
 
     /**
@@ -113,7 +113,7 @@ public class MarketMessage extends InstrumentMessage {
      * @return true if Currency Code is not null
      */
     public boolean hasCurrencyCode() {
-        return currencyCode != deltix.timebase.messages.TypeConstants.INT16_NULL;
+        return currencyCode != com.epam.deltix.timebase.messages.TypeConstants.INT16_NULL;
     }
 
     /**
@@ -122,7 +122,7 @@ public class MarketMessage extends InstrumentMessage {
      * convert this value to a three-character code.
      */
     public void nullifyCurrencyCode() {
-        this.currencyCode = deltix.timebase.messages.TypeConstants.INT16_NULL;
+        this.currencyCode = com.epam.deltix.timebase.messages.TypeConstants.INT16_NULL;
     }
 
     /**
@@ -147,14 +147,14 @@ public class MarketMessage extends InstrumentMessage {
      * @return true if Sequence Number is not null
      */
     public boolean hasSequenceNumber() {
-        return sequenceNumber != deltix.timebase.messages.TypeConstants.INT64_NULL;
+        return sequenceNumber != com.epam.deltix.timebase.messages.TypeConstants.INT64_NULL;
     }
 
     /**
      * Market specific identifier of the given event in a sequence of market events.
      */
     public void nullifySequenceNumber() {
-        this.sequenceNumber = deltix.timebase.messages.TypeConstants.INT64_NULL;
+        this.sequenceNumber = com.epam.deltix.timebase.messages.TypeConstants.INT64_NULL;
     }
 
     /**
@@ -186,7 +186,7 @@ public class MarketMessage extends InstrumentMessage {
      * @return true if Source Id is not null
      */
     public boolean hasSourceId() {
-        return sourceId != deltix.timebase.messages.TypeConstants.INT64_NULL;
+        return sourceId != com.epam.deltix.timebase.messages.TypeConstants.INT64_NULL;
     }
 
     /**
@@ -194,7 +194,7 @@ public class MarketMessage extends InstrumentMessage {
      * to a same data provider should have different id.
      */
     public void nullifySourceId() {
-        this.sourceId = deltix.timebase.messages.TypeConstants.INT64_NULL;
+        this.sourceId = com.epam.deltix.timebase.messages.TypeConstants.INT64_NULL;
     }
 
     /**
@@ -223,10 +223,10 @@ public class MarketMessage extends InstrumentMessage {
      */
     @Override
     public MarketMessage reset() {
-        originalTimestamp = deltix.timebase.messages.TypeConstants.TIMESTAMP_UNKNOWN;
+        originalTimestamp = com.epam.deltix.timebase.messages.TypeConstants.TIMESTAMP_UNKNOWN;
         currencyCode = 999;
-        sequenceNumber = deltix.timebase.messages.TypeConstants.INT64_NULL;
-        sourceId = deltix.timebase.messages.TypeConstants.INT64_NULL;
+        sequenceNumber = com.epam.deltix.timebase.messages.TypeConstants.INT64_NULL;
+        sourceId = com.epam.deltix.timebase.messages.TypeConstants.INT64_NULL;
         return this;
     }
 

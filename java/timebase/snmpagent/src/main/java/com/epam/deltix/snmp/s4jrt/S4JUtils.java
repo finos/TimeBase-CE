@@ -1,6 +1,6 @@
 package com.epam.deltix.snmp.s4jrt;
 
-import com.epam.deltix.gflog.Log;
+import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.snmp.smi.SMIOID;
 import com.epam.deltix.util.net.IPEndpoint;
 import java.net.InetAddress;
@@ -13,7 +13,7 @@ import org.snmp4j.smi.*;
  *
  */
 public abstract class S4JUtils {
-    static final Log LOGGER = deltix.gflog.LogFactory.getLog("deltix.snmp");
+    static final Log LOGGER = com.epam.deltix.gflog.api.LogFactory.getLog("deltix.snmp");
 
     //public static final Logger  LOGGER = Logger.getLogger ("deltix.snmp");
     

@@ -1,6 +1,6 @@
 package com.epam.deltix.util.os;
 
-import com.epam.deltix.anvil.util.Reusable;
+//import com.epam.deltix.anvil.util.Reusable;
 import com.epam.deltix.util.io.Home;
 import org.apache.commons.text.StringSubstitutor;
 
@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class SystemdServiceBuilder implements Reusable {
+public class SystemdServiceBuilder {
 
     private static final String systemdTemplate;
 
@@ -67,7 +67,7 @@ public class SystemdServiceBuilder implements Reusable {
         return this;
     }
 
-    @Override
+    //@Override
     public void reuse() {
         user = null;
         description = "";

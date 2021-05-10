@@ -10,11 +10,9 @@ import javax.naming.directory.DirContext;
 import javax.naming.ldap.LdapName;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.util.cmdline.DefaultApplication;
 import com.epam.deltix.util.lang.Depends;
 import com.epam.deltix.util.ldap.LDAPConnection;
@@ -23,7 +21,6 @@ import com.epam.deltix.util.ldap.config.Binding;
 import com.epam.deltix.util.ldap.config.Credentials;
 import com.epam.deltix.util.ldap.config.Query;
 import com.epam.deltix.util.ldap.security.Configuration;
-import com.epam.deltix.util.log.TerseFormatter;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @Depends({
@@ -33,7 +30,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 })
 public class SecurityConfigurator extends DefaultApplication {
     public static final String UAC_LOGGER_NAME = "deltix.uac";
-    public static final Logger LOGGER = Logger.getLogger(UAC_LOGGER_NAME);
+    public static final Log LOGGER = LogFactory.getLog(UAC_LOGGER_NAME);
     public static final String LOGPREFIX = "[UAC] ";
 
     public final static String DEFAULT_DOMAIN   = "dc=deltix,dc=com";
@@ -49,10 +46,6 @@ public class SecurityConfigurator extends DefaultApplication {
     }
 
     public static void main(String[] args) throws Throwable {
-        Handler[] handlers = Logger.getLogger("").getHandlers();
-        Formatter formatter = new TerseFormatter();
-        for (Handler handler : handlers)
-            handler.setFormatter(formatter);
 
         if (args.length > 0)
             new SecurityConfigurator(args).run();
@@ -132,7 +125,7 @@ public class SecurityConfigurator extends DefaultApplication {
         }
 
         File file = new File(new File(home, "config"), "uac-ldap-security.xml");
-        LOGGER.log(Level.INFO, "Saving UAC configuration to: " + file.getAbsolutePath());
+        LOGGER.info("Saving UAC configuration to: " + file.getAbsolutePath());
         Configuration.write(config, file);
 
         System.out.println(" Done.");
@@ -192,9 +185,9 @@ public class SecurityConfigurator extends DefaultApplication {
         try {
             context.createSubcontext(unitName, entryAttrs);
         } catch (NameAlreadyBoundException e) {
-            LOGGER.log(Level.INFO, "[LDAP] Schema attribute [{0}] already exists", e.getRemainingName());
+            LOGGER.info("[LDAP] Schema attribute [%s] already exists.").with(e.getRemainingName());
         } catch (NamingException x) {
-            LOGGER.log(Level.INFO, "[LDAP] Scheme attribute ({0}) [{1}] creation fail (maybe exists)", new Object[] {entryAttrs.get("m-name"), x.getRemainingName()});
+            LOGGER.info("[LDAP] Scheme attribute (%s) [%s] creation fail (maybe exists)").with(entryAttrs.get("m-name")).with(x.getRemainingName());
         }
     }
 
@@ -251,7 +244,7 @@ public class SecurityConfigurator extends DefaultApplication {
         try {
             LdapName name = new LdapName("cn=deltix, ou=schema ");
             context.createSubcontext(name,attributes);
-            LOGGER.log(Level.INFO, "[LDAP] Deltix schema not found.Creating schema");
+            LOGGER.info( "[LDAP] Deltix schema not found.Creating schema");
             return true;
         } catch (NameAlreadyBoundException e) {
             //LOGGER.log(Level.INFO, "[LDAP] Schema already exists");

@@ -9,17 +9,22 @@ ext {
 }
 
 dependencies {
-    compile project(':java:timebase:aerondirect')
-    compile project(':java:timebase:api')
-    compile project(':java:timebase:pub')
-    compile project(':java:timebase:s3')
+    api project(':java:timebase:aerondirect')
+    api project(':java:timebase:api')
+    api project(':java:timebase:pub')
+    api project(':java:timebase:s3')
 
-    implementation ('deltix.qsrv:deltix-commons-lang')
-    implementation ('deltix.qsrv:deltix-commons-util')
-    implementation ('deltix.qsrv:deltix-commons-messages')
+    implementation ('com.epam.deltix:timebase-lang')
+    implementation ('com.epam.deltix:timebase-util')
+    implementation ('com.epam.deltix:timebase-messages')
 
+    implementation ('com.epam.deltix:containers')
+    implementation ('com.epam.deltix:dfp')
 
-    api 'deltix:deltix-thread-affinity'
+    implementation 'com.epam.deltix:thread-affinity'
+
+    implementation 'com.epam.deltix:gflog-api',
+            'com.epam.deltix:gflog-jul'
 
     implementation 'com.google.guava:guava'
     implementation 'com.google.code.gson:gson'
@@ -27,6 +32,7 @@ dependencies {
     implementation 'org.apache.commons:commons-text'
 
     implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.commons:commons-compress:1.7'
 
     // TODO: Replace by JSR305
     compileOnly 'com.intellij:annotations'
@@ -36,8 +42,8 @@ dependencies {
     testCompile 'org.openjdk.jmh:jmh-core'
     testCompile 'org.openjdk.jmh:jmh-generator-annprocess'
 
-    testRuntimeOnly 'deltix:deltix-gflog-slf4j'
-    testImplementation 'deltix:deltix-gflog-jul'
+    testRuntimeOnly 'com.epam.deltix:gflog-slf4j'
+    testImplementation 'com.epam.deltix:gflog-jul'
 }
 
 task buildTestJar(type: Jar, dependsOn: testClasses) {

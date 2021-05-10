@@ -1,6 +1,5 @@
 package com.epam.deltix.qsrv.hf.tickdb.ui.tbshell;
 
-import com.sun.istack.NotNull;
 import com.epam.deltix.data.stream.ConsumableMessageSource;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.streaming.MessageSource;
@@ -17,10 +16,10 @@ import com.epam.deltix.qsrv.hf.tickdb.schema.MetaDataChange;
 import com.epam.deltix.qsrv.hf.tickdb.schema.SchemaAnalyzer;
 import com.epam.deltix.qsrv.hf.tickdb.schema.SchemaConverter;
 import com.epam.deltix.qsrv.hf.tickdb.schema.SchemaMapping;
-//import com.epam.deltix.timebase.ClassMappings;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.progress.ConsoleProgressIndicator;
 import com.epam.deltix.util.time.Interval;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;

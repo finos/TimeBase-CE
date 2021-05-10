@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.dtb.store.impl;
 
-import com.epam.deltix.gflog.Log;
+import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.qsrv.dtb.store.codecs.BlockCompressor;
 import com.epam.deltix.util.collections.generated.ByteArrayList;
 import com.epam.deltix.util.lang.StringUtils;

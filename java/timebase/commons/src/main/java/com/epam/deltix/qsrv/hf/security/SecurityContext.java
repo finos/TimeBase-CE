@@ -17,11 +17,11 @@ public final class SecurityContext implements SecurityProvider, SecurityControll
 
     private final ContextSecurityManager securityManager;
 
-    public SecurityContext(deltix.util.security.SecurityController permissionResolver) {
+    public SecurityContext(com.epam.deltix.util.security.SecurityController permissionResolver) {
         securityManager = new ContextSecurityManager(permissionResolver);
     }
 
-    public static SecurityContext create(deltix.util.security.SecurityController controller) {
+    public static SecurityContext create(com.epam.deltix.util.security.SecurityController controller) {
         return controller != null ? new SecurityContext(controller) : null;
     }
 
@@ -74,7 +74,7 @@ public final class SecurityContext implements SecurityProvider, SecurityControll
     ///////////////////////// HELPER CLASSES /////////////////////
 
     private static final class ContextSecurityManager extends SecurityManagerBase {
-        private ContextSecurityManager(deltix.util.security.SecurityController securityController) {
+        private ContextSecurityManager(com.epam.deltix.util.security.SecurityController securityController) {
             super(securityController);
         }
 

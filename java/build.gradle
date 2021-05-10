@@ -41,8 +41,6 @@ ext {
     publisherPassword = findProperty('ARTIFACTORY_PASS') ?: System.getenv('ARTIFACTORY_PASS') ?: "FakePassword"
 }
 
-apply from: 'promotion.gradle'
-
 configure(leafProjects) {
     apply plugin: 'java'
     apply plugin: 'java-library'
@@ -72,28 +70,26 @@ configure(leafProjects) {
     // https://github.com/spring-gradle-plugins/dependency-management-plugin#dependency-management-dsl
     dependencyManagement {
         dependencies {
-            dependencySet(group: 'com.epam.deltix', version: '2.0.40') {
+            dependencySet(group: 'com.epam.deltix', version: '3.0.0') {
                 entry 'gflog-api'
                 entry 'gflog-core'
-                entry 'gflog-jul'
-                entry 'gflog-dcl'
+                entry 'gflog-jul'                
                 entry 'gflog-jcl'
                 entry 'gflog-slf4j'
                 entry 'gflog-mail'
             }
 
-            dependency 'deltix:rtmath-containers:2.3.1' //transitive
+            dependency 'com.epam.deltix:value-types:0.9.3'
+            dependency 'com.epam.deltix:dfp:0.11.01'
+            dependency 'com.epam.deltix:thread-affinity:1.0.4'
+            //implementation 'com.epam.deltix:hd-date-time:0.2.4'
+            dependency 'com.epam.deltix:containers:3.1.2'
 
-            dependency 'deltix:deltix-dfp:0.10.12'
-
-            dependency 'deltix:deltix-thread-affinity:1.0.2'
-
-            dependencySet(group: 'com.epam.deltix', version: '6.0.48') {
-                entry 'deltix-commons-collections'
-                entry 'deltix-commons-messages'
-                entry 'deltix-commons-lang'
-                entry 'deltix-commons-log'
-                entry 'deltix-commons-util'
+            dependencySet(group: 'com.epam.deltix', version: '6.0.58') {
+                entry 'timebase-collections'
+                entry 'timebase-messages'
+                entry 'timebase-lang'
+                entry 'timebase-util'
             }
 
             dependency 'org.apache.poi:poi:4.1.1'
@@ -132,7 +128,7 @@ configure(leafProjects) {
 
             dependency 'org.apache.ant:ant:1.9.13'
 
-            dependency 'org.f1x:f1x:0.7.0'
+            //dependency 'org.f1x:f1x:0.7.0'
 
             dependency 'org.hdrhistogram:HdrHistogram:2.1.10'
 
@@ -225,8 +221,14 @@ configure(leafProjects) {
                 entry 'parquet-encoding'
                 entry 'parquet-hadoop'
             }
+
             dependency 'log4j:log4j:1.2.17'
-            dependency 'javax.xml.bind:jaxb-api:2.2.2'
+
+            dependency 'javax.xml.bind:jaxb-api:2.2.8'
+            dependency 'com.sun.xml.bind:jaxb-impl:2.3.0'
+            dependency 'com.sun.xml.bind:jaxb-core:2.3.0'
+
+
             dependencySet(group: 'org.codehaus.jackson', version: '1.9.13') {
                 entry 'jackson-mapper-asl'
                 entry 'jackson-core-asl'

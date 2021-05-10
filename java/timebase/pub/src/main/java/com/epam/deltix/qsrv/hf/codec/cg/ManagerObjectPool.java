@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.hf.codec.cg;
 
 import com.epam.deltix.util.collections.ICapacity;
-import rtmath.containers.BinaryArray;
+import com.epam.deltix.containers.BinaryArray;
 
 import java.lang.reflect.InvocationTargetException;
 

@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.impl;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.util.lang.Depends;
 import com.epam.deltix.util.xml.JAXBContextFactory;
 import com.epam.deltix.util.xml.SkipValidationEventHandler;
@@ -47,7 +47,7 @@ public class TickDBJAXBContext {
     	throws JAXBException
     {
         return JAXBContextFactory.newInstance (
-            "deltix.qsrv.hf.tickdb.pub:" + "deltix.qsrv.hf.tickdb.impl:" + "deltix.qsrv.hf.pub.md"
+            "com.epam.deltix.qsrv.hf.tickdb.pub:" + "com.epam.deltix.qsrv.hf.tickdb.impl:" + "com.epam.deltix.qsrv.hf.pub.md"
         );            
     }
 }

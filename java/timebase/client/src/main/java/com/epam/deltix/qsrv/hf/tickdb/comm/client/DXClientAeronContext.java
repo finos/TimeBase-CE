@@ -1,8 +1,8 @@
 package com.epam.deltix.qsrv.hf.tickdb.comm.client;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.thread.affinity.AffinityConfig;
 import com.epam.deltix.thread.affinity.PinnedThreadFactoryWrapper;
 import io.aeron.Aeron;

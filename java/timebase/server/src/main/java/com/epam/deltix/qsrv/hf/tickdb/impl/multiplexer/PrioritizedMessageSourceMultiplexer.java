@@ -2,9 +2,9 @@ package com.epam.deltix.qsrv.hf.tickdb.impl.multiplexer;
 
 
 import com.epam.deltix.data.stream.RealTimeMessageSource;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.tickdb.impl.DebugFlags;
 import com.epam.deltix.streaming.MessageSource;

@@ -1,8 +1,8 @@
 package com.epam.deltix.data.stream;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.hf.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.impl.DebugFlags;
 import com.epam.deltix.streaming.MessageSource;

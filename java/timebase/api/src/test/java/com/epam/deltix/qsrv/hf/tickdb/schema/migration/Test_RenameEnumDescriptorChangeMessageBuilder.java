@@ -59,7 +59,7 @@ public class Test_RenameEnumDescriptorChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.EnumClassDescriptor sourceEnumDescriptor = new com.epam.deltix.timebase.messages.schema.EnumClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.EnumClassDescriptor sourceEnumDescriptor = new com.epam.deltix.timebase.messages.schema.EnumClassDescriptor();
         sourceEnumDescriptor.setName("sourceName");
         sourceEnumDescriptor.setTitle("title");
 
@@ -77,7 +77,7 @@ public class Test_RenameEnumDescriptorChangeMessageBuilder {
 
         sourceEnumDescriptor.setValues(enumValues);
 
-        deltix.timebase.messages.schema.EnumClassDescriptor targetEnumDescriptor = new com.epam.deltix.timebase.messages.schema.EnumClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.EnumClassDescriptor targetEnumDescriptor = new com.epam.deltix.timebase.messages.schema.EnumClassDescriptor();
         targetEnumDescriptor.setName("targetName");
         targetEnumDescriptor.setTitle("title");
         targetEnumDescriptor.setValues(enumValues);

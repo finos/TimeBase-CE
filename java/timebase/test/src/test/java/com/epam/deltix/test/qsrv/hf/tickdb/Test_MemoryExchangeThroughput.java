@@ -13,7 +13,7 @@ import com.epam.deltix.timebase.messages.InstrumentMessage;
 
 import com.epam.deltix.util.collections.CircularBoundedDoubleStateQueue;
 import com.epam.deltix.util.collections.FixedSizeStack;
-import org.f1x.io.disruptor.*;
+//import org.f1x.io.disruptor.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import sun.misc.Unsafe;
@@ -319,80 +319,80 @@ public class Test_MemoryExchangeThroughput extends TDBTestBase {
     }
 
 
-    @Test
-    public void testByteRing() throws InterruptedException {
-        ByteRing ring = new ByteRing (QUEUE_SIZE*1024, new BusySpinWaitStrategy());
+//    @Test
+//    public void testByteRing() throws InterruptedException {
+//        ByteRing ring = new ByteRing (QUEUE_SIZE*1024, new BusySpinWaitStrategy());
+//
+//        CountingMessageProcessor handler = new CountingMessageProcessor();
+//        MessageProcessorPool processorPool = new MessageProcessorPool (ring, ring.newBarrier(), new TestExceptionHandler(), handler);
+//        ring.addGatingSequences(processorPool.getWorkerSequences());
+//        processorPool.start(executor);
+//
+//        executor.execute(new PlaybackMessageProducer(ring));
+//
+//        measureThroughput (handler, "ByteRing");
+//
+//    }
 
-        CountingMessageProcessor handler = new CountingMessageProcessor();
-        MessageProcessorPool processorPool = new MessageProcessorPool (ring, ring.newBarrier(), new TestExceptionHandler(), handler);
-        ring.addGatingSequences(processorPool.getWorkerSequences());
-        processorPool.start(executor);
-
-        executor.execute(new PlaybackMessageProducer(ring));
-
-        measureThroughput (handler, "ByteRing");
-
-    }
-
-    static class PlaybackMessageProducer implements Runnable, RingBufferBlockProcessor {
-        private final ByteRing ring;
-        private int current;
-        private final byte [] source;
-
-        PlaybackMessageProducer(ByteRing ring) {
-            this.ring = ring;
-            source = new byte [2*MESSAGE_SIZE];
-            System.arraycopy(MESSAGE_BYTES, 0, source, 0, MESSAGE_SIZE);
-            System.arraycopy(MESSAGE_BYTES, 0, source, MESSAGE_SIZE, MESSAGE_SIZE);
-        }
-
-        private static final int SIZE_OF_INT32 = 4;
-
-        @Override
-        public void run() {
-            while (true) {
-                final long high = ring.next(MESSAGE_SIZE + SIZE_OF_INT32);
-                final long low = high - MESSAGE_SIZE - SIZE_OF_INT32 + 1;
-
-                ring.writeInt(low, MESSAGE_SIZE);
-                ring.write(low, source, current, MESSAGE_SIZE); //TODO:                ring.processBlock(low+SIZE_OF_INT32, MESSAGE_SIZE, this);
-
-                ring.publish(high);
-            }
-        }
-
-        @Override
-        public int process(byte[] buffer, int offset, int length, int ringBufferSize) {
-            if (offset + length <= ringBufferSize) {
-                return write(buffer, offset, length);
-            } else {
-                int wrappedSize = offset + length - ringBufferSize;
-                assert wrappedSize > 0;
-                assert wrappedSize < length;
-                final int numberOfBytesToWrite = length - wrappedSize;
-                int result = write(buffer, offset, numberOfBytesToWrite);
-                if (result == numberOfBytesToWrite)
-                    result += write(buffer, 0, wrappedSize);
-                return result;
-            }
-        }
-
-        @Override
-        public void close() {
-
-        }
-
-        public int write(byte[] buffer, int offset, int length) {
-            assert current >= 0;
-            assert current < source.length;
-            assert current + length < source.length;
-
-            System.arraycopy(source, current, buffer, offset, length);
-
-            current = (current + length) % (source.length/2);
-            return length;
-        }
-    }
+//    static class PlaybackMessageProducer implements Runnable, RingBufferBlockProcessor {
+//        private final ByteRing ring;
+//        private int current;
+//        private final byte [] source;
+//
+//        PlaybackMessageProducer(ByteRing ring) {
+//            this.ring = ring;
+//            source = new byte [2*MESSAGE_SIZE];
+//            System.arraycopy(MESSAGE_BYTES, 0, source, 0, MESSAGE_SIZE);
+//            System.arraycopy(MESSAGE_BYTES, 0, source, MESSAGE_SIZE, MESSAGE_SIZE);
+//        }
+//
+//        private static final int SIZE_OF_INT32 = 4;
+//
+//        @Override
+//        public void run() {
+//            while (true) {
+//                final long high = ring.next(MESSAGE_SIZE + SIZE_OF_INT32);
+//                final long low = high - MESSAGE_SIZE - SIZE_OF_INT32 + 1;
+//
+//                ring.writeInt(low, MESSAGE_SIZE);
+//                ring.write(low, source, current, MESSAGE_SIZE); //TODO:                ring.processBlock(low+SIZE_OF_INT32, MESSAGE_SIZE, this);
+//
+//                ring.publish(high);
+//            }
+//        }
+//
+//        @Override
+//        public int process(byte[] buffer, int offset, int length, int ringBufferSize) {
+//            if (offset + length <= ringBufferSize) {
+//                return write(buffer, offset, length);
+//            } else {
+//                int wrappedSize = offset + length - ringBufferSize;
+//                assert wrappedSize > 0;
+//                assert wrappedSize < length;
+//                final int numberOfBytesToWrite = length - wrappedSize;
+//                int result = write(buffer, offset, numberOfBytesToWrite);
+//                if (result == numberOfBytesToWrite)
+//                    result += write(buffer, 0, wrappedSize);
+//                return result;
+//            }
+//        }
+//
+//        @Override
+//        public void close() {
+//
+//        }
+//
+//        public int write(byte[] buffer, int offset, int length) {
+//            assert current >= 0;
+//            assert current < source.length;
+//            assert current + length < source.length;
+//
+//            System.arraycopy(source, current, buffer, offset, length);
+//
+//            current = (current + length) % (source.length/2);
+//            return length;
+//        }
+//    }
 
 
     public static InstrumentMessage createRawMessage(String symbol) {
@@ -438,26 +438,26 @@ public class Test_MemoryExchangeThroughput extends TDBTestBase {
             return messageCount;
         }
     }
-
-    private static class CountingMessageProcessor implements RingBufferBlockProcessor, MessageCounter {
-        private volatile long messageCount;
-
-        @Override
-        public int process(byte[] buffer, int offset, int length, int bufferSize) {
-            processPayload(buffer, offset);
-            messageCount++;
-            return length;
-        }
-
-        @Override
-        public void close() {
-        }
-
-        @Override
-        public long getMessageCount() {
-            return messageCount;
-        }
-    }
+//
+//    private static class CountingMessageProcessor implements RingBufferBlockProcessor, MessageCounter {
+//        private volatile long messageCount;
+//
+//        @Override
+//        public int process(byte[] buffer, int offset, int length, int bufferSize) {
+//            processPayload(buffer, offset);
+//            messageCount++;
+//            return length;
+//        }
+//
+//        @Override
+//        public void close() {
+//        }
+//
+//        @Override
+//        public long getMessageCount() {
+//            return messageCount;
+//        }
+//    }
 
     private static class TestExceptionHandler implements ExceptionHandler {
 

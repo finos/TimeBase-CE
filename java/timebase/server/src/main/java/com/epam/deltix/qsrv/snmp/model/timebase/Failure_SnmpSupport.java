@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.snmp.model.timebase;
 
-public class Failure_SnmpSupport implements deltix.snmp.s4jrt.EntrySupport <Failure> {
+public class Failure_SnmpSupport implements com.epam.deltix.snmp.s4jrt.EntrySupport <Failure> {
  public static final Failure_SnmpSupport INSTANCE = new Failure_SnmpSupport ();
 
  private Failure_SnmpSupport () {

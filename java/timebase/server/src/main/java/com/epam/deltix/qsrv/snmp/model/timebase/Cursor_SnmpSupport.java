@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.snmp.model.timebase;
 
-public class Cursor_SnmpSupport implements deltix.snmp.s4jrt.EntrySupport <Cursor> {
+public class Cursor_SnmpSupport implements com.epam.deltix.snmp.s4jrt.EntrySupport <Cursor> {
  public static final Cursor_SnmpSupport INSTANCE = new Cursor_SnmpSupport ();
 
  private Cursor_SnmpSupport () {

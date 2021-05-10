@@ -28,17 +28,17 @@ public class Test_SchemaChangeMessageHelper {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        deltix.timebase.messages.schema.DataField previousFieldState = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField previousFieldState = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         previousFieldState.setTitle("title");
         previousFieldState.setName("field");
         previousFieldState.setDataType(varcharDataType);
@@ -56,7 +56,7 @@ public class Test_SchemaChangeMessageHelper {
         schemaChangeMessage.setPreviousState(previousState);
 
         ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
@@ -64,7 +64,7 @@ public class Test_SchemaChangeMessageHelper {
 
         ObjectArrayList<DataFieldInfo> targetDescriptorFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.DataField renamedField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField renamedField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         renamedField.setTitle("title");
         renamedField.setName("field2");
         renamedField.setDataType(varcharDataType);
@@ -101,13 +101,13 @@ public class Test_SchemaChangeMessageHelper {
     private StreamMetaDataChange getExpectedStreamMetaDataChange() {
         StreamMetaDataChange streamMetaDataChange = new StreamMetaDataChange();
 
-        deltix.qsrv.hf.pub.md.DataField newFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field2", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
+        com.epam.deltix.qsrv.hf.pub.md.DataField newFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field2", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
 
-        deltix.qsrv.hf.pub.md.RecordClassDescriptor targetDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState);
+        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor targetDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState);
 
-        deltix.qsrv.hf.pub.md.DataField oldFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
+        com.epam.deltix.qsrv.hf.pub.md.DataField oldFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
 
-        deltix.qsrv.hf.pub.md.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState);
+        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState);
 
         RecordClassSet targetClassSet = new RecordClassSet();
         targetClassSet.setClassDescriptors(targetDescriptor);
@@ -147,8 +147,8 @@ public class Test_SchemaChangeMessageHelper {
         assertThat(actual.getClassDescriptors().length, is(expected.getClassDescriptors().length));
         for (int i = 0; i < actual.getClassDescriptors().length; i++) {
             assertRecordClassDescriptors(
-                    (deltix.qsrv.hf.pub.md.RecordClassDescriptor) actual.getClassDescriptors()[i],
-                    (deltix.qsrv.hf.pub.md.RecordClassDescriptor) expected.getClassDescriptors()[i]);
+                    (com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor) actual.getClassDescriptors()[i],
+                    (com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor) expected.getClassDescriptors()[i]);
         }
         assertThat(actual.getNumTopTypes(), is(expected.getNumTopTypes()));
         for (int i = 0; i < actual.getContentClasses().length; i++) {
@@ -168,7 +168,7 @@ public class Test_SchemaChangeMessageHelper {
         }
     }
 
-    private void assertRecordClassDescriptors(deltix.qsrv.hf.pub.md.RecordClassDescriptor actual, deltix.qsrv.hf.pub.md.RecordClassDescriptor expected) {
+    private void assertRecordClassDescriptors(com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor actual, com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor expected) {
         assertThat(actual.getFields().length, is(expected.getFields().length));
         for (int i = 0; i < actual.getFields().length; i++) {
             assertThat(actual.getFields()[i].getType().getCode(), is(expected.getFields()[i].getType().getCode()));

@@ -11,6 +11,7 @@ buildscript {
 }
 
 plugins {
+    id 'java-library'
     id 'base'
     id 'idea'
     id 'com.github.johnrengelman.shadow' version '5.1.0'
@@ -63,23 +64,7 @@ idea {
 subprojects {
     apply plugin: 'com.github.johnrengelman.shadow'
 }
-
-// gradlew wrapper --gradle-version 5.4.1 --distribution-type bin
-//task wrapper(type: Wrapper) {
-//    gradleVersion = '5.4.1'
-//}
-
-/*
-repositories {
-    mavenCentral()
-    mavenLocal()
-    mavenDeltix("Deltix.Java")
-    mavenDeltix("QuantServer.Java")
-    mavenDeltix("ThirdParty.Java")
-}
-*/
-
-clean.doFirst {        
+clean.doFirst {
     file('temp').deleteDir()
     fileTree('lib') { include '*.jar' }.each { it.delete() }
     file('~plugins').deleteDir()
@@ -98,7 +83,7 @@ task cleanJava(dependsOn: [':java:cleanSubprojects', cleanBuildSrc]) {
 }
 
 task buildJava(dependsOn: ':java:build')
-task buildDotNet(dependsOn: ':dotnet:build')
+//task buildDotNet(dependsOn: ':dotnet:build')
 
 task testJava(dependsOn: 'java:allJunitTests')
 
@@ -163,11 +148,12 @@ task generateSetQsVersionScript() {
 
     doLast {
         def content = """set QS_VERSION=${project.version}"""
-        new File("$projectDir/bin/set_qs_version.cmd").text = content
+        file("$projectDir/bin/set_qs_version.cmd").text = content
     }
 }
 
-build.dependsOn buildJava, buildDotNet, license, generateSetQsVersionScript
+//build.dependsOn buildJava, buildDotNet, license, generateSetQsVersionScript
+build.dependsOn buildJava, license, generateSetQsVersionScript
 
 def currentJvm = org.gradle.internal.jvm.Jvm.current()
 

@@ -1,7 +1,7 @@
 package com.epam.deltix.util.os;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.util.concurrent.UncheckedInterruptedException;
 import com.epam.deltix.util.lang.Util;
 

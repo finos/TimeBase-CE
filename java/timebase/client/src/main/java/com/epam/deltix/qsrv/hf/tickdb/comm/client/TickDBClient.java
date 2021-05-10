@@ -5,8 +5,8 @@ import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.data.stream.UnknownChannelException;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.hf.pub.ChannelCompression;
 import com.epam.deltix.qsrv.hf.pub.ChannelQualityOfService;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
@@ -935,7 +935,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     @Override
-    public MessageSource<InstrumentMessage> createConsumer(@Nonnull String topicKey, @Nullable ConsumerPreferences pref, @Nullable deltix.util.io.idlestrat.IdleStrategy idleStrategy) {
+    public MessageSource<InstrumentMessage> createConsumer(@Nonnull String topicKey, @Nullable ConsumerPreferences pref, @Nullable IdleStrategy idleStrategy) {
         AddTopicSubscriberResponse response = executeSubscribeRequest(topicKey);
 
         if (pref == null) {

@@ -1,11 +1,11 @@
 package com.epam.deltix.qsrv.solgen.cpp;
 
-import com.epam.deltix.anvil.util.StringUtil;
 import com.epam.deltix.qsrv.solgen.SolgenUtils;
 import com.epam.deltix.qsrv.solgen.base.Property;
 import com.epam.deltix.qsrv.solgen.base.PropertyFactory;
 import com.epam.deltix.qsrv.solgen.base.Sample;
 import com.epam.deltix.qsrv.solgen.base.SampleFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,7 +26,7 @@ public class CppSampleFactory implements SampleFactory {
         "timebase.stream",
         "TimeBase stream key.",
         true,
-        StringUtil::isNotEmpty
+        StringUtils::isNotEmpty
     );
     public static final Property NUM_THREADS = PropertyFactory.create(
         "cpp.SpeedTest.numThreads",

@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.dtb.fs.alloc;
 
-import com.epam.deltix.gflog.Loggable;
+import com.epam.deltix.gflog.api.Loggable;
 import com.epam.deltix.util.collections.ByteArray;
 
 /**

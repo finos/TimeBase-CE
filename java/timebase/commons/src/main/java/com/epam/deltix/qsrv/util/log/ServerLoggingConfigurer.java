@@ -1,11 +1,14 @@
 package com.epam.deltix.qsrv.util.log;
 
-import com.epam.deltix.gflog.*;
-import com.epam.deltix.gflog.appender.Appender;
-import com.epam.deltix.gflog.appender.SmtpAppenderFactory;
-import com.epam.deltix.gflog.dcl.DclBridge;
+import com.epam.deltix.gflog.api.LogDebug;
+import com.epam.deltix.gflog.api.LogLevel;
+import com.epam.deltix.gflog.core.LogConfig;
+import com.epam.deltix.gflog.core.LogConfigFactory;
+import com.epam.deltix.gflog.core.LogConfigurator;
+import com.epam.deltix.gflog.core.appender.Appender;
+import com.epam.deltix.gflog.core.layout.TemplateLayoutFactory;
 import com.epam.deltix.gflog.jul.JulBridge;
-import com.epam.deltix.gflog.layout.TemplateLayoutFactory;
+import com.epam.deltix.gflog.mail.appender.SmtpAppenderFactory;
 import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.config.QuantServiceConfig;
 import com.epam.deltix.qsrv.util.text.Mangle;
@@ -38,7 +41,6 @@ public class ServerLoggingConfigurer {
 
     public static void configure(QuantServiceConfig config) throws Exception {
         JulBridge.install();
-        DclBridge.install();
         GFLoggingConfigurer.configure(config, createProperties(config));
     }
 
@@ -64,7 +66,7 @@ public class ServerLoggingConfigurer {
         return properties;
     }
 
-    public static Level getJULLevel(deltix.gflog.LogLevel level) {
+    public static Level getJULLevel(com.epam.deltix.gflog.api.LogLevel level) {
         switch (level) {
             case TRACE:
                 return Level.ALL;
@@ -88,10 +90,10 @@ public class ServerLoggingConfigurer {
             final Properties properties = new Properties();
             properties.put("handlers", JulBridge.class.getName());
 
-            ArrayList<deltix.gflog.Logger> loggers = new ArrayList<>(config.getLoggers());
-            loggers.sort(Comparator.comparing(deltix.gflog.Logger::getName));
+            ArrayList<com.epam.deltix.gflog.core.Logger> loggers = new ArrayList<>(config.getLoggers());
+            loggers.sort(Comparator.comparing(com.epam.deltix.gflog.core.Logger::getName));
 
-            for (deltix.gflog.Logger gfLogger : loggers) {
+            for (com.epam.deltix.gflog.core.Logger gfLogger : loggers) {
                 LogLevel logLevel = gfLogger.getLevel();
                 String logName = gfLogger.getName();
 
@@ -191,7 +193,7 @@ public class ServerLoggingConfigurer {
                 Appender appender = appenderFactory.create();
                 config.addAppender(appender);
 
-                for (final deltix.gflog.Logger logger : config.getLoggers()) {
+                for (final com.epam.deltix.gflog.core.Logger logger : config.getLoggers()) {
                     logger.addAppender(appender);
                 }
             }

@@ -19,7 +19,7 @@ public class DataTypeCompiler {
     public static final String      ALPHANUMERIC = "ALPHANUMERIC";
     
     public static final int         MAX_DECIMAL_SCALE = 
-        deltix.util.memory.MemoryDataOutput.MAX_SCALE_EXP;
+        com.epam.deltix.util.memory.MemoryDataOutput.MAX_SCALE_EXP;
     
     static IntegerDataType   compileInteger (SimpleDataTypeSpec dts, Long min, Long max) {
         final String    enc = dts.encoding;

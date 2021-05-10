@@ -5,7 +5,7 @@
 <%@ page import="java.util.Comparator" %>
 <%@ page import="java.util.*" %>
 <%@ page import="java.util.logging.Logger" %>
-<%@ page import="com.epam.deltix.gflog.*" %>
+<%@ page import="com.epam.deltix.gflog.api.*" %>
 <%@ page import="com.epam.deltix.qsrv.util.log.ServerLoggingConfigurer" %>
 
 <%

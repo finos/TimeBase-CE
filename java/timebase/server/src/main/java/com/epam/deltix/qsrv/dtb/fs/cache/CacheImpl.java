@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.dtb.fs.cache;
 
 import com.google.common.util.concurrent.Striped;
-import com.epam.deltix.gflog.*;
+import com.epam.deltix.gflog.api.*;
 import com.epam.deltix.qsrv.dtb.fs.alloc.BinaryBuddyHeapManager;
 import com.epam.deltix.qsrv.dtb.fs.alloc.HeapManager;
 import com.epam.deltix.util.collections.ByteArray;

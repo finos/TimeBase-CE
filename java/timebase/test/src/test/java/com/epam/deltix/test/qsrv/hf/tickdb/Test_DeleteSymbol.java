@@ -1,9 +1,9 @@
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
-import com.epam.deltix.anvil.util.ShutdownSignal;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
+import com.epam.deltix.qsrv.hf.tickdb.tests.ShutdownSignal;
 import com.epam.deltix.qsrv.test.messages.BarMessage;
 import com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner;
 import com.epam.deltix.timebase.messages.IdentityKey;

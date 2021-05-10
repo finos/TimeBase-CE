@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.hf.tickdb.web.controller;
 
-import com.epam.deltix.gflog.*;
+import com.epam.deltix.gflog.api.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBMonitor;
 import com.epam.deltix.qsrv.hf.tickdb.web.model.pub.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,7 +119,7 @@ public class TimeBaseMonitorController {
 
     @RequestMapping(value = "/track/{on}")
     public String track(HttpServletRequest request, @PathVariable("on") boolean on) {
-        ((TBMonitor) deltix.qsrv.hf.tickdb.http.AbstractHandler.TDB).setTrackMessages(on);
+        ((TBMonitor) com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler.TDB).setTrackMessages(on);
         String referer = request.getHeader("Referer");
         return "redirect:" + referer;
     }

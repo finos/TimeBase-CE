@@ -6,6 +6,7 @@ import com.epam.deltix.qsrv.hf.pub.codec.StaticFieldLayout;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.util.JUnitCategories;
+import com.epam.deltix.util.lang.Util;
 import org.junit.experimental.categories.Category;
 
 import static com.epam.deltix.qsrv.hf.pub.md.FloatDataType.*;
@@ -2116,8 +2117,8 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             (msg).CharSequence2 = null;
             (msg).String3 = null;
             (msg).CharSequence4 = null;
-            (msg).long5 = deltix.qsrv.hf.pub.ExchangeCodec.NULL;
-            (msg).long6 = deltix.qsrv.hf.pub.ExchangeCodec.NULL;
+            (msg).long5 = com.epam.deltix.qsrv.hf.pub.ExchangeCodec.NULL;
+            (msg).long6 = com.epam.deltix.qsrv.hf.pub.ExchangeCodec.NULL;
             super.testRcdBound ("public nullable - null values", msg, rcdAllVarcharPublicNullable);
             super.testRcdBound ("public nullable static - null values", msg, rcdAllVarcharPublicNullableStaticNV);
         }
@@ -2127,8 +2128,8 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             (msg).CharSequence2 = null;
             (msg).String3 = null;
             (msg).CharSequence4 = null;
-            (msg).long5 = deltix.qsrv.hf.pub.ExchangeCodec.NULL;
-            (msg).long6 = deltix.qsrv.hf.pub.ExchangeCodec.NULL;
+            (msg).long5 = com.epam.deltix.qsrv.hf.pub.ExchangeCodec.NULL;
+            (msg).long6 = com.epam.deltix.qsrv.hf.pub.ExchangeCodec.NULL;
             try {
                 super.boundEncode (msg, rcdAllVarcharPublicNotNullable);
                 org.junit.Assert.fail ("UTF8 - null violation - public");
@@ -2187,8 +2188,8 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             (msg).CharSequence2 = null;
             (msg).String3 = null;
             (msg).CharSequence4 = null;
-            (msg).long5 = deltix.qsrv.hf.pub.ExchangeCodec.NULL;
-            (msg).long6 = deltix.qsrv.hf.pub.ExchangeCodec.NULL;
+            (msg).long5 = com.epam.deltix.qsrv.hf.pub.ExchangeCodec.NULL;
+            (msg).long6 = com.epam.deltix.qsrv.hf.pub.ExchangeCodec.NULL;
             super.testRcdBound ("private nullable - null values", msg, rcdAllVarcharPrivateNullable);
             super.testRcdBound ("private nullable static - null values", msg, rcdAllVarcharPrivateNullableStaticNV);
         }
@@ -2198,8 +2199,8 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             (msg).CharSequence2 = null;
             (msg).String3 = null;
             (msg).CharSequence4 = null;
-            (msg).long5 = deltix.qsrv.hf.pub.ExchangeCodec.NULL;
-            (msg).long6 = deltix.qsrv.hf.pub.ExchangeCodec.NULL;
+            (msg).long5 = com.epam.deltix.qsrv.hf.pub.ExchangeCodec.NULL;
+            (msg).long6 = com.epam.deltix.qsrv.hf.pub.ExchangeCodec.NULL;
             try {
                 super.boundEncode (msg, rcdAllVarcharPrivateNotNullable);
                 org.junit.Assert.fail ("UTF8 - null violation - private");
@@ -2261,7 +2262,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             if (!((o) instanceof Test_RecordCodecs5.AllVarcharPublic))
                 return false;
             Test_RecordCodecs5.AllVarcharPublic other = (Test_RecordCodecs5.AllVarcharPublic) (o);
-            return (((((deltix.util.lang.Util.equals ((this).String1, (other).String1)) && (deltix.util.lang.Util.equals ((this).CharSequence2, (other).CharSequence2))) && (deltix.util.lang.Util.equals ((this).String3, (other).String3))) && (deltix.util.lang.Util.equals ((this).CharSequence4, (other).CharSequence4))) && (((this).long5) == ((other).long5))) && (((this).long6) == ((other).long6));
+            return (((((Util.equals ((this).String1, (other).String1)) && (Util.equals ((this).CharSequence2, (other).CharSequence2))) && (Util.equals ((this).String3, (other).String3))) && (Util.equals ((this).CharSequence4, (other).CharSequence4))) && (((this).long5) == ((other).long5))) && (((this).long6) == ((other).long6));
         }}
     private static final RecordClassDescriptor rcdAllVarcharPublicNullable = new RecordClassDescriptor ((Test_RecordCodecs5.AllVarcharPublic.class).getName (), null, false, null, new NonStaticDataField ("String1", null, new VarcharDataType ("UTF8", true, false)), new NonStaticDataField ("CharSequence2", null, new VarcharDataType ("UTF8", true, false)), new NonStaticDataField ("String3", null, new VarcharDataType ("ALPHANUMERIC(100)", true, false)), new NonStaticDataField ("CharSequence4", null, new VarcharDataType ("ALPHANUMERIC(100)", true, false)), new NonStaticDataField ("long5", null, new VarcharDataType ("ALPHANUMERIC(5)", true, false)), new NonStaticDataField ("long6", null, new VarcharDataType ("ALPHANUMERIC(10)", true, false)));
     private static final RecordClassDescriptor rcdAllVarcharPublicNotNullable = new RecordClassDescriptor ((Test_RecordCodecs5.AllVarcharPublic.class).getName (), null, false, null, new NonStaticDataField ("String1", null, new VarcharDataType ("UTF8", false, false)), new NonStaticDataField ("CharSequence2", null, new VarcharDataType ("UTF8", false, false)), new NonStaticDataField ("String3", null, new VarcharDataType ("ALPHANUMERIC(100)", false, false)), new NonStaticDataField ("CharSequence4", null, new VarcharDataType ("ALPHANUMERIC(100)", false, false)), new NonStaticDataField ("long5", null, new VarcharDataType ("ALPHANUMERIC(5)", false, false)), new NonStaticDataField ("long6", null, new VarcharDataType ("ALPHANUMERIC(10)", false, false)));
@@ -2286,7 +2287,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             if (!((o) instanceof Test_RecordCodecs5.AllVarcharPrivate))
                 return false;
             Test_RecordCodecs5.AllVarcharPrivate other = (Test_RecordCodecs5.AllVarcharPrivate) (o);
-            return (((((deltix.util.lang.Util.equals ((this).String1, (other).String1)) && (deltix.util.lang.Util.equals ((this).CharSequence2, (other).CharSequence2))) && (deltix.util.lang.Util.equals ((this).String3, (other).String3))) && (deltix.util.lang.Util.equals ((this).CharSequence4, (other).CharSequence4))) && (((this).long5) == ((other).long5))) && (((this).long6) == ((other).long6));
+            return (((((Util.equals ((this).String1, (other).String1)) && (Util.equals ((this).CharSequence2, (other).CharSequence2))) && (Util.equals ((this).String3, (other).String3))) && (Util.equals ((this).CharSequence4, (other).CharSequence4))) && (((this).long5) == ((other).long5))) && (((this).long6) == ((other).long6));
         }}
     private static final RecordClassDescriptor rcdAllVarcharPrivateNullable = new RecordClassDescriptor ((Test_RecordCodecs5.AllVarcharPrivate.class).getName (), null, false, null, new NonStaticDataField ("String1", null, new VarcharDataType ("UTF8", true, false)), new NonStaticDataField ("CharSequence2", null, new VarcharDataType ("UTF8", true, false)), new NonStaticDataField ("String3", null, new VarcharDataType ("ALPHANUMERIC(100)", true, false)), new NonStaticDataField ("CharSequence4", null, new VarcharDataType ("ALPHANUMERIC(100)", true, false)), new NonStaticDataField ("long5", null, new VarcharDataType ("ALPHANUMERIC(5)", true, false)), new NonStaticDataField ("long6", null, new VarcharDataType ("ALPHANUMERIC(10)", true, false)));
     private static final RecordClassDescriptor rcdAllVarcharPrivateNotNullable = new RecordClassDescriptor ((Test_RecordCodecs5.AllVarcharPrivate.class).getName (), null, false, null, new NonStaticDataField ("String1", null, new VarcharDataType ("UTF8", false, false)), new NonStaticDataField ("CharSequence2", null, new VarcharDataType ("UTF8", false, false)), new NonStaticDataField ("String3", null, new VarcharDataType ("ALPHANUMERIC(100)", false, false)), new NonStaticDataField ("CharSequence4", null, new VarcharDataType ("ALPHANUMERIC(100)", false, false)), new NonStaticDataField ("long5", null, new VarcharDataType ("ALPHANUMERIC(5)", false, false)), new NonStaticDataField ("long6", null, new VarcharDataType ("ALPHANUMERIC(10)", false, false)));
@@ -2554,7 +2555,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             if (!((o) instanceof Test_RecordCodecs5.AllEnumPublic))
                 return false;
             Test_RecordCodecs5.AllEnumPublic other = (Test_RecordCodecs5.AllEnumPublic) (o);
-            return deltix.util.lang.Util.equals (CharSequence2, (other).CharSequence2)
+            return Util.equals (CharSequence2, (other).CharSequence2)
                     && (((this).byte3) == ((other).byte3))
                     && (((this).short4) == ((other).short4))
                     && (((this).int5) == ((other).int5)) && (((this).long6) == ((other).long6));
@@ -2595,7 +2596,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             if (!((o) instanceof Test_RecordCodecs5.AllEnumPrivate))
                 return false;
             Test_RecordCodecs5.AllEnumPrivate other = (Test_RecordCodecs5.AllEnumPrivate) (o);
-            return (((( (deltix.util.lang.Util.equals ((this).CharSequence2, (other).CharSequence2))) && (((this).byte3) == ((other).byte3))) && (((this).short4) == ((other).short4))) && (((this).int5) == ((other).int5))) && (((this).long6) == ((other).long6));
+            return (((( (Util.equals ((this).CharSequence2, (other).CharSequence2))) && (((this).byte3) == ((other).byte3))) && (((this).short4) == ((other).short4))) && (((this).int5) == ((other).int5))) && (((this).long6) == ((other).long6));
         }}
     private static final RecordClassDescriptor rcdAllEnumPrivateNullable = new RecordClassDescriptor ((Test_RecordCodecs5.AllEnumPrivate.class).getName (), null, false, null, new NonStaticDataField ("InstrumentType1", null, new EnumDataType (true, INSTRUMENT_TYPE)), new NonStaticDataField ("CharSequence2", null, new EnumDataType (true, INSTRUMENT_TYPE)), new NonStaticDataField ("byte3", null, new EnumDataType (true, INSTRUMENT_TYPE)), new NonStaticDataField ("short4", null, new EnumDataType (true, INSTRUMENT_TYPE)), new NonStaticDataField ("int5", null, new EnumDataType (true, INSTRUMENT_TYPE)), new NonStaticDataField ("long6", null, new EnumDataType (true, INSTRUMENT_TYPE)));
     private static final RecordClassDescriptor rcdAllEnumPrivateNotNullable = new RecordClassDescriptor ((Test_RecordCodecs5.AllEnumPrivate.class).getName (), null, false, null, new NonStaticDataField ("InstrumentType1", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("CharSequence2", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("byte3", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("short4", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("int5", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("long6", null, new EnumDataType (false, INSTRUMENT_TYPE)));
@@ -3056,8 +3057,8 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 (((this).char2) == ((other).char2)) && (((this).byte3) == ((other).byte3))
                     && (((this).short4) == ((other).short4)) && (((this).int5) == ((other).int5))
                     && (((this).long6) == ((other).long6)) && ((java.lang.Float.compare ((this).float7, (other).float7)) == (0))
-                    && ((java.lang.Double.compare ((this).double8, (other).double8)) == (0)) && (deltix.util.lang.Util.equals ((this).String9, (other).String9))
-                    && (deltix.util.lang.Util.equals ((this).CharSequence11, (other).CharSequence11));
+                    && ((java.lang.Double.compare ((this).double8, (other).double8)) == (0)) && (Util.equals ((this).String9, (other).String9))
+                    && (Util.equals ((this).CharSequence11, (other).CharSequence11));
         }}
 
     @org.junit.Test
@@ -5367,12 +5368,12 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
     }
 
     public static final class ArrayOtherBindingsPublic extends InstrumentMessage {
-        public deltix.util.collections.generated.ByteArrayList ByteArrayList1;
-        public deltix.util.collections.generated.ShortArrayList ShortArrayList2;
-        public deltix.util.collections.generated.IntegerArrayList IntegerArrayList3;
-        public deltix.util.collections.generated.LongArrayList LongArrayList4;
-        public deltix.util.collections.generated.LongArrayList LongArrayList5;
-        public deltix.util.collections.generated.DoubleArrayList DoubleArrayList6;
+        public com.epam.deltix.util.collections.generated.ByteArrayList ByteArrayList1;
+        public com.epam.deltix.util.collections.generated.ShortArrayList ShortArrayList2;
+        public com.epam.deltix.util.collections.generated.IntegerArrayList IntegerArrayList3;
+        public com.epam.deltix.util.collections.generated.LongArrayList LongArrayList4;
+        public com.epam.deltix.util.collections.generated.LongArrayList LongArrayList5;
+        public com.epam.deltix.util.collections.generated.DoubleArrayList DoubleArrayList6;
         @java.lang.Override
         public java.lang.String toString ()
         {
@@ -5384,7 +5385,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             if (!((o) instanceof Test_RecordCodecs5.ArrayOtherBindingsPublic))
                 return false;
             Test_RecordCodecs5.ArrayOtherBindingsPublic other = (Test_RecordCodecs5.ArrayOtherBindingsPublic) (o);
-            return (((((deltix.util.lang.Util.xequals ((this).ByteArrayList1, (other).ByteArrayList1)) && (deltix.util.lang.Util.xequals ((this).ShortArrayList2, (other).ShortArrayList2))) && (deltix.util.lang.Util.xequals ((this).IntegerArrayList3, (other).IntegerArrayList3))) && (deltix.util.lang.Util.xequals ((this).LongArrayList4, (other).LongArrayList4))) && (deltix.util.lang.Util.xequals ((this).LongArrayList5, (other).LongArrayList5))) && (deltix.util.lang.Util.xequals ((this).DoubleArrayList6, (other).DoubleArrayList6));
+            return (((((Util.xequals ((this).ByteArrayList1, (other).ByteArrayList1)) && (Util.xequals ((this).ShortArrayList2, (other).ShortArrayList2))) && (Util.xequals ((this).IntegerArrayList3, (other).IntegerArrayList3))) && (Util.xequals ((this).LongArrayList4, (other).LongArrayList4))) && (Util.xequals ((this).LongArrayList5, (other).LongArrayList5))) && (Util.xequals ((this).DoubleArrayList6, (other).DoubleArrayList6));
         }
         private void initEmpty ()
         {

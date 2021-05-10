@@ -1,7 +1,7 @@
 package com.epam.deltix.test.qsrv.hf.tickdb.replication;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 
 import com.epam.deltix.qsrv.hf.pub.md.FloatDataType;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;

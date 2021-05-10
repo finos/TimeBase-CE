@@ -266,7 +266,7 @@ public class TimebaseServlet extends HttpServlet {
             QQLParser.parse(request.qql, map);
             state.tokens = new ArrayList<>();
 
-            for (deltix.qsrv.hf.tickdb.lang.pub.Token token : map.getTokens())
+            for (com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token token : map.getTokens())
                 state.tokens.add(new Token(token.type, token.location));
 
         } catch (CompilationException e) {

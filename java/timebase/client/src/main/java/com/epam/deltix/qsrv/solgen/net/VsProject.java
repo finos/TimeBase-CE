@@ -1,10 +1,10 @@
 package com.epam.deltix.qsrv.solgen.net;
 
-import com.epam.deltix.anvil.util.StringUtil;
 import com.epam.deltix.qsrv.solgen.SolgenUtils;
 import com.epam.deltix.qsrv.solgen.base.Project;
 import com.epam.deltix.qsrv.solgen.base.Property;
 import com.epam.deltix.qsrv.solgen.base.PropertyFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class VsProject implements Project {
             "net.project.name",
             "Project name",
             false,
-            StringUtil::isNotEmpty,
+            StringUtils::isNotEmpty,
             "TimebaseSample"
     );
 
@@ -62,8 +62,6 @@ public class VsProject implements Project {
         this.name = name;
 
         templateParams.put(NET_PROJECT_NAME.getName(), name);
-        templateParams.put(DELTIX_REPOSITORY_PROP, DEFAULT_DELTIX_REPO);
-        templateParams.put(RTMATH_REPOSITORY_PROP, DEFAULT_RTMATH_REPO);
         templateParams.put(TB_VERSION_PROP, DEFAULT_TB_VERSION);
         templateParams.put(MESSAGES_VERSION_PROP, DEFAULT_MESSAGES_VERSION);
     }

@@ -1,8 +1,8 @@
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.AeronThreadTracker;
@@ -235,7 +235,7 @@ public class CopyTopicToStreamTaskManager {
     }
 
     private static RecordClassDescriptor findTypeMatch(RecordClassDescriptor topicType, RecordClassDescriptor[] streamTypes) {
-        RecordClassDescriptor match = deltix.qsrv.hf.stream.MessageProcessor.findMatch(topicType, streamTypes);
+        RecordClassDescriptor match = com.epam.deltix.qsrv.hf.stream.MessageProcessor.findMatch(topicType, streamTypes);
         if (match == null) {
             throw new IllegalArgumentException("Destination stream does not support all topic's types. Missing type: " + topicType.getName());
         }

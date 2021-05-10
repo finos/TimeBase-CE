@@ -33,7 +33,7 @@ public class Test_MessageOrder {
     private static File STREAM_FILE1 = Home.getFile("testdata//tickdb//misc//4.4//daily.zip");
     private static File STREAM_FILE2 = Home.getFile("testdata//tickdb//misc//4.4//daily_bars.zip");
     private static File STREAM_FILE3 = Home.getFile("testdata//tickdb//misc//4.4//DailyBars.zip");
-    private static deltix.test.qsrv.hf.tickdb.server.ServerRunner runner;
+    private static ServerRunner runner;
 
     @BeforeClass
     public static void      start() throws Throwable {

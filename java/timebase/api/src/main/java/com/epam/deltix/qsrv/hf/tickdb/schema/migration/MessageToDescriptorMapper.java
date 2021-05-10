@@ -53,7 +53,7 @@ public class MessageToDescriptorMapper {
         return classSet;
     }
 
-    public static RecordClassDescriptor map(deltix.timebase.messages.schema.RecordClassDescriptorInfo descriptorInfo,
+    public static RecordClassDescriptor map(com.epam.deltix.timebase.messages.schema.RecordClassDescriptorInfo descriptorInfo,
                                             ObjectArrayList<ClassDescriptorInfo> allDescriptors) {
         ObjectList<DataFieldInfo> dataFields = descriptorInfo.getDataFields();
         DataField[] fields = new DataField[dataFields.size()];

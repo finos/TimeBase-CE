@@ -11,7 +11,6 @@ import com.epam.deltix.qsrv.hf.pub.util.SerializationUtils;
 
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.time.GMT;
-import com.epam.deltix.util.time.Interval;
 import com.epam.deltix.util.xml.JAXBContextFactory;
 import com.epam.deltix.util.xml.JAXBStackTraceSuppressor;
 

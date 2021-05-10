@@ -1,11 +1,9 @@
 package com.epam.deltix.qsrv.config;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.SSLProperties;
-import com.epam.deltix.qsrv.util.log.RollingFileHandler;
-import com.epam.deltix.qsrv.util.log.SMTPHandler;
 import com.epam.deltix.qsrv.util.text.Mangle;
 import com.epam.deltix.util.cmdline.DefaultApplication;
 import com.epam.deltix.util.io.Home;
@@ -14,8 +12,6 @@ import com.epam.deltix.util.lang.Depends;
 import com.epam.deltix.util.lang.DependsOnClass;
 import com.epam.deltix.util.lang.SortedProperties;
 import com.epam.deltix.util.lang.StringUtils;
-import com.epam.deltix.util.log.SafeHandler;
-import com.epam.deltix.util.log.TerseFormatter;
 import com.epam.deltix.util.os.CommonSysProps;
 
 import java.io.File;
@@ -33,12 +29,7 @@ import java.util.Properties;
         "config/logger.properties",
     "config/gflog.xml"
 })
-@DependsOnClass({
-    TerseFormatter.class,
-    RollingFileHandler.class,
-    SMTPHandler.class,
-    SafeHandler.class
-})
+
 public class QuantServiceConfig {
     private static final Log LOG = LogFactory.getLog(QuantServiceConfig.class);
 

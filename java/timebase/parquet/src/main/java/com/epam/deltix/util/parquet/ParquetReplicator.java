@@ -1,8 +1,8 @@
 package com.epam.deltix.util.parquet;
 
 import com.epam.deltix.data.stream.ConsumableMessageSource;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.stream.MessageFileHeader;

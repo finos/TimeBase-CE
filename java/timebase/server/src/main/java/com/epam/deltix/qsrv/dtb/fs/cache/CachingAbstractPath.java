@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.dtb.fs.cache;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.dtb.fs.common.DelegatingAbstractPath;
 import com.epam.deltix.qsrv.dtb.fs.common.DelegatingOutputStream;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractFileSystem;

@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.dtb.fs;
 
-import com.epam.deltix.gflog.*;
+import com.epam.deltix.gflog.api.*;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractFileSystem;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 import com.epam.deltix.qsrv.dtb.fs.pub.FSFactory;

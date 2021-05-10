@@ -148,7 +148,7 @@ public class Test_Replicator {
 
     @Test
     public void testTruncateRemote() throws Throwable {
-        deltix.test.qsrv.hf.tickdb.server.ServerRunner runner = new com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner();
+        ServerRunner runner = new ServerRunner();
         try {
             runner.startup();
             TickDBCreator.createBarsStream(runner.getTickDb(), TickDBCreator.BARS_STREAM_KEY);
@@ -180,7 +180,7 @@ public class Test_Replicator {
 
 
     public void testTransientReplicate() throws Throwable {
-        deltix.test.qsrv.hf.tickdb.server.ServerRunner runner = new com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner();
+        ServerRunner runner = new ServerRunner();
         runner.startup();
 
         RecordClassDescriptor classDescriptor = StreamConfigurationHelper.mkBarMessageDescriptor(
@@ -271,7 +271,7 @@ public class Test_Replicator {
     @Test
     public void testReplicateTruncate() throws Throwable {
 
-        deltix.test.qsrv.hf.tickdb.server.ServerRunner runner = new com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner();
+        ServerRunner runner = new ServerRunner();
         try {
             runner.startup();
 
@@ -299,7 +299,7 @@ public class Test_Replicator {
 
         TickDBCreator.createTickDB(primary, true).close();
 
-        deltix.test.qsrv.hf.tickdb.server.ServerRunner runner = new com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner();
+        ServerRunner runner = new ServerRunner();
         try {
             runner.startup();
             String secondary = "dxtick://localhost:" + runner.getPort();
@@ -330,8 +330,8 @@ public class Test_Replicator {
     @Test
     public void testReplicateTruncate2() throws Throwable {
 
-        deltix.test.qsrv.hf.tickdb.server.ServerRunner runner = new com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner(true, PRIMARY_HOME);
-        deltix.test.qsrv.hf.tickdb.server.ServerRunner runner1 = new com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner(true, SECONDARY_HOME);
+        ServerRunner runner = new ServerRunner(true, PRIMARY_HOME);
+        ServerRunner runner1 = new ServerRunner(true, SECONDARY_HOME);
 
         try {
             runner.startup();

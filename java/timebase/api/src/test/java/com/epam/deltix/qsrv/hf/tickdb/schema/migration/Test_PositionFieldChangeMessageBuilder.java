@@ -31,17 +31,17 @@ public class Test_PositionFieldChangeMessageBuilder {
     private StreamMetaDataChange getStreamMetaDataChange() {
         StreamMetaDataChange streamMetaDataChange = new StreamMetaDataChange();
 
-        deltix.qsrv.hf.pub.md.DataField newFieldState1 = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
+        com.epam.deltix.qsrv.hf.pub.md.DataField newFieldState1 = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
 
-        deltix.qsrv.hf.pub.md.DataField newFieldState2 = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field2", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
+        com.epam.deltix.qsrv.hf.pub.md.DataField newFieldState2 = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field2", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
 
-        deltix.qsrv.hf.pub.md.RecordClassDescriptor targetDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState1, newFieldState2);
+        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor targetDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState1, newFieldState2);
 
-        deltix.qsrv.hf.pub.md.DataField oldFieldState1 = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
+        com.epam.deltix.qsrv.hf.pub.md.DataField oldFieldState1 = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
 
-        deltix.qsrv.hf.pub.md.DataField oldFieldState2 = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field2", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
+        com.epam.deltix.qsrv.hf.pub.md.DataField oldFieldState2 = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field2", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false));
 
-        deltix.qsrv.hf.pub.md.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState2, oldFieldState1);
+        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState2, oldFieldState1);
 
         RecordClassSet targetClassSet = new RecordClassSet();
         targetClassSet.setClassDescriptors(targetDescriptor);
@@ -76,22 +76,22 @@ public class Test_PositionFieldChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        deltix.timebase.messages.schema.DataField previousFieldState1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField previousFieldState1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         previousFieldState1.setTitle("title");
         previousFieldState1.setName("field");
         previousFieldState1.setDataType(varcharDataType);
 
-        deltix.timebase.messages.schema.DataField previousFieldState2 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField previousFieldState2 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         previousFieldState2.setTitle("title");
         previousFieldState2.setName("field2");
         previousFieldState2.setDataType(varcharDataType);
@@ -108,19 +108,19 @@ public class Test_PositionFieldChangeMessageBuilder {
         schemaChangeMessage.setPreviousState(previousState);
 
         ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
 
         ObjectArrayList<DataFieldInfo> targetDescriptorFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.DataField targetField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField targetField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         targetField1.setTitle("title");
         targetField1.setName("field");
         targetField1.setDataType(varcharDataType);
 
-        deltix.timebase.messages.schema.DataField targetField2 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField targetField2 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         targetField2.setTitle("title");
         targetField2.setName("field2");
         targetField2.setDataType(varcharDataType);

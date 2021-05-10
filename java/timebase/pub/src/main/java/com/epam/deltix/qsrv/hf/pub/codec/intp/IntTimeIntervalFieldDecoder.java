@@ -15,12 +15,12 @@ class IntTimeIntervalFieldDecoder extends IntegerFieldDecoder {
 
     @Override
     public long         getLong (DecodingContext ctxt) {
-        return (deltix.qsrv.hf.pub.codec.TimeIntervalCodec.read(ctxt.in));
+        return (TimeIntervalCodec.read(ctxt.in));
     }
 
     @Override
     public void         skip (DecodingContext ctxt) {
-        deltix.qsrv.hf.pub.codec.TimeIntervalCodec.read(ctxt.in);
+        TimeIntervalCodec.read(ctxt.in);
     }
 
     @Override

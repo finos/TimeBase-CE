@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.dtb.store.impl;
 
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.dtb.fs.pub.*;
 import com.epam.deltix.qsrv.dtb.store.codecs.*;
 import com.epam.deltix.qsrv.dtb.store.dataacc.*;

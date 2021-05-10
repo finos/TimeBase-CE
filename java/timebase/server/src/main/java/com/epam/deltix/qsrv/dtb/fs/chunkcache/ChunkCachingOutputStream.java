@@ -1,8 +1,8 @@
 package com.epam.deltix.qsrv.dtb.fs.chunkcache;
 
 import com.google.common.primitives.Ints;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.dtb.fs.chunkcache.chunkpool.Chunk;
 import com.epam.deltix.qsrv.dtb.fs.chunkcache.chunkpool.ChunkPool;
 

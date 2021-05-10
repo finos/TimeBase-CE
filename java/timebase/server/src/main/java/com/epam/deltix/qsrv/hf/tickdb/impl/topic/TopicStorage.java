@@ -2,8 +2,8 @@ package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.dtb.fs.local.LocalFS;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;

@@ -1,9 +1,9 @@
 package com.epam.deltix.qsrv.solgen.python;
 
-import com.epam.deltix.anvil.util.StringUtil;
 import com.epam.deltix.qsrv.solgen.SolgenUtils;
 import com.epam.deltix.qsrv.solgen.base.*;
 import com.epam.deltix.qsrv.solgen.java.JavaSampleFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -13,7 +13,7 @@ public class ReadStreamSample extends PythonSample {
         "timebase.stream",
         "TimeBase stream key.",
         true,
-        StringUtil::isNotEmpty
+        StringUtils::isNotEmpty
     );
 
     static final List<Property> PROPERTIES = Collections.unmodifiableList(Arrays.asList(STREAM_KEY));

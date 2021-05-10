@@ -14,7 +14,7 @@ import java.util.*;
  */
 
 @XmlRootElement(name = "ClassSet")
-public class ClassSet implements deltix.qsrv.hf.pub.md.ClassSet<RecordClassDescriptor>, Serializable {
+public class ClassSet implements com.epam.deltix.qsrv.hf.pub.md.ClassSet<RecordClassDescriptor>, Serializable {
 
     @XmlElement (name = "classDescriptor")
     private HashSet <ClassDescriptor>               classDescriptors;

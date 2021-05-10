@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.tests.procs;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
 import com.epam.deltix.qsrv.hf.tickdb.tests.TestUtils;

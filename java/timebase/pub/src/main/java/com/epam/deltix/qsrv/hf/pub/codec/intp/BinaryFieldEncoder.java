@@ -4,7 +4,7 @@ import com.epam.deltix.qsrv.hf.codec.BinaryCodec;
 import com.epam.deltix.qsrv.hf.pub.codec.NonStaticFieldLayout;
 import com.epam.deltix.qsrv.hf.pub.md.BinaryDataType;
 import com.epam.deltix.util.collections.generated.ByteArrayList;
-import rtmath.containers.interfaces.BinaryArrayReadOnly;
+import com.epam.deltix.containers.interfaces.BinaryArrayReadOnly;
 
 import java.lang.reflect.InvocationTargetException;
 

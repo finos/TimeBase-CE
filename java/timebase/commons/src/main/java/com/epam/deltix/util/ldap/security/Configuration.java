@@ -1,7 +1,7 @@
 package com.epam.deltix.util.ldap.security;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.util.lang.Depends;
 import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.ldap.LDAPConnection.Vendor;

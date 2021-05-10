@@ -4,7 +4,7 @@ group = 'com.epam.deltix'
 
 dependencies {
     compileOnly project(':java:timebase:commons')
-    compileOnly ('deltix.qsrv:deltix-commons-util')
+    compileOnly ('com.epam.deltix:timebase-util')
 
 //    compileOnly 'java:tools'
     compileOnly 'com.sun.activation:javax.activation'
@@ -13,6 +13,7 @@ dependencies {
 
     compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
     compileOnly 'org.apache.taglibs:taglibs-standard-impl' // Tomcat JSTL Support
+    compileOnly 'com.epam.deltix:gflog-api'
 }
 
 def webappDir = file('src/main/webapp')

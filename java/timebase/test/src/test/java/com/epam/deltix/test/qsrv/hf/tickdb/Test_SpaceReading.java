@@ -1,6 +1,6 @@
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
-import com.epam.deltix.anvil.util.CharSequenceUtil;
+import com.epam.deltix.containers.CharSequenceUtils;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.test.messages.BarMessage;
 import com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner;
@@ -365,7 +365,7 @@ public class Test_SpaceReading {
                     prevSymbol.append(msg.getSymbol());
                 } else {
                     CharSequence symbol = msg.getSymbol();
-                    int compare = CharSequenceUtil.compare(symbol, prevSymbol, false) * direction;
+                    int compare = CharSequenceUtils.compare(symbol, prevSymbol, false) * direction;
                     Assert.assertTrue(compare >= 0);
                     if (compare != 0) {
                         prevSymbol.setLength(0);

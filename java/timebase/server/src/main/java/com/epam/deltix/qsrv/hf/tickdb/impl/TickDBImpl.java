@@ -1,8 +1,8 @@
 package com.epam.deltix.qsrv.hf.tickdb.impl;
 
 import com.epam.deltix.data.stream.DXChannel;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.dtb.fs.FSLocator;
 import com.epam.deltix.qsrv.dtb.fs.azure2.Azure2FS;
 import com.epam.deltix.qsrv.dtb.fs.hdfs.DistributedFS;

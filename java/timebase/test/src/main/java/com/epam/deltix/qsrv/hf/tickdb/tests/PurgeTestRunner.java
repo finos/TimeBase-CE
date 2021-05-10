@@ -1,6 +1,5 @@
 package com.epam.deltix.qsrv.hf.tickdb.tests;
 
-import com.epam.deltix.anvil.util.ShutdownSignal;
 import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
 import com.epam.deltix.qsrv.hf.tickdb.tests.reports.JsonReport;
 import com.epam.deltix.util.cmdline.DefaultApplication;

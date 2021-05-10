@@ -1,9 +1,9 @@
 package com.epam.deltix.qsrv.dtb.store.dataacc;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.dtb.store.pub.EntityFilter;
 import com.epam.deltix.util.concurrent.UncheckedInterruptedException;
 

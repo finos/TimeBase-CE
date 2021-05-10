@@ -1,7 +1,7 @@
 package com.epam.deltix.util.net;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 
 import javax.annotation.Nullable;
 import java.net.*;

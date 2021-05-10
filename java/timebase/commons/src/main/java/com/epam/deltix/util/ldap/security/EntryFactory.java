@@ -23,7 +23,7 @@ final class EntryFactory {
 
         EntryMembersBinding mapping = new EntryMembersBinding(clazz);
 
-        for (deltix.util.ldap.config.Attribute attribute : binding.attributes) {
+        for (com.epam.deltix.util.ldap.config.Attribute attribute : binding.attributes) {
             if (attribute.field != null)
                 mapping.addField(attribute.name, attribute.field);
             else if (attribute.property != null)

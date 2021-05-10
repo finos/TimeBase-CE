@@ -1,8 +1,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.tests;
 
-import com.epam.deltix.anvil.util.SystemUtil;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.Introspector;
@@ -43,7 +42,7 @@ public class TestUtils {
         List<String> command = new LinkedList<>();
         Path deltixJavaHome = Paths.get(System.getenv("DELTIX_JAVA_HOME"));
         Path javaPath;
-        if (SystemUtil.isWindows()) {
+        if (Util.IS_WINDOWS_OS) {
             javaPath = deltixJavaHome.resolve("bin").resolve("java.exe");
         } else {
             javaPath = deltixJavaHome.resolve("bin").resolve("java");

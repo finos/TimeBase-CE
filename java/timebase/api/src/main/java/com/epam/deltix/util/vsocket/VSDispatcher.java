@@ -81,7 +81,7 @@ public final class VSDispatcher implements Disposable {
                     // ignore
                 } catch (ConnectionAbortedException e) {
                     VSProtocol.LOGGER.log (Level.WARNING, "Client unexpectedly drop connection. Remote address: " + channel.getRemoteAddress());
-                } catch (deltix.util.io.UncheckedIOException | IOException e ) {
+                } catch (com.epam.deltix.util.io.UncheckedIOException | IOException e ) {
                      VSProtocol.LOGGER.log (Level.WARNING, "Exception while flushing data. Remote address: " + channel.getRemoteAddress(), e);
                 }
             }

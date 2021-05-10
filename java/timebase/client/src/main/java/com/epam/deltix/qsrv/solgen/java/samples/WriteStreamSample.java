@@ -1,9 +1,9 @@
 package com.epam.deltix.qsrv.solgen.java.samples;
 
-import com.epam.deltix.anvil.util.StringUtil;
 import com.epam.deltix.qsrv.solgen.SolgenUtils;
 import com.epam.deltix.qsrv.solgen.base.*;
 import com.epam.deltix.qsrv.solgen.java.JavaSampleFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +16,7 @@ public class WriteStreamSample implements JavaSample {
             "timebase.stream",
             "TimeBase stream key.",
             true,
-            StringUtil::isNotEmpty
+            StringUtils::isNotEmpty
     );
     public static final Property CLASS_NAME = PropertyFactory.create(
             "java.samples.writestream.className",

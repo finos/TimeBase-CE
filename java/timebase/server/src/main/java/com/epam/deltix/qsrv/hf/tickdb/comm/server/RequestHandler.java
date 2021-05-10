@@ -1,9 +1,9 @@
 package com.epam.deltix.qsrv.hf.tickdb.comm.server;
 
 import com.google.common.collect.ImmutableList;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.hf.tickdb.server.Version;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
@@ -323,7 +323,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         out.writeInt (TDBProtocol.VERSION);
         out.writeByte(isReadOnly ? TDBProtocol.READ_ONLY : TDBProtocol.READ_WRITE);
         String version = Version.getVersion();
-        out.writeUTF(version == null ? deltix.util.Version.VERSION_STRING : version);
+        out.writeUTF(version == null ? com.epam.deltix.util.Version.VERSION_STRING : version);
         out.writeBoolean(context != null);
 
         long bandwidth = params != null ? params.maxBandwidth : Long.MAX_VALUE;

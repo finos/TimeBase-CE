@@ -1,14 +1,18 @@
 group = 'com.epam.deltix'
 
 dependencies {
-    implementation project(':java:timebase:pub')
-    implementation ('deltix.qsrv:deltix-commons-lang')
-    implementation ('deltix.qsrv:deltix-commons-util')
-    implementation ('deltix.qsrv:deltix-commons-messages')
+    api project(':java:timebase:pub')
+    api ('com.epam.deltix:timebase-lang')
+    api ('com.epam.deltix:timebase-util')
+    api ('com.epam.deltix:timebase-messages')
+    api ('com.epam.deltix:timebase-collections')
 
-    implementation('deltix:rtmath-containers')
+    implementation ('com.epam.deltix:containers')
+    implementation ('com.epam.deltix:dfp')
+    implementation ('com.epam.deltix:thread-affinity')
 
-    implementation ('deltix:deltix-thread-affinity')
+    implementation 'com.epam.deltix:gflog-api',
+            'com.epam.deltix:gflog-jul'
 
     implementation ('com.google.guava:guava')
     implementation ('com.google.code.gson:gson')
@@ -16,8 +20,12 @@ dependencies {
     implementation ('commons-io:commons-io')
 
     implementation ('com.fasterxml.jackson.core:jackson-core')
+    implementation 'javax.xml.bind:jaxb-api'
+    implementation 'com.sun.xml.bind:jaxb-impl'
+    implementation 'com.sun.xml.bind:jaxb-core'
 
     implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.commons:commons-compress:1.7'
 
     // TODO: Move to client and server?
     compile('io.aeron:aeron-client')

@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.tool;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.util.cmdline.DefaultApplication;
 import com.epam.deltix.util.s3.S3DataStore;

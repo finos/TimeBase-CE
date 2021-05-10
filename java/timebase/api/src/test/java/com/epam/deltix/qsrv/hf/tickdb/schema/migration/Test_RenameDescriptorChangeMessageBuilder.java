@@ -76,17 +76,17 @@ public class Test_RenameDescriptorChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        deltix.timebase.messages.schema.DataField expectedField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField expectedField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         expectedField1.setTitle("title");
         expectedField1.setName("field");
         expectedField1.setDataType(varcharDataType);
@@ -103,7 +103,7 @@ public class Test_RenameDescriptorChangeMessageBuilder {
         schemaChangeMessage.setPreviousState(previousState);
 
         ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-        deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         targetDescriptor.setName("targetName");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);

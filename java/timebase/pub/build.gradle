@@ -2,20 +2,28 @@ group = 'com.epam.deltix'
 apply plugin: 'java-library'
 
 dependencies {
-    implementation ('deltix.qsrv:deltix-commons-lang')
-    implementation ('deltix.qsrv:deltix-commons-util')
-    implementation ('deltix.qsrv:deltix-commons-messages')
+    api ('com.epam.deltix:timebase-lang')
+    api ('com.epam.deltix:timebase-util')
+    api ('com.epam.deltix:timebase-messages')
+    api ('com.epam.deltix:timebase-collections')
+
+    implementation ('com.epam.deltix:dfp')
+    implementation('com.epam.deltix:containers')
 
     implementation ('org.apache.commons:commons-lang3')
 
-    implementation('deltix:rtmath-containers')
+    implementation 'com.epam.deltix:gflog-api',
+                   'com.epam.deltix:gflog-jul'
 
-    //api ('deltix.qsrv:deltix-timebase-api-messages')
-//    implementation 'java:tools'
     implementation 'com.sun.activation:javax.activation'
     implementation 'com.sun.codemodel:codemodel'
     implementation 'com.sun.codemodel:codemodel-project'
     implementation 'javax.activation:javax.activation-api'
+
+    implementation 'javax.xml.bind:jaxb-api'
+
+    implementation 'com.sun.xml.bind:jaxb-impl'
+    implementation 'com.sun.xml.bind:jaxb-core'
 
     compileOnly 'com.google.code.findbugs:jsr305'
 }

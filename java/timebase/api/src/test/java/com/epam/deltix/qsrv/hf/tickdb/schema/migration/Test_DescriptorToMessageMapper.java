@@ -35,28 +35,28 @@ public class Test_DescriptorToMessageMapper {
                 field1
         );
 
-        deltix.timebase.messages.schema.RecordClassDescriptor actualDescriptorMessage = DescriptorToMessageMapper.map(descriptor);
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor actualDescriptorMessage = DescriptorToMessageMapper.map(descriptor);
 
-        deltix.timebase.messages.schema.RecordClassDescriptor expectedDescriptorMessage = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor expectedDescriptorMessage = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
         expectedDescriptorMessage.setName("name");
         expectedDescriptorMessage.setTitle("title");
         expectedDescriptorMessage.setIsAbstract(false);
 
         ObjectArrayList<DataFieldInfo> expectedFields = new ObjectArrayList<>();
 
-        deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setIsNullable(false);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setLength(0);
         varcharDataType.setEncodingType(INLINE_VARSIZE);
 
-        deltix.timebase.messages.schema.DataField expectedField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        com.epam.deltix.timebase.messages.schema.DataField expectedField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
         expectedField1.setName("field1");
         expectedField1.setTitle("field1_title");
         expectedField1.setDataType(varcharDataType);
 
-        deltix.timebase.messages.schema.StaticDataField expectedField2 = new com.epam.deltix.timebase.messages.schema.StaticDataField();
+        com.epam.deltix.timebase.messages.schema.StaticDataField expectedField2 = new com.epam.deltix.timebase.messages.schema.StaticDataField();
         expectedField2.setName("field2");
         expectedField2.setTitle("field2_title");
         expectedField2.setDataType(varcharDataType);

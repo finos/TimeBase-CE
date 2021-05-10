@@ -1,5 +1,6 @@
 package com.epam.deltix.qsrv.hf.pub.codec.intp;
 
+import com.epam.deltix.qsrv.hf.codec.CodecUtils;
 import com.epam.deltix.qsrv.hf.codec.MessageSizeCodec;
 import com.epam.deltix.qsrv.hf.pub.NullValueException;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
@@ -229,7 +230,7 @@ public class ClassFieldDecoder extends FieldDecoder {
             else {
                 if (size0 < in.getAvail ())
                 {
-                    final int limit = deltix.qsrv.hf.codec.CodecUtils.limitMDI (size0, in);     // set limit for reading this object
+                    final int limit = CodecUtils.limitMDI (size0, in);     // set limit for reading this object
 
                     int code = (types.length > 1) ? in.readUnsignedByte() : 0;        // read object code if poly object
                     UnboundDecoder udec = getUnboundDecoder(code);

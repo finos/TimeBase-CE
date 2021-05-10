@@ -1,8 +1,8 @@
 package com.epam.deltix.util.s3;
 
 import com.amazonaws.util.StringUtils;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.lang.Util;
 import org.apache.commons.lang3.tuple.Pair;

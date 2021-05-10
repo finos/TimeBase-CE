@@ -17,18 +17,24 @@ shadowJar {
 
 dependencies {
     //compile project(':java:plugins:data')
-    implementation project(':java:timebase:commons')
-
-    implementation ('deltix.qsrv:deltix-commons-lang')
-    implementation ('deltix.qsrv:deltix-commons-util')
-    implementation ('deltix.qsrv:deltix-commons-messages')
-
-    implementation('deltix:rtmath-containers')
-
-    compile project(':java:timebase:api')
-    compile project(':java:timebase:aerondirect')
+    api project(':java:timebase:commons')
+    api project(':java:timebase:api')
+    api project(':java:timebase:aerondirect')
 
     implementation project(':java:timebase:snmpagent')
+
+    implementation ('com.epam.deltix:timebase-lang')
+    implementation ('com.epam.deltix:timebase-util')
+    implementation ('com.epam.deltix:timebase-messages')
+    implementation ('com.epam.deltix:timebase-collections')
+    implementation ('com.epam.deltix:dfp')
+    implementation('com.epam.deltix:containers')
+    implementation ('com.epam.deltix:thread-affinity')
+
+    implementation ('org.apache.commons:commons-lang3')
+
+    implementation 'com.epam.deltix:gflog-api', 'com.epam.deltix:gflog-core',
+            'com.epam.deltix:gflog-jul'
 
     // web application
 
@@ -37,6 +43,10 @@ dependencies {
 
     implementation 'org.apache.taglibs:taglibs-standard-impl' // JSTL Support
     implementation 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
+
+    implementation 'javax.xml.bind:jaxb-api'
+    implementation 'com.sun.xml.bind:jaxb-impl'
+    implementation 'com.sun.xml.bind:jaxb-core'
 //
 //    implementation 'org.springframework:spring-context'
 

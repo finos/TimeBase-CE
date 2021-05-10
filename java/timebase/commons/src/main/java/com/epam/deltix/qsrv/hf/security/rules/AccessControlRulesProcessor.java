@@ -1,5 +1,6 @@
 package com.epam.deltix.qsrv.hf.security.rules;
 
+import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.qsrv.hf.security.SecurityConfigurator;
 import com.epam.deltix.qsrv.hf.security.TimeBasePermissions;
 import com.epam.deltix.util.lang.StringUtils;
@@ -20,7 +21,7 @@ import java.util.regex.Pattern;
 
 /** Processes user-specified Access Control Rules and builds internal structures optimized for fast permission check */
 class AccessControlRulesProcessor {
-    private static final Logger LOGGER = SecurityConfigurator.LOGGER;
+    private static final Log LOGGER = SecurityConfigurator.LOGGER;
     private static final String LOGPREFIX = SecurityConfigurator.LOGPREFIX;
 
     private static final boolean USE_IMPLICIT_SELF_OWNERSHIP_PERMISSION = ! Boolean.getBoolean("Security.disableSelfOwnership");
@@ -52,15 +53,15 @@ class AccessControlRulesProcessor {
             Principal principal = rule.getPrincipal();
             String permission = rule.getPermission();
             if (StringUtils.isEmpty(principal.getName()) || principal.getName().equals("*")) {
-                LOGGER.log(Level.WARNING, LOGPREFIX + "Skipping rule have empty principal: {0}", rule);
+                LOGGER.warn(LOGPREFIX + "Skipping rule have empty principal: {%s}").with(rule);
                 continue;
             }
             if (StringUtils.isEmpty(permission)) {
-                LOGGER.log(Level.WARNING, LOGPREFIX + "Skipping rule that does not have permission key: {0}", rule);
+                LOGGER.warn(LOGPREFIX + "Skipping rule that does not have permission key: {%s}").with(rule);
                 continue;
             }
             if (TimeBasePermissions.IMPERSONATE_PERMISSION.equals (permission) && resourceType == ResourceType.Stream) {
-                LOGGER.log(Level.WARNING, LOGPREFIX + "Skipping IMPERSONATE rule with stream resource type: {0}", rule);
+                LOGGER.warn(LOGPREFIX + "Skipping IMPERSONATE rule with stream resource type: {%s}").with(rule);
                 continue;
             }
 
@@ -71,7 +72,7 @@ class AccessControlRulesProcessor {
                 for (String currentRuleUser : currentRuleUsers) {
                     UserPermission userPermission = getOrCreate(ruleEffect, currentRuleUser, permission);
                     if (currentRuleResources.isEmpty()) {
-                        LOGGER.log(Level.WARNING, LOGPREFIX + "Skipping permission rule that does not have any matching resources: {0}", rule);
+                        LOGGER.warn(LOGPREFIX + "Skipping permission rule that does not have any matching resources: {%s}").with(rule);
                     } else {
                         for (String currentRuleResource : currentRuleResources)
                             userPermission.add(currentRuleResource, resourceType, resourceFormat);
@@ -89,7 +90,7 @@ class AccessControlRulesProcessor {
 
     private static void checkGroupNameClash(Principal user, Principal[] knownGroups) {
         if (contains(knownGroups, user))
-            LOGGER.log(Level.WARNING, LOGPREFIX + "Name \"{0}\" is used by both a user and a group (will ignore group)", user.getName());
+            LOGGER.warn(LOGPREFIX + "Name \"{%s}\" is used by both a user and a group (will ignore group)").with(user.getName());
     }
 
     private static String getResource(AccessControlRule rule) {
@@ -131,7 +132,7 @@ class AccessControlRulesProcessor {
                     }
 
                 if ( ! expanded) {
-                    LOGGER.log(Level.INFO, LOGPREFIX + "Permission specifies unknown user or group: {0}", resource);
+                    LOGGER.info(LOGPREFIX + "Permission specifies unknown user or group: {%s}").with( resource);
                 }
             }
         } else {
@@ -152,7 +153,7 @@ class AccessControlRulesProcessor {
             } else if (contains(knownGroups, principal)) {
                 appendGroupUsers(knownGroups, principal, currentRuleUsers);
             } else {
-                LOGGER.log(Level.WARNING, LOGPREFIX + "Skip permission resolving for unknown user or group: \"{0}\"", principal.getName());
+                LOGGER.warn(LOGPREFIX + "Skip permission resolving for unknown user or group: \"{%s}\"").with(principal.getName());
             }
         }
         return currentRuleUsers;

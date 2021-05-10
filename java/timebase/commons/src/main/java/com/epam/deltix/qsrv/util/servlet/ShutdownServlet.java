@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.util.servlet;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.config.QuantServerExecutor;
 import com.epam.deltix.qsrv.hf.security.TimeBasePermissions;
 import com.epam.deltix.util.runtime.Shutdown;

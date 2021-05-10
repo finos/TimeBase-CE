@@ -6,6 +6,7 @@
 /.plugins
 /.project
 /.settings
+lib/**
 
 
 *.iml

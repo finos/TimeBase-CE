@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.hf.codec;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.hf.codec.cg.CodecGenerator;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
 import com.epam.deltix.qsrv.hf.pub.codec.*;

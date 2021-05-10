@@ -1,9 +1,9 @@
 package com.epam.deltix.qsrv.solgen.net.samples;
 
-import com.epam.deltix.anvil.util.StringUtil;
 import com.epam.deltix.qsrv.solgen.SolgenUtils;
 import com.epam.deltix.qsrv.solgen.base.*;
 import com.epam.deltix.qsrv.solgen.net.NetSampleFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -13,7 +13,7 @@ public class ReadStreamSample implements Sample {
             "timebase.stream",
             "TimeBase stream key.",
             true,
-            StringUtil::isNotEmpty
+            StringUtils::isNotEmpty
     );
     public static final List<Property> PROPERTIES = Collections.unmodifiableList(Collections.singletonList(STREAM_KEY));
 

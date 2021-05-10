@@ -1,9 +1,8 @@
 package com.epam.deltix.qsrv.hf.tickdb.tests.procs;
 
-import com.epam.deltix.anvil.util.ShutdownSignal;
-import com.epam.deltix.anvil.util.TimeoutException;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.qsrv.hf.tickdb.tests.ShutdownSignal;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickLoader;
@@ -105,7 +104,7 @@ public class StressTestLoader extends DefaultApplication implements Runnable {
                 interval = System.currentTimeMillis() - startTime;
             } while (stream == null && interval < 20000);
             if (stream == null) {
-                throw new TimeoutException("Timeout while waiting for stream " + key);
+                throw new RuntimeException("Timeout while waiting for stream " + key);
             }
             return stream;
         }

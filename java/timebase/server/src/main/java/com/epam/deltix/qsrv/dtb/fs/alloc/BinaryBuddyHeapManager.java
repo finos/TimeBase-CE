@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.dtb.fs.alloc;
 
-import com.epam.deltix.gflog.AppendableEntry;
+import com.epam.deltix.gflog.api.AppendableEntry;
 import com.epam.deltix.util.collections.ByteArray;
 import net.jcip.annotations.GuardedBy;
 

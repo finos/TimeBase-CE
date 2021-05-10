@@ -43,12 +43,12 @@ public class ProjectFactory implements ProjectFactoryBase {
 
     @Override
     public List<String> listNETProjectTypes() {
-        return Collections.singletonList(deltix.qsrv.solgen.net.VsProject.PROJECT_TYPE);
+        return Collections.singletonList(com.epam.deltix.qsrv.solgen.net.VsProject.PROJECT_TYPE);
     }
 
     @Override
     public List<Property> getNETProjectProps(String projectType) {
-        return deltix.qsrv.solgen.net.VsProject.PROPERTIES;
+        return com.epam.deltix.qsrv.solgen.net.VsProject.PROPERTIES;
     }
 
     @Override

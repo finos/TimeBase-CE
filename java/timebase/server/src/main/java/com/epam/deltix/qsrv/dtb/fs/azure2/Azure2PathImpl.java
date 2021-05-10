@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.dtb.fs.azure2;
 
 import com.microsoft.azure.datalake.store.*;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractFileSystem;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 import com.epam.deltix.qsrv.dtb.fs.pub.FSFactory;

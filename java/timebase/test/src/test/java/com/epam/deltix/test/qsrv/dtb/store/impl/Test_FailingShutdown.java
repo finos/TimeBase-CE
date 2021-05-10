@@ -1,7 +1,7 @@
 package com.epam.deltix.test.qsrv.dtb.store.impl;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.dtb.StreamTestHelpers;
 import com.epam.deltix.qsrv.dtb.fs.local.FailingFileSystem;
 import com.epam.deltix.qsrv.dtb.fs.local.FailingPathImpl;

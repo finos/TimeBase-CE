@@ -1,9 +1,9 @@
 package com.epam.deltix.qsrv.hf.security.rules;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogEntry;
-import com.epam.deltix.gflog.LogFactory;
-import com.epam.deltix.gflog.LogLevel;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogEntry;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.hf.security.SecurityConfigurator;
 import com.epam.deltix.util.security.AccessControlRule;
 import com.epam.deltix.util.security.UserDirectory;

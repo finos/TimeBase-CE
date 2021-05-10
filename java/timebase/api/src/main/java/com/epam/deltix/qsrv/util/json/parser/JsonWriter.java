@@ -1,6 +1,5 @@
 package com.epam.deltix.qsrv.util.json.parser;
 
-import com.epam.deltix.anvil.util.CharSequenceParser;
 import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.WritableValue;
@@ -9,6 +8,7 @@ import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.util.json.DateFormatter;
 import com.epam.deltix.util.collections.generated.*;
 import com.epam.deltix.util.memory.MemoryDataOutput;
+import com.epam.deltix.util.text.CharSequenceParser;
 import org.apache.commons.io.output.StringBuilderWriter;
 
 import java.nio.ByteBuffer;

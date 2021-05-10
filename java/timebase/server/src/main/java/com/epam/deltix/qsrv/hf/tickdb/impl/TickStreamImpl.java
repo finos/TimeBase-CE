@@ -798,7 +798,7 @@ public abstract class TickStreamImpl extends ServerStreamImpl
         try {
             if (fileLock != null)
                 fileLock.delete();
-        } catch (deltix.util.io.UncheckedIOException ex) {
+        } catch (com.epam.deltix.util.io.UncheckedIOException ex) {
             TickDBImpl.LOG.warn("Failed to remove lock: %s").with(ex);
         }
 

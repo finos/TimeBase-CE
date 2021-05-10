@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.snmp.model.timebase;
 
-public class Loader_SnmpSupport implements deltix.snmp.s4jrt.EntrySupport <Loader> {
+public class Loader_SnmpSupport implements com.epam.deltix.snmp.s4jrt.EntrySupport <Loader> {
  public static final Loader_SnmpSupport INSTANCE = new Loader_SnmpSupport ();
 
  private Loader_SnmpSupport () {

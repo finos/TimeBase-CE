@@ -15,7 +15,7 @@ import com.epam.deltix.util.xml.JAXBStackTraceSuppressor;
 @Depends ("../jaxb.index")
 public class UHFJAXBContext {
 	public static final String      PACKAGE_PATH =
-        "deltix.qsrv.hf.pub.md";
+        "com.epam.deltix.qsrv.hf.pub.md";
     
     public static final JAXBContext       INSTANCE;
     

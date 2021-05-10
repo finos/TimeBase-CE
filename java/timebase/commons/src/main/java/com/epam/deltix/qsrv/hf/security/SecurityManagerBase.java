@@ -13,7 +13,7 @@ import java.util.List;
  * Date: Feb 11, 2011
  * @author Nickolay Dul
  */
-public abstract class SecurityManagerBase implements deltix.qsrv.hf.security.SecurityManager, deltix.qsrv.hf.security.SecurityController {
+public abstract class SecurityManagerBase implements com.epam.deltix.qsrv.hf.security.SecurityManager, com.epam.deltix.qsrv.hf.security.SecurityController {
     private final SecurityController securityController;
 
     public SecurityManagerBase(SecurityController securityController) {

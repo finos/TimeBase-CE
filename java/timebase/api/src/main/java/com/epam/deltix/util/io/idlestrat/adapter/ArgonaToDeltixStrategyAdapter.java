@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * @author Alexei Osipov
  */
 @ParametersAreNonnullByDefault
-public class ArgonaToDeltixStrategyAdapter implements deltix.util.io.idlestrat.IdleStrategy {
+public class ArgonaToDeltixStrategyAdapter implements com.epam.deltix.util.io.idlestrat.IdleStrategy {
     private final org.agrona.concurrent.IdleStrategy wrapped;
 
     static IdleStrategy adapt(org.agrona.concurrent.IdleStrategy idleStrategy) {

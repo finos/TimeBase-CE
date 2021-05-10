@@ -1,6 +1,6 @@
 package com.epam.deltix.qsrv.dtb.fs.alloc;
 
-import com.epam.deltix.gflog.AppendableEntry;
+import com.epam.deltix.gflog.api.AppendableEntry;
 import com.epam.deltix.util.collections.ByteArray;
 
 /** Implementation of heap manager that simply uses Java heap - for DEBUGGING purposes only */

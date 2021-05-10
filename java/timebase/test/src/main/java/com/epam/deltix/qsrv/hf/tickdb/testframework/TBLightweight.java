@@ -1,6 +1,5 @@
 package com.epam.deltix.qsrv.hf.tickdb.testframework;
 
-import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TestServer;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DataCacheOptions;
 import com.epam.deltix.util.cmdline.DefaultApplication;
@@ -127,8 +126,6 @@ public class TBLightweight extends DefaultApplication {
         File timebase = new File(location);
         if (!timebase.exists() && !timebase.mkdirs())
             throw new NullPointerException("Cannot create folder: " + location);
-
-        QSHome.set(timebase.getParent());
 
         server = new TestServer(port, null, null, new DataCacheOptions(), timebase);
         int actual = server.start();

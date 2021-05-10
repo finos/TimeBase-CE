@@ -1,5 +1,6 @@
 package com.epam.deltix.qsrv.hf.security.simple;
 
+import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.qsrv.hf.security.SecurityConfigurator;
 import com.epam.deltix.qsrv.util.text.Mangle;
 import com.epam.deltix.util.io.IOUtil;
@@ -43,7 +44,7 @@ public class SimpleUserDirectoryFactory implements Factory<AuthenticatingUserDir
  * File-based user directory
  */
 class SimpleUserDirectory implements AuthenticatingUserDirectory {
-    private static final Logger LOGGER = SecurityConfigurator.LOGGER;
+    private static final Log LOGGER = SecurityConfigurator.LOGGER;
     private static final String LOGPREFIX = SecurityConfigurator.LOGPREFIX;
 
     private final TreeMap<String, GroupEntry> groups = new TreeMap<>(IgnoreCaseComparator.INSTANCE);
@@ -98,7 +99,7 @@ class SimpleUserDirectory implements AuthenticatingUserDirectory {
             buildChain(groupEntry, chain);
         }
 
-        if (LOGGER.isLoggable(Level.FINE)) {
+        if (LOGGER.isDebugEnabled()) {
             StringBuilder builder = new StringBuilder(512);
             builder.append(LOGPREFIX).append("Loaded FILE UAC configuration:\n");
             builder.append("USERS:\n");
@@ -111,7 +112,7 @@ class SimpleUserDirectory implements AuthenticatingUserDirectory {
                 builder.append("\t\tMembers: ").append(Arrays.toString(group.getPrincipals())).append('\n');
             }
 
-            LOGGER.log(Level.FINE, builder.toString());
+            LOGGER.debug(builder.toString());
         }
     }
 
@@ -139,12 +140,12 @@ class SimpleUserDirectory implements AuthenticatingUserDirectory {
         String groupName = StringUtils.trim(groupEntity.name);
 
         if (groupName == null) {
-            LOGGER.log(Level.WARNING, LOGPREFIX + "Group name could not be empty", groupEntity);
+            LOGGER.warn(LOGPREFIX + "Group name could not be empty: " + groupEntity);
             return;
         }
 
         if (exists(groupName)) {
-            LOGGER.log(Level.WARNING, LOGPREFIX + "Member already exists: {0}", groupName);
+            LOGGER.warn(LOGPREFIX + "Member already exists: {0}").with(groupName);
             return;
         }
 
@@ -157,7 +158,7 @@ class SimpleUserDirectory implements AuthenticatingUserDirectory {
                 if (def != null)
                     group.addPrincipal(def);
                 else
-                    LOGGER.log(Level.WARNING, LOGPREFIX + "Unknown group member: {0}", member);
+                    LOGGER.warn(LOGPREFIX + "Unknown group member: {0}").with(member);
             }
 
         groups.put(groupName, group);
@@ -166,10 +167,10 @@ class SimpleUserDirectory implements AuthenticatingUserDirectory {
     private void processUser(SimpleSecurityConfiguration.User userEntity) {
         String name = StringUtils.trim(userEntity.id);
         if (name == null) {
-            LOGGER.log(Level.WARNING, LOGPREFIX + "Skip user with empty name");
+            LOGGER.warn(LOGPREFIX + "Skip user with empty name");
         } else {
             if (exists(name)) {
-                LOGGER.log(Level.WARNING, LOGPREFIX + "User already exists: {0}", name);
+                LOGGER.warn(LOGPREFIX + "User already exists: {0}").with(name);
             } else {
                 String password = userEntity.password;
                 password = Mangle.split(password);

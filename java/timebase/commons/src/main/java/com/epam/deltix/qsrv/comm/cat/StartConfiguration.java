@@ -12,9 +12,7 @@ public class StartConfiguration {
 
     private static ObjectToObjectHashMap<Type, String> DEFAULTS = new ObjectToObjectHashMap<>();
     static {
-        DEFAULTS.put(Type.TimeBase, "deltix.qsrv.config.TimebaseServiceExecutor");
-        DEFAULTS.put(Type.Aggregator, "deltix.qsrv.hf.aggregator.AggregatorExecutor");
-        DEFAULTS.put(Type.ExecutionServer, "deltix.qsrv.hf.server.es.server.ExecutionServerStarter");
+        DEFAULTS.put(Type.TimeBase, "com.epam.deltix.qsrv.config.TimebaseServiceExecutor");
         DEFAULTS.put(Type.StrategyServer, "");
         DEFAULTS.put(Type.UHF, "");
         DEFAULTS.put(Type.QuantServer, QuantServerExecutor.class.getName());

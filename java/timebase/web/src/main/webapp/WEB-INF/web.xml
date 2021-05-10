@@ -8,12 +8,12 @@
 
     <filter>
         <filter-name>AccessFilter</filter-name>
-        <filter-class>deltix.qsrv.util.servlet.AccessFilter</filter-class>
+        <filter-class>com.epam.deltix.qsrv.util.servlet.AccessFilter</filter-class>
     </filter>
 
     <servlet>
         <servlet-name>api</servlet-name>
-        <servlet-class>deltix.qsrv.hf.tickdb.http.TimebaseServlet</servlet-class>
+        <servlet-class>com.epam.deltix.qsrv.hf.tickdb.http.TimebaseServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

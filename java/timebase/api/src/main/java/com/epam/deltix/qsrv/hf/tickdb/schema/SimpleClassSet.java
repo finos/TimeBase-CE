@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.*;
 
 @XmlRootElement(name = "ClassSet")
-public class SimpleClassSet implements deltix.qsrv.hf.pub.md.ClassSet<RecordClassDescriptor>, Serializable {
+public class SimpleClassSet implements com.epam.deltix.qsrv.hf.pub.md.ClassSet<RecordClassDescriptor>, Serializable {
 
     @XmlElement(name = "classDescriptor")
     private HashSet<ClassDescriptor> classDescriptors;

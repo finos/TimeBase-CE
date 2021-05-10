@@ -15,9 +15,9 @@ import java.lang.Object;
 import java.lang.Override;
 import java.lang.String;
 import java.lang.StringBuilder;
-import rtmath.containers.BinaryAsciiString;
-import rtmath.containers.CharSequenceUtils;
-import rtmath.containers.MutableString;
+import com.epam.deltix.containers.BinaryAsciiString;
+import com.epam.deltix.containers.CharSequenceUtils;
+import com.epam.deltix.containers.MutableString;
 
 /**
  * Basic information about a market trade.
@@ -93,14 +93,14 @@ public class TradeMessage extends MarketMessage {
      * @return true if Exchange Id is not null
      */
     public boolean hasExchangeId() {
-        return exchangeId != deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
+        return exchangeId != com.epam.deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
     }
 
     /**
      * Exchange code compressed to long using ALPHANUMERIC(10) encoding
      */
     public void nullifyExchangeId() {
-        this.exchangeId = deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
+        this.exchangeId = com.epam.deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
     }
 
     /**
@@ -136,7 +136,7 @@ public class TradeMessage extends MarketMessage {
      * The trade price.
      */
     public void nullifyPrice() {
-        this.price = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        this.price = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
     }
 
     /**
@@ -172,7 +172,7 @@ public class TradeMessage extends MarketMessage {
      * The trade size.
      */
     public void nullifySize() {
-        this.size = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        this.size = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
     }
 
     /**
@@ -272,7 +272,7 @@ public class TradeMessage extends MarketMessage {
      * Net change from previous days closing price vs. last traded price.
      */
     public void nullifyNetPriceChange() {
-        this.netPriceChange = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        this.netPriceChange = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
     }
 
     /**
@@ -342,12 +342,12 @@ public class TradeMessage extends MarketMessage {
     @Override
     public TradeMessage reset() {
         super.reset();
-        exchangeId = deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
-        price = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
-        size = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        exchangeId = com.epam.deltix.timebase.messages.TypeConstants.EXCHANGE_NULL;
+        price = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        size = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
         condition = null;
         aggressorSide = null;
-        netPriceChange = deltix.timebase.messages.TypeConstants.IEEE64_NULL;
+        netPriceChange = com.epam.deltix.timebase.messages.TypeConstants.IEEE64_NULL;
         eventType = null;
         return this;
     }

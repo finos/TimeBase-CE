@@ -3,9 +3,9 @@ package com.epam.deltix.qsrv.hf.codec;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 import com.epam.deltix.util.memory.MemoryDataInput;
 import com.epam.deltix.qsrv.hf.pub.NullValueException;
-import rtmath.containers.BinaryArray;
-import rtmath.containers.BinaryArrayHelper;
-import rtmath.containers.interfaces.BinaryArrayReadOnly;
+import com.epam.deltix.containers.BinaryArray;
+import com.epam.deltix.containers.BinaryArrayHelper;
+import com.epam.deltix.containers.interfaces.BinaryArrayReadOnly;
 
 import java.io.OutputStream;
 import java.io.IOException;

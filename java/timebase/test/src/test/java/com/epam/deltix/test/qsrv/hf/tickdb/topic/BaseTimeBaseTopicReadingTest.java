@@ -2,8 +2,8 @@ package com.epam.deltix.test.qsrv.hf.tickdb.topic;
 
 import com.epam.deltix.qsrv.test.messages.TradeMessage;
 import com.epam.deltix.streaming.MessageChannel;
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;

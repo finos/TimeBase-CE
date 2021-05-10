@@ -1,7 +1,7 @@
 package com.epam.deltix.qsrv.comm.cat;
 
-import com.epam.deltix.gflog.Log;
-import com.epam.deltix.gflog.LogFactory;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.MemoryMonitorConfigurer;
 import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.config.QuantServiceConfig;

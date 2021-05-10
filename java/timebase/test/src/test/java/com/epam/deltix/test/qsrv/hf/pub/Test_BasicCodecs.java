@@ -78,14 +78,14 @@ public class Test_BasicCodecs {
         out.reset ();
         
         for (int n = 1; n <= max; n++)
-            deltix.qsrv.hf.pub.codec.TimeIntervalCodec.write(n * scale, out);
+            com.epam.deltix.qsrv.hf.pub.codec.TimeIntervalCodec.write(n * scale, out);
         
         assertEquals (max, out.getSize ());
         
         in.setBytes (out);
         
         for (int n = 1; n <= max; n++) {
-            int        actual = deltix.qsrv.hf.pub.codec.TimeIntervalCodec.read(in);
+            int        actual = com.epam.deltix.qsrv.hf.pub.codec.TimeIntervalCodec.read(in);
             assertEquals (n * scale, actual);
         }
         
@@ -93,7 +93,7 @@ public class Test_BasicCodecs {
             new DataInputStream (new ByteArrayInputStream (out.getBuffer (), 0, out.getSize ()));
         
         for (int n = 1; n <= max; n++) {
-            int        actual = deltix.qsrv.hf.pub.codec.TimeIntervalCodec.read(dis);
+            int        actual = com.epam.deltix.qsrv.hf.pub.codec.TimeIntervalCodec.read(dis);
             assertEquals (n * scale, actual);
         }
         
@@ -103,12 +103,12 @@ public class Test_BasicCodecs {
     @Test
     public void     testNulls () throws IOException {
         out.reset();
-        deltix.qsrv.hf.pub.codec.TimeIntervalCodec.write(IntegerDataType.PINTERVAL_NULL, out);
+        com.epam.deltix.qsrv.hf.pub.codec.TimeIntervalCodec.write(IntegerDataType.PINTERVAL_NULL, out);
         out.writePackedUnsignedInt(0);
         out.writePackedUnsignedLong(0);
 
         in.setBytes(out);
-        int actual = deltix.qsrv.hf.pub.codec.TimeIntervalCodec.read(in);
+        int actual = com.epam.deltix.qsrv.hf.pub.codec.TimeIntervalCodec.read(in);
         assertEquals(IntegerDataType.PINTERVAL_NULL, actual);
 
         actual = in.readPackedUnsignedInt();

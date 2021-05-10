@@ -5,9 +5,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.qsrv.hf.security.rules.AccessControlEntry;
 import com.epam.deltix.qsrv.hf.security.rules.DefaultAuthorizationController;
 import com.epam.deltix.qsrv.hf.security.rules.ManagedAuthorizationController;
@@ -18,7 +17,7 @@ import com.epam.deltix.util.time.GlobalTimer;
 import com.epam.deltix.util.time.Interval;
 
 public class DefaultSecurityController implements SecurityController, ManagedAuthorizationController, SecurityReloadNotifier {
-    private static final Logger LOGGER = SecurityConfigurator.LOGGER;
+    private static final Log LOGGER = SecurityConfigurator.LOGGER;
     private static final String LOGPREFIX = SecurityConfigurator.LOGPREFIX;
 
     private final Factory<AuthenticatingUserDirectory> userDirectoryFactory;
@@ -133,7 +132,7 @@ public class DefaultSecurityController implements SecurityController, ManagedAut
             try {
                 reload();
             } catch (Throwable e) {
-                LOGGER.log(Level.SEVERE, "Failed to reload configuration", e);
+                LOGGER.error("Failed to reload configuration: " + e);
             }
         }
     }

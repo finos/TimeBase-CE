@@ -247,7 +247,7 @@ public class Test_HttpSecured {
                     loader.send(raw);
                 }
 
-                time += deltix.util.time.TimeConstants.MINUTE;
+                time += com.epam.deltix.util.time.TimeConstants.MINUTE;
             }
             loader.close();
 

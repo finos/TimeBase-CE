@@ -5,18 +5,8 @@
     <add key="automatic" value="True" />
   </packageRestore>
   <packageSources>
-    <add key="Deltix.NET" value="${deltix.repository}" />
-    <add key="RTMath.NET" value="${rtmath.repository}" />
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
   </packageSources>
   <packageSourceCredentials>
-    <Deltix.NET>
-      <add key="Username" value="%EPM_ANYWHERE_PROGET_USER%" />
-      <add key="ClearTextPassword" value="%EPM_ANYWHERE_PROGET_PASS%" />
-    </Deltix.NET>
-    <RTMath.NET>
-      <add key="Username" value="%EPM_ANYWHERE_PROGET_USER%" />
-      <add key="ClearTextPassword" value="%EPM_ANYWHERE_PROGET_PASS%" />
-    </RTMath.NET>
   </packageSourceCredentials>
 </configuration>

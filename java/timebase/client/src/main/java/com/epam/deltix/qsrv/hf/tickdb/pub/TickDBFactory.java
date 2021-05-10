@@ -38,7 +38,7 @@ public class TickDBFactory {
 
     private static String           defaultApplicationID;
 
-    private static final String     defaultImplementationClass = "deltix.qsrv.hf.tickdb.impl.TickDBImpl";
+    private static final String     defaultImplementationClass = "com.epam.deltix.qsrv.hf.tickdb.impl.TickDBImpl";
     
     /**
      *  Creates a new embedded database with the specified root folders.

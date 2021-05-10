@@ -15,7 +15,7 @@ import static com.epam.deltix.qsrv.hf.pub.md.FloatDataType.*;
 public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
 
     public enum TestEnum {
-        ONE, TWO
+        EQUITY, OPTION, FUTURE, BOND, FX, INDEX, ETF, CUSTOM, SIMPLE_OPTION, EXCHANGE, TRADING_SESSION, STREAM, DATA_CONNECTOR, SYSTEM
     }
 
 
@@ -2307,10 +2307,12 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
         this.testVarcharDataType ();
     }
     private static final EnumClassDescriptor INSTRUMENT_TYPE = new EnumClassDescriptor (TestEnum.class.getName (), null, false, "EQUITY", "OPTION", "FUTURE", "BOND", "FX", "INDEX", "ETF", "CUSTOM", "SIMPLE_OPTION", "EXCHANGE", "TRADING_SESSION", "STREAM", "DATA_CONNECTOR", "SYSTEM");
+
     private void testEnumDataType ()
     {
         {
-            Test_RecordCodecs5.AllEnumPublic msg = new Test_RecordCodecs5.AllEnumPublic ();
+            AllEnumPublic msg = new AllEnumPublic ();
+            (msg).InstrumentType1 = TestEnum.OPTION;
             (msg).CharSequence2 = "FUTURE";
             (msg).byte3 = (byte) (3L);
             (msg).short4 = (short) (2L);
@@ -2320,6 +2322,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             super.testRcdBound ("public non-nullable - normal values", msg, rcdAllEnumPublicNotNullable);
             super.testRcdBound ("public nullable static - normal values", msg, rcdAllEnumPublicNullableStatic);
             super.testRcdBound ("public non-nullable static - normal values", msg, rcdAllEnumPublicNotNullableStatic);
+            (msg).InstrumentType1 = null;
             (msg).CharSequence2 = null;
             (msg).byte3 = (byte) (-1L);
             (msg).short4 = (short) (-1L);
@@ -2329,7 +2332,8 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             super.testRcdBound ("public nullable static - null values", msg, rcdAllEnumPublicNullableStaticNV);
         }
         {
-            Test_RecordCodecs5.AllEnumPublic msg = new Test_RecordCodecs5.AllEnumPublic ();
+            AllEnumPublic msg = new AllEnumPublic ();
+            (msg).InstrumentType1 = null;
             (msg).CharSequence2 = null;
             (msg).byte3 = (byte) (-1L);
             (msg).short4 = (short) (-1L);
@@ -2337,94 +2341,98 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             (msg).long6 = (long) (-1L);
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - public");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'InstrumentType1\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'InstrumentType1\' field is not nullable", (e).toString ());
             }
+            (msg).InstrumentType1 = TestEnum.OPTION;
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - public");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'CharSequence2\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'CharSequence2\' field is not nullable", (e).toString ());
             }
             (msg).CharSequence2 = "FUTURE";
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - public");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'byte3\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'byte3\' field is not nullable", (e).toString ());
             }
             (msg).byte3 = (byte) (3L);
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - public");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'short4\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'short4\' field is not nullable", (e).toString ());
             }
             (msg).short4 = (short) (2L);
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - public");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'int5\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'int5\' field is not nullable", (e).toString ());
             }
             (msg).int5 = (int) (1L);
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - public");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'long6\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - public", "java.lang.IllegalArgumentException: \'long6\' field is not nullable", (e).toString ());
             }
         }
         {
-            Test_RecordCodecs5.AllEnumPublic msg = new Test_RecordCodecs5.AllEnumPublic ();
+            AllEnumPublic msg = new AllEnumPublic ();
+            (msg).InstrumentType1 = null;
             (msg).CharSequence2 = "BAD_VALUE";
             (msg).byte3 = 20;
             (msg).short4 = 21;
             (msg).int5 = 22;
             (msg).long6 = 8197L;
+            (msg).InstrumentType1 = TestEnum.OPTION;
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: CharSequence2 == BAD_VALUE").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == BAD_VALUE", (this).getFieldString (msg, "CharSequence2"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == BAD_VALUE", (this).getFieldString (msg, "CharSequence2"))).toString (), (e).toString ());
             }
             (msg).CharSequence2 = "FUTURE";
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: byte3 == 20").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 20", (this).getFieldString (msg, "byte3"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 20", (this).getFieldString (msg, "byte3"))).toString (), (e).toString ());
             }
             (msg).byte3 = (byte) (3L);
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: short4 == 21").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 21", (this).getFieldString (msg, "short4"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 21", (this).getFieldString (msg, "short4"))).toString (), (e).toString ());
             }
             (msg).short4 = (short) (2L);
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: int5 == 22").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 22", (this).getFieldString (msg, "int5"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 22", (this).getFieldString (msg, "int5"))).toString (), (e).toString ());
             }
             (msg).int5 = (int) (1L);
             try {
                 super.boundEncode (msg, rcdAllEnumPublicNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - public");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: long6 == 8197").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 8197", (this).getFieldString (msg, "long6"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - public", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 8197", (this).getFieldString (msg, "long6"))).toString (), (e).toString ());
             }
         }
         {
-            Test_RecordCodecs5.AllEnumPrivate msg = new Test_RecordCodecs5.AllEnumPrivate ();
+            AllEnumPrivate msg = new AllEnumPrivate ();
+            (msg).InstrumentType1 = TestEnum.OPTION;
             (msg).CharSequence2 = "FUTURE";
             (msg).byte3 = (byte) (3L);
             (msg).short4 = (short) (2L);
@@ -2434,6 +2442,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             super.testRcdBound ("private non-nullable - normal values", msg, rcdAllEnumPrivateNotNullable);
             super.testRcdBound ("private nullable static - normal values", msg, rcdAllEnumPrivateNullableStatic);
             super.testRcdBound ("private non-nullable static - normal values", msg, rcdAllEnumPrivateNotNullableStatic);
+            (msg).InstrumentType1 = null;
             (msg).CharSequence2 = null;
             (msg).byte3 = (byte) (-1L);
             (msg).short4 = (short) (-1L);
@@ -2443,7 +2452,8 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             super.testRcdBound ("private nullable static - null values", msg, rcdAllEnumPrivateNullableStaticNV);
         }
         {
-            Test_RecordCodecs5.AllEnumPrivate msg = new Test_RecordCodecs5.AllEnumPrivate ();
+            AllEnumPrivate msg = new AllEnumPrivate ();
+            (msg).InstrumentType1 = null;
             (msg).CharSequence2 = null;
             (msg).byte3 = (byte) (-1L);
             (msg).short4 = (short) (-1L);
@@ -2451,94 +2461,98 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
             (msg).long6 = (long) (-1L);
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - private");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'InstrumentType1\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'InstrumentType1\' field is not nullable", (e).toString ());
             }
+            (msg).InstrumentType1 = TestEnum.OPTION;
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - private");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'CharSequence2\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'CharSequence2\' field is not nullable", (e).toString ());
             }
             (msg).CharSequence2 = "FUTURE";
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - private");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'byte3\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'byte3\' field is not nullable", (e).toString ());
             }
             (msg).byte3 = (byte) (3L);
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - private");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'short4\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'short4\' field is not nullable", (e).toString ());
             }
             (msg).short4 = (short) (2L);
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - private");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'int5\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'int5\' field is not nullable", (e).toString ());
             }
             (msg).int5 = (int) (1L);
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - null violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - null violation - private");
             }catch (java.lang.IllegalArgumentException e) {
-                org.junit.Assert.assertEquals ("InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'long6\' field is not nullable", (e).toString ());
+                org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - null violation - private", "java.lang.IllegalArgumentException: \'long6\' field is not nullable", (e).toString ());
             }
         }
         {
-            Test_RecordCodecs5.AllEnumPrivate msg = new Test_RecordCodecs5.AllEnumPrivate ();
+            AllEnumPrivate msg = new AllEnumPrivate ();
+            (msg).InstrumentType1 = null;
             (msg).CharSequence2 = "BAD_VALUE";
             (msg).byte3 = 20;
             (msg).short4 = 21;
             (msg).int5 = 22;
             (msg).long6 = 8197L;
+            (msg).InstrumentType1 = TestEnum.OPTION;
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: CharSequence2 == BAD_VALUE").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == BAD_VALUE", (this).getFieldString (msg, "CharSequence2"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == BAD_VALUE", (this).getFieldString (msg, "CharSequence2"))).toString (), (e).toString ());
             }
             (msg).CharSequence2 = "FUTURE";
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: byte3 == 20").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 20", (this).getFieldString (msg, "byte3"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 20", (this).getFieldString (msg, "byte3"))).toString (), (e).toString ());
             }
             (msg).byte3 = (byte) (3L);
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: short4 == 21").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 21", (this).getFieldString (msg, "short4"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 21", (this).getFieldString (msg, "short4"))).toString (), (e).toString ());
             }
             (msg).short4 = (short) (2L);
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: int5 == 22").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 22", (this).getFieldString (msg, "int5"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 22", (this).getFieldString (msg, "int5"))).toString (), (e).toString ());
             }
             (msg).int5 = (int) (1L);
             try {
                 super.boundEncode (msg, rcdAllEnumPrivateNotNullable);
-                org.junit.Assert.fail ("InstrumentType - contraint violation - private");
+                org.junit.Assert.fail ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private");
             }catch (java.lang.IllegalArgumentException e) {
                 if (!(("java.lang.IllegalArgumentException: long6 == 8197").equals ((e).toString ())))
-                    org.junit.Assert.assertEquals ("InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 8197", (this).getFieldString (msg, "long6"))).toString (), (e).toString ());
+                    org.junit.Assert.assertEquals ("deltix.qsrv.hf.pub.InstrumentType - contraint violation - private", (java.lang.String.format ("java.lang.IllegalArgumentException: %s == 8197", (this).getFieldString (msg, "long6"))).toString (), (e).toString ());
             }
         }
     }
     public static final class AllEnumPublic extends InstrumentMessage {
+        public TestEnum InstrumentType1;
         public java.lang.CharSequence CharSequence2;
         public byte byte3;
         public short short4;
@@ -2561,25 +2575,32 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                     && (((this).int5) == ((other).int5)) && (((this).long6) == ((other).long6));
         }}
     private static final RecordClassDescriptor rcdAllEnumPublicNullable = new RecordClassDescriptor ((Test_RecordCodecs5.AllEnumPublic.class).getName (), null, false, null,
-            new NonStaticDataField ("InstrumentType1", null, new EnumDataType (true, INSTRUMENT_TYPE)), 
-            new NonStaticDataField ("CharSequence2", null, new EnumDataType (true, INSTRUMENT_TYPE)), 
-            new NonStaticDataField ("byte3", null, new EnumDataType (true, INSTRUMENT_TYPE)), 
-            new NonStaticDataField ("short4", null, new EnumDataType (true, INSTRUMENT_TYPE)), 
-            new NonStaticDataField ("int5", null, new EnumDataType (true, INSTRUMENT_TYPE)), 
+            new NonStaticDataField ("InstrumentType1", null, new EnumDataType (true, INSTRUMENT_TYPE)),
+            new NonStaticDataField ("CharSequence2", null, new EnumDataType (true, INSTRUMENT_TYPE)),
+            new NonStaticDataField ("byte3", null, new EnumDataType (true, INSTRUMENT_TYPE)),
+            new NonStaticDataField ("short4", null, new EnumDataType (true, INSTRUMENT_TYPE)),
+            new NonStaticDataField ("int5", null, new EnumDataType (true, INSTRUMENT_TYPE)),
             new NonStaticDataField ("long6", null, new EnumDataType (true, INSTRUMENT_TYPE)));
     private static final RecordClassDescriptor rcdAllEnumPublicNotNullable = new RecordClassDescriptor ((Test_RecordCodecs5.AllEnumPublic.class).getName (), null, false, null,
-            new NonStaticDataField ("InstrumentType1", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("CharSequence2", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("byte3", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("short4", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("int5", null, new EnumDataType (false, INSTRUMENT_TYPE)), new NonStaticDataField ("long6", null, new EnumDataType (false, INSTRUMENT_TYPE)));
+            new NonStaticDataField ("InstrumentType1", null, new EnumDataType (false, INSTRUMENT_TYPE)),
+            new NonStaticDataField ("CharSequence2", null, new EnumDataType (false, INSTRUMENT_TYPE)),
+            new NonStaticDataField ("byte3", null, new EnumDataType (false, INSTRUMENT_TYPE)),
+            new NonStaticDataField ("short4", null, new EnumDataType (false, INSTRUMENT_TYPE)),
+            new NonStaticDataField ("int5", null, new EnumDataType (false, INSTRUMENT_TYPE)),
+            new NonStaticDataField ("long6", null, new EnumDataType (false, INSTRUMENT_TYPE)));
     private static final RecordClassDescriptor rcdAllEnumPublicNullableStatic = new RecordClassDescriptor ((Test_RecordCodecs5.AllEnumPublic.class).getName (), null, false, null, new StaticDataField ("InstrumentType1", null, new EnumDataType (true, INSTRUMENT_TYPE), "OPTION"), new StaticDataField ("CharSequence2", null, new EnumDataType (true, INSTRUMENT_TYPE), "FUTURE"), new StaticDataField ("byte3", null, new EnumDataType (true, INSTRUMENT_TYPE), "BOND"), new StaticDataField ("short4", null, new EnumDataType (true, INSTRUMENT_TYPE), "FUTURE"), new StaticDataField ("int5", null, new EnumDataType (true, INSTRUMENT_TYPE), "OPTION"), new StaticDataField ("long6", null, new EnumDataType (true, INSTRUMENT_TYPE), "FX"));
     private static final RecordClassDescriptor rcdAllEnumPublicNotNullableStatic = new RecordClassDescriptor ((Test_RecordCodecs5.AllEnumPublic.class).getName (), null, false, null, new StaticDataField ("InstrumentType1", null, new EnumDataType (false, INSTRUMENT_TYPE), "OPTION"), new StaticDataField ("CharSequence2", null, new EnumDataType (false, INSTRUMENT_TYPE), "FUTURE"), new StaticDataField ("byte3", null, new EnumDataType (false, INSTRUMENT_TYPE), "BOND"), new StaticDataField ("short4", null, new EnumDataType (false, INSTRUMENT_TYPE), "FUTURE"), new StaticDataField ("int5", null, new EnumDataType (false, INSTRUMENT_TYPE), "OPTION"), new StaticDataField ("long6", null, new EnumDataType (false, INSTRUMENT_TYPE), "FX"));
-    private static final RecordClassDescriptor rcdAllEnumPublicNullableStaticNV = 
+    private static final RecordClassDescriptor rcdAllEnumPublicNullableStaticNV =
             new RecordClassDescriptor ((Test_RecordCodecs5.AllEnumPublic.class).getName (), null, false, null,
-                    new StaticDataField ("InstrumentType1", null,new EnumDataType (true, INSTRUMENT_TYPE), null), 
-                    new StaticDataField ("CharSequence2", null, new EnumDataType (true, INSTRUMENT_TYPE), null), 
-                    new StaticDataField ("byte3", null, new EnumDataType (true, INSTRUMENT_TYPE), null), 
-                    new StaticDataField ("short4", null, new EnumDataType (true, INSTRUMENT_TYPE), null), 
-                    new StaticDataField ("int5", null, new EnumDataType (true, INSTRUMENT_TYPE), null), 
+                    new StaticDataField ("InstrumentType1", null,new EnumDataType (true, INSTRUMENT_TYPE), null),
+                    new StaticDataField ("CharSequence2", null, new EnumDataType (true, INSTRUMENT_TYPE), null),
+                    new StaticDataField ("byte3", null, new EnumDataType (true, INSTRUMENT_TYPE), null),
+                    new StaticDataField ("short4", null, new EnumDataType (true, INSTRUMENT_TYPE), null),
+                    new StaticDataField ("int5", null, new EnumDataType (true, INSTRUMENT_TYPE), null),
                     new StaticDataField ("long6", null, new EnumDataType (true, INSTRUMENT_TYPE), null));
+
     public static final class AllEnumPrivate extends InstrumentMessage {
+        public TestEnum InstrumentType1;
         public java.lang.CharSequence CharSequence2;
         public byte byte3;
         public short short4;
@@ -3040,6 +3061,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
         public float float7;
         public double double8;
         public java.lang.String String9;
+        public TestEnum InstrumentType10;
         public java.lang.CharSequence CharSequence11;
         @java.lang.Override
         public java.lang.String toString ()
@@ -3655,7 +3677,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to INTEGER");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -3664,7 +3686,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to INTEGER");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -3673,7 +3695,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to INTEGER");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -3682,7 +3704,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to INTEGER");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -3691,7 +3713,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to INTEGER");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -3700,7 +3722,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to INTEGER");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -3709,7 +3731,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to INTEGER");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -3718,7 +3740,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to INTEGER");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: INTEGER cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4188,7 +4210,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to FLOAT");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4197,7 +4219,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to FLOAT");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4206,7 +4228,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to FLOAT");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4215,7 +4237,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to FLOAT");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4224,7 +4246,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to FLOAT");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: FLOAT cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4732,7 +4754,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to VARCHAR");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4741,7 +4763,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to VARCHAR");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4750,7 +4772,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to VARCHAR");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4759,7 +4781,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to VARCHAR");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4768,7 +4790,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to VARCHAR");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         try {
             {
@@ -4777,7 +4799,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("InstrumentType10 to VARCHAR");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to InstrumentType field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: VARCHAR cannot be bound to " + TestEnum.class.getName() + " field", (e).toString ());
         }
         {
             final NonStaticFieldLayout layout = new NonStaticFieldLayout ( new NonStaticDataField ("CharSequence11", null, new VarcharDataType ("UTF8", false, false)));
@@ -4816,7 +4838,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("boolean1 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to boolean field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to boolean field", (e).toString ());
         }
         try {
             {
@@ -4825,7 +4847,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("boolean1 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to boolean field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to boolean field", (e).toString ());
         }
         try {
             {
@@ -4834,7 +4856,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("boolean1 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to boolean field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to boolean field", (e).toString ());
         }
         try {
             {
@@ -4843,7 +4865,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("boolean1 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to boolean field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to boolean field", (e).toString ());
         }
         try {
             {
@@ -4852,7 +4874,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("boolean1 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to boolean field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to boolean field", (e).toString ());
         }
         try {
             {
@@ -4861,7 +4883,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("boolean1 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to boolean field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to boolean field", (e).toString ());
         }
         try {
             {
@@ -4870,7 +4892,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("char2 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to char field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to char field", (e).toString ());
         }
         try {
             {
@@ -4879,7 +4901,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("char2 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to char field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to char field", (e).toString ());
         }
         try {
             {
@@ -4888,7 +4910,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("char2 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to char field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to char field", (e).toString ());
         }
         try {
             {
@@ -4897,7 +4919,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("char2 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to char field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to char field", (e).toString ());
         }
         try {
             {
@@ -4906,7 +4928,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("char2 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to char field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to char field", (e).toString ());
         }
         try {
             {
@@ -4915,7 +4937,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("char2 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to char field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to char field", (e).toString ());
         }
         {
             final NonStaticFieldLayout layout = new NonStaticFieldLayout ( new NonStaticDataField ("byte3", null, new EnumDataType (false, INSTRUMENT_TYPE)));
@@ -5044,7 +5066,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("float7 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to float field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to float field", (e).toString ());
         }
         try {
             {
@@ -5053,7 +5075,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("float7 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to float field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to float field", (e).toString ());
         }
         try {
             {
@@ -5062,7 +5084,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("float7 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to float field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to float field", (e).toString ());
         }
         try {
             {
@@ -5071,7 +5093,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("float7 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to float field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to float field", (e).toString ());
         }
         try {
             {
@@ -5080,7 +5102,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("float7 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to float field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to float field", (e).toString ());
         }
         try {
             {
@@ -5089,7 +5111,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("float7 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to float field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to float field", (e).toString ());
         }
         try {
             {
@@ -5098,7 +5120,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("double8 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to double field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to double field", (e).toString ());
         }
         try {
             {
@@ -5107,7 +5129,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("double8 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to double field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to double field", (e).toString ());
         }
         try {
             {
@@ -5116,7 +5138,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("double8 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to double field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to double field", (e).toString ());
         }
         try {
             {
@@ -5125,7 +5147,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("double8 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to double field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to double field", (e).toString ());
         }
         try {
             {
@@ -5134,7 +5156,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("double8 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to double field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to double field", (e).toString ());
         }
         try {
             {
@@ -5143,7 +5165,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("double8 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to double field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to double field", (e).toString ());
         }
         try {
             {
@@ -5152,7 +5174,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("String9 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to java.lang.String field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to java.lang.String field", (e).toString ());
         }
         try {
             {
@@ -5161,7 +5183,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("String9 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to java.lang.String field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to java.lang.String field", (e).toString ());
         }
         try {
             {
@@ -5170,7 +5192,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("String9 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to java.lang.String field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to java.lang.String field", (e).toString ());
         }
         try {
             {
@@ -5179,7 +5201,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("String9 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to java.lang.String field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to java.lang.String field", (e).toString ());
         }
         try {
             {
@@ -5188,7 +5210,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("String9 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to java.lang.String field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to java.lang.String field", (e).toString ());
         }
         try {
             {
@@ -5197,7 +5219,7 @@ public final class Test_RecordCodecs5 extends Test_RecordCodecsBase {
                 org.junit.Assert.fail ("String9 to InstrumentType");
             }
         }catch (java.lang.IllegalArgumentException e) {
-            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: InstrumentType cannot be bound to java.lang.String field", (e).toString ());
+            org.junit.Assert.assertEquals (null, "java.lang.IllegalArgumentException: " + TestEnum.class.getName() + " cannot be bound to java.lang.String field", (e).toString ());
         }
         {
             final NonStaticFieldLayout layout = new NonStaticFieldLayout ( new NonStaticDataField ("InstrumentType10", null, new EnumDataType (false, INSTRUMENT_TYPE)));

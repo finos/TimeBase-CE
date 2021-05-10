@@ -1,7 +1,9 @@
 package com.epam.deltix.test.qsrv.hf.pub;
 
 import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.test.qsrv.hf.tickdb.testframework.TestEnum;
 import com.epam.deltix.timebase.messages.*;
+import junit.framework.Test;
 
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
 public class MsgClassAllPublic {
     public String s1;
 
+    public TestEnum mEnum;
     public String mString;
     public CharSequence mCharSequence;
     public boolean mBoolean; // unnullable case
@@ -64,21 +67,22 @@ public class MsgClassAllPublic {
     public double mSCALE4;
 
     public String toString() {
-        return s1 + " " + mString + " " + mCharSequence + " " + mBoolean + " " + mBoolByte + " " + mChar + " " + mDateTime + " "
-            + mTimeOfDay + " " + mByte + " " + mShort + " " + mInt + " " + mInt48 + " " + mLong + " " + mFloat + " "
-            + mDouble + " " + mDouble2 + " " + mPUINT30 + " " + mPUINT61 + " " + mPIneterval + " " + mSCALE_AUTO + " "
-            + mSCALE4;
+        return s1 + " " + mEnum + " " + mString + " " + mCharSequence + " " + mBoolean + " " + mBoolByte + " " + mChar + " " + mDateTime + " "
+                + mTimeOfDay + " " + mByte + " " + mShort + " " + mInt + " " + mInt48 + " " + mLong + " " + mFloat + " "
+                + mDouble + " " + mDouble2 + " " + mPUINT30 + " " + mPUINT61 + " " + mPIneterval + " " + mSCALE_AUTO + " "
+                + mSCALE4;
     }
 
     public String toString2() {
-        return s1 + " " + mString + " " + mCharSequence + " " + mBoolByte + " " + mChar + " " + mDateTime + " "
-            + mTimeOfDay + " " + mByte + " " + mShort + " " + mInt + " " + mInt48 + " " + mLong + " " + mFloat + " "
-            + mDouble + " " + mDouble2 + " " + mPUINT30 + " " + mPUINT61 + " " + mPIneterval + " " + mSCALE_AUTO + " "
-            + mSCALE4;
+        return s1 + mEnum + " " + mString + " " + mCharSequence + " " + mBoolByte + " " + mChar + " " + mDateTime + " "
+                + mTimeOfDay + " " + mByte + " " + mShort + " " + mInt + " " + mInt48 + " " + mLong + " " + mFloat + " "
+                + mDouble + " " + mDouble2 + " " + mPUINT30 + " " + mPUINT61 + " " + mPIneterval + " " + mSCALE_AUTO + " "
+                + mSCALE4;
     }
 
     // Set all fields to null values (except mBoolean and mDouble2)
     void setNulls() {
+        mEnum = null;
         mString = null;
         mCharSequence = null;
         //mBoolean = true;
@@ -107,6 +111,7 @@ public class MsgClassAllPublic {
         s1 = "Hi Kolia";
         mString = "IBM";
         mCharSequence = "MSFT";
+        mEnum = TestEnum.RED;
         mByte = 1;
         mShort = 2;
         mInt = 3;
@@ -138,6 +143,7 @@ public class MsgClassAllPublic {
         values.add(1235746625319L); //mDateTime
         values.add(76456577.76);  //mDouble
         values.add(null); //mDouble2  // FloatDataType.IEEE64_NULL assert validation code doesn't support it
+        values.add(TestEnum.RED.toString());  //mEnum
         values.add(63545.34f);  //mFloat
         values.add(3);  //mInt
         values.add(4L);  //mInt48

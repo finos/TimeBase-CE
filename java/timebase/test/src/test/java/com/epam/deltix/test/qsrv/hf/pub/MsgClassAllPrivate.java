@@ -1,6 +1,7 @@
 package com.epam.deltix.test.qsrv.hf.pub;
 
 import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.test.qsrv.hf.tickdb.testframework.TestEnum;
 import com.epam.deltix.timebase.messages.*;
 
 /**
@@ -10,6 +11,7 @@ import com.epam.deltix.timebase.messages.*;
 public class MsgClassAllPrivate {
     private String s1;
 
+    private TestEnum mEnum;
     private String mString;
     private CharSequence mCharSequence;
     public boolean mBoolean; // unnullable case
@@ -40,21 +42,22 @@ public class MsgClassAllPrivate {
     private double mSCALE4;
 
     public String toString() {
-        return s1 + " " + mString + " " + mCharSequence + " " + mBoolean + " " + mBoolByte + " " + mChar + " " + mDateTime + " "
-            + mTimeOfDay + " " + mByte + " " + mShort + " " + mInt + " " + mInt48 + " " + mLong + " " + mFloat + " "
-            + mDouble + " " + mDouble2 + " " + mPUINT30 + " " + mPUINT61 + " " + mPIneterval + " " + mSCALE_AUTO + " "
-            + mSCALE4;
+        return s1 + " " + mEnum + " " + mString + " " + mCharSequence + " " + mBoolean + " " + mBoolByte + " " + mChar + " " + mDateTime + " "
+                + mTimeOfDay + " " + mByte + " " + mShort + " " + mInt + " " + mInt48 + " " + mLong + " " + mFloat + " "
+                + mDouble + " " + mDouble2 + " " + mPUINT30 + " " + mPUINT61 + " " + mPIneterval + " " + mSCALE_AUTO + " "
+                + mSCALE4;
     }
 
     public String toString2() {
-        return s1 + " " + mString + " " + mCharSequence + " " + mBoolByte + " " + mChar + " " + mDateTime + " "
-            + mTimeOfDay + " " + mByte + " " + mShort + " " + mInt + " " + mInt48 + " " + mLong + " " + mFloat + " "
-            + mDouble + " " + mDouble2 + " " + mPUINT30 + " " + mPUINT61 + " " + mPIneterval + " " + mSCALE_AUTO + " "
-            + mSCALE4;
+        return s1 + mEnum + " " + mString + " " + mCharSequence + " " + mBoolByte + " " + mChar + " " + mDateTime + " "
+                + mTimeOfDay + " " + mByte + " " + mShort + " " + mInt + " " + mInt48 + " " + mLong + " " + mFloat + " "
+                + mDouble + " " + mDouble2 + " " + mPUINT30 + " " + mPUINT61 + " " + mPIneterval + " " + mSCALE_AUTO + " "
+                + mSCALE4;
     }
 
     // Set all fields to null values (except mBoolean and mDouble2)
     void setNulls() {
+        mEnum = null;
         mString = null;
         mCharSequence = null;
         //mBoolean = true;
@@ -83,6 +86,7 @@ public class MsgClassAllPrivate {
         s1 = "Hi Kolia";
         mString = "IBM";
         mCharSequence = "MSFT";
+        mEnum = TestEnum.RED;
         mByte = 1;
         mShort = 2;
         mInt = 3;
@@ -165,6 +169,16 @@ public class MsgClassAllPrivate {
 
     public void setmSCALE_AUTO (double mSCALE_AUTO) {
         this.mSCALE_AUTO = mSCALE_AUTO;
+    }
+
+
+    @SchemaElement
+    public TestEnum getmEnum () {
+        return mEnum;
+    }
+
+    public void setmEnum (TestEnum mEnum) {
+        this.mEnum = mEnum;
     }
 
 

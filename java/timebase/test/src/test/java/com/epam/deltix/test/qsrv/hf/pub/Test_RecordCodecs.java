@@ -1163,7 +1163,7 @@ public class Test_RecordCodecs {
             testUnboundRoundTrip2(values, rcd, null, false, false);
             assertTrue("NullValueException was not thrown", false);
         } catch (NullValueException e) {
-            assertEquals("deltix.qsrv.hf.pub.NullValueException: NULL", e.toString());
+            assertEquals(NullValueException.class.getName() + ": NULL", e.toString());
         }
 
         try {
@@ -1171,7 +1171,7 @@ public class Test_RecordCodecs {
             testUnboundRoundTrip2(values, rcd, null, true, false);
             assertTrue("IllegalArgumentException was not thrown", false);
         } catch (NullValueException e) {
-            assertEquals("deltix.qsrv.hf.pub.NullValueException: NULL", e.toString());
+            assertEquals(NullValueException.class.getName() + ": NULL", e.toString());
         }
     }
 

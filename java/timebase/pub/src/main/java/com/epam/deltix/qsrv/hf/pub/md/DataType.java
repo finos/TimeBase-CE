@@ -57,8 +57,7 @@ public abstract class DataType implements Serializable, Cloneable {
     public final DataType           nullableInstance (boolean nullable) {
         if (this.nullable == nullable)
             return (this);
-        
-        
+
         DataType    copy = clone ();
         copy.nullable = nullable;
         return (copy);        

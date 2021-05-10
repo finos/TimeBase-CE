@@ -9,6 +9,7 @@ import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.InstrumentMessageSource;
 import com.epam.deltix.qsrv.hf.tickdb.util.ZIPUtil;
+import com.epam.deltix.test.qsrv.hf.tickdb.testframework.TestEnum;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.timebase.messages.*;
 import com.epam.deltix.util.JUnitCategories;
@@ -497,15 +498,18 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
 
     public static abstract class ClassAA implements InterfaceA {
         public String s1;
+        public TestEnum mEnum;
 
         @Override
         public void setNulls() {
             s1 = null;
+            mEnum = null;
         }
 
         @Override
         public void setValues() {
             s1 = "Hi Kolia";
+            mEnum = TestEnum.RED;
         }
 
         @Override
@@ -890,6 +894,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         oPub1.add(1235746625319L); //mDateTime
         oPub1.add(76456577.76);  //mDouble
         oPub1.add(null); //mDouble2 // FloatDataType.IEEE64_NULL assert validation code doesn't support it
+        oPub1.add(TestEnum.RED.toString()); //mEnum
         oPub1.add(63545.34f); //mFloat
         oPub1.add(3);       //mInt
         oPub1.add(4L);      //mInt48
@@ -952,6 +957,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         assertValuesEquals(values, values2, rcd);
     }
 
+
     @Test
     public void testObjectFieldPolyUnbound() throws Exception {
         setUpIntp();
@@ -976,6 +982,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
 
         List<Object> oInter1 = new ArrayList<>(5);
         oInter1.add(findRCD(rcd, "oInter1", ClassAAA.class));
+        oInter1.add(TestEnum.RED.toString());
         oInter1.add("Hi Kolia");
         oInter1.add(1);
         oInter1.add(2);
@@ -985,6 +992,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
 
         List<Object> oClass1 = new ArrayList<>(5);
         oClass1.add(findRCD(rcd, "oClass1", ClassAAB.class));
+        oClass1.add(TestEnum.RED.toString());
         oClass1.add("Hi Kolia");
         oClass1.add(3);
         oClass1.add(4L);
@@ -1031,6 +1039,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
 
         oInter1 = new ArrayList<>(5);
         oInter1.add(findRCD(rcd, "oInter1", ClassAAAA.class));
+        oInter1.add(TestEnum.RED.toString());
         oInter1.add("Hi Kolia");
         oInter1.add(1);
         oInter1.add(2);
@@ -1041,6 +1050,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         values.add(null);
         oClass1 = new ArrayList<>(5);
         oClass1.add(findRCD(rcd, "oClass1", ClassAAB.class));
+        oClass1.add(TestEnum.RED.toString());
         oClass1.add("Hi Kolia");
         oClass1.add(3);
         oClass1.add(4L);
@@ -2841,11 +2851,11 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         )
         public MsgClassAllPublic oPub1;
 
-//        @SchemaType(
-//                isNullable = false,
-//                dataType = SchemaDataType.OBJECT,
-//                nestedTypes = {MsgClassAllPublic.class}
-//        )
+        @SchemaType(
+                isNullable = false,
+                dataType = SchemaDataType.OBJECT,
+                nestedTypes = {MsgClassAllPublic.class}
+        )
         private MsgClassAllPublic oPub2;
 
         @SchemaType(
@@ -2855,7 +2865,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         )
         public MsgClassAllPrivate oPri3;
 
-//        @SchemaType(
+        //        @SchemaType(
 //                isNullable = false,
 //                dataType = SchemaDataType.OBJECT,
 //                nestedTypes = {MsgClassAllPrivate.class}
@@ -2870,7 +2880,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         )
         public ByteArrayList aByte5;
 
-//        @SchemaArrayType(
+        //        @SchemaArrayType(
 //                elementDataType = SchemaDataType.INTEGER,
 //                elementEncoding = "INT8",
 //                isNullable = false,
@@ -2890,7 +2900,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         )
         public ObjectArrayList<MsgClassAllPrivate> aObj9;
 
-//        @SchemaArrayType(
+        //        @SchemaArrayType(
 //                isNullable = false
 //        )
         private ObjectArrayList<MsgClassAllPrivate> aObj10;
@@ -2903,7 +2913,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         )
         public ObjectArrayList<InterfaceA> aPoly11;
 
-//        @SchemaArrayType(
+        //        @SchemaArrayType(
 //                isNullable = false,
 //                isElementNullable = false,
 //                elementDataType = SchemaDataType.OBJECT,
@@ -3026,7 +3036,9 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
     }
 
     private void testNotNullable4CompoundBound() throws Exception {
-        final RecordClassDescriptor rcd = getRCD(AllCompoundFields.class);
+        RecordClassDescriptor rcd = getRCD(AllCompoundFields.class);
+        rcd = changeRCDNullability(rcd, false);
+
         final RecordClassDescriptor rcdNullable = changeRCDNullability(rcd, true);
         final AllCompoundFields msg = new AllCompoundFields();
 
@@ -3037,7 +3049,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
 
         // field level on encode
         final Field[] fields = AllCompoundFields.class.getDeclaredFields();
-        Arrays.sort(fields, ((o1, o2) -> o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase())));
+        Arrays.sort(fields, (Comparator.comparing(o -> o.getName().toLowerCase())));
         for (int i = fields.length - 1; i >= 0; i--) {
             final String fieldName = fields[i].getName();
             Util.setFieldValue(msg, fieldName, null);

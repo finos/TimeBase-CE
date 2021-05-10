@@ -40,7 +40,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Build with gradle
-        run: ./gradlew build
+        run: ./gradlew build junitTest
       - name: Upload test results
         if: ${{ failure() }}
         uses: actions/upload-artifact@v2

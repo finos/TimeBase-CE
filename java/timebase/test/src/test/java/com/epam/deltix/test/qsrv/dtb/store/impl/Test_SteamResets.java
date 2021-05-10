@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class Test_SteamResets {
     private static final Log LOG = LogFactory.getLog(FailingPathImpl.class);
 
-    private static final long DURATION = TimeUnit.MINUTES.toMillis(5);
+    private static final long DURATION = TimeUnit.MINUTES.toMillis(2);
     private static final boolean printTime = false; // Set to true to print extremely not precise time
 
     TickDBImpl tickDB;

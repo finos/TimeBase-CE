@@ -45,5 +45,5 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v2
         with:
-          path: build/reports/tests/test
+          path: build/reports/junit
           name: Test Report

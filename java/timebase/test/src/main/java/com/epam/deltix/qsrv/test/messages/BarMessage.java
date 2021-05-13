@@ -18,7 +18,7 @@ import java.lang.StringBuilder;
  */
 @OldElementName("deltix.qsrv.hf.pub.BarMessage")
 @SchemaElement(
-        name = "deltix.timebase.api.messages.BarMessage",
+        name = "com.epam.deltix.qsrv.test.messages.BarMessage",
         title = "Bar Message"
 )
 public class BarMessage extends MarketMessage {

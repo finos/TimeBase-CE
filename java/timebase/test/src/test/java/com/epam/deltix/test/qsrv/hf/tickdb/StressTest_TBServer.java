@@ -46,7 +46,7 @@ public class StressTest_TBServer {
         QSHome.set(tb.getParent());
 
         StartConfiguration config = StartConfiguration.create(true, false, false);
-        config.tb.setSSLConfig(new SSLProperties(true, true));
+        //config.tb.setSSLConfig(new SSLProperties(true, true));
         runner = new TDBRunner(true, true, tb.getAbsolutePath(), new TomcatServer(config));
         runner.startup();
 

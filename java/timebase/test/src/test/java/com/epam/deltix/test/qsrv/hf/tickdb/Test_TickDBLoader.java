@@ -21,8 +21,10 @@ import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.io.IOUtil;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.File;
+import java.io.Reader;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.*;
@@ -39,39 +41,38 @@ import com.epam.deltix.util.JUnitCategories.TickDBFast;
 public class Test_TickDBLoader {
     private static final SimpleDateFormat DF = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.S");
     private static final SimpleDateFormat DF2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-    private static File DIR = Home.getFile("/testdata/qsrv/hf/tickdb");
 
     private final TickDBUtil util = new TickDBUtil();
     protected DXTickDB db = null;
     private final List<String> errors = new ArrayList<String>();
 
-    private static final String ABORT_ETALON = "deltix.qsrv.hf.tickdb.pub.OutOfSequenceMessageException: [S1] Message EURCHF:FX 2008-11-12 01:59:59.999 GMT is out of sequence (< 2008-11-12 02:00:00.000)";
+    private static final String ABORT_ETALON = "com.epam.deltix.qsrv.hf.tickdb.pub.OutOfSequenceMessageException: [S1] Message EURCHF:FX 2008-11-12 01:59:59.999 GMT is out of sequence (< 2008-11-12 02:00:00.000)";
 
     private static final String[] WHOLE_CHAIN_MESSAGES_ETALON = {        
-        "deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message GBPUSD:FX 2008-11-12 01:58:01.000 GMT is bumped up to 2008-11-12 01:58:02.0 GMT",
-        "deltix.qsrv.hf.tickdb.pub.SkipMessageException: [S1] Message USDCHF:FX 2008-11-12 01:56:01.000 GMT is skipped"
+        "com.epam.deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message GBPUSD:FX 2008-11-12 01:58:01.000 GMT is bumped up to 2008-11-12 01:58:02.0 GMT",
+        "com.epam.deltix.qsrv.hf.tickdb.pub.SkipMessageException: [S1] Message USDCHF:FX 2008-11-12 01:56:01.000 GMT is skipped"
     };
 
     private static final String[] WHOLE_CHAIN_SYMBOL_LEVEL_MESSAGES_ETALON = {
-        "deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message USDJPY:FX 2008-11-12 01:58:02.0 GMT is bumped up to 2008-11-12 02:00:00.0 GMT",
-        "deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message USDJPY:FX 2008-11-12 01:58:01.0 GMT is bumped up to 2008-11-12 02:00:00.0 GMT",
-        "deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message EURJPY:FX 2008-11-12 01:58:02.0 GMT is bumped up to 2008-11-12 02:00:00.0 GMT",
-        "deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message EURJPY:FX 2008-11-12 01:58:01.0 GMT is bumped up to 2008-11-12 02:00:00.0 GMT",
-        "deltix.qsrv.hf.tickdb.pub.SkipMessageException: [S1] Message EURJPY:FX 2008-11-12 01:56:01.0 GMT is skipped",
-        "deltix.qsrv.hf.tickdb.pub.SkipMessageException: [S1] Message USDCHF:FX 2008-11-12 01:56:01.0 GMT is skipped"
+        "com.epam.deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message USDJPY:FX 2008-11-12 01:58:02.0 GMT is bumped up to 2008-11-12 02:00:00.0 GMT",
+        "com.epam.deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message USDJPY:FX 2008-11-12 01:58:01.0 GMT is bumped up to 2008-11-12 02:00:00.0 GMT",
+        "com.epam.deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message EURJPY:FX 2008-11-12 01:58:02.0 GMT is bumped up to 2008-11-12 02:00:00.0 GMT",
+        "com.epam.deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message EURJPY:FX 2008-11-12 01:58:01.0 GMT is bumped up to 2008-11-12 02:00:00.0 GMT",
+        "com.epam.deltix.qsrv.hf.tickdb.pub.SkipMessageException: [S1] Message EURJPY:FX 2008-11-12 01:56:01.0 GMT is skipped",
+        "com.epam.deltix.qsrv.hf.tickdb.pub.SkipMessageException: [S1] Message USDCHF:FX 2008-11-12 01:56:01.0 GMT is skipped"
     };
 
     private static final String[] WHOLE_CHAIN_ONE_SYMBOL_MESSAGES_ETALON = {
-        "deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message AUDUSD:FX 2008-11-12 01:58:02.0 GMT is bumped up to 2008-11-12 02:00:00.2 GMT",
-        "deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message AUDUSD:FX 2008-11-12 01:58:01.0 GMT is bumped up to 2008-11-12 02:00:00.2 GMT",
-        "deltix.qsrv.hf.tickdb.pub.SkipMessageException: [S1] Message AUDUSD:FX 2008-11-12 01:56:01.0 GMT is skipped"
+        "com.epam.deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message AUDUSD:FX 2008-11-12 01:58:02.0 GMT is bumped up to 2008-11-12 02:00:00.2 GMT",
+        "com.epam.deltix.qsrv.hf.tickdb.pub.BumpUpMessageException: [S1] Message AUDUSD:FX 2008-11-12 01:58:01.0 GMT is bumped up to 2008-11-12 02:00:00.2 GMT",
+        "com.epam.deltix.qsrv.hf.tickdb.pub.SkipMessageException: [S1] Message AUDUSD:FX 2008-11-12 01:56:01.0 GMT is skipped"
     };
 
     private static final String[] WHOLE_CHAIN_ABORT_MESSAGES_ETALON = {
         WHOLE_CHAIN_MESSAGES_ETALON[0],
         WHOLE_CHAIN_MESSAGES_ETALON[1],
         //WHOLE_CHAIN_MESSAGES_ETALON[2],
-        "deltix.qsrv.hf.tickdb.pub.OutOfSequenceMessageException: [S1] Message EURCHF:FX 2008-11-12 04:50:00.0 GMT is out of sequence (< 2008-11-12 05:00:00.0)"
+        "com.epam.deltix.qsrv.hf.tickdb.pub.OutOfSequenceMessageException: [S1] Message EURCHF:FX 2008-11-12 04:50:00.0 GMT is out of sequence (< 2008-11-12 05:00:00.0)"
     };
 
     static {
@@ -157,8 +158,14 @@ public class Test_TickDBLoader {
 
         //final String output = util.select(0, db.listStreams()[0], null, false);
         //TickDBUtil.dump2File(TickDBUtil.USER_HOME + "loader.chain.txt", output);
-        final String etalon = IOUtil.readTextFile (new File (DIR, "loader.chain.txt"));
+        final String etalon = readFromResource("loader.chain.txt");
         Assert.assertEquals("Data log is not the same as etalon", etalon, output);
+    }
+
+    private String readFromResource(String name) throws IOException, InterruptedException {
+        try (Reader rd = IOUtil.openResourceAsReader (getClass().getPackageName() + "/" + name)) {
+            return IOUtil.readFromReader(rd);
+        }
     }
 
     @Test
@@ -250,11 +257,10 @@ public class Test_TickDBLoader {
         }
     }
 
-    // adapted from LoadToTickDB.run
     private static void loadCSVFile(String fileName, MessageChannel<InstrumentMessage> loader)
             throws IOException, ParseException
     {
-        CSVXReader csv = new CSVXReader(new File(DIR, fileName));
+        CSVXReader csv = CSVXReader.openResource(Test_TickDBLoader.class, fileName);
         csv.nextLine(); // headers
 
         final BarMessage bar = new BarMessage();
@@ -277,7 +283,7 @@ public class Test_TickDBLoader {
 
     // BarMessage,FX,NZDUSD,2008-11-12 01:59:01.000,1226455141000,0,999,0.57,0.57,0.57,0.57,77.00
     private static void loadEtalonFile(String fileName, TickLoader loader) throws IOException, ParseException {
-        CSVXReader csv = new CSVXReader(new File(DIR, fileName));
+        CSVXReader csv = CSVXReader.openResource(Test_TickDBLoader.class, fileName);
         //csv.nextLine(); // headers
 
         final BarMessage bar = new BarMessage();

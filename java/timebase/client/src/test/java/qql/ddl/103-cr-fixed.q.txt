@@ -9,7 +9,7 @@ CREATE DURABLE STREAM S (
 )
 OPTIONS (fixedType)
 /
->deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
 0,*,,_,SUCCESS,INFO,Stream created,0
 !end
@@ -28,7 +28,7 @@ OPTIONS (FIXEDTYPE; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE)
 #   Drop stream via qql
 #
 test drop stream S
->deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
 0,*,,_,SUCCESS,INFO,Stream dropped,0
 !end

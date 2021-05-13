@@ -18,7 +18,7 @@ public class TimeIdentitySet<T extends TimeIdentity> implements TimeIdentity, It
     @SuppressWarnings ("unchecked")
     public TimeIdentity get(IdentityKey id) {
 
-        T instance = map.get(id);
+        T instance = map.get(id.getSymbol());
         
         if (instance == null) {
             entry = instance = (T) entry.create(id);

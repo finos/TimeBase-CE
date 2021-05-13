@@ -42,6 +42,6 @@ public class SimpleBoundDecoder implements RecordDecoder<InstrumentMessage>  {
         in.readStringBuilder(symBuilder);
         decoder.decode(in, instance);
 
-        return filter.accept(instance) ? instance : null;
+        return filter != null ? (filter.accept(instance) ? instance : null) : instance;
     }
 }

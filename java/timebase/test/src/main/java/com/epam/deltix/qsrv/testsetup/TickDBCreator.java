@@ -2,7 +2,9 @@ package com.epam.deltix.qsrv.testsetup;
 
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
+import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.util.ZIPUtil;
 import com.epam.deltix.qsrv.test.messages.BarMessage;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
@@ -25,7 +27,6 @@ import java.text.*;
 public class TickDBCreator extends DefaultApplication {
     public static final String      LOCATION = Home.getPath ("temp/qstest/tickdb");
     public static final String      RO_MINUTES_LOCATION = Home.getPath ("testdata/tickdb/minutes");
-    public static final String      RO_CUST_TICKS_LOCATION = Home.getPath ("testdata/tickdb/testticks");
 
     public static final String      BARS_STREAM_KEY = "bars";
 
@@ -82,25 +83,12 @@ public class TickDBCreator extends DefaultApplication {
     }
 
     public static DXTickDB      openStdTicksTestDB (String path) throws IOException, InterruptedException {
-        IOUtil.removeRecursive(new File(path));
-        
-        IOUtil.copyDirectory(new File(RO_CUST_TICKS_LOCATION),
-                new File(path),
-                true,
-                true,
-                null,
-//                new FilenameFilter() {
-//                    @Override
-//                    public boolean accept(File dir, String name) {
-//                        return TickDBImpl.isDBFile(dir, name) || new File(dir, name).isDirectory();
-//                    }
-//                },
-                new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.contains(".svn");
-                    }
-                });
+        File home = new File(path);
+        IOUtil.removeRecursive(home);
+
+        try (InputStream is = IOUtil.openResourceAsStream("com/epam/deltix/testticks.zip")) {
+            ZIPUtil.extractZipStream(is, home);
+        }
         
         DXTickDB    db = TickDBFactory.create (path);
 

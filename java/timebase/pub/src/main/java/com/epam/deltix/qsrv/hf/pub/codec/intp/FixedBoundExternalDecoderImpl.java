@@ -53,7 +53,9 @@ public class FixedBoundExternalDecoderImpl implements FixedExternalDecoder {
             try {
                 if (truncated || (truncated = ctxt.in.getAvail() <= 0)) {
                     if (f.isBound()) {
-                        assert f.isNullable : f.getNotNullableMsg();
+                        //assert f.isNullable : f.getNotNullableMsg();
+                        if (!f.isNullable)
+                            throw new IllegalArgumentException(f.getNotNullableMsg());
                         f.setNull(msgObject);
                     }
                 } else {

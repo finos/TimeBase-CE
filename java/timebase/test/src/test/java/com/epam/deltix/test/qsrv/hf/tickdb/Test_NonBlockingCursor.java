@@ -1,6 +1,7 @@
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
 
+import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
@@ -16,6 +17,8 @@ import static org.junit.Assert.*;
 import org.junit.experimental.categories.Category;
 import com.epam.deltix.util.JUnitCategories.TickDBFast;
 
+import java.io.File;
+
 /**
  *  Test transient stream features.
  */
@@ -28,6 +31,8 @@ public class Test_NonBlockingCursor {
 
     @Before
     public final void           startup() throws Throwable {
+        QSHome.set(new File(LOCATION).getParent());
+
         db = TickDBFactory.create (LOCATION);
 
         db.format ();

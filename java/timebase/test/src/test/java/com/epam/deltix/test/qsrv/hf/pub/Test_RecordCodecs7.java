@@ -3070,7 +3070,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
                 MemoryDataInput in = new MemoryDataInput(out);
                 boundDecode(null, rcd, in);
                 fail("field level decode " + fieldName);
-            } catch (AssertionError e1) {
+            } catch (IllegalArgumentException e1) {
                 Assert.assertEquals(String.format("'%s' field is not nullable", fieldName), e1.getMessage());
             }
         }

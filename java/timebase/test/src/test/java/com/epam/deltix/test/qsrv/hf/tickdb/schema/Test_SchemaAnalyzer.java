@@ -236,11 +236,8 @@ public class Test_SchemaAnalyzer {
     public void Test_Serialize()  throws Exception {
 
         RecordClassSet left = new RecordClassSet();
-        RecordClassDescriptor d1 = StreamConfigurationHelper.mkBarMessageDescriptor(null,
-                "", 840, FloatDataType.ENCODING_SCALE_AUTO, FloatDataType.ENCODING_SCALE_AUTO);
-        List<RecordClassDescriptor> descriptors = new ArrayList<RecordClassDescriptor>();
-        descriptors.add(d1);
-        descriptors.addAll(Arrays.asList(StreamConfigurationHelper.mkUniversalMarketDescriptors()));
+        List<RecordClassDescriptor> descriptors =
+                new ArrayList<>(Arrays.asList(StreamConfigurationHelper.mkUniversalMarketDescriptors()));
         left.addContentClasses(descriptors.toArray(new RecordClassDescriptor[descriptors.size()]));
         
         RecordClassSet right = getRight4test3();

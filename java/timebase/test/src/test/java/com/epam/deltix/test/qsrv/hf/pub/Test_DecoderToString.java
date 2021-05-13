@@ -33,7 +33,7 @@ public class Test_DecoderToString {
         encoder.encode(msg, out);
         RawMessage raw = new RawMessage(BinaryMessage.getClassDescriptor());
         raw.setBytes(out);
-        assertEquals("deltix.qsrv.hf.pub.messages.BinaryMessage,,<null>,binary_n:1, 2, 3, 4, 5,char_c:C,char_n:N",
+        assertEquals("com.epam.deltix.qsrv.hf.pub.messages.BinaryMessage,,<null>,binary_n:1, 2, 3, 4, 5,char_c:C,char_n:N",
                 raw.toString());
     }
 

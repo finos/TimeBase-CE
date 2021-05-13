@@ -24,7 +24,7 @@ import com.epam.deltix.containers.MutableString;
  */
 @OldElementName("deltix.qsrv.hf.pub.TradeMessage")
 @SchemaElement(
-        name = "deltix.timebase.api.messages.TradeMessage",
+        name = "com.epam.deltix.qsrv.test.messages.TradeMessage",
         title = "Trade Message"
 )
 public class TradeMessage extends MarketMessage {

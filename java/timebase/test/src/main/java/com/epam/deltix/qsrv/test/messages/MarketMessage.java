@@ -288,6 +288,8 @@ public class MarketMessage extends InstrumentMessage {
      */
     public MarketMessage copyFrom(RecordInfo template) {
 
+        super.copyFrom(template);
+
         if (template instanceof MarketMessage) {
             MarketMessage t = (MarketMessage)template;
             if (t.hasOriginalTimestamp()) {

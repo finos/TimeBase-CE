@@ -43,8 +43,8 @@ import static org.junit.Assert.assertEquals;
  */
 @Category(TickDBFast.class)
 public class Test_Decoder4Truncated {
-    private static final File DIR = Home.getFile("testdata", "qsrv", "hf", "tickdb");
-    private static final File ZIP = new File(DIR, "tickdb.trade-bars.zip");
+    //private static final File DIR = Home.getFile("testdata" );
+    //private static final File ZIP = new File(DIR, "tickdb.trade-bars.zip");
 
     private DXTickDB db = null;
 
@@ -56,9 +56,11 @@ public class Test_Decoder4Truncated {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        String path = createDB(ZIP.getAbsolutePath());
+        try (InputStream stream = IOUtil.openResourceAsStream("com/epam/deltix/trade-bars.zip")) {
+            String path = createDB(stream);
+            db = TickDBFactory.create(path);
+        }
 
-        db = TickDBFactory.create(path);
         db.open(false);
     }
 
@@ -207,12 +209,20 @@ public class Test_Decoder4Truncated {
         }
     }
 
-    private static String createDB(String zipFileName) throws IOException, InterruptedException {
-        File folder = new File(TDBRunner.getTemporaryLocation());
-        //BasicIOUtil.deleteFileOrDir(folder);f
-        //folder.mkdirs();
+//    private static String createDB(String zipFileName) throws IOException, InterruptedException {
+//        File folder = new File(TDBRunner.getTemporaryLocation());
+//        //BasicIOUtil.deleteFileOrDir(folder);f
+//        //folder.mkdirs();
+//
+//        FileInputStream is = new FileInputStream(zipFileName);
+//        ZIPUtil.extractZipStream(is, folder);
+//        is.close();
+//
+//        return folder.getAbsolutePath();
+//    }
 
-        FileInputStream is = new FileInputStream(zipFileName);
+    private static String createDB(InputStream is) throws IOException, InterruptedException {
+        File folder = new File(TDBRunner.getTemporaryLocation());
         ZIPUtil.extractZipStream(is, folder);
         is.close();
 
@@ -235,7 +245,13 @@ public class Test_Decoder4Truncated {
             out.close();
         }
 
-        String[] lines = IOUtil.readLinesFromTextFile(new File(DIR, etalonFile));
+        String[] lines;
+
+        try (InputStream in = getClass().getResourceAsStream(etalonFile)) {
+            Reader reader = new LineNumberReader (new InputStreamReader (in));
+            lines = IOUtil.readLinesFromReader(reader);
+        }
+
         String etalon = StringUtils.join(System.lineSeparator(), lines);
         assertEquals("Data log is not the same as etalon", etalon, os.toString());
     }

@@ -3,20 +3,20 @@
 #
 testqql
 CREATE DURABLE STREAM test1 (
-    ENUM "deltix.qsrv.hf.tickdb.testframework.TestBitmask" (
+    ENUM "com.epam.deltix.qsrv.hf.tickdb.testframework.TestBitmask" (
         BIT0,
         BIT1,
         BIT2 = 4,
         BIT3
     ) FLAGS COMMENT 'This enum is a bitmask';
 
-    ENUM "deltix.qsrv.hf.tickdb.testframework.TestEnum" 'Test Enum Title' (
+    ENUM "com.epam.deltix.qsrv.hf.tickdb.testframework.TestEnum" 'Test Enum Title' (
         RED,
         GREEN = 1,
         BLUE
     );
 
-    CLASS "deltix.qsrv.hf.tickdb.testframework.TestAllTypesMessage" 'Test Class Title' (
+    CLASS "com.epam.deltix.qsrv.hf.tickdb.testframework.TestAllTypesMessage" 'Test Class Title' (
         "sequence" 'Sequence' INTEGER SIGNED (32) COMMENT 'Sequence field',
         "bool_c" 'Non-nullable BOOLEAN' BOOLEAN NOT NULL,
         "bool_n" 'Nullable BOOLEAN' BOOLEAN,
@@ -52,16 +52,16 @@ CREATE DURABLE STREAM test1 (
         "tod_n" 'Nullable TIMEOFDAY' TIMEOFDAY,
         "date_c" 'Non-nullable DATE' TIMESTAMP NOT NULL,
         "date_n" 'Nullable DATE' TIMESTAMP,
-        "enum_c" 'Non-nullable ENUM' deltix.qsrv.hf.tickdb.testframework.TestEnum NOT NULL,
-        "enum_n" 'Nullable ENUM' deltix.qsrv.hf.tickdb.testframework.TestEnum,
-        "bitmask_c" 'Non-nullable BITMASK' deltix.qsrv.hf.tickdb.testframework.TestBitmask NOT NULL,
+        "enum_c" 'Non-nullable ENUM' com.epam.deltix.qsrv.hf.tickdb.testframework.TestEnum NOT NULL,
+        "enum_n" 'Nullable ENUM' com.epam.deltix.qsrv.hf.tickdb.testframework.TestEnum,
+        "bitmask_c" 'Non-nullable BITMASK' com.epam.deltix.qsrv.hf.tickdb.testframework.TestBitmask NOT NULL,
         "binary_n" 'Nullable BINARY' BINARY
     )
     COMMENT 'This class tests the majority of field types';    
 )
 OPTIONS (DF = 1)
 /
->deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
 0,*,,_,SUCCESS,INFO,Stream created,0
 !end
@@ -70,12 +70,12 @@ OPTIONS (DF = 1)
 #
 testdesc TEST1
 DURABLE STREAM TEST1 (
-    ENUM "deltix.qsrv.hf.tickdb.testframework.TestEnum" 'Test Enum Title' (
+    ENUM "com.epam.deltix.qsrv.hf.tickdb.testframework.TestEnum" 'Test Enum Title' (
         "RED" = 0,
         "GREEN" = 1,
         "BLUE" = 2
     );
-    ENUM "deltix.qsrv.hf.tickdb.testframework.TestBitmask" (
+    ENUM "com.epam.deltix.qsrv.hf.tickdb.testframework.TestBitmask" (
         "BIT0" = 1,
         "BIT1" = 2,
         "BIT2" = 4,
@@ -83,7 +83,7 @@ DURABLE STREAM TEST1 (
     ) 
         FLAGS
         COMMENT 'This enum is a bitmask';
-    CLASS "deltix.qsrv.hf.tickdb.testframework.TestAllTypesMessage" 'Test Class Title' (
+    CLASS "com.epam.deltix.qsrv.hf.tickdb.testframework.TestAllTypesMessage" 'Test Class Title' (
         "sequence" 'Sequence' INTEGER SIGNED (32) COMMENT 'Sequence field',
         "bool_c" 'Non-nullable BOOLEAN' BOOLEAN NOT NULL,
         "bool_n" 'Nullable BOOLEAN' BOOLEAN,
@@ -119,9 +119,9 @@ DURABLE STREAM TEST1 (
         "tod_n" 'Nullable TIMEOFDAY' TIMEOFDAY,
         "date_c" 'Non-nullable DATE' TIMESTAMP NOT NULL,
         "date_n" 'Nullable DATE' TIMESTAMP,
-        "enum_c" 'Non-nullable ENUM' "deltix.qsrv.hf.tickdb.testframework.TestEnum" NOT NULL,
-        "enum_n" 'Nullable ENUM' "deltix.qsrv.hf.tickdb.testframework.TestEnum",
-        "bitmask_c" 'Non-nullable BITMASK' "deltix.qsrv.hf.tickdb.testframework.TestBitmask" NOT NULL,
+        "enum_c" 'Non-nullable ENUM' "com.epam.deltix.qsrv.hf.tickdb.testframework.TestEnum" NOT NULL,
+        "enum_n" 'Nullable ENUM' "com.epam.deltix.qsrv.hf.tickdb.testframework.TestEnum",
+        "bitmask_c" 'Non-nullable BITMASK' "com.epam.deltix.qsrv.hf.tickdb.testframework.TestBitmask" NOT NULL,
         "binary_n" 'Nullable BINARY' BINARY
     )
         COMMENT 'This class tests the majority of field types';
@@ -132,7 +132,7 @@ OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE)
 #   Drop stream via qql
 #
 test drop stream test1
->deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
 0,*,,_,SUCCESS,INFO,Stream dropped,0
 !end

@@ -10,6 +10,7 @@ import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.util.io.BasicIOUtil;
 import com.epam.deltix.util.io.Home;
 import com.epam.deltix.qsrv.hf.tickdb.util.ZIPUtil;
+import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.time.GMT;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -17,6 +18,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.*;
 
@@ -29,10 +31,6 @@ import com.epam.deltix.util.JUnitCategories.TickDBFast;
 @Category(TickDBFast.class)
 public class Test_MessageOrder {
 
-    private static File STREAM_FILE = Home.getFile("testdata//tickdb//misc//4.4//trade.zip");
-    private static File STREAM_FILE1 = Home.getFile("testdata//tickdb//misc//4.4//daily.zip");
-    private static File STREAM_FILE2 = Home.getFile("testdata//tickdb//misc//4.4//daily_bars.zip");
-    private static File STREAM_FILE3 = Home.getFile("testdata//tickdb//misc//4.4//DailyBars.zip");
     private static ServerRunner runner;
 
     @BeforeClass
@@ -42,21 +40,9 @@ public class Test_MessageOrder {
         BasicIOUtil.deleteFileOrDir(folder);
         folder.mkdirs();
 
-        FileInputStream is = new FileInputStream(STREAM_FILE);
-        ZIPUtil.extractZipStream(is, folder);
-        is.close();
-
-        is = new FileInputStream(STREAM_FILE1);
-        ZIPUtil.extractZipStream(is, folder);
-        is.close();
-
-        is = new FileInputStream(STREAM_FILE2);
-        ZIPUtil.extractZipStream(is, folder);
-        is.close();
-
-        is = new FileInputStream(STREAM_FILE3);
-        ZIPUtil.extractZipStream(is, folder);
-        is.close();
+        try (InputStream is = IOUtil.openResourceAsStream("com/epam/deltix/daily.zip")) {
+            ZIPUtil.extractZipStream(is, folder);
+        }
         
         runner = new ServerRunner(true, false, folder.getAbsolutePath());
         runner.startup();

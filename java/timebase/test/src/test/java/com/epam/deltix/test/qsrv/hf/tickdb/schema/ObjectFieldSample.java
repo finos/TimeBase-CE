@@ -183,7 +183,7 @@ public class ObjectFieldSample {
     }
 
 
-    private static final int NUM_OF_RECORDS = 10;
+    private static final int NUM_OF_RECORDS = 3;
 
     private static final String INSTRUMENT_DATA[][] = {
             {"AAPL", null, "ES", "1980-12-12", "Apple Inc."},

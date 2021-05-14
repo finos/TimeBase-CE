@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<config xmlns="http://xml.deltixlab.com/internal/quantserver/3.0">
+    <users>
+        <user id="admin">
+            <password>admin</password>
+        </user>
+        <user id="JohnDoe">
+            <password>QWERTY</password>
+        </user>
+        <user id="OwnersManager">
+            <password>123</password>
+        </user>
+        <user id="User1">
+            <password>123</password>
+        </user>
+        <user id="User2">
+            <password>123</password>
+        </user>
+        <user id="User3">
+            <password>123</password>
+        </user>
+        <user id="User4">
+            <password>123</password>
+        </user>
+    </users>
+    <groups>
+        <group id="Administrators">
+            <principal>admin</principal>
+        </group>
+        <group id="Users">
+            <principal>JohnDoe</principal>
+        </group>
+    </groups>
+</config>

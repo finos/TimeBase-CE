@@ -85,7 +85,7 @@ configure(leafProjects) {
             //implementation 'com.epam.deltix:hd-date-time:0.2.4'
             dependency 'com.epam.deltix:containers:3.1.2'
 
-            dependencySet(group: 'com.epam.deltix', version: '6.0.58') {
+            dependencySet(group: 'com.epam.deltix', version: '6.0.59') {
                 entry 'timebase-collections'
                 entry 'timebase-messages'
                 entry 'timebase-lang'

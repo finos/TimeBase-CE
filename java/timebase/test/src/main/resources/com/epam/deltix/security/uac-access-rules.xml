@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <rules xmlns="http://xml.deltixlab.com/internal/quantserver/3.0">
+        <allow>
+            <principal>Administrators</principal>
+            <permission>*</permission>
+            <resource>*</resource>
+        </allow>
+        <allow>
+            <principal>Users</principal>
+            <permission>CONNECT</permission>
+        </allow>
+        <allow>
+            <principal>Users</principal>
+            <permission>CREATE</permission>
+        </allow>
+        <allow>
+            <principal>Users</principal>
+            <permission>READ</permission>
+            <resource>*</resource>
+        </allow>
+        <allow>
+            <principal>JohnDoe</principal>
+            <permission>IMPERSONATE</permission>
+            <resource type="Principal">Admin</resource>
+        </allow>
+        <allow>
+            <principal>OwnersManager</principal>
+            <permission>CONNECT</permission>
+        </allow>
+        <allow>
+            <principal>OwnersManager</principal>
+            <permission>READ</permission>
+            <resource>*</resource>
+        </allow>
+        <allow>
+            <principal>OwnersManager</principal>
+            <permission>IMPERSONATE</permission>
+            <resource type="Principal">*</resource>
+        </allow>
+        <!-- -->
+        <allow>
+            <principal>User1</principal>
+            <permission>CONNECT</permission>
+        </allow>
+        <allow>
+            <principal>User1</principal>
+            <permission>CREATE</permission>
+        </allow>
+        <allow>
+            <principal>User1</principal>
+            <permission>READ</permission>
+            <permission>WRITE</permission>
+            <resource>Admin</resource>
+        </allow>
+        <!-- -->
+        <allow>
+            <principal>User2</principal>
+            <permission>CONNECT</permission>
+        </allow>
+        <allow>
+            <principal>User2</principal>
+            <permission>CREATE</permission>
+        </allow>
+        <allow>
+            <principal>User2</principal>
+            <permission>READ</permission>
+            <resource>Admin</resource>
+        </allow>
+        <allow>
+            <principal>User2</principal>
+            <permission>READ</permission>
+            <permission>WRITE</permission>
+            <resource type="Stream">user1_stream</resource>
+        </allow>
+        <!-- -->
+        <allow>
+            <principal>User4</principal>
+            <permission>CONNECT</permission>
+        </allow>
+        <allow>
+            <principal>User4</principal>
+            <permission>CREATE</permission>
+        </allow>
+        <allow>
+            <principal>User4</principal>
+            <permission>READ</permission>
+            <resource>Admin</resource>
+        </allow>
+    </rules>

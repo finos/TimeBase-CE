@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 @ParametersAreNonnullByDefault
 public class TopicDBFactory {
 
-    private static final String factoryClass = "deltix.qsrv.hf.tickdb.impl.topic.TopicSupportWrapper";
+    private static final String factoryClass = "com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicSupportWrapper";
     private static final String factoryMethod = "wrapStandalone";
 
 

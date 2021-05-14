@@ -11,6 +11,7 @@ import com.epam.deltix.qsrv.test.messages.MarketMessage;
 import com.epam.deltix.qsrv.test.messages.TradeMessage;
 import com.epam.deltix.util.JUnitCategories;
 import com.epam.deltix.util.io.Home;
+import com.epam.deltix.util.io.IOUtil;
 import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -20,6 +21,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
+import java.io.InputStream;
 import java.security.AccessControlException;
 import java.security.Principal;
 
@@ -53,10 +55,15 @@ public class Test_UserImpersonation  {
 
     @BeforeClass
     public static void start() throws Throwable {
-        FileUtils.copyFile(new File(SECURITY_DIR + File.separator + SECURITY_FILE_NAME),
-            new File(CONFIG_LOCATION + File.separator + SECURITY_FILE_NAME));
-        FileUtils.copyFile(new File(SECURITY_DIR + File.separator + SECURITY_RULES_NAME),
-                new File(CONFIG_LOCATION + File.separator + SECURITY_RULES_NAME));
+        try (InputStream stream = IOUtil.openResourceAsStream("com/epam/deltix/security/" + SECURITY_FILE_NAME)) {
+            FileUtils.copyToFile(stream,
+                    new File(CONFIG_LOCATION + File.separator + SECURITY_FILE_NAME));
+        }
+
+        try (InputStream stream = IOUtil.openResourceAsStream("com/epam/deltix/security/" + SECURITY_RULES_NAME)) {
+            FileUtils.copyToFile(stream,
+                    new File(CONFIG_LOCATION + File.separator + SECURITY_RULES_NAME));
+        }
 
         StartConfiguration configuration = StartConfiguration.create(true, false, false);
         configuration.quantServer.setProperty("security", "FILE");

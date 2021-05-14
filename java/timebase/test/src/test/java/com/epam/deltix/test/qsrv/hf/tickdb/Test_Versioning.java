@@ -120,7 +120,7 @@ public class Test_Versioning extends TDBTestBase {
 
             count++;
             if (message instanceof StreamTruncatedMessage) {
-                assertEquals("AA1:EQUITY", ((StreamTruncatedMessage)message).getInstruments().toString());
+                assertEquals("AA1", ((StreamTruncatedMessage)message).getInstruments().toString());
                 getMessage = true;
                 break;
             }

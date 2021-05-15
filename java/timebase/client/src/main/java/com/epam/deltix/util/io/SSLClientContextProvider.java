@@ -16,9 +16,6 @@ public class SSLClientContextProvider {
     public static final String CLIENT_KEYSTORE_PASS_PROPNAME        = "deltix.ssl.clientKeyStorePass";
     public static final String CLIENT_SSL_TRUST_ALL                 = "deltix.ssl.clientSSLTrustAll";
 
-    private static final String CLIENT_KEYSTORE_PASS_DEFAULT        = "deltix";
-    private static final String CLIENT_KEYSTORE_LOCATION            = "cert/localhost.jks";
-
     private static SSLContext   sslContext = null;
     private static Exception    error = null;
 
@@ -32,16 +29,7 @@ public class SSLClientContextProvider {
             if (keystoreFile != null && keystorePass != null) {
                 sslContext = SSLContextProvider.createSSLContext(keystoreFile, keystorePass, trustAll);
             } else {
-                //if test keystore exists than use it (for tests only)
-                File keyStore = Home.isSet() ? Home.getFile(CLIENT_KEYSTORE_LOCATION) : null;
-
-                if (keyStore != null && keyStore.exists()) {
-                    sslContext = SSLContextProvider.createSSLContext(
-                        keyStore.getAbsolutePath(),
-                        CLIENT_KEYSTORE_PASS_DEFAULT,
-                        trustAll);
-                } else //create default keystore with java cacert
-                    sslContext = SSLContext.getDefault();
+               sslContext = SSLContext.getDefault();
             }
         } catch (GeneralSecurityException | IOException e) {
             error = e;

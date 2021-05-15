@@ -347,8 +347,8 @@ public final class FloatDataType extends DataType {
 
         switch (tag) {
             case T_NULL:        return (null);
-            case T_FLOAT:       return (new Float (in.readFloat ()));
-            case T_DOUBLE:      return (new Double (in.readDouble ()));
+            case T_FLOAT:       return (in.readFloat ());
+            case T_DOUBLE:      return (in.readDouble ());
             default:            throw new IOException ("Illegal tag: " + tag);
         }
     }

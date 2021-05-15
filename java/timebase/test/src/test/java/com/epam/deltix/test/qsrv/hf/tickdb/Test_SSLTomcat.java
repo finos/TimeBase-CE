@@ -8,6 +8,8 @@ import com.epam.deltix.qsrv.hf.tickdb.comm.client.TickDBClient;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickDBFactory;
+import com.epam.deltix.util.io.IOUtil;
+import com.epam.deltix.util.io.SSLClientContextProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,8 +34,18 @@ public class Test_SSLTomcat {
         File tb = new File(TDBRunner.getTemporaryLocation());
         QSHome.set(tb.getParent());
 
+        File certificate = new File(tb.getParent(), "selfsigned.jks");
+        IOUtil.extractResource("com/epam/deltix/cert/selfsigned.jks", certificate);
+
         StartConfiguration config = StartConfiguration.create(true, false, false);
-        config.tb.setSSLConfig(new SSLProperties(true, false));
+        SSLProperties ssl = new SSLProperties(true, false);
+        ssl.keystoreFile = certificate.getAbsolutePath();
+
+        System.setProperty(SSLClientContextProvider.CLIENT_KEYSTORE_PROPNAME, ssl.keystoreFile);
+        System.setProperty(SSLClientContextProvider.CLIENT_KEYSTORE_PASS_PROPNAME, ssl.keystorePass);
+
+
+        config.tb.setSSLConfig(ssl);
         runner = new TDBRunner(true, true, tb.getAbsolutePath(), new TomcatServer(config));
         runner.startup();
     }

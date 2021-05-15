@@ -48,7 +48,6 @@ public class QuantServiceConfig {
 
     public static final String ADMIN_PROPS                 = "config/admin.properties";
     public static final String TICK_DB_FOLDER              = "timebase";
-    public static final String OLD_TICK_DB_FOLDER          = "tickdb";
 
     public static final String  QSRV_TYPE_SYS_PROP         = "deltix.qsrv.type";
 

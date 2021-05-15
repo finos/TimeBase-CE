@@ -36,7 +36,7 @@ public class Test_UserImpersonation  {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Begin of copy from Test_TDBSecured
     ///
-    private static final String       SECURITY_DIR        = Home.getPath("testdata/tickdb/security");
+    //private static final String       SECURITY_DIR        = Home.getPath("testdata/tickdb/security");
     private static final String       TB_LOCATION         = Home.getPath("temp/tdbsecurity/tickdb");
     private static final String       CONFIG_LOCATION     = Home.getPath("temp/tdbsecurity/config");
     private static final String       SECURITY_FILE_NAME  = "uac-file-security.xml";

@@ -13,7 +13,6 @@ ext {
 
 // To enable JavaDoc generation add Gradle property to command line:
 // -PincludeJavaDocs
-def includeJavaDocs = hasProperty("includeJavaDocs")
 
 apply plugin: 'base'
 
@@ -42,12 +41,11 @@ ext {
 }
 
 configure(leafProjects) {
-    apply plugin: 'java'
     apply plugin: 'java-library'
-    apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: "com.github.spotbugs" // Static Code analysis
+    apply plugin: 'signing'
 
     compileJava.options.encoding = 'UTF-8'
     compileJava.options.compilerArgs += '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED'
@@ -242,7 +240,7 @@ configure(leafProjects) {
     }
 
     ext {
-        vendor = 'Deltix Inc.'
+        vendor = 'EPAM Systems, Inc.'
     }
 
     group = 'com.epam.deltix'
@@ -287,8 +285,13 @@ configure(leafProjects) {
                     'Created-By': vendor,
                     'Implementation-Title': archivesBaseName,
                     'Implementation-Vendor': vendor,
-                    'Implementation-Version': version
+                    'Implementation-Version': archiveVersion
         }
+    }
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
     }
 
     processResources {
@@ -358,18 +361,18 @@ configure(leafProjects) {
 
     /// Support for publishing -sources.jar and -javadoc.jar artifacts:
 
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        baseName = archivesBaseName
-        from sourceSets.main.allSource
-    }
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        enabled = includeJavaDocs
-        classifier = 'javadoc'
-        baseName = archivesBaseName
-        from javadoc.destinationDir
-    }
+//    task sourcesJar(type: Jar, dependsOn: classes) {
+//        classifier = 'sources'
+//        baseName = archivesBaseName
+//        from sourceSets.main.allSource
+//    }
+//
+//    task javadocJar(type: Jar, dependsOn: javadoc) {
+//        enabled = includeJavaDocs
+//        classifier = 'javadoc'
+//        baseName = archivesBaseName
+//        from javadoc.destinationDir
+//    }
 
     tasks.withType(Javadoc) {
         // "Xdoclint:all,-reference" - disables fail on missing JavaDoc reference. TODO: Consider removing this.
@@ -378,21 +381,18 @@ configure(leafProjects) {
         options.addStringOption('encoding', 'UTF-8')
     }
 
-    artifacts {
-        archives sourcesJar
-        if (includeJavaDocs) {
-            archives javadocJar
-        }
-    }
+    def rUser = findProperty('SONATYPE_NEXUS_USERNAME') ?:  System.getenv('SONATYPE_NEXUS_USERNAME') ?: "FakeUser"
+    def rPass = findProperty('SONATYPE_NEXUS_PASSWORD') ?:  System.getenv('SONATYPE_NEXUS_PASSWORD') ?: "FakePass"
 
     // Publishing
     publishing {
         repositories {
             maven {
-                url javaPublicationUrl
+                url = findProperty('SONATYPE_REPOSITORY') ?: System.getenv('SONATYPE_REPOSITORY') ?: "FakeRepo"
+
                 credentials {
-                    username publisherUser
-                    password publisherPassword
+                    username rUser
+                    password rPass
                 }
             }
         }
@@ -400,18 +400,52 @@ configure(leafProjects) {
         publications {
             mavenJava(MavenPublication) {
                 from components.java
-                if (includeJavaDocs) {
-                    artifact javadocJar
+
+                pom {
+                    name = 'hd-date-time'
+                    packaging = 'jar'
+                    description = 'Date & Time Classes for Java & .NET having nanosecond precision, mostly ' +
+                            'match the functionality of .NET DateTime/TimeSpan, but have no timezone support and greater performance. '
+                    url = 'https://github.com/epam/HdDateTime'
+
+                    scm {
+                        connection = 'scm:git:https://github.com/epam/HdDateTime.git'
+                        developerConnection = 'scm:git:https://github.com/epam/HdDateTime.git'
+                        url = 'https://github.com/epam/HdDateTime.git'
+                    }
+
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'alex-karpovich'
+                            name = 'Alexander Karpovich'
+                            email = 'aliaksandr_karpovich@epam.com'
+                            url = 'https://github.com/alex-karpovich'
+                            organization = 'EPAM Systems'
+                            organizationUrl = 'https://www.epam.com/'
+                        }
+                    }
                 }
-                artifact sourcesJar
-                artifactId = archivesBaseName
             }
+        }
+
+        signing {
+            def signingKey = findProperty('SIGNING_PRIVATE_KEY') ?: System.getenv('SIGNING_PRIVATE_KEY') ?: "FakeUser"
+            def signingPassword = findProperty('SIGNING_PASSWORD') ?: System.getenv('SIGNING_PASSWORD') ?: "FakePass"
+
+            useInMemoryPgpKeys(signingKey, signingPassword)
+            sign publishing.publications.mavenJava
+
+            required { isReleaseVersion }
         }
     }
 
-    if (!includeJavaDocs) {
-        tasks.withType(Javadoc).all { enabled = false }
-    }
     tasks.test { enabled = false }
 
     task copyJarsToLib(type: Copy, dependsOn: jar) {
@@ -420,7 +454,6 @@ configure(leafProjects) {
         from configurations.runtimeClasspath
         from jar.getOutputs().files.getSingleFile()
         into "$rootDir/lib"
-        //rename 'tools.*.jar', 'tools.jar'
     }
 
     build.dependsOn(copyJarsToLib)
@@ -429,8 +462,6 @@ configure(leafProjects) {
         description "Prints project dependency tree"
     }
 }
-
-//def webAbbrs = [':java:quantserver:web': 'default', ':java:timebase:web': 'tb', ':java:aggregator:web': 'agg', ':java:quantserver:mon': 'mon', ':java:license:server': 'ls']
 
 def webAbbrs = [':java:quantserver:web': 'default', ':java:timebase:web': 'tb']
 webAbbrs.each { key, value ->
@@ -447,7 +478,6 @@ webAbbrs.each { key, value ->
         }
     }
 }
-
 
 def javaDocProjects = [':java:timebase:server', ':java:timebase:aerondirect',':java:timebase:api', ':java:timebase:pub', ':java:timebase:client']
 task aggregatedJavaDoc(type: Javadoc, description: 'Generate javadocs from selected projects', group: 'Documentation') {

@@ -8,6 +8,8 @@ ext {
     dockerImageName = 'timebase/client'
 }
 
+project.description = "Timebase Client API Library"
+
 dependencies {
     api project(':java:timebase:aerondirect')
     api project(':java:timebase:api')

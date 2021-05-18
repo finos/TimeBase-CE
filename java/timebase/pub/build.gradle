@@ -1,5 +1,6 @@
-group = 'com.epam.deltix'
 apply plugin: 'java-library'
+
+project.description = "Timebase Public API Library"
 
 dependencies {
     api ('com.epam.deltix:timebase-lang')

@@ -1,4 +1,4 @@
-group = 'com.epam.deltix'
+project.description = "Timebase Tests"
 
 dependencies {
     api project(':java:timebase:client')

@@ -20,6 +20,7 @@ import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.TickDBShell;
 import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.lang.Util;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -47,10 +48,8 @@ public class Test_Queries {
         }        
     }
     
-    @Test()
+    @Ignore()
     public void             testSelect () throws Exception {
-        Home.getFile("test/qqltest").mkdirs();
-
         test ("${home}/java/timebase/client/src/test/java/qql/select/*.q.txt");
     }
 

@@ -3,8 +3,6 @@ evaluationDependsOn(':java')
 apply plugin: 'java-library'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-group = 'com.epam.deltix'
-
 ext {
     dockerImageName = 'timebase/server'
 }
@@ -14,6 +12,8 @@ shadowJar {
     mergeServiceFiles('META-INF/spring.*')
     mergeServiceFiles('META-INF/services/javax.servlet.ServletContainerInitializer') // for tomcat
 }
+
+project.description = "Timebase Server"
 
 dependencies {
     //compile project(':java:plugins:data')

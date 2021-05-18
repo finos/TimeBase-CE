@@ -36,8 +36,8 @@ if (enableSpotbugs) {
 }
 
 ext {
-    publisherUser = findProperty('ARTIFACTORY_USER') ?: System.getenv('ARTIFACTORY_USER') ?: "FakeUser"
-    publisherPassword = findProperty('ARTIFACTORY_PASS') ?: System.getenv('ARTIFACTORY_PASS') ?: "FakePassword"
+    def rUser = findProperty('SONATYPE_NEXUS_USERNAME') ?:  System.getenv('SONATYPE_NEXUS_USERNAME') ?: "FakeUser"
+    def rPass = findProperty('SONATYPE_NEXUS_PASSWORD') ?:  System.getenv('SONATYPE_NEXUS_PASSWORD') ?: "FakePass"
 }
 
 configure(leafProjects) {
@@ -381,9 +381,6 @@ configure(leafProjects) {
         options.addStringOption('encoding', 'UTF-8')
     }
 
-    def rUser = findProperty('SONATYPE_NEXUS_USERNAME') ?:  System.getenv('SONATYPE_NEXUS_USERNAME') ?: "FakeUser"
-    def rPass = findProperty('SONATYPE_NEXUS_PASSWORD') ?:  System.getenv('SONATYPE_NEXUS_PASSWORD') ?: "FakePass"
-
     // Publishing
     publishing {
         repositories {
@@ -402,16 +399,15 @@ configure(leafProjects) {
                 from components.java
 
                 pom {
-                    name = 'hd-date-time'
+                    name = project.name
                     packaging = 'jar'
-                    description = 'Date & Time Classes for Java & .NET having nanosecond precision, mostly ' +
-                            'match the functionality of .NET DateTime/TimeSpan, but have no timezone support and greater performance. '
-                    url = 'https://github.com/epam/HdDateTime'
+                    description = project.description
+                    url = 'https://github.com/epam/TimeBaseCommons.git'
 
                     scm {
-                        connection = 'scm:git:https://github.com/epam/HdDateTime.git'
-                        developerConnection = 'scm:git:https://github.com/epam/HdDateTime.git'
-                        url = 'https://github.com/epam/HdDateTime.git'
+                        connection = 'scm:git:https://github.com/epam/TimeBase.git'
+                        developerConnection = 'scm:git:https://github.com/epam/TimeBase.git'
+                        url = 'https://github.com/epam/TimeBase.git'
                     }
 
                     licenses {

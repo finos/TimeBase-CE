@@ -14,6 +14,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+
+@ParametersAreNonnullByDefault
 package com.epam.deltix.qsrv.hf.tickdb.impl.bytedisruptor;
 
 import javax.annotation.ParametersAreNonnullByDefault;

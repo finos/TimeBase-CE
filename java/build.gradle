@@ -5,6 +5,8 @@ plugins {
     id "io.spring.dependency-management" version "1.0.5.RELEASE"
     id "com.github.spotbugs" version "2.0.0" apply false
     id "com.github.hierynomus.license-report" version "0.15.0"
+
+    id 'com.github.jk1.dependency-license-report' version '1.16'
 }
 
 ext {

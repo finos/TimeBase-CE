@@ -64,6 +64,10 @@ configure(leafProjects) {
         }
     }
 
+    licenseReport {
+        allowedLicensesFile = new File("$rootDir/allowed-licenses.json")
+    }
+
     // Defines versions of dependencies to be used by subprojects
     // https://github.com/spring-gradle-plugins/dependency-management-plugin#dependency-management-dsl
     dependencyManagement {

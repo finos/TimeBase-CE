@@ -67,7 +67,6 @@ configure(leafProjects) {
     apply plugin: 'io.spring.dependency-management'
     apply plugin: "com.github.spotbugs" // Static Code analysis
     apply plugin: 'signing'
-    //apply plugin: 'com.github.jk1.dependency-license-report'
 
     compileJava.options.encoding = 'UTF-8'
     compileJava.options.compilerArgs += '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED'

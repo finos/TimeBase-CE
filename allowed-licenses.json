@@ -67,6 +67,9 @@
     {"moduleLicense": "Mozilla Public License 1.1"},
     {"moduleLicense": "Mozilla Public License Version 1.1"},
     {"moduleLicense": "Mozilla Public License 1.1 (MPL 1.1)"},
-    {"moduleLicense": "MPL 1.1"}
+    {"moduleLicense": "MPL 1.1"},
+
+    {"moduleLicense": "UnRar License"},
+    {"moduleLicense": "Similar to Apache License but with the acknowledgment clause removed"}
   ]
 }

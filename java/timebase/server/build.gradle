@@ -73,7 +73,7 @@ dependencies {
     implementation('net.jpountz.lz4:lz4:1.3.0') { transitive = false }
     implementation('org.xerial.snappy:snappy-java')
 
-    implementation('org.glassfish:javax.json')
+    //implementation('org.glassfish:javax.json')
 
     implementation 'com.google.guava:guava'
 

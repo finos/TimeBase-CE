@@ -42,7 +42,7 @@ downloadLicenses {
             (cpl1) : [
                     license('Common Public License Version 1.0', 'https://opensource.org/licenses/cpl1.0.php')
                 ],
-            (bsd2) : ['The BSD License', 'BSD', 'BSD License', 'BSD licence', 'BSD-2-Clause',
+            (bsd2) : ['The BSD License', 'BSD', 'BSD License', 'BSD licence', 'BSD-2-Clause', 'BSD style',
                       license('The New BSD License', 'https://opensource.org/licenses/bsd-license.html')],
             (bsd3) : ['BSD 3-Clause License', 'BSD License 2.0', 'Revised BSD', 'Revised BSD License', 'New BSD License', 'New BSD license', 'Modified BSD License', 'The BSD 3-Clause License', 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)', 'BSD 3','BSD 3-clause New License'],
             (epl) : ['Eclipse Public License - Version 1.0', 'Eclipse Public License', 'Eclipse Public License 1.0', 'Eclipse Public License v1.0', 'Eclipse Public License - v 1.0'],

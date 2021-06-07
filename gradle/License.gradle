@@ -67,7 +67,7 @@ downloadLicenses {
     dependencyConfiguration = 'runtimeClasspath' // work-around for https://github.com/hierynomus/license-gradle-plugin/issues/113
 
     ext.allowedLicenses = [
-            apache2, cc0, cddl, cddl11, cddl11_gpl2ce, cpl1, bsd2, bsd3, epl, gpl2, gpl2ce, gpl3, lgpl2, lgpl21, lgpl3, mit, moz
+            apache2, cc0, cddl, cddl11, cddl11_gpl2ce, cpl1, bsd2, bsd3, epl, mit, moz
     ]
 }
 

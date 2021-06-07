@@ -40,12 +40,34 @@ if (enableSpotbugs) {
 def rUser = findProperty('SONATYPE_NEXUS_USERNAME') ?:  System.getenv('SONATYPE_NEXUS_USERNAME') ?: "FakeUser"
 def rPass = findProperty('SONATYPE_NEXUS_PASSWORD') ?:  System.getenv('SONATYPE_NEXUS_PASSWORD') ?: "FakePass"
 
+licenseReport {
+    // prepare allowed licenses
+
+//    for (nl.javadude.gradle.plugins.license.LicenseMetadata a in downloadLicenses.allowedLicenses) {
+//
+//        def names = downloadLicenses.aliases.get(a)
+//        for (name in names) {
+//            if (name instanceof String)
+//                println("{\"moduleLicense\": \"" + name + "\"},")
+//            else if (name instanceof nl.javadude.gradle.plugins.license.LicenseMetadata)
+//                println("{\"moduleLicense\": \"" + name.licenseName + "\"},")
+//        }
+//    }
+
+    allowedLicensesFile = new File("$rootDir/allowed-licenses.json")
+}
+
+checkLicense {
+    outputs.upToDateWhen { false }
+}
+
 configure(leafProjects) {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: "com.github.spotbugs" // Static Code analysis
     apply plugin: 'signing'
+    //apply plugin: 'com.github.jk1.dependency-license-report'
 
     compileJava.options.encoding = 'UTF-8'
     compileJava.options.compilerArgs += '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED'
@@ -64,10 +86,9 @@ configure(leafProjects) {
         }
     }
 
-    licenseReport {
-        allowedLicensesFile = new File("$rootDir/allowed-licenses.json")
-    }
-
+//    licenseReport {
+//        allowedLicensesFile = new File("$rootDir/allowed-licenses.json")
+//    }
     // Defines versions of dependencies to be used by subprojects
     // https://github.com/spring-gradle-plugins/dependency-management-plugin#dependency-management-dsl
     dependencyManagement {
@@ -179,8 +200,7 @@ configure(leafProjects) {
             // This section enlists only dependencies that are not directly used by our code but used by our dependencies
             // and cause version conflict. Versions specified here may need to be updated when we update 3rd party dependeiceis.
             // The project should be buildable without this section but with "failOnVersionConflict" option turned off.
-
-            //dependency 'org.gflogger:gflogger:1.2.0'
+            
             dependency 'net.java.dev.jna:jna:4.2.1'
             dependency 'org.hamcrest:hamcrest-core:1.3'
 

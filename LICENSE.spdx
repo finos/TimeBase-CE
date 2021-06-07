@@ -1,0 +1,7 @@
+SPDXVersion: SPDX-2.0
+DataLicense: CC0-1.0
+Creator: EPAM Systems, Inc
+PackageName: TimeBase
+PackageOriginator: EPAM Systems, Inc
+PackageHomePage: https://github.com/epam/TimeBase
+PackageLicenseDeclared: Apache-2.0

@@ -3211,8 +3211,8 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         try {
             boundDecode(null, rcdNotNull, in);
             Assert.fail("totally empty");
-        } catch (AssertionError e) {
-            Assert.assertEquals("'f1' field is not nullable", e.getMessage());
+        } catch (Exception e) {
+            Assert.assertEquals("'f1' field is not nullable", e.getCause().getMessage());
         }
 
         // 2. 1st field != null, 2nd == null
@@ -3223,12 +3223,11 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         try {
             boundDecode(null, rcdNotNull, in);
             Assert.fail("1st field != null, 2nd == null");
-        } catch (AssertionError e) {
-            Assert.assertEquals("'f2' field is not nullable", e.getMessage());
-        }
-        catch (IllegalStateException e2) {
-        //    Assert.assertTrue(IKVMUtil.IS_IKVM);
-            Assert.assertEquals("cannot write null to not nullable field 'f1'", e2.getMessage());
+        } catch (RuntimeException e) {
+            if (e instanceof IllegalStateException )
+                Assert.assertEquals("cannot write null to not nullable field 'f1'", e.getMessage());
+            else
+                Assert.assertEquals("'f2' field is not nullable", e.getCause().getMessage());
         }
 
         // 3. array has null elements
@@ -3238,12 +3237,11 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         try {
             boundDecode(null, rcdNotNull, in);
             Assert.fail("array has null elements");
-        } catch (AssertionError e) {
-            Assert.assertEquals("'f1[]' field array element is not nullable", e.getMessage());
-        }
-        catch (IllegalStateException e2) {
-         //   Assert.assertTrue(IKVMUtil.IS_IKVM);
-            Assert.assertEquals("cannot write null to not nullable field 'f1'", e2.getMessage());
+        } catch (RuntimeException e) {
+            if (e instanceof IllegalStateException)
+                Assert.assertEquals("cannot write null to not nullable field 'f1'", e.getMessage());
+            else
+                Assert.assertEquals("'f1[]' field array element is not nullable", e.getCause().getMessage());
         }
     }
 

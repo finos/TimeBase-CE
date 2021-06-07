@@ -4,6 +4,7 @@ downloadLicenses {
     ext.cddl = license('CDDL', 'https://opensource.org/licenses/CDDL-1.0')
     ext.cddl11 = license('CDDL 1.1', 'https://oss.oracle.com/licenses/CDDL-1.1')
     ext.cddl11_gpl2ce = license('CDDL 1.1 + GPL 2 with CE', 'https://oss.oracle.com/licenses/CDDL+GPL-1.1')
+    ext.cpl1 = license('Common Public License Version 1.0', 'https://opensource.org/licenses/cpl1.0.php')
     ext.bsd2 = license('BSD 2-Clause License', 'https://opensource.org/licenses/BSD-2-Clause')
     ext.bsd3 = license('BSD 3-Clause License', 'https://opensource.org/licenses/BSD-3-Clause')
     ext.epl = license('Eclipse Public License v1.0', 'http://www.eclipse.org/legal/epl-v10.html')
@@ -21,6 +22,7 @@ downloadLicenses {
     aliases = [
             (apache2) : ['The Apache Software License, Version 2.0', 'Apache License',
                          'Apache 2.0 License',
+                         'Apache-2.0',
                          'Apache 2', 'Apache 2.0', 'Apache License Version 2.0',
                          'Apache License, Version 2.0', 'Apache License 2.0', 'Apache License v2.0', 'Apache License 2',
                          'The Apache License, Version 2.0',
@@ -30,16 +32,23 @@ downloadLicenses {
             (cddl) : ['CDDL', 'CDDL, v1.0', 'Common Development and Distribution License (CDDL) v1.0',
                       'COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0', license('CDDL', 'https://opensource.org/licenses/CDDL-1.0')],
             (cddl11) : ['Common Development and Distribution License (CDDL), Version 1.1'],
-            (cddl11_gpl2ce) : ['CDDL + GPLv2 with classpath exception', 'Dual license consisting of the CDDL v1.1 and GPL v2', 'CDDL/GPLv2+CE',
+            (cddl11_gpl2ce) : ['CDDL + GPLv2 with classpath exception',
+                               'Dual license consisting of the CDDL v1.1 and GPL v2',
+                               'CDDL/GPLv2+CE',
+                               'CDDL v1.1 / GPL v2 dual license',
                                license('CDDL 1.1', 'https://oss.oracle.com/licenses/CDDL+GPL-1.1'),
                                license('CDDL 1.1', 'https://glassfish.java.net/public/CDDL+GPL_1_1.html'),
                                license('CDDL+GPL License', 'http://glassfish.java.net/public/CDDL+GPL_1_1.html')],
+            (cpl1) : [
+                    license('Common Public License Version 1.0', 'https://opensource.org/licenses/cpl1.0.php')
+                ],
             (bsd2) : ['The BSD License', 'BSD', 'BSD License', 'BSD licence', 'BSD-2-Clause',
                       license('The New BSD License', 'https://opensource.org/licenses/bsd-license.html')],
             (bsd3) : ['BSD 3-Clause License', 'BSD License 2.0', 'Revised BSD', 'Revised BSD License', 'New BSD License', 'New BSD license', 'Modified BSD License', 'The BSD 3-Clause License', 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)', 'BSD 3','BSD 3-clause New License'],
             (epl) : ['Eclipse Public License - Version 1.0', 'Eclipse Public License', 'Eclipse Public License 1.0', 'Eclipse Public License v1.0', 'Eclipse Public License - v 1.0'],
             (gpl2) : ['GNU General Public License, version 2'],
-            (gpl2ce) : ['GPLv2+CE', 'GPL2 w/ CPE', 'The GNU General Public License (GPL), Version 2, With Classpath Exception', 'GPL 2 + CE'],
+            (gpl2ce) : ['GPLv2+CE', 'GPL2 w/ CPE', 'The GNU General Public License (GPL), Version 2, With Classpath Exception', 'GPL 2 + CE',
+                        'GNU General Public License (GPL), version 2, with the Classpath exception'],
             (gpl3) : [],
             (lgpl2) : ['GNU LESSER GENERAL PUBLIC LICENSE', 'LGPL 2',
                        'Lesser General Public License', 'GNU Lesser General Public License', 'Lesser General Public License (LGPL)',
@@ -56,4 +65,10 @@ downloadLicenses {
     ]
 
     dependencyConfiguration = 'runtimeClasspath' // work-around for https://github.com/hierynomus/license-gradle-plugin/issues/113
+
+    ext.allowedLicenses = [
+            apache2, cc0, cddl, cddl11, cddl11_gpl2ce, cpl1, bsd2, bsd3, epl, gpl2, gpl2ce, gpl3, lgpl2, lgpl21, lgpl3, mit, moz
+    ]
 }
+
+

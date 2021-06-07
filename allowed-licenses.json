@@ -16,31 +16,37 @@
     {"moduleLicense": "ASL, version 2"},
     {"moduleLicense": "Apache Software License - Version 2.0"},
     {"moduleLicense": "Apache License, 2.0"},
-    {"moduleLicense": "Apache License"},
+
     {"moduleLicense": "CC0"},
     {"moduleLicense": "Public Domain, per Creative Commons CC0"},
     {"moduleLicense": "Public Domain"},
     {"moduleLicense": "WTFPL"},
+
     {"moduleLicense": "CDDL"},
     {"moduleLicense": "CDDL, v1.0"},
     {"moduleLicense": "Common Development and Distribution License (CDDL) v1.0"},
     {"moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0"},
     {"moduleLicense": "CDDL"},
+
     {"moduleLicense": "Common Development and Distribution License (CDDL), Version 1.1"},
+
     {"moduleLicense": "CDDL + GPLv2 with classpath exception"},
     {"moduleLicense": "Dual license consisting of the CDDL v1.1 and GPL v2"},
     {"moduleLicense": "CDDL/GPLv2+CE"},
     {"moduleLicense": "CDDL v1.1 / GPL v2 dual license"},
     {"moduleLicense": "CDDL 1.1"},
-    {"moduleLicense": "CDDL 1.1"},
     {"moduleLicense": "CDDL+GPL License"},
+
     {"moduleLicense": "Common Public License Version 1.0"},
+
     {"moduleLicense": "The BSD License"},
     {"moduleLicense": "BSD"},
     {"moduleLicense": "BSD License"},
     {"moduleLicense": "BSD licence"},
     {"moduleLicense": "BSD-2-Clause"},
+    {"moduleLicense": "BSD style"},
     {"moduleLicense": "The New BSD License"},
+
     {"moduleLicense": "BSD 3-Clause License"},
     {"moduleLicense": "BSD License 2.0"},
     {"moduleLicense": "Revised BSD"},
@@ -52,17 +58,20 @@
     {"moduleLicense": "BSD 3-Clause \"New\" or \"Revised\" License (BSD-3-Clause)"},
     {"moduleLicense": "BSD 3"},
     {"moduleLicense": "BSD 3-clause New License"},
+
     {"moduleLicense": "Eclipse Public License - Version 1.0"},
     {"moduleLicense": "Eclipse Public License"},
     {"moduleLicense": "Eclipse Public License 1.0"},
     {"moduleLicense": "Eclipse Public License v1.0"},
     {"moduleLicense": "Eclipse Public License - v 1.0"},
+
     {"moduleLicense": "MIT License"},
     {"moduleLicense": "The MIT License"},
     {"moduleLicense": "MIT"},
     {"moduleLicense": "The MIT License (MIT)"},
     {"moduleLicense": "MIT License (MIT)"},
     {"moduleLicense": "Bouncy Castle Licence"},
+
     {"moduleLicense": "Mozilla Public License"},
     {"moduleLicense": "Mozilla Public License 1.1"},
     {"moduleLicense": "Mozilla Public License Version 1.1"},

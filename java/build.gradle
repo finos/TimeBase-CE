@@ -43,16 +43,17 @@ def rPass = findProperty('SONATYPE_NEXUS_PASSWORD') ?:  System.getenv('SONATYPE_
 licenseReport {
     // prepare allowed licenses
 
-//    for (nl.javadude.gradle.plugins.license.LicenseMetadata a in downloadLicenses.allowedLicenses) {
-//
-//        def names = downloadLicenses.aliases.get(a)
-//        for (name in names) {
-//            if (name instanceof String)
-//                println("{\"moduleLicense\": \"" + name + "\"},")
-//            else if (name instanceof nl.javadude.gradle.plugins.license.LicenseMetadata)
-//                println("{\"moduleLicense\": \"" + name.licenseName + "\"},")
-//        }
-//    }
+    for (nl.javadude.gradle.plugins.license.LicenseMetadata a in downloadLicenses.allowedLicenses) {
+        println()
+        
+        def names = downloadLicenses.aliases.get(a)
+        for (name in names) {
+            if (name instanceof String)
+                println("{\"moduleLicense\": \"" + name + "\"},")
+            else if (name instanceof nl.javadude.gradle.plugins.license.LicenseMetadata)
+                println("{\"moduleLicense\": \"" + name.licenseName + "\"},")
+        }
+    }
 
     allowedLicensesFile = new File("$rootDir/allowed-licenses.json")
 }

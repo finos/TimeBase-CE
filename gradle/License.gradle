@@ -37,7 +37,6 @@ downloadLicenses {
                                'CDDL/GPLv2+CE',
                                'CDDL v1.1 / GPL v2 dual license',
                                license('CDDL 1.1', 'https://oss.oracle.com/licenses/CDDL+GPL-1.1'),
-                               license('CDDL 1.1', 'https://glassfish.java.net/public/CDDL+GPL_1_1.html'),
                                license('CDDL+GPL License', 'http://glassfish.java.net/public/CDDL+GPL_1_1.html')],
             (cpl1) : [
                     license('Common Public License Version 1.0', 'https://opensource.org/licenses/cpl1.0.php')
@@ -56,7 +55,6 @@ downloadLicenses {
             (lgpl21) : ['LGPL-2.1', 'LGPL 2.1', 'LGPL, version 2.1', 'LGPL, v2.1 or later',
                         'GNU Lesser General Public License v2.1 or later',
                         'GNU General Lesser Public License (LGPL) version 2.1',
-                        license('GNU Library General Public License v2.1 or later', 'https://opensource.org/licenses/LGPL-2.1'),
                         license('GNU Library General Public License v2.1 or later', 'http://www.opensource.org/licenses/LGPL-2.1'),
                         license('GNU Lesser General Public License', 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt')],
             (lgpl3) : ['GNU General Lesser Public License (LGPL) version 3.0', license('GNU LESSER GENERAL PUBLIC LICENSE', 'https://www.gnu.org/licenses/lgpl-3.0.txt')],

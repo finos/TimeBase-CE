@@ -7,6 +7,7 @@ plugins {
     id "com.github.hierynomus.license-report" version "0.15.0"
 
     id 'com.github.jk1.dependency-license-report' version '1.16'
+    id "com.vanniktech.dependency.graph.generator" version "0.5.0"
 }
 
 ext {
@@ -17,7 +18,6 @@ ext {
 // -PincludeJavaDocs
 
 apply plugin: 'base'
-
 apply plugin: "com.github.hierynomus.license-report"
 apply from: "$rootDir/gradle/License.gradle"
 
@@ -43,18 +43,19 @@ def rPass = findProperty('SONATYPE_NEXUS_PASSWORD') ?:  System.getenv('SONATYPE_
 licenseReport {
     // prepare allowed licenses
 
-    for (nl.javadude.gradle.plugins.license.LicenseMetadata a in downloadLicenses.allowedLicenses) {
-        println()
-        
-        def names = downloadLicenses.aliases.get(a)
-        for (name in names) {
-            if (name instanceof String)
-                println("{\"moduleLicense\": \"" + name + "\"},")
-            else if (name instanceof nl.javadude.gradle.plugins.license.LicenseMetadata)
-                println("{\"moduleLicense\": \"" + name.licenseName + "\"},")
-        }
-    }
+//    for (nl.javadude.gradle.plugins.license.LicenseMetadata a in downloadLicenses.allowedLicenses) {
+//        println()
+//
+//        def names = downloadLicenses.aliases.get(a)
+//        for (name in names) {
+//            if (name instanceof String)
+//                println("{\"moduleLicense\": \"" + name + "\"},")
+//            else if (name instanceof nl.javadude.gradle.plugins.license.LicenseMetadata)
+//                println("{\"moduleLicense\": \"" + name.licenseName + "\"},")
+//        }
+//    }
 
+    configurations = ['runtimeClasspath']
     allowedLicensesFile = new File("$rootDir/allowed-licenses.json")
 }
 
@@ -86,9 +87,8 @@ configure(leafProjects) {
         }
     }
 
-//    licenseReport {
-//        allowedLicensesFile = new File("$rootDir/allowed-licenses.json")
-//    }
+    task allDeps(type: DependencyReportTask) {}
+
     // Defines versions of dependencies to be used by subprojects
     // https://github.com/spring-gradle-plugins/dependency-management-plugin#dependency-management-dsl
     dependencyManagement {

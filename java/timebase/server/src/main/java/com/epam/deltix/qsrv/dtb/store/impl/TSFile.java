@@ -249,6 +249,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         return checkoutsSnapshot;
     }
 
+    public int              getUncompressedSize() {
+        return uncompressedSize;
+    }
+
     boolean                 hasDataFor (EntityFilter filter)
         throws IOException
     {

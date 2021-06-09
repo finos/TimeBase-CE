@@ -151,6 +151,16 @@ public class Test_PDStreamSpaceIndexManager {
         }
 
         @Override
+        public boolean isOpen() {
+            return true;
+        }
+
+        @Override
+        public void setSpace(String name) {
+
+        }
+
+        @Override
         public void format() {
 
         }

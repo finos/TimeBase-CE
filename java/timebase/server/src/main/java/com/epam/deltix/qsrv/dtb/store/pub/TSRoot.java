@@ -18,12 +18,10 @@ package com.epam.deltix.qsrv.dtb.store.pub;
 
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractFileSystem;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
-import com.epam.deltix.qsrv.dtb.store.dataacc.DAPrivate;
-import com.epam.deltix.qsrv.dtb.store.dataacc.DataAccessorBase;
+
 import com.epam.deltix.qsrv.hf.pub.TimeInterval;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -33,6 +31,8 @@ public interface TSRoot {
     public PersistentDataStore      getStore ();
     
     public void                     open (boolean readOnly);
+
+    public boolean                  isOpen ();
     
     public void                     format ();
 
@@ -101,7 +101,12 @@ public interface TSRoot {
      * @return name of space, may be {@code null} if space name was not explicitly assigned
      */
     @Nullable
-    String getSpace();
+    String          getSpace();
+
+    /**
+     * Set name of the space for this root
+     */
+    void            setSpace(String name);
 
     /**
      * Assigns index for this {@link TSRoot}. See {@link #getSpaceIndex()}
@@ -113,8 +118,6 @@ public interface TSRoot {
      *
      * <pre> signum(String.compare(r1.getSpace(), r2.getSpace()) == signum(Integer.compare(r1.getSpaceIndex(), r2.getSpaceIndex()) </pre>
      * This means that sorting by value of getSpaceIndex() produces same order as sorting by {@link TSRoot#getSpace()}
-     *
-     * NOTE: This statement is valid only if the index was assigned by {@link deltix.qsrv.hf.tickdb.impl.PDStreamSpaceIndexManager}.
      */
     int getSpaceIndex();
 }

@@ -43,14 +43,18 @@ class PDSImpl implements PersistentDataStore {
     static final Log LOGGER = LogFactory.getLog("deltix.dtb");
 
     // After thant number of failures across any number of files we trigger Emergency shutdown.
-    private static final int FAILURES_TO_TRIGGER_SHUTDOWN = Integer.getInteger("TimeBase.store.pds.failures_to_trigger_shutdown", 5);
+    private static final int FAILURES_TO_TRIGGER_SHUTDOWN = Integer.getInteger("TimeBase.storage.failuresToShutdown", 5);
 
     // Additional attempts to save a file. Value 2 means that there may be up to 3 failed attempts in total per files.
     // If all attempts failed then Emergency shutdown will be triggered.
-    private static final int ATTEMPTS_PER_FILE = Integer.getInteger("TimeBase.store.pds.attempts_per_file", 2);
+    private static final int ATTEMPTS_PER_FILE = Integer.getInteger("TimeBase.storage.attemptsPerFile", 2);
 
-    // Maximum number of dirty files contains in write queue. Verified when DataWriter is switched to the new slice.
-    private static final int WRITE_QUEUE_LIMIT = Integer.getInteger("TimeBase.store.pds.writeQueueLimit", 300);
+    // Number of Writer Threads
+    private static final int NUMBER_OF_WRITERS = Integer.getInteger("TimeBase.storage.writers", 1);
+
+    final Runtime RUNTIME = Runtime.getRuntime();
+
+    private long maxFileSize;
 
 //    //For debugging
 //    static {
@@ -61,7 +65,7 @@ class PDSImpl implements PersistentDataStore {
     private boolean                         shutdownInProgress = false;
     private boolean                         isReadOnly = false;
     private final ObjectArrayList <TSFile>  dirtyFiles = new ObjectArrayList <> ();
-    private int                             numWriters = 1;
+    private int                             numWriters = NUMBER_OF_WRITERS;
     private final List<TSFWriterThread>     writers = new ObjectArrayList<>(numWriters);
 
     private final Object                    cleanLock = new Object ();
@@ -95,7 +99,7 @@ class PDSImpl implements PersistentDataStore {
     //
     //  PersistentDataStore IMPLEMENTATION
     //
-    
+
     @Override
     public synchronized boolean     isStarted () {
         return (isStarted);
@@ -105,15 +109,15 @@ class PDSImpl implements PersistentDataStore {
     public synchronized void        setReadOnly (boolean readOnly) {
         if (isStarted)
             throw new IllegalStateException ("Already started");
-        
+
         isReadOnly = readOnly;
     }
-    
+
     @Override
     public synchronized boolean     isReadOnly () {
         return (isReadOnly);
     }
-    
+
     @Override
     public synchronized void        setNumWriterThreads (int n) {
         numWriters = n;
@@ -126,12 +130,12 @@ class PDSImpl implements PersistentDataStore {
 
         for (int ii = 0; ii < numWriters; ii++) {
             TSFWriterThread     wt = new TSFWriterThread (this, ii);
-            
+
             wt.start ();
 
             writers.add(wt);
         }
-        
+
         isStarted = true;
     }
 
@@ -159,23 +163,23 @@ class PDSImpl implements PersistentDataStore {
 
         assert isStarted();
 
-        long            limit = 
-            timeout <= 0 ? 
-                Long.MAX_VALUE : 
-                System.currentTimeMillis () + timeout;
-        
+        long            limit =
+                timeout <= 0 ?
+                        Long.MAX_VALUE :
+                        System.currentTimeMillis () + timeout;
+
         synchronized (cleanLock) {
             for (;;) {
                 assert numDirtyFiles >= 0 : "should be >=0 " + numDirtyFiles;
 
                 if (numDirtyFiles <= 0)
                     return (true);
-                
+
                 long    ttw = limit - System.currentTimeMillis ();
-                
+
                 if (ttw <= 0)
                     return (false);
-                
+
                 try {
                     cleanLock.wait (ttw);
                 } catch (InterruptedException x) {
@@ -185,16 +189,20 @@ class PDSImpl implements PersistentDataStore {
         }
     }
 
-    void             checkWriteQueueLimit () {
+    void             checkWriteQueueLimit (long maxFileSize) {
         boolean logged = false;
 
         synchronized (cleanLock) {
             for (;;) {
-                if (numDirtyFiles <= WRITE_QUEUE_LIMIT)
+
+                long freeMemory = RUNTIME.maxMemory() - (RUNTIME.totalMemory() - RUNTIME.freeMemory());
+                if (freeMemory > maxFileSize * 5)
+                    return;
+
+                if (numDirtyFiles == 0)
                     return;
 
                 try {
-
                     if (!logged) {
                         LOGGER.warn("Write Queue is overloaded [dirty files = %s]. Waiting ... ").with(numDirtyFiles);
                         logged = true;
@@ -208,13 +216,13 @@ class PDSImpl implements PersistentDataStore {
         }
     }
 
-    
+
     @Override
     public synchronized boolean        waitForShutdown (int timeout) {
-        long            limit = 
-            timeout <= 0 ? 
-                Long.MAX_VALUE : 
-                System.currentTimeMillis () + timeout;
+        long            limit =
+                timeout <= 0 ?
+                        Long.MAX_VALUE :
+                        System.currentTimeMillis () + timeout;
 
         for (TSFWriterThread wt : writers) {
             while (wt.isAlive ()) {
@@ -238,7 +246,7 @@ class PDSImpl implements PersistentDataStore {
         }
 
         LOGGER.info("Writers successfully stopped, files in queue = " + dirtyFiles);
-        
+
         return (true);
     }
 
@@ -258,7 +266,7 @@ class PDSImpl implements PersistentDataStore {
             Shutdown.asyncTerminate();
         }
     }
-    
+
     @Override
     public TSRootFolder createRoot(@Nullable String space, AbstractFileSystem fs, String path) {
         checkIsStarted ();
@@ -279,7 +287,7 @@ class PDSImpl implements PersistentDataStore {
     public DataWriter       createWriter () {
         checkIsStarted ();
         checkShutdown ();
-        
+
         return (new DataWriterImpl ());
     }
     
@@ -308,7 +316,7 @@ class PDSImpl implements PersistentDataStore {
     boolean                    removeFromWriteQueue (TSFile tsf) {
 
         boolean removed;
-        
+
         synchronized (dirtyFiles) {
             removed = dirtyFiles.remove(tsf);
             if (removed) {
@@ -327,7 +335,7 @@ class PDSImpl implements PersistentDataStore {
 
         return removed;
     }
-    
+
     void                    fileWasCheckedInClean (TSFile tsf) {
     }
 
@@ -410,10 +418,7 @@ class PDSImpl implements PersistentDataStore {
         }
     }
 
-
-    
     void                    addToWriteQueue (TSFile tsf) {
-
         synchronized (this) {
             checkIsStarted ();
 
@@ -424,16 +429,18 @@ class PDSImpl implements PersistentDataStore {
                 if (writer.isInterrupted())
                     throw new IllegalStateException("Writer thread is interrupted");
             }
-            
+
             if (isReadOnly)
                 throw new IllegalStateException ("This PDS is running in read-only mode");
         }
+
+        maxFileSize = Math.max(maxFileSize, tsf.getUncompressedSize());
 
         synchronized (cleanLock) {
             numDirtyFiles++;
             cleanLock.notifyAll();
         }
-        
+
         synchronized (dirtyFiles) {
             assert dirtyFiles.indexOf (tsf) < 0 : tsf + " is already queued";
 
@@ -447,7 +454,7 @@ class PDSImpl implements PersistentDataStore {
             LOGGER.info("Added file to be saved during shutdown: %s").with(tsf.getPathString());
         }
     }
-    
+
     TSFile                  getTSFToWrite () throws InterruptedException {
         synchronized (dirtyFiles) {
             while (dirtyFiles.isEmpty ()) {

@@ -57,7 +57,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     private boolean configIsDirty;
     private final AbstractFileSystem fs;
     private final String path;
-    private final String space;
+    private String space;
     private int spaceIndex = PDStreamSpaceIndexManager.NO_INDEX;
     private final PDSImpl cache;
     private final SymbolRegistryImpl symRegistry = new SymbolRegistryImpl();
@@ -80,7 +80,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
     //
     //  TSRoot IMPLEMENTATION
-    //    
+    //
     @Override
     public PersistentDataStore getStore() {
         return (cache);
@@ -108,6 +108,11 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         } finally {
             releaseSharedLock();
         }
+    }
+
+    @Override
+    public boolean          isOpen() {
+        return isOpen;
     }
 
     public void delete() {
@@ -205,7 +210,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
                 err.append("\n    ");
                 err.append(tsf.toString()).append(": ").append(tsf.useCount);
                 if (tsf instanceof TSFile) {
-                    DAPrivate[] snapshot = ((TSFile) tsf).checkoutsSnapshot;
+                    DAPrivate[] snapshot = ((TSFile) tsf).getCheckouts();
 
                     for (int i = 0; snapshot != null && i < snapshot.length; i++) {
                         if (snapshot[i] != null)
@@ -248,7 +253,13 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
     @Override
     public synchronized int getMaxFileSize() {
-        return compression == null ? (maxFileSize) : (maxFileSize * COMPRESSION_RATIO);
+        if (compression == null)
+            return maxFileSize;
+
+        if ((long) maxFileSize * (long) COMPRESSION_RATIO > Integer.MAX_VALUE)
+            return maxFileSize;
+
+        return (maxFileSize * COMPRESSION_RATIO);
     }
 
     @Override
@@ -438,7 +449,6 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
     @Override
     public void iterate(TimeRange range, EntityFilter filter, TimeSliceIterator it) {
-        acquireWriteLock();
 
         sequence.incrementAndGet();
 
@@ -446,9 +456,22 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             long from = range != null ? range.from : Long.MIN_VALUE;
             long to = range != null ? range.to : Long.MAX_VALUE;
 
-            TSFile tsf = findTSFForRead(this, from);
+            boolean locked = false;
+            TSFile tsf;
 
-            for (; ; ) {
+            try {
+                locked = acquireSharedLock();
+                tsf = findTSFForRead(this, from);
+            } catch (IOException iox) {
+                throw new com.epam.deltix.util.io.UncheckedIOException(iox);
+            } finally {
+                if (locked)
+                    releaseSharedLock();
+            }
+
+            for (;;) {
+                locked = false;
+
                 if (tsf == null)
                     return;
 
@@ -457,6 +480,11 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
                 try {
                     if (tsf.getStartTimestamp() > to)
                         break;
+
+                    // should be out of structure lock
+                    getCache().checkWriteQueueLimit(getMaxFileSize());
+
+                    locked = acquireWriteLock();
 
                     if (filter == null || tsf.hasDataFor(filter)) {
 
@@ -476,7 +504,10 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
                     next = getNextFile(tsf, null);
 
                 } finally {
-                    unuse(tsf);
+                    release(tsf, locked);
+
+                    if (locked)
+                        releaseWriteLock();
                 }
 
                 tsf = next;
@@ -484,8 +515,21 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
-        } finally {
-            releaseWriteLock();
+        }
+    }
+
+    private void release(TSFile file, boolean hasLock) {
+        if (hasLock) {
+            unuse(file);
+        } else {
+            boolean locked = false;
+            try {
+                locked = acquireSharedLock();
+                unuse(file);
+            } finally {
+                if (locked)
+                    releaseSharedLock();
+            }
         }
     }
 
@@ -501,7 +545,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         try {
             TSFile tsf = findTSFForRead(this, from);
 
-            for (; ; ) {
+            for (;;) {
                 if (tsf == null)
                     return;
 
@@ -574,7 +618,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
     //
     //  TimeSliceStore IMPLEMENTATION
-    //    
+    //
     @Override
     public TimeSlice checkOutTimeSliceForRead(
             DAPrivate accessor,
@@ -795,7 +839,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     //
     //  Package interface
     //
-    TSFile getNextTimeSliceToWrite(
+    TSFile getNextTimeSliceToWrite (
             long timestamp,
             DAPrivate accessor,
             TSFile prevTSF
@@ -926,7 +970,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         return rwl.isWriteLockedByCurrentThread();
     }
 
-    void acquireSharedLock() {
+    boolean acquireSharedLock() {
         if (!isOpen)
             throw new IllegalStateException(this + " is not open");
 
@@ -941,6 +985,8 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
         if (LOGGER.isDebugEnabled())
             logLockInfo(true, "Acquired");
+
+        return true;
     }
 
     void releaseSharedLock() {
@@ -950,7 +996,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             logLockInfo(true, "Released");
     }
 
-    void acquireWriteLock() {
+    boolean acquireWriteLock() {
         if (!isOpen)
             throw new IllegalStateException(this + " is not open");
 
@@ -975,6 +1021,8 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
         if (LOGGER.isDebugEnabled())
             logLockInfo(false, "Acquired");
+
+        return true;
     }
 
     void releaseWriteLock() {
@@ -1093,12 +1141,6 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         configIsDirty = false;
     }
 
-    @Nullable
-    @Override
-    public String getSpace() {
-        return space;
-    }
-
     @Override
     public void setSpaceIndex(int index) {
         this.spaceIndex = index;
@@ -1107,6 +1149,17 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     @Override
     public int getSpaceIndex() {
         return this.spaceIndex;
+    }
+
+    @Nullable
+    @Override
+    public String getSpace() {
+        return space;
+    }
+
+    @Override
+    public void setSpace(String name) {
+        space = name;
     }
 
     public long getSequence() {

@@ -16,7 +16,7 @@ shadowJar {
 project.description = "Timebase Server"
 
 dependencies {
-    //compile project(':java:plugins:data')
+
     api project(':java:timebase:commons')
     api project(':java:timebase:api')
     api project(':java:timebase:aerondirect')
@@ -89,11 +89,9 @@ dependencies {
     // TODO: Replace by JSR305
     compileOnly 'com.intellij:annotations'
 
-    //implementation 'uk.co.real-logic:aeron-all:0.9.4'
-
     // For JMH-based tests
-    testCompile 'org.openjdk.jmh:jmh-core'
-    testCompile 'org.openjdk.jmh:jmh-generator-annprocess'
+    testImplementation 'org.openjdk.jmh:jmh-core'
+    testImplementation 'org.openjdk.jmh:jmh-generator-annprocess'
 
     compile 'org.owasp.encoder:encoder'
 }

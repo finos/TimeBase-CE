@@ -10,7 +10,7 @@ dependencies {
     implementation ('com.epam.deltix:timebase-messages')
     implementation ('com.epam.deltix:timebase-collections')
     implementation ('com.epam.deltix:dfp')
-    implementation('com.epam.deltix:containers')
+    implementation ('com.epam.deltix:containers')
     implementation ('com.epam.deltix:thread-affinity')
 
     implementation 'io.github.resilience4j:resilience4j-ratelimiter:1.3.1' // for TestLoader
@@ -22,14 +22,12 @@ dependencies {
 
     implementation 'com.google.guava:guava'
 
-        implementation 'com.epam.deltix:gflog-jul',
+    implementation 'com.epam.deltix:gflog-jul',
                 'com.epam.deltix:gflog-mail'
 
     implementation 'javax.xml.bind:jaxb-api'
     implementation 'com.sun.xml.bind:jaxb-impl'
     implementation 'com.sun.xml.bind:jaxb-core'
-
-    compileOnly 'com.intellij:annotations'
 
     implementation 'com.lmax:disruptor'
 
@@ -38,11 +36,11 @@ dependencies {
     implementation 'org.hdrhistogram:HdrHistogram'
 
     // For JMH-based tests
-    implementation 'org.openjdk.jmh:jmh-core'
-    implementation 'org.openjdk.jmh:jmh-generator-annprocess'
+    testImplementation 'org.openjdk.jmh:jmh-core'
+    testImplementation 'org.openjdk.jmh:jmh-generator-annprocess'
 
     testImplementation 'net.sourceforge.stripes:stripes:1.5.6'
 
     //testImplementation 'org.f1x:f1x'
-    testCompile 'com.intellij:annotations'
+    testImplementation 'com.intellij:annotations'
 }

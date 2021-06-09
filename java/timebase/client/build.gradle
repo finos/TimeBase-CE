@@ -41,8 +41,8 @@ dependencies {
     testCompile 'com.intellij:annotations'
 
     // For JMH-based tests
-    testCompile 'org.openjdk.jmh:jmh-core'
-    testCompile 'org.openjdk.jmh:jmh-generator-annprocess'
+    testImplementation 'org.openjdk.jmh:jmh-core'
+    testImplementation 'org.openjdk.jmh:jmh-generator-annprocess'
 
     testRuntimeOnly 'com.epam.deltix:gflog-slf4j'
     testImplementation 'com.epam.deltix:gflog-jul'

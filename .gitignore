@@ -31,3 +31,5 @@ lib/**
 /python/**/*.so
 /python/**/*.pyd
 /python/dxapi/
+
+/web/

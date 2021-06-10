@@ -130,7 +130,12 @@ public class TimebasePanel extends IzPanel implements ActionListener {
             return;
         }
 
-        serviceControl.load(installData.getVariable(Utils.INSTALL_PATH_VAR) + "/bin");
+        try {
+            serviceControl.load(installData.getVariable(Utils.INSTALL_PATH_VAR) + "/bin");
+        } catch (Throwable t) {
+            emitError("Warning", "Can't load native library. Service control will not work.");
+        }
+
         buildLayout();
     }
 

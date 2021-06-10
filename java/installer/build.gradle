@@ -1,5 +1,9 @@
 apply from: "$rootDir/distribution/scripts.gradle"
 
+configurations {
+    izpack.extendsFrom compile
+}
+
 apply plugin: 'java-library'
 apply plugin: 'de.undercouch.download'
 
@@ -29,10 +33,17 @@ repositories {
 }
 
 dependencies {
-    compile 'org.codehaus.izpack:izpack-compiler:5.1.3'
-    compile 'org.codehaus.izpack:izpack-ant:5.1.3'
+    izpack 'org.codehaus.izpack:izpack-compiler:5.1.3'
+    izpack 'org.codehaus.izpack:izpack-ant:5.1.3'
 }
 
+compileJava {
+    classpath = configurations.izpack
+}
+
+javadoc {
+    classpath = configurations.izpack
+}
 
 //def distDir = "${instDir}/dist"
 //def installerDir = "${distDir}/installer"

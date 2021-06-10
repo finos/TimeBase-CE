@@ -1,0 +1,14 @@
+apply plugin: 'java-library'
+
+project.description = "Timebase SNMP MIB Compiler"
+
+dependencies {
+    api project(':java:timebase:snmpagent')
+
+    api 'com.epam.deltix:timebase-collections'
+    api 'com.epam.deltix:timebase-util'
+
+    // SNMP Support
+    api ('org.snmp4j:snmp4j:2.5.8')
+    api ('org.snmp4j:snmp4j-agent:2.6.2')
+}

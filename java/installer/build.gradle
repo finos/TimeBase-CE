@@ -68,7 +68,7 @@ clean.doLast {
         ]
 
         platform = installerPlatform
-        classpath = configurations.compile.asPath
+        classpath = configurations.izpack.asPath
         jarpath = jar.outputs.files[0].absolutePath
         generatedDirectory = generatedDir
         instDirectory = instDir

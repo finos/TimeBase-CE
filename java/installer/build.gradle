@@ -1,5 +1,7 @@
 apply from: "$rootDir/distribution/scripts.gradle"
 
+project.description = "Timebase Installer Packager"
+
 configurations {
     izpack.extendsFrom compile
 }
@@ -12,7 +14,7 @@ sourceCompatibility = 8
 targetCompatibility = 8
 
 group = 'com.epam.deltix'
-archivesBaseName = 'deltix-' + project.path.replace(":java:", "").replaceAll(':', '-')
+
 
 if (!project.hasProperty('instDir'))
     ext.instDir = "$rootDir/installer"
@@ -44,10 +46,6 @@ compileJava {
 javadoc {
     classpath = configurations.izpack
 }
-
-//def distDir = "${instDir}/dist"
-//def installerDir = "${distDir}/installer"
-//def distQODir = "${distDir}/qo"
 
 def generatedDir = file('build/generated')
 

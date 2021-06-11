@@ -56,8 +56,7 @@ class BuildTimebaseInstallerTask extends DefaultTask {
         def resourcesDir = new File(project.projectDir, RESOURCES_DIR)
         def installXmlFile = new File(projectDir.absolutePath, INSTALL_XML_FILE)
 
-        String distDir = "${instDirectory}/dist"
-        String installerDir = "${distDir}/installer"
+        String installerDir = "${project.parent.buildDir}/installer"
         String outputInstaller = "${installerDir}/timebase-${platform}-installer-${instVersion}.jar"
 
         if (!new File(installerDir).mkdirs()) {
@@ -101,6 +100,8 @@ class BuildTimebaseInstallerTask extends DefaultTask {
         {
             ant.config(installXmlFile.text)
         }
+
+        println "Installer created: " + outputInstaller
     }
 
 //    private void downloadExternalResources(File resourcesDir, File generatedDirectory, String distDir) {

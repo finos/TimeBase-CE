@@ -1,0 +1,6 @@
+.vs/
+~Intermediate/
+Bin/
+java-headers/
+
+projects/*.vcxproj.user

@@ -49,7 +49,7 @@
 
         <res id="CustomLangPack.xml_eng" src="@{izpack.resources.path}/langpack.xml_eng"/>
         <res id="HTMLHelloPanel.welcome" src="@{izpack.resources.path}/welcome.html"/>
-        <res id="HTMLLicencePanel.license" src="@{izpack.resources.path}/license.html"/>
+        <res id="HTMLLicencePanel.license" src="LICENSE"/>
 
         <res id="packsLang.xml_eng" src="@{izpack.resources.path}/packsLang.xml_eng"/>
 

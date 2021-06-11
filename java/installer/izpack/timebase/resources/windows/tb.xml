@@ -79,7 +79,7 @@
 <!--    </fileset>-->
 
     <!-- License -->
-    <fileset dir="java/installer/izpack/timebase/resources" targetdir="${INSTALL_PATH}" override="true">
+    <fileset dir="" targetdir="${INSTALL_PATH}" override="true">
         <include name="LICENSE"/>
     </fileset>
 

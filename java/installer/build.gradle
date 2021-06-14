@@ -1,3 +1,7 @@
+plugins {
+    id 'com.ullink.msbuild' version '3.9'
+}
+
 apply from: "$rootDir/distribution/scripts.gradle"
 
 project.description = "Timebase Installer Packager"
@@ -17,7 +21,7 @@ group = 'com.epam.deltix'
 
 
 if (!project.hasProperty('instDir'))
-    ext.instDir = "$rootDir/installer"
+    ext.instDir = project.file('build')
 
 if (!project.hasProperty('instVersion'))
     ext.instVersion = new java.text.SimpleDateFormat('yyyyMMdd').format(new java.util.Date())
@@ -61,7 +65,8 @@ clean.doLast {
                      ':java:installer:build',
                      ':generateSetQsVersionScript',
                      'generateScriptsTimebase',
-                     'copyTimebaseJars'
+                     'copyTimebaseJars',
+                     'copyNativeUtils'
 //                     ,'timebaseWebGateway' todo:
         ]
 
@@ -144,3 +149,41 @@ timebaseScripts.each() { row ->
     }
 }
 
+
+// Must run on Windows with Visual Studio 2019 installed
+// JAVA_HOME should point to JDK
+
+def solutionFilePath = rootProject.file('cpp/utils/Utils.sln').absolutePath
+
+task compileCppUtilsX64(type: com.ullink.Msbuild) {
+    solutionFile = solutionFilePath
+    platform = 'x64'
+    configuration = 'Release'
+    version = '16.0'
+    targets = ['Rebuild']
+    //verbosity = 'detailed'
+}
+
+task compileCppUtilsX86(type: com.ullink.Msbuild) {
+    solutionFile = solutionFilePath
+    platform = 'x86'
+    configuration = 'Release'
+    version = '16.0'
+    targets = ['Rebuild']
+    //verbosity = 'detailed'
+}
+
+task compileCppUtils(dependsOn: [compileCppUtilsX64, compileCppUtilsX86]) {
+    mustRunAfter build
+}
+
+task copyNativeUtils(type: Copy, dependsOn: [compileCppUtils] ) {
+    from rootProject.file("cpp/utils/Bin")
+    into rootProject.file("bin")
+    include 'windscamd64.dll'
+    include 'windscx86.dll'
+    include 'winsvcamd64.dll'
+    include 'winsvcx86.dll'
+    include 'launcheramd64.exe'
+    include 'launcherx86.exe'
+}

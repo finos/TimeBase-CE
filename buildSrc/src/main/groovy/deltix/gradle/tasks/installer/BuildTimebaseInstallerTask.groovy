@@ -56,7 +56,7 @@ class BuildTimebaseInstallerTask extends DefaultTask {
         def resourcesDir = new File(project.projectDir, RESOURCES_DIR)
         def installXmlFile = new File(projectDir.absolutePath, INSTALL_XML_FILE)
 
-        String installerDir = "${project.parent.buildDir}/installer"
+        String installerDir = "${instDirectory}/installer"
         String outputInstaller = "${installerDir}/timebase-${platform}-installer-${instVersion}.jar"
 
         if (!new File(installerDir).mkdirs()) {

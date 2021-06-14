@@ -2,5 +2,6 @@
 ~Intermediate/
 Bin/
 java-headers/
+build/
 
 projects/*.vcxproj.user

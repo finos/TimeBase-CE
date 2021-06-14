@@ -115,7 +115,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>"$(JAVA_HOME)/bin/javac.exe" -classpath $(DELTIX_HOME)\lib\* -h $(ProjectDir)..\java-headers -d $(ProjectDir)..\~Intermediate $(DELTIX_HOME)\java\timebase\commons\src\main\java\com\epam\deltix\util\os\WindowsNativeServiceControl.java</Command>
+      <Command>"$(JAVA_HOME)/bin/javac.exe" -classpath $(SolutionDir)..\..\lib\* -h $(ProjectDir)..\java-headers -d $(ProjectDir)..\~Intermediate $(SolutionDir)..\..\java\timebase\commons\src\main\java\com\epam\deltix\util\jni\WindowsService.java</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -135,7 +135,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>"$(JAVA_HOME)/bin/javac.exe" -classpath $(DELTIX_HOME)\lib\* -h $(ProjectDir)..\java-headers -d $(ProjectDir)..\~Intermediate $(DELTIX_HOME)\java\timebase\commons\src\main\java\com\epam\deltix\util\os\WindowsNativeServiceControl.java</Command>
+      <Command>"$(JAVA_HOME)/bin/javac.exe" -classpath $(SolutionDir)..\..\lib\* -h $(ProjectDir)..\java-headers -d $(ProjectDir)..\~Intermediate $(SolutionDir)..\..\java\timebase\commons\src\main\java\com\epam\deltix\util\jni\WindowsService.java</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -151,7 +151,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>"$(JAVA_HOME)/bin/javac.exe" -classpath $(DELTIX_HOME)\lib\* -h $(ProjectDir)..\java-headers -d $(ProjectDir)..\~Intermediate $(DELTIX_HOME)\java\timebase\commons\src\main\java\com\epam\deltix\util\os\WindowsNativeServiceControl.java</Command>
+      <Command>"$(JAVA_HOME)/bin/javac.exe" -classpath $(SolutionDir)..\..\lib\* -h $(ProjectDir)..\java-headers -d $(ProjectDir)..\~Intermediate $(SolutionDir)..\..\java\timebase\commons\src\main\java\com\epam\deltix\util\jni\WindowsService.java</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -171,7 +171,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>"$(JAVA_HOME)/bin/javac.exe" -classpath $(DELTIX_HOME)\lib\* -h $(ProjectDir)..\java-headers -d $(ProjectDir)..\~Intermediate $(DELTIX_HOME)\java\timebase\commons\src\main\java\com\epam\deltix\util\os\WindowsNativeServiceControl.java</Command>
+      <Command>"$(JAVA_HOME)/bin/javac.exe" -classpath $(SolutionDir)..\..\lib\* -h $(ProjectDir)..\java-headers -d $(ProjectDir)..\~Intermediate $(SolutionDir)..\..\java\timebase\commons\src\main\java\com\epam\deltix\util\jni\WindowsService.java</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

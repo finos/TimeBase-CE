@@ -166,7 +166,7 @@ configure(leafProjects) {
                 entry 'spring-beans'
             }
 
-            dependencySet(group: 'org.apache.hadoop', version: '2.9.2') {
+            dependencySet(group: 'org.apache.hadoop', version: '2.10.0') {
                 entry 'hadoop-annotations'
                 entry 'hadoop-auth'
                 entry 'hadoop-common'
@@ -243,12 +243,14 @@ configure(leafProjects) {
                 entry 'okhttp'
             }
 
-            dependencySet(group: 'org.apache.parquet', version: '1.12.0') {
+            dependencySet(group: 'org.apache.parquet', version: '1.11.1') {
                 entry 'parquet-common'
                 entry 'parquet-column'
                 entry 'parquet-encoding'
                 entry 'parquet-hadoop'
             }
+
+            dependency 'org.apache.zookeeper:zookeeper:3.4.10'
 
             dependency 'log4j:log4j:1.2.17'
 

@@ -12,7 +12,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.10.0'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.10.0'
     compile 'de.undercouch:gradle-download-task:3.4.3'
-    testCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:4.13.1'
 }
 
 tasks.test { enabled = false }

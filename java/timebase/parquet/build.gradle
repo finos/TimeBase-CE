@@ -19,6 +19,7 @@ dependencies {
     implementation 'org.apache.parquet:parquet-common',
             'org.apache.parquet:parquet-column',
             'org.apache.parquet:parquet-encoding',
-            'org.apache.parquet:parquet-hadoop',
-            'org.apache.hadoop:hadoop-common'
+            'org.apache.parquet:parquet-hadoop'
+
+    //implementation        'org.apache.hadoop:hadoop-common'
 }

@@ -51,7 +51,7 @@ public class RawMessageWriteSupport extends WriteSupport<RawMessage> implements 
     private final MemoryDataInput buffer = new MemoryDataInput();
 
     private final boolean fixed;
-    private byte[] binaryBuffer = new byte[128];
+    private final byte[] binaryBuffer = new byte[128];
 
     private RecordConsumer consumer;
 

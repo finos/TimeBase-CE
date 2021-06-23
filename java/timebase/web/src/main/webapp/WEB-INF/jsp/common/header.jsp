@@ -16,15 +16,10 @@
     <title>${model.title}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <%--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cerulean/bootstrap.min.css">--%>
-    <%--<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">--%>
     <link rel="stylesheet" href="${bootstrapCeruleanCss}" type="text/css">
     <link rel="stylesheet" href="${dataTablesCss}" type="text/css">
     <link rel="stylesheet" href="${styleCss}" type="text/css">
 
-    <%--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>--%>
-    <%--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>--%>
-    <%--<script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>--%>
     <script src="${jqueryJs}"></script>
     <script src="${bootstrapJs}"></script>
     <script src="${dataTablesJs}"></script>

@@ -58,4 +58,6 @@ public interface AbstractFileSystem {
     default boolean isReadsWithLimitPreferable() {
         return false;
     }
+
+    default boolean isLocal() { return true; }
 }

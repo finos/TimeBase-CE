@@ -20,8 +20,6 @@ import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.dtb.fs.FSLocator;
-import com.epam.deltix.qsrv.dtb.fs.azure2.Azure2FS;
-import com.epam.deltix.qsrv.dtb.fs.hdfs.DistributedFS;
 import com.epam.deltix.qsrv.dtb.fs.lock.atomicfs.AtomicFsLockManager;
 import com.epam.deltix.qsrv.dtb.fs.lock.atomicfs.FsLock;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractFileSystem;
@@ -1546,9 +1544,7 @@ public class TickDBImpl
         try {
             if (location != null) {
                 AbstractFileSystem distributedFS = unwrapFs(FSFactory.getDistributedFS(location));
-                if (distributedFS instanceof Azure2FS || distributedFS instanceof DistributedFS) {
-                    return true;
-                }
+                return !distributedFS.isLocal();
             }
         } catch (IOException ignored) {
         }

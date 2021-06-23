@@ -20,7 +20,6 @@ import com.epam.deltix.qsrv.hf.tickdb.schema.migration.SchemaChangeMessageBuilde
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
-import com.epam.deltix.qsrv.dtb.fs.hdfs.DistributedFS;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractFileSystem;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 import com.epam.deltix.qsrv.dtb.fs.pub.FSFactory;
@@ -45,7 +44,6 @@ import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.TimeInterval;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
-import com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol;
 import com.epam.deltix.qsrv.hf.tickdb.pub.BackgroundProcessInfo;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
@@ -54,9 +52,6 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.SelectionOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickCursor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickLoader;
-import com.epam.deltix.qsrv.hf.tickdb.pub.mapreduce.PDSInputFormat;
-import com.epam.deltix.qsrv.hf.tickdb.pub.mapreduce.StreamOutputFormat;
-import com.epam.deltix.qsrv.hf.tickdb.pub.task.MapReduceTask;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.SchemaChangeTask;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.SchemaUpdateTask;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.StreamChangeTask;
@@ -80,7 +75,6 @@ import com.epam.deltix.util.time.GMT;
 import com.epam.deltix.util.time.Periodicity;
 import net.jcip.annotations.GuardedBy;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.hadoop.mapreduce.Job;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -88,7 +82,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1002,9 +995,10 @@ public class PDStream extends TickStreamImpl {
             copyTask.invalidate(db);
 
             transform(copyTask);
-        } else if (task instanceof MapReduceTask) {
-            transform(task);
         }
+//        else if (task instanceof MapReduceTask) {
+//            transform(task);
+//        }
     }
 
     private void executeSchemaChangeTask(SchemaChangeTask changeTask) {
@@ -1089,9 +1083,10 @@ public class PDStream extends TickStreamImpl {
             });
         } else if (task instanceof StreamCopyTask) {
             transformImpl((StreamCopyTask) task, monitor);
-        } else if (task instanceof MapReduceTask) {
-            transformImpl((MapReduceTask) task, monitor);
         }
+//        else if (task instanceof MapReduceTask) {
+//            transformImpl((MapReduceTask) task, monitor);
+//        }
     }
 
     private void                        transformImpl(StreamChangeTask task, ExecutionMonitorImpl monitor) {
@@ -1284,85 +1279,85 @@ public class PDStream extends TickStreamImpl {
         }
     }
 
-    private void                        transformImpl(MapReduceTask task, ExecutionMonitorImpl monitor) {
-        monitor.start();
-
-        AbstractFileSystem fs = root.getFileSystem();
-        if (!(Util.unwrap(fs) instanceof DistributedFS))
-            throw new IllegalStateException("File system " + fs + " is not supported for map/reduce.");
-
-        AbstractPath jarPath = null;
-        try {
-            task.config.set(MapReduceTask.MAP_CLASS_NAME, task.mapper);
-            if (task.reducer != null)
-                task.config.set(MapReduceTask.REDUCE_CLASS_NAME, task.reducer);
-            if (task.combiner != null)
-                task.config.set(MapReduceTask.COMBINE_CLASS_NAME, task.combiner);
-            task.config.set(MapReduceTask.OUTPUT_KEY_CLASS, task.outputKeyClass);
-            task.config.set(MapReduceTask.OUTPUT_VALUE_CLASS, task.outputValueClass);
-
-            if (location != null)
-                task.config.set(PDSInputFormat.STREAM_ROOT, location);
-            task.config.set(PDSInputFormat.STREAM_SCHEMA, TDBProtocol.toString(md));
-
-            if (task.tickdbUrl != null)
-                task.config.set(StreamOutputFormat.TICKDB_URL, task.tickdbUrl);
-            if (task.outputStreamKey != null)
-                task.config.set(StreamOutputFormat.STREAM_KEY, task.outputStreamKey);
-
-            Job job = Job.getInstance(task.config, task.name);
-            job.setNumReduceTasks(task.reducer == null ? 0 : task.numReduceTasks);
-            job.setInputFormatClass(PDSInputFormat.class);
-            job.setOutputFormatClass(StreamOutputFormat.class);
-
-            jarPath = fs.createPath("/tmp/deltix/job_" + task.hashCode());
-            for (String jarName : task.getJarNames()) {
-                AbstractPath jar = fs.createPath(jarPath, jarName);
-                try (OutputStream out = jar.openOutput(0)) {
-                    task.writeJar(jarName, out);
-                }
-                if (jarName.equalsIgnoreCase(MapReduceTask.JOB_JAR_NAME))
-                    job.setJar(jar.getPathString());
-                job.addFileToClassPath(new org.apache.hadoop.fs.Path(jar.getPathString()));
-            }
-
-            if (task.isBackground()) {
-                job.submit();
-                int waitInterval = Job.getCompletionPollInterval(task.config);
-                while (!job.isComplete()) {
-                    if (monitor.getStatus() == ExecutionStatus.Aborted)
-                        return;
-
-                    try {
-                        Thread.sleep((long) waitInterval);
-                    } catch (InterruptedException e) {
-                    }
-                    monitor.setProgress(job.mapProgress()/2.0 + job.reduceProgress()/2.0);
-                }
-            } else {
-                job.waitForCompletion(true);
-            }
-
-            if (!job.isSuccessful())
-                TickDBImpl.LOG.warn("MapReduce task finished with errors.");
-
-            monitor.setComplete();
-        } catch (Exception e) {
-            monitor.abort(e);
-            throw new RuntimeException(e);
-        } finally {
-            if (jarPath != null) {
-                try {
-                    jarPath.deleteIfExists();
-                } catch (IOException e) {
-                    TickDBImpl.LOG.warn("Failed to delete file %s. Error: ").with(jarPath.getPathString()).with(e);
-                }
-            }
-
-            if (monitor.getStatus() == ExecutionStatus.Running || monitor.getStatus() == ExecutionStatus.None)
-                monitor.setComplete();
-        }
-    }
+//    private void                        transformImpl(MapReduceTask task, ExecutionMonitorImpl monitor) {
+//        monitor.start();
+//
+//        AbstractFileSystem fs = root.getFileSystem();
+//        if (!(Util.unwrap(fs) instanceof DistributedFS))
+//            throw new IllegalStateException("File system " + fs + " is not supported for map/reduce.");
+//
+//        AbstractPath jarPath = null;
+//        try {
+//            task.config.set(MapReduceTask.MAP_CLASS_NAME, task.mapper);
+//            if (task.reducer != null)
+//                task.config.set(MapReduceTask.REDUCE_CLASS_NAME, task.reducer);
+//            if (task.combiner != null)
+//                task.config.set(MapReduceTask.COMBINE_CLASS_NAME, task.combiner);
+//            task.config.set(MapReduceTask.OUTPUT_KEY_CLASS, task.outputKeyClass);
+//            task.config.set(MapReduceTask.OUTPUT_VALUE_CLASS, task.outputValueClass);
+//
+//            if (location != null)
+//                task.config.set(PDSInputFormat.STREAM_ROOT, location);
+//            task.config.set(PDSInputFormat.STREAM_SCHEMA, TDBProtocol.toString(md));
+//
+//            if (task.tickdbUrl != null)
+//                task.config.set(StreamOutputFormat.TICKDB_URL, task.tickdbUrl);
+//            if (task.outputStreamKey != null)
+//                task.config.set(StreamOutputFormat.STREAM_KEY, task.outputStreamKey);
+//
+//            Job job = Job.getInstance(task.config, task.name);
+//            job.setNumReduceTasks(task.reducer == null ? 0 : task.numReduceTasks);
+//            job.setInputFormatClass(PDSInputFormat.class);
+//            job.setOutputFormatClass(StreamOutputFormat.class);
+//
+//            jarPath = fs.createPath("/tmp/deltix/job_" + task.hashCode());
+//            for (String jarName : task.getJarNames()) {
+//                AbstractPath jar = fs.createPath(jarPath, jarName);
+//                try (OutputStream out = jar.openOutput(0)) {
+//                    task.writeJar(jarName, out);
+//                }
+//                if (jarName.equalsIgnoreCase(MapReduceTask.JOB_JAR_NAME))
+//                    job.setJar(jar.getPathString());
+//                job.addFileToClassPath(new org.apache.hadoop.fs.Path(jar.getPathString()));
+//            }
+//
+//            if (task.isBackground()) {
+//                job.submit();
+//                int waitInterval = Job.getCompletionPollInterval(task.config);
+//                while (!job.isComplete()) {
+//                    if (monitor.getStatus() == ExecutionStatus.Aborted)
+//                        return;
+//
+//                    try {
+//                        Thread.sleep((long) waitInterval);
+//                    } catch (InterruptedException e) {
+//                    }
+//                    monitor.setProgress(job.mapProgress()/2.0 + job.reduceProgress()/2.0);
+//                }
+//            } else {
+//                job.waitForCompletion(true);
+//            }
+//
+//            if (!job.isSuccessful())
+//                TickDBImpl.LOG.warn("MapReduce task finished with errors.");
+//
+//            monitor.setComplete();
+//        } catch (Exception e) {
+//            monitor.abort(e);
+//            throw new RuntimeException(e);
+//        } finally {
+//            if (jarPath != null) {
+//                try {
+//                    jarPath.deleteIfExists();
+//                } catch (IOException e) {
+//                    TickDBImpl.LOG.warn("Failed to delete file %s. Error: ").with(jarPath.getPathString()).with(e);
+//                }
+//            }
+//
+//            if (monitor.getStatus() == ExecutionStatus.Running || monitor.getStatus() == ExecutionStatus.None)
+//                monitor.setComplete();
+//        }
+//    }
 
     private long[] recalculateTimeRange (DXTickStream[] sources){
         long[] range = null;

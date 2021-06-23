@@ -21,7 +21,6 @@ import com.epam.deltix.qsrv.dtb.fs.azure.AzureFS;
 import com.epam.deltix.qsrv.dtb.fs.azure2.Azure2FS;
 import com.epam.deltix.qsrv.dtb.fs.cache.CachingFileSystem;
 import com.epam.deltix.qsrv.dtb.fs.chunkcache.ChunkCachingFileSystem;
-import com.epam.deltix.qsrv.dtb.fs.hdfs.DistributedFS;
 import com.epam.deltix.qsrv.dtb.fs.local.LocalFS;
 
 import java.io.IOException;
@@ -150,8 +149,8 @@ public final class FSFactory {
             }
         }
 
-        if (isDistributedFSScheme(scheme))
-            return DistributedFS.createFromUrl(scheme + SCHEME_SEPARATOR + address);
+//        if (isDistributedFSScheme(scheme))
+//            return DistributedFS.createFromUrl(scheme + SCHEME_SEPARATOR + address);
 
         throw new IllegalArgumentException("No supported FileSystem for scheme '" + scheme + "' (Address: '" + address + "').");
     }

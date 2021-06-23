@@ -16,11 +16,9 @@
  */
 package com.epam.deltix.qsrv.dtb.fs.pub;
 
-import com.epam.deltix.qsrv.dtb.fs.hdfs.DistributedFS;
 import com.epam.deltix.qsrv.dtb.fs.local.LocalFS;
 import com.epam.deltix.util.collections.Visitor;
 import com.epam.deltix.util.lang.Wrapper;
-import org.apache.hadoop.fs.*;
 
 import java.io.*;
 
@@ -52,12 +50,12 @@ public class FSUtils {
         return (true);
     }
 
-    public static FileSystem            getFileSystem(AbstractPath path) {
-        if (path.getFileSystem() instanceof DistributedFS)
-            return ((DistributedFS)path.getFileSystem()).delegate;
-
-        return new LocalFileSystem();
-    }
+//    public static FileSystem            getFileSystem(AbstractPath path) {
+//        if (path.getFileSystem() instanceof DistributedFS)
+//            return ((DistributedFS)path.getFileSystem()).delegate;
+//
+//        return new LocalFileSystem();
+//    }
 
     @SuppressWarnings("unchecked")
     public static boolean               isDistributedFS(final AbstractFileSystem fs) {

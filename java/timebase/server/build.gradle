@@ -47,18 +47,19 @@ dependencies {
     implementation 'javax.xml.bind:jaxb-api'
     implementation 'com.sun.xml.bind:jaxb-impl'
     implementation 'com.sun.xml.bind:jaxb-core'
-//
-//    implementation 'org.springframework:spring-context'
+
+//    implementation 'org.apache.hadoop:hadoop-hdfs:3.3.1'
+//    implementation 'org.apache.hadoop:hadoop-common:3.3.1'
 
     // Hadoop API
-    implementation('org.apache.hadoop:hadoop-annotations'){ transitive = false}
-    implementation('org.apache.hadoop:hadoop-auth'){ transitive = false }
-    compile('org.apache.hadoop:hadoop-common'){ transitive = false } // TODO: Should be "implementation"
-    implementation('org.apache.hadoop:hadoop-mapreduce-client-common'){ transitive = false } // TODO: Should be "implementation"
-    compile('org.apache.hadoop:hadoop-mapreduce-client-core'){ transitive = false }   //have hadoop-yarn-common.jar v in dependency // TODO: Should be "implementation"
-    implementation('org.apache.hadoop:hadoop-yarn-api'){ transitive = false }
-    implementation('org.apache.hadoop:hadoop-yarn-client'){ transitive = false }
-    implementation('org.apache.hadoop:hadoop-yarn-common'){ transitive = false }
+//    implementation('org.apache.hadoop:hadoop-annotations'){ transitive = false}
+//    implementation('org.apache.hadoop:hadoop-auth'){ transitive = false }
+//    compile('org.apache.hadoop:hadoop-common'){ transitive = false } // TODO: Should be "implementation"
+//    implementation('org.apache.hadoop:hadoop-mapreduce-client-common'){ transitive = false } // TODO: Should be "implementation"
+//    compile('org.apache.hadoop:hadoop-mapreduce-client-core'){ transitive = false }   //have hadoop-yarn-common.jar v in dependency // TODO: Should be "implementation"
+//    implementation('org.apache.hadoop:hadoop-yarn-api'){ transitive = false }
+//    implementation('org.apache.hadoop:hadoop-yarn-client'){ transitive = false }
+//    implementation('org.apache.hadoop:hadoop-yarn-common'){ transitive = false }
 
     // JMS Api
     // compile('org.apache.qpid:qpid-jms-client:0.11.1') { transitive = false } // TODO: Should be "implementation"

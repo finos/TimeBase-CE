@@ -68,4 +68,9 @@ public abstract class AzureFsBase implements AbstractFileSystem {
     public int getPrefetchSize() {
         return prefetchSize;
     }
+
+    @Override
+    public boolean isLocal() {
+        return false;
+    }
 }

@@ -166,16 +166,16 @@ configure(leafProjects) {
                 entry 'spring-beans'
             }
 
-            dependencySet(group: 'org.apache.hadoop', version: '2.10.0') {
-                entry 'hadoop-annotations'
-                entry 'hadoop-auth'
-                entry 'hadoop-common'
-                entry 'hadoop-mapreduce-client-common'
-                entry 'hadoop-mapreduce-client-core'
-                entry 'hadoop-yarn-api'
-                entry 'hadoop-yarn-client'
-                entry 'hadoop-yarn-common'
-            }
+//            dependencySet(group: 'org.apache.hadoop', version: '2.10.1') {
+//                entry 'hadoop-annotations'
+//                entry 'hadoop-auth'
+//                entry 'hadoop-common'
+//                entry 'hadoop-mapreduce-client-common'
+//                entry 'hadoop-mapreduce-client-core'
+//                entry 'hadoop-yarn-api'
+//                entry 'hadoop-yarn-client'
+//                entry 'hadoop-yarn-common'
+//            }
 
             dependencySet(group: 'org.apache.tomcat.embed', version: '8.0.53') {
                 entry 'tomcat-embed-core' // Tomcat core

@@ -16,13 +16,11 @@
  */
 package com.epam.deltix.qsrv.dtb.store.tools;
 
-import com.epam.deltix.qsrv.dtb.fs.hdfs.DistributedFS;
 import com.epam.deltix.qsrv.dtb.fs.pub.*;
 import com.epam.deltix.qsrv.dtb.store.impl.PDSFactory;
 import com.epam.deltix.qsrv.dtb.store.pub.*;
 import com.epam.deltix.util.collections.PrintVisitor;
 import com.epam.deltix.util.collections.generated.*;
-import com.epam.deltix.util.io.*;
 import com.epam.deltix.util.lang.Disposable;
 import com.epam.deltix.util.memory.*;
 import java.io.*;
@@ -335,7 +333,7 @@ public class PerfTest implements Disposable {
                 case "-nr":     numReaders = Integer.parseInt (args [ii++]); break;
                 case "-rt":     readTime = 1000 * Integer.parseInt (args [ii++]); break;
                 case "-ef":     filters = parseFilters (args [ii++]); break;
-                case "-hadoop": fs = DistributedFS.createFromUrl (args [ii++]); break;
+                //case "-hadoop": fs = DistributedFS.createFromUrl (args [ii++]); break;
                     
                 default: throw new IllegalArgumentException (arg);
             }

@@ -3,7 +3,7 @@ plugins {
     // Helps to avoid re-declaring dependency version in each subproject.
     // See https://github.com/spring-gradle-plugins/dependency-management-plugin
     id "io.spring.dependency-management" version "1.0.5.RELEASE"
-    id "com.github.spotbugs" version "2.0.0" apply false
+    id "com.github.spotbugs" version "4.2.3" apply false
     id "com.github.hierynomus.license-report" version "0.15.0"
 
     id 'com.github.jk1.dependency-license-report' version '1.16'
@@ -263,7 +263,6 @@ configure(leafProjects) {
             dependency 'com.sun.xml.bind:jaxb-impl:2.3.0'
             dependency 'com.sun.xml.bind:jaxb-core:2.3.0'
 
-
             dependencySet(group: 'org.codehaus.jackson', version: '1.9.13') {
                 entry 'jackson-mapper-asl'
                 entry 'jackson-core-asl'
@@ -290,7 +289,7 @@ configure(leafProjects) {
     }
 
     dependencies {
-        spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.9.0'
+        spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.10.1'
 
         compileOnly 'com.google.code.findbugs:jsr305'
         compileOnly 'com.google.code.findbugs:annotations'
@@ -301,21 +300,20 @@ configure(leafProjects) {
     }
 
     spotbugs {
-        toolVersion = "3.1.12"
+        toolVersion = "4.2.3"
         effort = "max"
         reportLevel = "medium"
-        sourceSets = [sourceSets.main] // exclude tests
         excludeFilter = rootProject.file('spotbugs-excludes.xml')
     }
 
-    tasks.withType(com.github.spotbugs.SpotBugsTask) {
-        enabled = enableSpotbugs
-
-        reports {
-            xml.enabled = false
-            html.enabled = true
-        }
-    }
+//    tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+//        enabled = enableSpotbugs
+//
+//        reports {
+//            xml.enabled = false
+//            html.enabled = true
+//        }
+//    }
 
     jar {
         manifest {

@@ -242,9 +242,6 @@ configure(leafProjects) {
             dependency 'org.tukaani:xz:1.6'
             dependency 'joda-time:joda-time:2.8.1'
 
-            dependency 'org.bouncycastle:bcprov-jdk15on:1.64'
-            dependency 'org.bouncycastle:bcpkix-jdk15on:1.64'
-
             dependency 'org.jdom:jdom2:2.0.5'
 
             dependency 'com.google.errorprone:error_prone_annotations:2.0.19'

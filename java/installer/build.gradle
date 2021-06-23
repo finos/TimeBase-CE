@@ -52,6 +52,11 @@ dependencies {
 
     izpack 'org.apache.pdfbox:pdfbox:2.0.24'
     izpack 'org.apache.cxf:cxf-rt-transports-http:3.2.12'
+
+    izpack 'org.bouncycastle:bcpkix-jdk15on:1.68'
+    izpack 'org.bouncycastle:bcprov-jdk15on:1.68'
+    izpack 'org.bouncycastle:bcprov-ext-jdk15on:1.68'
+    izpack 'org.bouncycastle:bcmail-jdk15on:1.68'
 }
 
 compileJava {

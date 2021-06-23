@@ -212,7 +212,11 @@ configure(leafProjects) {
             dependency 'org.apache.commons:commons-math3:3.6'
             dependency 'org.apache.commons:commons-text:1.8'
 
-            dependency 'org.apache.httpcomponents:httpclient:4.5.13'
+            dependencySet(group: 'org.apache.httpcomponents', version: '4.5.13') {
+                entry 'httpclient'
+                entry 'httpcore'
+                entry 'httpasyncclient'
+            }
             dependency 'org.apache.httpcomponents:httpcore:4.4.4'
 
             dependency 'org.apache.tika:tika-core:1.26'

@@ -48,6 +48,7 @@ dependencies {
     izpack 'com.fasterxml.jackson.core:jackson-core:2.10.5'
 
     izpack 'org.apache.commons:commons-compress:1.19'
+    izpack 'commons-io:commons-io:2.7'
 
     izpack 'org.apache.pdfbox:pdfbox:2.0.24'
     izpack 'org.apache.cxf:cxf-rt-transports-http:3.2.12'

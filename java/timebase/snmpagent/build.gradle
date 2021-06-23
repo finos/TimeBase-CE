@@ -11,7 +11,7 @@ dependencies {
             'com.epam.deltix:gflog-jul'
 
     // SNMP Support
-    api('org.snmp4j:snmp4j:2.5.8') { transitive = false }   //change from version 2.1.0
-    api('org.snmp4j:snmp4j-agent:2.6.2') { transitive = false }   //change from version 2.0.6
-    api('rhino:js:1.7R2') { transitive = false } // JavaScript engine TODO: Try to change cope of this to "implementation"
+    api ('org.snmp4j:snmp4j:2.8.4')
+    api ('org.snmp4j:snmp4j-agent:2.7.4')
+    api ('rhino:js:1.7R2')
 }

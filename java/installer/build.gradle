@@ -58,6 +58,8 @@ dependencies {
     izpack 'org.bouncycastle:bcprov-jdk15on:1.68'
     izpack 'org.bouncycastle:bcprov-ext-jdk15on:1.68'
     izpack 'org.bouncycastle:bcmail-jdk15on:1.68'
+
+    izpack 'org.jdom:jdom2:2.0.6'
 }
 
 compileJava {

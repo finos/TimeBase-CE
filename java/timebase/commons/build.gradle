@@ -18,6 +18,7 @@ dependencies {
     api 'org.apache.tomcat.embed:tomcat-embed-core' // Tomcat core
     implementation 'org.apache.tomcat.embed:tomcat-embed-jasper' // Tomcat JSP support
     implementation 'org.apache.tomcat.embed:tomcat-embed-logging-juli' // Tomcat Logging
+
     compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
     compileOnly 'org.apache.taglibs:taglibs-standard-impl' // Tomcat JSTL Support
     implementation 'javax.servlet:javax.servlet-api:3.1.0' // Tomcat Requires
@@ -31,10 +32,6 @@ dependencies {
     testImplementation 'commons-io:commons-io'
 
     implementation 'com.github.sarxos:windows-registry-util:0.3'
-
-//    compile 'org.springframework:spring-beans' // Used by plugins (TODO: Check)
-//    implementation 'org.springframework:spring-context'
-//    implementation 'org.springframework:spring-webmvc'
 
     implementation 'com.epam.deltix:gflog-api',
             'com.epam.deltix:gflog-core',

@@ -90,6 +90,20 @@ configure(leafProjects) {
         }
     }
 
+    spotbugsMain {
+        enabled = false
+        reports {
+            html.enabled = true
+        }
+    }
+
+    spotbugsTest {
+        enabled = false
+        reports {
+            html.enabled = true
+        }
+    }
+
     task allDeps(type: DependencyReportTask) {}
 
     // Defines versions of dependencies to be used by subprojects
@@ -306,9 +320,10 @@ configure(leafProjects) {
         excludeFilter = rootProject.file('spotbugs-excludes.xml')
     }
 
-    spotbugsTest {
-        enabled = false
-    }
+
+//    spotbugsMain {
+//        enabled = enableSpotbugs
+//    }
 
 //    tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
 //        enabled = enableSpotbugs

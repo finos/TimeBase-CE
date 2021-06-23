@@ -1,10 +1,12 @@
 project.description = "Timebase S3 API Library"
 
 dependencies {
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.11.696'
+
     implementation 'com.epam.deltix:timebase-collections'
     implementation 'com.epam.deltix:timebase-lang'
-    implementation 'com.epam.deltix:gflog-jul',            
-            'com.epam.deltix:gflog-mail'
+    implementation 'com.epam.deltix:gflog-jul'
+
     implementation 'org.apache.commons:commons-lang3'
+
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.11.1034'
 }

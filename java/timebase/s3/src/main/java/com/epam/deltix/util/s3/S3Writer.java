@@ -47,8 +47,8 @@ public abstract class S3Writer<T> implements Closeable, Flushable {
 
     private static final long MS_PER_DAY = TimeUnit.DAYS.toMillis(1);
 
-    private S3DataStore dataStore;
-    private String dataKey;
+    private final S3DataStore dataStore;
+    private final String dataKey;
     private S3Metadata metadata = null;
     private String userMetadata = null;
     private int maxBatchSize;
@@ -63,7 +63,7 @@ public abstract class S3Writer<T> implements Closeable, Flushable {
 
     private final DateFormat dateFormat;
     private final DateFormat timeFormat;
-    private StringBuilder keyBuilder = new StringBuilder();
+    private final StringBuilder keyBuilder = new StringBuilder();
 
     public S3Writer(S3DataStore dataStore, String dataKey, int maxBatchSize, long maxBatchTime) {
         assert dataStore != null && dataKey != null && dataKey.length() > 0 && !dataKey.endsWith(S3DataStore.KEY_DELIMITER);
@@ -88,7 +88,7 @@ public abstract class S3Writer<T> implements Closeable, Flushable {
         this.metadata = metadata;
     }
 
-    private static final boolean sameDay(long timestamp1, long timestamp2) {
+    private static boolean sameDay(long timestamp1, long timestamp2) {
         return timestamp1 == timestamp2 || timestamp1/MS_PER_DAY == timestamp2/MS_PER_DAY;
     }
 
@@ -103,7 +103,7 @@ public abstract class S3Writer<T> implements Closeable, Flushable {
      * @param timestamp Records timestamp in ms
      * @param records Records
      * @return false when duplicate records are ignored
-     * @throws IOException
+     * @throws IOException in case of remote errors
      */
     public synchronized boolean write(long timestamp, List<T> records) throws IOException {
         // ignore duplicates

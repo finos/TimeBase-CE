@@ -11,4 +11,6 @@ dependencies {
     // SNMP Support
     api ('org.snmp4j:snmp4j:2.5.8')
     api ('org.snmp4j:snmp4j-agent:2.6.2')
+
+    implementation 'org.apache.commons:commons-compress:1.19'
 }

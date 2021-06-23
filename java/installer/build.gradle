@@ -44,8 +44,9 @@ dependencies {
     izpack 'org.apache.tika:tika-core:1.26'
     izpack 'org.apache.tika:tika-parsers:1.26'
 
-    izpack 'com.fasterxml.jackson.core:jackson-databind:2.10.5'
+    izpack 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
     izpack 'com.fasterxml.jackson.core:jackson-core:2.10.5'
+    izpack 'com.fasterxml.jackson.core:jackson-annotations:2.10.5'
 
     izpack 'org.apache.commons:commons-compress:1.19'
     izpack 'commons-io:commons-io:2.7'

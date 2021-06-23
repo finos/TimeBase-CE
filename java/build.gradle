@@ -252,9 +252,9 @@ configure(leafProjects) {
 
             dependencySet(group: 'com.fasterxml.jackson.core', version: '2.10.5') {
                 entry 'jackson-core'
-                entry 'jackson-databind'
                 entry 'jackson-annotations'
             }
+            dependency 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
 
             dependencySet(group: 'com.squareup.okhttp3', version: '3.3.1') {
                 entry 'okhttp'
@@ -267,7 +267,12 @@ configure(leafProjects) {
                 entry 'parquet-hadoop'
             }
 
-            dependency 'org.apache.zookeeper:zookeeper:3.4.10'
+            dependencySet(group: 'org.bouncycastle', version: '1.68') {
+                entry 'bcpkix-jdk15on'
+                entry 'bcprov-jdk15on'
+                entry 'bcprov-ext-jdk15on'
+                entry 'bcmail-jdk15on'
+            }
 
             dependency 'log4j:log4j:1.2.17'
 

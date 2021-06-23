@@ -10,7 +10,7 @@ dependencies {
 
     compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.1034'
 
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.10.5'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
     compile 'com.fasterxml.jackson.core:jackson-core:2.10.5'
 
     compile 'de.undercouch:gradle-download-task:3.4.3'

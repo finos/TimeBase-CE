@@ -233,9 +233,10 @@ configure(leafProjects) {
             }
             dependency 'org.apache.httpcomponents:httpcore:4.4.4'
 
+            // used by izpack
             dependency 'org.apache.tika:tika-core:1.26'
             dependency 'org.apache.tika:tika-parsers:1.26'
-            dependency 'org.apache.pdfbox:pdfbox:1.8.10'
+
             dependency 'org.apache.yetus:audience-annotations:0.5.0'
 
             dependency 'org.tukaani:xz:1.6'

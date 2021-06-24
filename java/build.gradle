@@ -164,7 +164,7 @@ configure(leafProjects) {
 
             dependency 'org.hdrhistogram:HdrHistogram:2.1.10'
 
-            dependencySet(group: 'org.springframework', version: '4.3.25.RELEASE') {
+            dependencySet(group: 'org.springframework', version: '5.3.8') {
                 entry 'spring-context'
                 entry 'spring-web'
                 entry 'spring-webmvc'

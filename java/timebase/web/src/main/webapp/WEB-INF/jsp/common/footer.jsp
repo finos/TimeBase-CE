@@ -1,1 +1,1 @@
-<small>&copy; 2015-2018 Deltix, Inc. QuantServer version ${model.version}.</small>
+<small>&copy; 2021 EPAM Systems, Inc. Timebase version ${model.version}.</small>

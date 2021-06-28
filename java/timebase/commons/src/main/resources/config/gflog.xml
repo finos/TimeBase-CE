@@ -2,16 +2,16 @@
 
 <config>
 
-    <appender name="consoleAppender" factory="deltix.gflog.appender.ConsoleAppenderFactory" wrap="true">
+    <appender name="consoleAppender" factory="com.epam.deltix.gflog.core.appender.ConsoleAppenderFactory" wrap="true">
         <layout template="%d{yyyy-MM-dd HH:mm:ss.SSS} %p: %m%n" zoneId="UTC"/>
     </appender>
 
-    <appender name="fileAppender" factory="deltix.gflog.appender.DailyRollingFileAppenderFactory"
+    <appender name="fileAppender" factory="com.epam.deltix.gflog.core.appender.DailyRollingFileAppenderFactory"
               file="${qshome}/logs/deltix_${type}.log">
         <layout template="%d{d MMM HH:mm:ss} %p %m%n"/>
     </appender>
 
-    <appender name="safeAppender" factory="deltix.gflog.appender.SafeAppenderFactory">
+    <appender name="safeAppender" factory="com.epam.deltix.gflog.core.appender.SafeAppenderFactory">
         <appender-ref ref="consoleAppender"/>
         <appender-ref ref="fileAppender"/>
     </appender>

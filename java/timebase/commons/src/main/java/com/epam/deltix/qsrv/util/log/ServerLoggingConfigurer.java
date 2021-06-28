@@ -56,7 +56,7 @@ public class ServerLoggingConfigurer {
     };
 
     public static void configure(QuantServiceConfig config) throws Exception {
-        JulBridge.install();
+        System.setProperty("java.util.logging.manager", "com.epam.deltix.gflog.jul.JulBridgeManager");
         GFLoggingConfigurer.configure(config, createProperties(config));
     }
 

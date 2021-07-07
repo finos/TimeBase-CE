@@ -17,7 +17,6 @@
 package com.epam.deltix.qsrv.dtb.fs.pub;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.epam.deltix.qsrv.dtb.fs.azure.AzureFS;
 import com.epam.deltix.qsrv.dtb.fs.azure2.Azure2FS;
 import com.epam.deltix.qsrv.dtb.fs.cache.CachingFileSystem;
 import com.epam.deltix.qsrv.dtb.fs.chunkcache.ChunkCachingFileSystem;
@@ -139,14 +138,8 @@ public final class FSFactory {
 
     private static AbstractFileSystem   createDistributedFS(String scheme, String address) throws IOException {
         if (isAzureFSScheme(scheme)) {
-            // Choose AzureFs implementation
-            if (AzureFS.isAccountNameSet() && !Azure2FS.isFullAccountNameSet()) {
-                // Use old Azure client
-                return AzureFS.create();
-            } else {
-                // Use new Azure client
-                return Azure2FS.create();
-            }
+            // Use new Azure client
+            return Azure2FS.create();
         }
 
 //        if (isDistributedFSScheme(scheme))

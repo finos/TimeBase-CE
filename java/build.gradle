@@ -91,10 +91,11 @@ configure(leafProjects) {
     }
 
     spotbugsMain {
-        enabled = false
+        enabled = true
         reports {
             html.enabled = true
         }
+        reportLevel = "high"
     }
 
     spotbugsTest {
@@ -102,6 +103,7 @@ configure(leafProjects) {
         reports {
             html.enabled = true
         }
+        reportLevel = "high"
     }
 
     task allDeps(type: DependencyReportTask) {}

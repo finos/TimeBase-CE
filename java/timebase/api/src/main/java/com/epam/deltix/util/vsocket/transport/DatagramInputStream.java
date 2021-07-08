@@ -22,9 +22,11 @@ package com.epam.deltix.util.vsocket.transport;
 
 import com.epam.deltix.util.collections.ByteQueue;
 import com.epam.deltix.util.memory.DataExchangeUtils;
+import com.epam.deltix.util.vsocket.VSProtocol;
 
 import java.io.*;
 import java.net.*;
+import java.util.logging.Level;
 
 public class DatagramInputStream extends InputStream {
     private ByteQueue       buffer = new ByteQueue(1024 * 1024);
@@ -48,12 +50,11 @@ public class DatagramInputStream extends InputStream {
                 connection.remotePort = pack.getPort();
 
         } catch (Exception e) {
-            e.printStackTrace(System.out);
+            VSProtocol.LOGGER.log (Level.WARNING, null, e);
             return false;
         }
 
         int s = DataExchangeUtils.readInt(pack.getData(), 0);
-        //System.out.println("sequence: " + s);
         buffer.offer(pack.getData(), 4, pack.getLength() - 4);
 
         return true;

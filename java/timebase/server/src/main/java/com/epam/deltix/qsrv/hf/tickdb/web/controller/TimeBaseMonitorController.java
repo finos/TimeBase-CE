@@ -133,7 +133,7 @@ public class TimeBaseMonitorController {
         return "locks";
     }
 
-    @RequestMapping(value = "/track/{on}")
+    @RequestMapping(value = "/track/{on}", method = RequestMethod.GET)
     public String track(HttpServletRequest request, @PathVariable("on") boolean on) {
         ((TBMonitor) com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler.TDB).setTrackMessages(on);
         String referer = request.getHeader("Referer");

@@ -17,11 +17,13 @@
 package com.epam.deltix.util.vsocket.transport;
 
 import com.epam.deltix.util.memory.MemoryDataOutput;
+import com.epam.deltix.util.vsocket.VSProtocol;
 
 import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.logging.Level;
 
 /**
  *
@@ -53,7 +55,7 @@ public class DatagramOutputStream extends OutputStream {
         try {
             ds.send(packet);
         } catch (Exception e) {
-            e.printStackTrace(System.out);
+            VSProtocol.LOGGER.log (Level.WARNING, null, e);
         }
     }
 
@@ -76,7 +78,7 @@ public class DatagramOutputStream extends OutputStream {
             ds.send(packet);
             //System.out.println("Send packet, size = " + out.getSize());
         } catch (Exception e) {
-            e.printStackTrace(System.out);
+            VSProtocol.LOGGER.log (Level.WARNING, null, e);
         }
     }
 }

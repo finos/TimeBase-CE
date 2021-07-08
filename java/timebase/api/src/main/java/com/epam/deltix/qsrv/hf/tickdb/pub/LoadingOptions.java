@@ -131,11 +131,6 @@ public class LoadingOptions extends CommonOptions {
         APPEND,
 
         /**
-          Adds data into a stream and removes previous data older that new time
-         */
-        REPLACE,
-
-        /**
          Adds data into a stream and removes previous data by truncating using first new message time
          */
         REWRITE,

@@ -581,9 +581,8 @@ public class TickDBShell extends AbstractShell {
 
             try {
                 JSONHelper.parseAndLoad(args, dbmgr.getSingleStream());
-            } catch (Exception exc) {
-                System.out.println("Got exception while performing operation.");
-                exc.printStackTrace();
+            } catch (Exception e) {
+                System.out.println("Got exception while performing operation:" + e.getMessage());
             }
             if (!Util.QUIET)
                 System.out.println("total time (ms): " + (TimeKeeper.currentTime - ts));

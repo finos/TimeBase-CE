@@ -836,7 +836,7 @@ public class StreamReplicator {
         DataOutputStream out = null;
         try {
             out = new DataOutputStream(new FileOutputStream(file));
-            out.writeByte(TDBProtocol.VERSION);
+            out.writeInt(TDBProtocol.VERSION);
             TDBProtocol.writeStreamOptions(out, options, TDBProtocol.VERSION);
         } catch (IOException e) {
             LOGGER.warn("Cannot store stream options: %s").with(e);
@@ -855,7 +855,7 @@ public class StreamReplicator {
             if (content[0] < 4) // it was StreamScope before version 76
                 return TDBProtocol.readStreamOptions76(in);
 
-            byte version = in.readByte();
+            int version = in.readInt();
             if (version == TDBProtocol.VERSION)
                 return TDBProtocol.readStreamOptions(in, version);
 

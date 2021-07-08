@@ -129,7 +129,6 @@ public class Test_MultipleLoaders extends TDBTestBase {
                                 "DECIMAL(4)", "DECIMAL(0)")));
 
         LoadingOptions options = new LoadingOptions(false);
-        options.writeMode = LoadingOptions.WriteMode.REPLACE;
 
          final LoadingErrorListener listener = new LoadingErrorListener() {
 

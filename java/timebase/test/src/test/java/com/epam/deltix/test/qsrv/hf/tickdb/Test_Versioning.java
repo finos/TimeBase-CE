@@ -149,6 +149,36 @@ public class Test_Versioning extends TDBTestBase {
     }
 
     @Test
+    public void testRename() {
+        DXTickDB tdb = getTickDb();
+
+        DXTickStream stream = TickDBCreator.createBarsStream (tdb, "bars_versions");
+        stream.enableVersioning();
+        stream.truncate(0);
+
+        SelectionOptions options = new SelectionOptions();
+        options.versionTracking = true;
+        options.allowLateOutOfOrder = true;
+
+        try (TickCursor cursor = stream.select(Long.MIN_VALUE, options)) {
+            assertTrue(cursor.next());
+            System.out.println(cursor.getMessage());
+        }
+
+        stream.rename("bars_versions1");
+
+        getServerDb().close();
+        getServerDb().open(false);
+
+        tdb = getTickDb();
+        stream = tdb.getStream("bars_versions1");
+        try (TickCursor cursor = stream.select(Long.MIN_VALUE, options)) {
+            assertTrue(cursor.next());
+            System.out.println(cursor.getMessage());
+        }
+    }
+
+    @Test
     public void                     clearTest() {
         DXTickStream stream = getTickDb().createStream("clearTest",
             StreamOptions.fixedType(StreamScope.DURABLE, "clearTest", null, 0,

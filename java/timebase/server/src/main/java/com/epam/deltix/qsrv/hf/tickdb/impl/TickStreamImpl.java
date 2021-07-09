@@ -375,7 +375,21 @@ public abstract class TickStreamImpl extends ServerStreamImpl
         return options;
     }
 
-    protected void                  onRename (File newFolder) {
+    protected void                  onRename (File newFolder, String oldKey) {
+
+        File file = getVersionsFile(oldKey);
+        if (versioning && file.exists()) {
+            File dest = getVersionsFile(key);
+
+            Util.close(versionsData);
+            versionsData = null;
+
+            if (file.renameTo(dest)) {
+                enableVersioning();
+            } else {
+                TickDBImpl.LOG.warn("Failed to rename " + file + " to " + dest);
+            }
+        }
     }
 
     protected TickDBImpl            getDBImpl () {
@@ -430,7 +444,7 @@ public abstract class TickStreamImpl extends ServerStreamImpl
             this.key = key;
 
             // rename files
-            onRename (newFolder);
+            onRename (newFolder, before);
 
             // save new metadata (in closed state)
             saveToFile();
@@ -765,13 +779,17 @@ public abstract class TickStreamImpl extends ServerStreamImpl
     }
 
     File                            getVersionsFile() {
+        return getVersionsFile(key);
+    }
+
+    File                            getVersionsFile(String streamKey) {
         if (metadataLocation.isRemote()) {
             // TODO: Implement
-            throw new NotImplementedException("Not implemented for remote streams yet");
+            throw new UnsupportedOperationException("Not implemented for remote streams yet");
         }
 
         return new File(file.getParentFile(),
-                            SimpleStringCodec.DEFAULT_INSTANCE.encode(key) + VERSIONS_FILE_SUFFIX);
+                SimpleStringCodec.DEFAULT_INSTANCE.encode(streamKey) + VERSIONS_FILE_SUFFIX);
     }
 
     private synchronized void       saveChanges () throws IOException {

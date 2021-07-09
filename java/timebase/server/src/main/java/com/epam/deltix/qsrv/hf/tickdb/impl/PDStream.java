@@ -228,6 +228,8 @@ public class PDStream extends TickStreamImpl {
                 getDBImpl().notifyRemoteStreamRenamed(before, key);
             }
         }
+        onRename(file.getParentFile(), before);
+
         getDBImpl ().fireRenamed(this, before);
     }
 

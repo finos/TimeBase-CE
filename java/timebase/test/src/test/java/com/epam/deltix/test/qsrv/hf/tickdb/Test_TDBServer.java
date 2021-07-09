@@ -458,6 +458,22 @@ public class Test_TDBServer {
     }
 
     @Test
+    public void testSwap()
+    {
+        DXTickDB tdb = runner.getTickDb();
+
+        DXTickStream stream1 = TickDBCreator.createBarsStream (tdb, "mybars1");
+        DXTickStream stream2 = TickDBCreator.createBarsStream (tdb, "mybars2");
+
+        stream1.rename("swap");
+        stream2.rename("mybars1");
+        stream1.rename("mybars2");
+
+        runner.getServerDb().close();
+        runner.getServerDb().open(false);
+    }
+
+    @Test
     public void testStreamChange() throws InterruptedException {
         DXTickDB tdb = getTickDb();
 

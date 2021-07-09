@@ -300,8 +300,8 @@ public class TickDBFolderManager {
     }
 
     /*
-        Renames folder to make sure that stream and folder name are equals
-     */
+         Renames folder to make sure that stream and folder name are equals
+      */
     public static File               rename(File folder) {
 
         File[] files = folder.listFiles(new FilenameFilter() {
@@ -320,6 +320,12 @@ public class TickDBFolderManager {
         String stream = fileName.substring(0, index);
 
         File dest = new File(folder.getParentFile(), stream);
+        int counter = 0;
+        while (dest.exists())
+            dest = new File(folder.getParentFile(), stream + counter++);
+
+        TickDBImpl.LOG.warn("Renaming folder '" + folder.getParentFile().getName() + "\\" + folder.getName() +
+                "' to '" + dest.getParentFile().getName() + "\\" + dest.getName() + "'");
 
         return folder.renameTo(dest) ? dest : null;
     }

@@ -19,10 +19,50 @@ History:
 2019 – Cloud support (REST/WS, Docker, Kuber)    
 2021 – Timebase 6.0 Community Edition (open source) and Clustering
 
+## Roadmap
+
+1. Replace Apache Tomcat
+2. TimeBase Cluster
+3. NIO Support for network layer
+
+
 ## Existing Materials
+
 * [TimeBase repository](https://github.com/epam/TimeBase)
 * [Web site](http://timebase.info)
 * [Documentation](https://kb.timebase.info) 
+
+
+## Build
+
+Build the project with [Gradle](http://gradle.org/) using this
+[build.gradle](https://github.com/finos/TimeBase-CE/blob/main/build.gradle) file.
+
+You will require the Java 11+ to build TimeBase:
+
+Full clean and build of all modules
+
+```shell
+    $ ./gradlew clean build
+```
+
+## Usage example
+https://kb.timebase.info/libs.html
+
+
+## Contributing
+
+1. Fork it (<https://github.com/finos/TimeBase-CE/fork>)
+2. Create your feature branch (`git checkout -b feature/fooBar`)
+3. Read our [contribution guidelines](.github/CONTRIBUTING.md) and [Community Code of Conduct](https://www.finos.org/code-of-conduct)
+4. Commit your changes (`git commit -am 'Add some fooBar'`)
+5. Push to the branch (`git push origin feature/fooBar`)
+6. Create a new Pull Request
+
+_NOTE:_ Commits and pull requests to FINOS repositories will only be accepted from those contributors with an active, executed Individual Contributor License Agreement (ICLA) with FINOS OR who are covered under an existing and active Corporate Contribution License Agreement (CCLA) executed with FINOS. Commits from individuals not covered under an ICLA or CCLA will be flagged and blocked by the FINOS Clabot tool. Please note that some CCLAs require individuals/employees to be explicitly named on the CCLA.
+
+*Need an ICLA? Unsure if you are covered under an existing CCLA? Email [help@finos.org](mailto:help@finos.org)*
+
 
 ## Development Team
 [Stuart Farr](https://github.com/stuartfarr) - Business    
@@ -42,4 +82,11 @@ History:
 [Sergei Remsha](https://github.com/sr-remsha) - Technical Writer
 
 
-https://timebase.info/
+## License
+
+Copyright © 2021 EPAM Systems, Inc.
+
+Distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+SPDX-License-Identifier: [Apache-2.0](https://spdx.org/licenses/Apache-2.0)
+

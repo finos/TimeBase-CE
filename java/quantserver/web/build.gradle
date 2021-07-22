@@ -1,6 +1,6 @@
 apply plugin: 'war'
 
-group = 'com.epam.deltix'
+group = 'org.finos.timebase-ce'
 
 dependencies {
     compileOnly project(':java:timebase:commons')

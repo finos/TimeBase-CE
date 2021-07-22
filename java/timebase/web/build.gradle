@@ -1,7 +1,5 @@
 apply plugin: 'war'
 
-group = 'com.epam.deltix'
-
 dependencies {
     compileOnly 'org.apache.tomcat.embed:tomcat-embed-jasper' // Tomcat JSP support
     compileOnly 'org.apache.tomcat.embed:tomcat-embed-logging-juli' // Tomcat Logging

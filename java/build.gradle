@@ -298,7 +298,7 @@ configure(leafProjects) {
         vendor = 'EPAM Systems, Inc.'
     }
 
-    group = 'com.epam.deltix'
+    group = 'org.finos.timebase-ce'
     archivesBaseName = project.path.replace(":java:", "").replaceAll(':', '-')
 
     repositories {

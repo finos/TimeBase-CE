@@ -1,6 +1,5 @@
 evaluationDependsOn(':java')
 
-group = 'com.epam.deltix'
 apply plugin: 'java-library'
 apply plugin: 'com.github.johnrengelman.shadow'
 

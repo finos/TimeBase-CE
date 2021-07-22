@@ -1,4 +1,4 @@
-FROM artifactory.epam.com:6190/thirdparty.docker/alpine-c-jdk:11.0.6_p10-r1-alpine20200319
+FROM adoptopenjdk/openjdk11:jdk-11.0.11_9-slim
 RUN mkdir timebase-home
 ENV DELTIX_HOME /timebase-server
 COPY timebase /timebase-server

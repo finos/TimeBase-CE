@@ -1,5 +1,3 @@
-group = 'com.epam.deltix'
-
 dependencies {
     compile project(':java:timebase:pub')
     compile project(':java:timebase:client')

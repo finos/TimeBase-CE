@@ -19,13 +19,14 @@ TimeBase can be used, simultaneously, as a traditional time-series database and 
 
 ## Current State
 
-History:
-2006 – Timebase 1.0 (historical data analytics, SQL)    
-2010 – Timebase 2.0 (timeseries data base, live streaming)    
-2015 – Timebase 5.0 (Very large databases, HDFS)    
-2018 – IPC/UDP low latency mode (Timebase topics)    
-2019 – Cloud support (REST/WS, Docker, Kuber)    
-2021 – Timebase 6.0 Community Edition (open source) and Clustering
+### History:
+
+- 2006 – Timebase 1.0 (historical data analytics, SQL)    
+- 2010 – Timebase 2.0 (timeseries data base, live streaming)    
+- 2015 – Timebase 5.0 (Very large databases, HDFS)    
+- 2018 – IPC/UDP low latency mode (Timebase topics)    
+- 2019 – Cloud support (REST/WS, Docker, Kuber)    
+- 2021 – Timebase 6.0 Community Edition (open source) and Clustering
 
 ## Roadmap
 
@@ -71,21 +72,21 @@ _NOTE:_ Commits and pull requests to FINOS repositories will only be accepted fr
 
 ## Development Team
 
-[Stuart Farr](https://github.com/stuartfarr) - Business    
-[Aliaksei Vavilov](https://github.com/avavilau) - Delivery Manager    
-[Alex Karpovich](https://github.com/alex-karpovich) - Chief Solution Architect / Main Developer / Maintainer            
-[Alexei Osipov](https://github.com/alexei-osipov) - Solution Architect / Main Developer    
-[Andy Malakov](https://github.com/andymalakov) - Solution Architect     
-[Raman Kisel](https://github.com/Romkisel) - Backend Developer    
-[Daniil Yarmalkevich](https://github.com/ypldan) - Backend Developer      
-[Maxim Gadalov](https://github.com/Maxim-Gadalov) - Backend Developer     
-[Siarhei Izmestsyeu](https://github.com/sizmestiev) - C++ Developer     
-[Dzmitry Barkouski ](https://github.com/MitoZ) - Front-end Developer     
-[Maksim Samusenka](https://github.com/msamusenka) - Solution Architect (Integrations)     
-[Eugene Karankow](https://github.com/ekarankow) - Backend Developer (Integrations)     
-[Polina Gurinovich](https://github.com/PolinaGurinovich) - Front-end Developer (Integrations)     
-[Aliaksei Strakh](https://github.com/astrakh) - QA Automation     
-[Sergei Remsha](https://github.com/sr-remsha) - Technical Writer
+- [Stuart Farr](https://github.com/stuartfarr) - Business    
+- [Aliaksei Vavilov](https://github.com/avavilau) - Delivery Manager    
+- [Alex Karpovich](https://github.com/alex-karpovich) - Chief Solution Architect / Main Developer / Maintainer            
+- [Alexei Osipov](https://github.com/alexei-osipov) - Solution Architect / Main Developer    
+- [Andy Malakov](https://github.com/andymalakov) - Solution Architect     
+- [Raman Kisel](https://github.com/Romkisel) - Backend Developer    
+- [Daniil Yarmalkevich](https://github.com/ypldan) - Backend Developer      
+- [Maxim Gadalov](https://github.com/Maxim-Gadalov) - Backend Developer     
+- [Siarhei Izmestsyeu](https://github.com/sizmestiev) - C++ Developer     
+- [Dzmitry Barkouski ](https://github.com/MitoZ) - Front-end Developer     
+- [Maksim Samusenka](https://github.com/msamusenka) - Solution Architect (Integrations)     
+- [Eugene Karankow](https://github.com/ekarankow) - Backend Developer (Integrations)     
+- [Polina Gurinovich](https://github.com/PolinaGurinovich) - Front-end Developer (Integrations)     
+- [Aliaksei Strakh](https://github.com/astrakh) - QA Automation     
+- [Sergei Remsha](https://github.com/sr-remsha) - Technical Writer
 
 ## License
 

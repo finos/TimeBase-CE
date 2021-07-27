@@ -1,4 +1,4 @@
-<img align="right" width="60%" src="https://github.com/finos/branding/blob/master/project-logos/active-project-logos/Timebase/tb-logo.png?raw=true">
+<img align="right" src="https://github.com/finos/branding/blob/master/project-logos/active-project-logos/Timebase/tb-logo.png?raw=true">
 
 # Timebase CE
 

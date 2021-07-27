@@ -8,6 +8,7 @@
 
 Time-series data is foundational to both buy-side and sell-side financial services firms. The need for time-series data management systems is well understood and is well-served by products provided under commercial licenses. There are also many open-source time-series data systems but their uptake in financial services firms is less extensive, possibly due to insufficient performance and scalability or lack of appropriateness for financial services time-series data.
 There is constant demand to reduce total cost of operating technology stacks, whilst at the same time implementing changes to serve new opportunities or meet new obligations. Implementing change in a cost-effective manner has led to an increase in the use of cloud and open-source technologies, and less of a “one size fits all” approach.
+
 ## Proposed Solution
 
 Having been battle-tested in trading firms for over 10 years under a commercial license, TimeBase is now offered under an open-source license as TimeBase Community Edition”. TimeBase Community Edition was designed from inception for managing time-series data found in financial services.
@@ -15,6 +16,7 @@ Having been battle-tested in trading firms for over 10 years under a commercial 
 The goal is to provide enterprise grade time-series data management and messaging capability which enables financial services firms to use with other open-source and commercial components to augment existing solutions, create new solutions.
 
 TimeBase can be used, simultaneously, as a traditional time-series database and real-time data messaging/streaming server. Data structures (“streams”) are user-defined. There is a rich API for interacting (ingesting, streaming) with TimeBase, which provide the necessary hooks for data population and data utilization.
+
 ## Current State
 
 History:
@@ -31,13 +33,11 @@ History:
 2. TimeBase Cluster
 3. NIO Support for network layer
 
-
 ## Existing Materials
 
 * [TimeBase repository](https://github.com/epam/TimeBase)
 * [Web site](http://timebase.info)
 * [Documentation](https://kb.timebase.info) 
-
 
 ## Build
 
@@ -53,8 +53,8 @@ Full clean and build of all modules
 ```
 
 ## Usage example
-https://kb.timebase.info/libs.html
 
+https://kb.timebase.info/libs.html
 
 ## Contributing
 
@@ -69,8 +69,8 @@ _NOTE:_ Commits and pull requests to FINOS repositories will only be accepted fr
 
 *Need an ICLA? Unsure if you are covered under an existing CCLA? Email [help@finos.org](mailto:help@finos.org)*
 
-
 ## Development Team
+
 [Stuart Farr](https://github.com/stuartfarr) - Business    
 [Aliaksei Vavilov](https://github.com/avavilau) - Delivery Manager    
 [Alex Karpovich](https://github.com/alex-karpovich) - Chief Solution Architect / Main Developer / Maintainer            
@@ -87,7 +87,6 @@ _NOTE:_ Commits and pull requests to FINOS repositories will only be accepted fr
 [Aliaksei Strakh](https://github.com/astrakh) - QA Automation     
 [Sergei Remsha](https://github.com/sr-remsha) - Technical Writer
 
-
 ## License
 
 Copyright © 2021 EPAM Systems, Inc.
@@ -95,4 +94,3 @@ Copyright © 2021 EPAM Systems, Inc.
 Distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 SPDX-License-Identifier: [Apache-2.0](https://spdx.org/licenses/Apache-2.0)
-

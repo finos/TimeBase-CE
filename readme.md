@@ -1,3 +1,9 @@
+<img align="right" width="60%" src="https://github.com/finos/branding/blob/master/project-logos/active-project-logos/Timebase/tb-logo.png?raw=true">
+
+# Timebase CE
+
+[![FINOS - Incubating](https://cdn.jsdelivr.net/gh/finos/contrib-toolbox@master/images/badge-incubating.svg)](https://finosfoundation.atlassian.net/wiki/display/FINOS/Incubating)
+
 ## Business Problem
 
 Time-series data is foundational to both buy-side and sell-side financial services firms. The need for time-series data management systems is well understood and is well-served by products provided under commercial licenses. There are also many open-source time-series data systems but their uptake in financial services firms is less extensive, possibly due to insufficient performance and scalability or lack of appropriateness for financial services time-series data.

@@ -43,6 +43,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          lfs: true
       - name: Checkout branch (Windows)
         if: matrix.os == 'windows-latest'
         run: |

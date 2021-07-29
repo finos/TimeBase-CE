@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [release-*]
+    branches: [release*]
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"

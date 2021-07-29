@@ -67,7 +67,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Build with gradle
-        run: ./gradlew build
+        run: |
+          ls -R
+          ./gradlew build
 
   release:
     name: Release
@@ -106,7 +108,7 @@ jobs:
       - name: Setup java
         uses: actions/setup-java@v1
         with:
-          java-version: 8
+          java-version: 11
       - name: Publish jars
         run: >
           ./gradlew :java:timebase:aerondirect:publish :java:quantserver:web:publish

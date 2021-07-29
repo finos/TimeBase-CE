@@ -1,3 +1,6 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+
 plugins {
     // Supports functionality similar to Maven BOM.
     // Helps to avoid re-declaring dependency version in each subproject.
@@ -12,6 +15,7 @@ plugins {
 
 ext {
     globalWebDir = file("$rootDir/web")
+    isReleaseVersion = !version.endsWith("SNAPSHOT")
 }
 
 // To enable JavaDoc generation add Gradle property to command line:
@@ -36,9 +40,6 @@ def enableSpotbugs = hasProperty("spotbugs") || Boolean.getBoolean("spotbugs") |
 if (enableSpotbugs) {
     println("Spotbugs is ENABLED")
 }
-
-def rUser = findProperty('SONATYPE_NEXUS_USERNAME') ?:  System.getenv('SONATYPE_NEXUS_USERNAME') ?: "FakeUser"
-def rPass = findProperty('SONATYPE_NEXUS_PASSWORD') ?:  System.getenv('SONATYPE_NEXUS_PASSWORD') ?: "FakePass"
 
 licenseReport {
     // prepare allowed licenses
@@ -323,20 +324,6 @@ configure(leafProjects) {
         excludeFilter = rootProject.file('spotbugs-excludes.xml')
     }
 
-
-//    spotbugsMain {
-//        enabled = enableSpotbugs
-//    }
-
-//    tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
-//        enabled = enableSpotbugs
-//
-//        reports {
-//            xml.enabled = false
-//            html.enabled = true
-//        }
-//    }
-
     jar {
         manifest {
             baseName archivesBaseName
@@ -440,6 +427,9 @@ configure(leafProjects) {
         options.addStringOption('encoding', 'UTF-8')
     }
 
+    def rUser = findProperty('SONATYPE_NEXUS_USERNAME') ?:  System.getenv('SONATYPE_NEXUS_USERNAME') ?: "FakeUser"
+    def rPass = findProperty('SONATYPE_NEXUS_PASSWORD') ?:  System.getenv('SONATYPE_NEXUS_PASSWORD') ?: "FakePass"
+
     // Publishing
     publishing {
         repositories {
@@ -461,12 +451,12 @@ configure(leafProjects) {
                     name = project.name
                     packaging = 'jar'
                     description = project.description
-                    url = 'https://github.com/epam/TimeBaseCommons.git'
+                    url = 'https://github.com/finos/TimeBase-CE.git'
 
                     scm {
-                        connection = 'scm:git:https://github.com/epam/TimeBase.git'
-                        developerConnection = 'scm:git:https://github.com/epam/TimeBase.git'
-                        url = 'https://github.com/epam/TimeBase.git'
+                        connection = 'scm:git:https://github.com/finos/TimeBase-CE.git'
+                        developerConnection = 'scm:git:https://github.com/finos/TimeBase-CE.git'
+                        url = 'https://github.com/finos/TimeBase-CE.git'
                     }
 
                     licenses {

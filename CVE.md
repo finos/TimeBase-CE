@@ -27,7 +27,7 @@ Very specific conditions to be reproducible.
 TimeBase Server with embedded tomcat setup is not affected, because issue related to the Tomcat Session persistence, which is not used by TimeBase Server.
 
 
-3. [CVE-2021-24122](https://www.cvedetails.com/cve/CVE-2021-24122)
+3. [CVE-2021-25122](https://www.cvedetails.com/cve/CVE-2021-25122)
 ```
 Important: Request mix-up with h2c CVE-2021-25122
 

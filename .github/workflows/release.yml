@@ -64,9 +64,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Build with gradle
-        run: |
-          ls -lh -R gradle/wrapper
-          ./gradlew build
+        run: ./gradlew build
 
   release:
     name: Release

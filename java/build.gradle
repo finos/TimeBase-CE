@@ -456,6 +456,8 @@ configure(leafProjects) {
                     }
                 }
 
+                artifactId = project.path.replace(":java:", "").replaceAll(':', '-')
+
                 pom {
                     name = project.name
                     packaging = 'jar'

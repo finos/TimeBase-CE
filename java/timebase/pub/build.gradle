@@ -1,24 +1,23 @@
-apply plugin: 'java-library'
-
 project.description = "Timebase Public API Library"
 
 dependencies {
-    api ('com.epam.deltix:timebase-lang')
-    api ('com.epam.deltix:timebase-util')
-    api ('com.epam.deltix:timebase-messages')
-    api ('com.epam.deltix:timebase-collections')
+    implementation ('com.epam.deltix:timebase-lang')
+    implementation ('com.epam.deltix:timebase-util')
+    implementation ('com.epam.deltix:timebase-messages')
+    implementation ('com.epam.deltix:timebase-collections')
 
     implementation ('com.epam.deltix:dfp')
-    implementation('com.epam.deltix:containers')
+    implementation ('com.epam.deltix:containers')
 
     implementation ('org.apache.commons:commons-lang3')
 
     implementation 'com.epam.deltix:gflog-api',
                    'com.epam.deltix:gflog-jul'
 
-    implementation 'com.sun.activation:javax.activation'
     implementation 'com.sun.codemodel:codemodel'
     implementation 'com.sun.codemodel:codemodel-project'
+
+    implementation 'com.sun.activation:javax.activation'
     implementation 'javax.activation:javax.activation-api'
 
     implementation 'javax.xml.bind:jaxb-api'

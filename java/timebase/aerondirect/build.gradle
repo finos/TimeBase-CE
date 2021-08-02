@@ -3,6 +3,7 @@ project.description = "Timebase Aeron Client API Library"
 dependencies {
     implementation project(':java:timebase:api') // Depends on classes: RawMessage,  TypeSet, ChannelPerformance
     implementation project(':java:timebase:pub')
+
     implementation ('com.epam.deltix:timebase-lang')
     implementation ('com.epam.deltix:timebase-util')
     implementation ('com.epam.deltix:timebase-messages')

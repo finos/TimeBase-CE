@@ -94,6 +94,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          lfs: true
       - name: Checkout branch
         run: |
           git config user.name github-actions

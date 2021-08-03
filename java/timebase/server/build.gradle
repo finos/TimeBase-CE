@@ -153,7 +153,7 @@ task copyWebapp(type: Copy) {
 
     from (project(':java:timebase:web').file('build/libs')) {
         include '*.war'
-        rename 'deltix-timebase-web(.*).war', 'deltix-timebase-web.war'
+        rename 'timebase-web(.*).war', 'timebase-web.war'
     }
     into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
 }

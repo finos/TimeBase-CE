@@ -1,19 +1,11 @@
 apply plugin: 'war'
 
-group = 'org.finos.timebase-ce'
-
 dependencies {
-    compileOnly project(':java:timebase:commons')
-    compileOnly ('com.epam.deltix:timebase-util')
-
-//    compileOnly 'java:tools'
-    compileOnly 'com.sun.activation:javax.activation'
     compileOnly 'org.apache.tomcat.embed:tomcat-embed-jasper' // Tomcat JSP support
     compileOnly 'org.apache.tomcat.embed:tomcat-embed-logging-juli' // Tomcat Logging
 
     compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
     compileOnly 'org.apache.taglibs:taglibs-standard-impl' // Tomcat JSTL Support
-    compileOnly 'com.epam.deltix:gflog-api'
 }
 
 def webappDir = file('src/main/webapp')

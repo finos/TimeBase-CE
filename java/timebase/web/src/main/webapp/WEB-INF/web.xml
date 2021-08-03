@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
@@ -12,50 +13,44 @@
     </filter>
 
     <servlet>
-        <servlet-name>api</servlet-name>
-        <servlet-class>com.epam.deltix.qsrv.hf.tickdb.http.TimebaseServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
+        <servlet-name>shutdown</servlet-name>
+        <servlet-class>com.epam.deltix.qsrv.util.servlet.ShutdownServlet</servlet-class>
     </servlet>
-
-    <servlet-mapping>
-        <servlet-name>api</servlet-name>
-        <url-pattern>/xml/*</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>api</servlet-name>
-        <url-pattern>/bin/*</url-pattern>
-    </servlet-mapping>
-
-    <mime-mapping>
-        <extension>xml</extension>
-        <mime-type>text/xml</mime-type>
-    </mime-mapping>
-
-    <jsp-config>
-        <taglib>
-            <taglib-uri>http://java.sun.com/jsp/jstl/core</taglib-uri>
-            <taglib-location>/WEB-INF/c.tld</taglib-location>
-        </taglib>
-        <taglib>
-            <taglib-uri>http://java.sun.com/jsp/jstl/fmt</taglib-uri>
-            <taglib-location>/WEB-INF/fmt.tld</taglib-location>
-        </taglib>
-        <taglib>
-            <taglib-uri>http://java.sun.com/jsp/jstl/functions</taglib-uri>
-            <taglib-location>/WEB-INF/fn.tld</taglib-location>
-        </taglib>
-    </jsp-config>
 
     <servlet>
-        <servlet-name>tbmon</servlet-name>
-        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
+        <servlet-name>logzip</servlet-name>
+        <servlet-class>com.epam.deltix.qsrv.servlet.LogServlet</servlet-class>
+    </servlet>
+    
+    <servlet>
+        <servlet-name>dumpzip</servlet-name>
+        <servlet-class>com.epam.deltix.qsrv.servlet.HeapDumpServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>home</servlet-name>
+        <servlet-class>com.epam.deltix.qsrv.servlet.HomeServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>tbmon</servlet-name>
-        <url-pattern>/</url-pattern>
+        <servlet-name>shutdown</servlet-name>
+        <url-pattern>/shutdown...</url-pattern>
+        <url-pattern>/shutdown</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>logzip</servlet-name>
+        <url-pattern>/getlogs</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>dumpzip</servlet-name>
+        <url-pattern>/heapdump</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>home</servlet-name>
+        <url-pattern>/gethome</url-pattern>
     </servlet-mapping>
 
     <filter-mapping>
@@ -63,29 +58,35 @@
         <url-pattern>*</url-pattern>
     </filter-mapping>
 
+    <mime-mapping>
+        <extension>xml</extension>
+        <mime-type>text/xml</mime-type>
+    </mime-mapping>
+
+    <!-- WELCOME PAGE -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+    <jsp-config>
+        <taglib>
+            <taglib-uri>http://java.sun.com/jsp/jstl/core</taglib-uri>
+            <taglib-location>/WEB-INF/c.tld</taglib-location>
+        </taglib>
+        <taglib>
+            <taglib-uri>http://java.sun.com/jsp/jstl/functions</taglib-uri>
+            <taglib-location>/WEB-INF/fn.tld</taglib-location>
+        </taglib>
+    </jsp-config>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Home</web-resource-name>
+            <url-pattern>/gethome</url-pattern>
+        </web-resource-collection>
+    </security-constraint>
+
     <deny-uncovered-http-methods/>
-	
-<!--
- <servlet>
-  <servlet-name>webdav</servlet-name>
-  <servlet-class>org.apache.catalina.servlets.DeltixWebDavServlet</servlet-class>
-    <init-param>
-      <param-name>debug</param-name>
-      <param-value>0</param-value>
-    </init-param>
-    <init-param>
-  <param-name>listings</param-name>
-  <param-value>true</param-value>
-    </init-param>
- <init-param>
-  <param-name>readonly</param-name>
-  <param-value>false</param-value>
- </init-param>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>webdav</servlet-name>
-    <url-pattern>/webdav/*</url-pattern>
-  </servlet-mapping>
-  -->
 
 </web-app>

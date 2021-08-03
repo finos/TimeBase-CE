@@ -489,8 +489,6 @@ configure(leafProjects) {
                     }
                 }
             }
-
-
         }
 
         signing {
@@ -521,7 +519,7 @@ configure(leafProjects) {
     }
 }
 
-def webAbbrs = [':java:quantserver:web': 'default', ':java:timebase:web': 'tb']
+def webAbbrs = [':java:timebase:web': 'default', ':java:timebase:webmonitor': 'tb']
 webAbbrs.each { key, value ->
     project(key) {
         clean.doFirst {

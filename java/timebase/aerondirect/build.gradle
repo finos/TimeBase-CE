@@ -1,4 +1,4 @@
-project.description = "Timebase Aeron Client API Library"
+description = "Timebase Aeron Client API Library"
 
 dependencies {
     implementation project(':java:timebase:api') // Depends on classes: RawMessage,  TypeSet, ChannelPerformance

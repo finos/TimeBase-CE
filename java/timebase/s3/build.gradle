@@ -1,4 +1,4 @@
-project.description = "Timebase S3 API Library"
+description = "Timebase S3 API Library"
 
 dependencies {
 

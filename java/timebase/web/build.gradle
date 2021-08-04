@@ -1,7 +1,5 @@
 apply plugin: 'war'
 
-group = 'org.finos.timebase-ce'
-
 dependencies {
     compileOnly project(':java:timebase:commons')
     compileOnly ('com.epam.deltix:timebase-util')

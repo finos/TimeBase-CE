@@ -462,6 +462,7 @@ configure(leafProjects) {
                     name = project.name
                     packaging = 'jar'
                     description = project.description
+
                     url = 'https://github.com/finos/TimeBase-CE.git'
 
                     scm {

@@ -1,4 +1,4 @@
-project.description = "Timebase Public API Library"
+description = "Timebase Public API Library"
 
 dependencies {
     implementation ('com.epam.deltix:timebase-lang')

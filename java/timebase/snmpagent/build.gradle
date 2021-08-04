@@ -1,6 +1,4 @@
-apply plugin: 'java-library'
-
-project.description = "Timebase SNMP Agent"
+description = "Timebase SNMP Agent"
 
 dependencies {
     api 'com.epam.deltix:timebase-collections'

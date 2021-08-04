@@ -1,7 +1,6 @@
 evaluationDependsOn(':java')
 
-apply plugin: 'java-library'
-apply plugin: 'com.github.johnrengelman.shadow'
+description = "Timebase Server"
 
 ext {
     dockerImageName = 'timebase/server'
@@ -12,8 +11,6 @@ shadowJar {
     mergeServiceFiles('META-INF/spring.*')
     mergeServiceFiles('META-INF/services/javax.servlet.ServletContainerInitializer') // for tomcat
 }
-
-project.description = "Timebase Server"
 
 dependencies {
 

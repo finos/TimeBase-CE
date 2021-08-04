@@ -303,7 +303,7 @@ configure(leafProjects) {
     archivesBaseName = project.path.replace(":java:", "").replaceAll(':', '-')
 
     repositories {
-        mavenCentral()        
+        mavenCentral()
     }
 
     dependencies {
@@ -327,6 +327,7 @@ configure(leafProjects) {
     jar {
         manifest {
             baseName archivesBaseName
+            description description
             attributes 'Manifest-Version': "1.0",
                     'Created-By': vendor,
                     'Implementation-Title': archivesBaseName,
@@ -405,21 +406,6 @@ configure(leafProjects) {
     task logJarFiles { doLast { configurations.compile.each { File file -> println '\t' + file } } }
     task logTestJarsFiles { doLast { configurations.testCompile.each { File file -> println '\t' + file } } }
 
-    /// Support for publishing -sources.jar and -javadoc.jar artifacts:
-
-//    task sourcesJar(type: Jar, dependsOn: classes) {
-//        classifier = 'sources'
-//        baseName = archivesBaseName
-//        from sourceSets.main.allSource
-//    }
-//
-//    task javadocJar(type: Jar, dependsOn: javadoc) {
-//        enabled = includeJavaDocs
-//        classifier = 'javadoc'
-//        baseName = archivesBaseName
-//        from javadoc.destinationDir
-//    }
-
     tasks.withType(Javadoc) {
         // "Xdoclint:all,-reference" - disables fail on missing JavaDoc reference. TODO: Consider removing this.
         // "-quiet" - skips warning messages (warnings still shown).
@@ -457,11 +443,9 @@ configure(leafProjects) {
                 }
 
                 artifactId = project.path.replace(":java:", "").replaceAll(':', '-')
-
                 pom {
                     name = project.name
                     packaging = 'jar'
-                    description = project.description
 
                     url = 'https://github.com/finos/TimeBase-CE.git'
 
@@ -500,6 +484,12 @@ configure(leafProjects) {
             sign publishing.publications.mavenJava
 
             required { isReleaseVersion }
+        }
+    }
+
+    afterEvaluate {
+        tasks.withType(GenerateMavenPom).all {
+            getPom().description.set(project.description)
         }
     }
 

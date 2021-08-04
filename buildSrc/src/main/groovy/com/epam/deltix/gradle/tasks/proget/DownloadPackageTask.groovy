@@ -1,4 +1,4 @@
-package deltix.gradle.tasks.proget
+package com.epam.deltix.gradle.tasks.proget
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileTree

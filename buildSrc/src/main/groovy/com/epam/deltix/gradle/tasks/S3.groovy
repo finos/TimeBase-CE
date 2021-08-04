@@ -1,4 +1,4 @@
-package deltix.gradle.tasks
+package com.epam.deltix.gradle.tasks
 
 import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.auth.AWSStaticCredentialsProvider
@@ -6,9 +6,7 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.event.ProgressListener
 import com.amazonaws.event.ProgressEvent
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
@@ -18,7 +16,6 @@ import com.amazonaws.services.s3.transfer.TransferManager
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import java.text.DecimalFormat
 import java.nio.file.Path

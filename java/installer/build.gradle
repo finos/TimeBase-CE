@@ -1,3 +1,5 @@
+import com.epam.deltix.gradle.tasks.installer.BuildTimebaseInstallerTask
+
 plugins {
     id 'com.ullink.msbuild' version '3.12'
 }
@@ -77,7 +79,7 @@ clean.doLast {
 
 // Timebase installer
 ['windows', 'linux'].each { installerPlatform ->
-    task("${installerPlatform}TimebaseInstaller", type: deltix.gradle.tasks.installer.BuildTimebaseInstallerTask) {
+    task("${installerPlatform}TimebaseInstaller", type: BuildTimebaseInstallerTask) {
         description = "Creates an IzPack based Timebase installer."
         dependsOn = [':build',
                      ':java:installer:build',

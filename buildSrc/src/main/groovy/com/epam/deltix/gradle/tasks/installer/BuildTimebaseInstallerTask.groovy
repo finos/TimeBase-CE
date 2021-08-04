@@ -1,4 +1,4 @@
-package deltix.gradle.tasks.installer
+package com.epam.deltix.gradle.tasks.installer
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input

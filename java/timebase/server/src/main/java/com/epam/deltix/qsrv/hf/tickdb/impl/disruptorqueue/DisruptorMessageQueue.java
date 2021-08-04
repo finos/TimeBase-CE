@@ -39,7 +39,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Message queue for {@link TransientStreamImpl} based on LMAX Disruptor.
  * <p>
- * <p>
  * <b>WARNING</b>: Lossless version for this queue has major issue. See {@link DisruptorQueueWriterLossless}.
  * </p>
  *

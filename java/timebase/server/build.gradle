@@ -1,7 +1,6 @@
 evaluationDependsOn(':java')
 
-apply plugin: 'java-library'
-apply plugin: 'com.github.johnrengelman.shadow'
+description = "Timebase Server"
 
 ext {
     dockerImageName = 'timebase/server'
@@ -12,8 +11,6 @@ shadowJar {
     mergeServiceFiles('META-INF/spring.*')
     mergeServiceFiles('META-INF/services/javax.servlet.ServletContainerInitializer') // for tomcat
 }
-
-project.description = "Timebase Server"
 
 dependencies {
 
@@ -153,7 +150,7 @@ task copyWebapp(type: Copy) {
 
     from (project(':java:timebase:web').file('build/libs')) {
         include '*.war'
-        rename 'deltix-timebase-web(.*).war', 'deltix-timebase-web.war'
+        rename 'timebase-web(.*).war', 'timebase-web.war'
     }
     into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
 }

@@ -45,7 +45,7 @@ allprojects {
         if (project.hasProperty("failOnHighCVSS") && project.getProperty("failOnHighCVSS") == 'true') {
             failBuildOnCVSS = 7
         }
-        skipProjects = [ ":java:installer", ":java:quantserver:all", ":java:quantserver:gui" ]
+        skipProjects = [ ":java:installer"]
         suppressionFile = file("$rootDir/dependency-check-suppression-file.xml")
         analyzers {
             assemblyEnabled = false

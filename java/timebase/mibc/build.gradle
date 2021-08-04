@@ -1,6 +1,4 @@
-apply plugin: 'java-library'
-
-project.description = "Timebase SNMP MIB Compiler"
+description = "Timebase SNMP MIB Compiler"
 
 dependencies {
     api project(':java:timebase:snmpagent')

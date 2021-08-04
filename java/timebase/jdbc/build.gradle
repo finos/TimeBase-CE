@@ -1,3 +1,5 @@
+description = "Timebase JDBC API"
+
 dependencies {
     compile project(':java:timebase:pub')
     compile project(':java:timebase:client')

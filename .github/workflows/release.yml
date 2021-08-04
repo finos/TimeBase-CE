@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [release-*]
+    branches: [release*]
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ '8' ]
+        java: [ '11' ]
         os: [ 'ubuntu-latest', 'windows-latest' ]
     steps:
       - name: Checkout code
@@ -94,6 +94,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          lfs: true
       - name: Checkout branch
         run: |
           git config user.name github-actions
@@ -103,13 +105,11 @@ jobs:
       - name: Setup java
         uses: actions/setup-java@v1
         with:
-          java-version: 8
+          java-version: 11
       - name: Publish jars
         run: >
-          ./gradlew :java:timebase:aerondirect:publish :java:quantserver:web:publish
-          :java:timebase:commons:publish :java:timebase:snmpagent:publish
+          ./gradlew :java:timebase:aerondirect:publish :java:timebase:commons:publish :java:timebase:s3:publish
           :java:timebase:pub:publish :java:timebase:api:publish :java:timebase:client:publish
-          :java:timebase:server:publish
         env:
           SONATYPE_REPOSITORY:      ${{ secrets.SONATYPE_REPOSITORY }}
           SONATYPE_NEXUS_USERNAME:  ${{ secrets.SONATYPE_NEXUS_USERNAME }}

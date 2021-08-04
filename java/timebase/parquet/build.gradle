@@ -1,4 +1,4 @@
-project.description = "Timebase Aeron Client API Library"
+description = "Timebase Parquet API library"
 
 dependencies {
     api project(':java:timebase:pub')

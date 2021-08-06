@@ -433,16 +433,18 @@ configure(leafProjects) {
             mavenJava(MavenPublication) {
                 from components.java
 
+                artifactId = archivesBaseName
+
                 versionMapping {
                     usage('java-api') {
-                        fromResolutionOf('runtimeClasspath')
+                        fromResolutionResult()
+                        //fromResolutionOf('runtimeClasspath')
                     }
                     usage('java-runtime') {
                         fromResolutionResult()
                     }
                 }
 
-                artifactId = project.path.replace(":java:", "").replaceAll(':', '-')
                 pom {
                     name = project.name
                     packaging = 'jar'

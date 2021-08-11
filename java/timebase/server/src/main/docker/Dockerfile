@@ -5,7 +5,7 @@ ENV DELTIX_HOME /timebase-server
 
 # Here we install GNU libc (aka glibc) and set C.UTF-8 locale as default.
 
-COPY ./rtc /rtc
+COPY timebase /timebase-server
 
 RUN apk add --no-cache openjdk11=11.0.11_p9-r0 && \
     ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases/download" && \
@@ -36,8 +36,7 @@ RUN apk add --no-cache openjdk11=11.0.11_p9-r0 && \
         "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME" && \
-    chmod +x -R /rtc && \
-    apk add musl=1.2.2-r3 \
+    apk add musl=1.2.2-r3 && \
     mkdir timebase-home
 
 COPY timebase /timebase-server

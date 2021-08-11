@@ -5,7 +5,7 @@ plugins {
     // Supports functionality similar to Maven BOM.
     // Helps to avoid re-declaring dependency version in each subproject.
     // See https://github.com/spring-gradle-plugins/dependency-management-plugin
-    id "io.spring.dependency-management" version "1.0.5.RELEASE"
+    id "io.spring.dependency-management" version "1.0.11.RELEASE"
     id "com.github.spotbugs" version "4.2.3" apply false
     id "com.github.hierynomus.license-report" version "0.15.0"
 
@@ -113,22 +113,29 @@ configure(leafProjects) {
     // https://github.com/spring-gradle-plugins/dependency-management-plugin#dependency-management-dsl
     dependencyManagement {
         dependencies {
-            dependencySet(group: 'com.epam.deltix', version: '3.0.0') {
-                entry 'gflog-api'
-                entry 'gflog-core'
-                entry 'gflog-jul'                
-                entry 'gflog-jcl'
-                entry 'gflog-slf4j'
-                entry 'gflog-mail'
-            }
+//            dependencySet(group: 'com.epam.deltix', version: '3.0.0') {
+//                entry 'gflog-api'
+//                entry 'gflog-core'
+//                entry 'gflog-jul'
+//                entry 'gflog-jcl'
+//                entry 'gflog-slf4j'
+//                entry 'gflog-mail'
+//            }
+
+            dependency 'com.epam.deltix:gflog-api:3.0.1'
+            dependency 'com.epam.deltix:gflog-core:3.0.1'
+            dependency 'com.epam.deltix:gflog-jul:3.0.1'
+            dependency 'com.epam.deltix:gflog-jcl:3.0.1'
+            dependency 'com.epam.deltix:gflog-slf4j:3.0.1'
+            dependency 'com.epam.deltix:gflog-mail:3.0.1'
 
             dependency 'com.epam.deltix:value-types:0.9.3'
             dependency 'com.epam.deltix:dfp:0.11.01'
             dependency 'com.epam.deltix:thread-affinity:1.0.4'
-            //implementation 'com.epam.deltix:hd-date-time:0.2.4'
+            dependency 'com.epam.deltix:hd-date-time:0.2.11'
             dependency 'com.epam.deltix:containers:3.1.2'
 
-            dependencySet(group: 'com.epam.deltix', version: '6.0.59') {
+            dependencySet(group: 'com.epam.deltix', version: '6.0.61') {
                 entry 'timebase-collections'
                 entry 'timebase-messages'
                 entry 'timebase-lang'
@@ -435,15 +442,15 @@ configure(leafProjects) {
 
                 artifactId = archivesBaseName
 
-//                versionMapping {
-//                    usage('java-api') {
-//                        fromResolutionResult()
-//                        //fromResolutionOf('runtimeClasspath')
-//                    }
-//                    usage('java-runtime') {
-//                        fromResolutionResult()
-//                    }
-//                }
+                versionMapping {
+                    usage(Usage.JAVA_RUNTIME) {
+                        fromResolutionResult()
+                    }
+                    usage(Usage.JAVA_API) {
+                        fromResolutionResult()
+                        //fromResolutionOf("runtimeClasspath")
+                    }
+                }
 
                 pom {
                     name = project.name

@@ -27,9 +27,9 @@
 
 import org.apache.tools.ant.filters.ReplaceTokens
 
-String DOCKER_REGISTRY_USERNAME=findProperty('ARTIFACTORY_USER') ?: System.getenv('ARTIFACTORY_USER') ?: "FakeProGetUser"
-String DOCKER_REGISTRY_PASSWORD=findProperty('ARTIFACTORY_PASS') ?: System.getenv('ARTIFACTORY_PASS') ?: "FakeProGetPass"
-String DOCKER_REGISTRY_URL=System.getenv('ARTIFACTORY_DOCKER_DEV_REPOSITORY')
+String DOCKER_REGISTRY_USERNAME=findProperty('DOCKER_REGISTRY_USERNAME') ?: System.getenv('DOCKER_REGISTRY_USERNAME') ?: "FakeProGetUser"
+String DOCKER_REGISTRY_PASSWORD=findProperty('DOCKER_REGISTRY_PASSWORD') ?: System.getenv('DOCKER_REGISTRY_PASSWORD') ?: "FakeProGetPass"
+String DOCKER_REGISTRY_URL=System.getenv('DOCKER_REGISTRY_URL') // https://index.docker.io/v2/
 
 def dockerCommonPath = rootProject.properties['docker.dockerCommonPath']
 def dockerFullCommonPath = DOCKER_REGISTRY_URL + dockerCommonPath
@@ -69,8 +69,7 @@ ext.dockerFullTagVersion = dockerFullTagVersion
 def dockerShortTagVersion = dockerFullTagVersion.substring(0, version.lastIndexOf('.'))
 
 def defaultDockerImages = [
-        main   : 'src/main/docker/Dockerfile',
-        openjdk: 'src/main/docker/openjdk/Dockerfile'
+        main   : 'src/main/docker/Dockerfile'
 ]
 
 task printDockerTagVersion {

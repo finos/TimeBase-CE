@@ -192,7 +192,7 @@ allprojects {
                     workingDir dockerDestDir
                     // You can change list of tags/branches to be created
                     // TODO: Make this a configuration option
-                    commandLine "docker", "build", "-t", urlWithShortVersion, "-t", urlWithFullVersion, "-f", dockerfileDest.toAbsolutePath().toString(), "--rm", "."
+                    commandLine "docker", "build", "-t", urlWithLatestTag, "-t", urlWithShortVersion, "-t", urlWithFullVersion, "-f", dockerfileDest.toAbsolutePath().toString(), "--rm", "."
 
                     if (debugDockerBuild) {
                         doFirst {

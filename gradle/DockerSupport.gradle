@@ -208,14 +208,20 @@ allprojects {
                     group 'docker'
                     description 'Upload docker image to the repository'
 
+                    def stdout = new ByteArrayOutputStream()
+
                     dependsOn dockerBuildImageTask
 
                     workingDir rootDir
                     commandLine "docker", "push", imageUrl
+                    standardOutput = stdout
 
                     if (debugDockerBuild) {
                         doFirst {
                             println "Exec: " + commandLine
+                        }
+                        doLast {
+                            println "Output:\n$stdout";
                         }
                     }
                 }

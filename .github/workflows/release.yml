@@ -141,8 +141,8 @@ jobs:
         run: ./gradlew :java:timebase:server:dockerPublishImageAll :java:timebase:client:dockerPublishImageAll
         env:
           DOCKER_REGISTRY_URL:      ${{ secrets.DOCKER_REGISTRY_URL }}
-          DOCKER_REGISTRY_USERNAME:  ${{ secrets.DOCKER_REGISTRY_USERNAME }}
-          DOCKER_REGISTRY_PASSWORD:  ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+          DOCKER_REGISTRY_USERNAME:  ${{ secrets.DOCKER_HUB_USER }}
+          DOCKER_REGISTRY_PASSWORD:  ${{ secrets.DOCKER_HUB_TOKEN }}
 
   cleanup:
     name: Cleanup

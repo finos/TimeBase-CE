@@ -3,7 +3,7 @@ evaluationDependsOn(':java')
 description = "Timebase Server"
 
 ext {
-    dockerImageName = 'timebase-server'
+    dockerImageName = 'timebase-ce-server'
 }
 
 shadowJar {

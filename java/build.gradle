@@ -178,7 +178,6 @@ configure(leafProjects) {
                 entry 'spring-context'
                 entry 'spring-web'
                 entry 'spring-webmvc'
-                entry 'spring-context'
                 entry 'spring-beans'
             }
 

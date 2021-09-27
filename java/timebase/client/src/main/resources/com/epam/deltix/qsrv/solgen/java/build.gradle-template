@@ -2,10 +2,6 @@ plugins {
     id 'java-library'
 }
 
-allprojects {
-    apply from: "$rootDir/gradle/repository.gradle"
-}
-
 group '${PROJECT_GROUP}'
 
 repositories {

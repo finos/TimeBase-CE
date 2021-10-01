@@ -293,6 +293,11 @@ public abstract class ClassDescriptor
         readNullableString (in);
     }
 
+    protected void readFieldsWithoutGuid(DataInputStream in, TypeResolver resolver, int serial) throws IOException {
+        super.readFields(in, serial);
+        readNullableString(in);
+    }
+
     public static ClassDescriptor   readFrom (DataInputStream in, TypeResolver resolver, int serial)
         throws IOException
     {
@@ -306,6 +311,28 @@ public abstract class ClassDescriptor
         }
 
         cd.readFields (in, resolver, serial);
+        return (cd);
+    }
+
+    public static ClassDescriptor readFrom (DataInputStream in, TypeResolver resolver, int serial,
+                                            Map<String, ClassDescriptor> cache) throws IOException {
+        int tag = in.readUnsignedByte();
+        ClassDescriptor cd;
+
+        switch (tag) {
+            case T_RECORD:
+                cd = new RecordClassDescriptor();
+                break;
+            case T_ENUM:
+                cd = new EnumClassDescriptor();
+                break;
+            default:
+                throw new IOException("Illegal tag: " + tag);
+        }
+        cd.guid = in.readUTF();
+        cache.put(cd.guid, cd);
+
+        cd.readFieldsWithoutGuid(in, resolver, serial);
         return (cd);
     }
 }

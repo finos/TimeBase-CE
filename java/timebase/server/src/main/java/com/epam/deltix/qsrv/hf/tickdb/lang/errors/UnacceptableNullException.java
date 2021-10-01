@@ -16,8 +16,8 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.errors;
 
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.Null;
 import com.epam.deltix.util.parsers.CompilationException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Null;
 
 /**
  *

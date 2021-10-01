@@ -30,6 +30,10 @@ final class VarDeclImpl
         super (context, modifiers, type, name);
     }
 
+    public VarDeclImpl(JContextImpl context, int modifiers, String type, String[] typeArgs, String name) {
+        super(context, modifiers, type, typeArgs, name);
+    }
+
     @Override
     public void         printElement (SourceCodePrinter out) throws IOException {
         printDeclaration (out);

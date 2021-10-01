@@ -17,8 +17,12 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime.activities;
 
 import com.epam.deltix.qsrv.hf.pub.ReadableValue;
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
+import com.epam.deltix.qsrv.hf.tickdb.pub.Messages;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.StreamChangeTask;
 import com.epam.deltix.timebase.messages.service.ErrorLevel;
 
@@ -54,4 +58,11 @@ public class StreamModifier extends LoggingActivityLauncher {
             }
         );
     }    
+
+    @Override
+    public ClassSet<RecordClassDescriptor> getSchema() {
+        ClassSet<RecordClassDescriptor> set = new RecordClassSet();
+        set.addContentClasses(Messages.ERROR_MESSAGE_DESCRIPTOR);
+        return set;
+    }
 }

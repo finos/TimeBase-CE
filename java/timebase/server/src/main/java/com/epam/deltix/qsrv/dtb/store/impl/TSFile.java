@@ -31,6 +31,7 @@ import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.collections.generated.ObjectHashSet;
 
 import java.io.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.epam.deltix.qsrv.dtb.store.impl.TSFState.*;
 
@@ -70,6 +71,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         SPLIT
     }
 
+    private CopyOnWriteArrayList<DAPrivate> checkouts = null;
+
     private TSFState                            state = null;
 
     // Indicates that file belongs to the write queue. Guarded by PDSImpl.
@@ -91,8 +94,6 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
 
     private ObjectArrayList <DataBlockInfo>     dbs = null;
 
-    private ObjectHashSet <DAPrivate>           checkouts = null;
-
     /**
      *  Inclusive end of the range of all data in this TSF.
      */
@@ -107,6 +108,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
 
     //    @GuardedBy("this")
     private BlockDecompressor                   decompressor;
+
+    private DAPrivate[]                         checkoutsSnapshot;
 
     TSFile (TSFolder parent, long version, int id, long startTimestamp, boolean isNew) {
         super (parent, id, startTimestamp);
@@ -186,8 +189,6 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
 
         state = TSFState.DIRTY_CHECKED_OUT;
     }
-
-    DAPrivate []    checkoutsSnapshot = null;
 
     @Override
     public void        dataInserted (
@@ -799,7 +800,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             throw new IllegalStateException(this + " is dropped.");
 
         if (checkouts == null)
-            checkouts = new ObjectHashSet <> ();
+            checkouts = new CopyOnWriteArrayList<>();
 
         boolean         check = checkouts.add (accessor);
 
@@ -1414,6 +1415,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         }
 
         return -(low + 1);
+    }
+
+    public boolean          isCheckoutOnly(DAPrivate accessor) {
+        return checkoutsSnapshot.length == 1 && accessor.equals(checkoutsSnapshot[0]);
     }
 
    

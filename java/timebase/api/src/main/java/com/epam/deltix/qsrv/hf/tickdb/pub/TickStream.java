@@ -213,7 +213,7 @@ public interface TickStream extends DXChannel<InstrumentMessage> {
      * <p>
      * If backing stream does not support spaces {@code null} will be returned.
      */
-    default String[]                        listSpaces() {
+    default String[]                listSpaces() {
         return null;
     }
 
@@ -222,14 +222,14 @@ public interface TickStream extends DXChannel<InstrumentMessage> {
      * <p>
      * If backing stream does not support spaces {@code null} will be returned.
      */
-    default IdentityKey[]        listEntities(String space) {
+    default IdentityKey[]           listEntities(String space) {
         return null;
     }
 
     /**
      * @return An array consisting of two long timestamps (from and to) or <code>null</code> if no data was found.
      */
-    default long[]                      getTimeRange(String space) {
+    default long[]                  getTimeRange(String space) {
         return null;
     }
 }

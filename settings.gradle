@@ -1,5 +1,5 @@
-include 'java:timebase:commons', 'java:timebase:snmpagent', 'java:timebase:mibc',
-		'java:timebase:api', 'java:timebase:client', 'java:timebase:server',
+include 'java:timebase:commons', 'java:timebase:computations-api', 'java:timebase:computations-std',
+		'java:timebase:snmpagent', 'java:timebase:mibc', 'java:timebase:api', 'java:timebase:client', 'java:timebase:server',
 		'java:timebase:webmonitor', 'java:timebase:web', 'java:timebase:pub', 'java:timebase:aerondirect',
 		'java:timebase:jdbc', 'java:timebase:s3', 'java:timebase:test',
 		'java:installer'

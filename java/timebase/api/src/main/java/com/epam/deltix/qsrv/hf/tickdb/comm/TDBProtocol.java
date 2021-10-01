@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.comm;
 
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.TimeInterval;
 import com.epam.deltix.timebase.messages.TimeStamp;
@@ -90,7 +91,7 @@ public abstract class TDBProtocol extends SerializationUtils {
     /**
      *  This component's version, whether server or client.
      */
-    public static final int     VERSION = 130;
+    public static final int     VERSION = 131;
     
     /**
      *  Server will refuse to talk to a client unless the client's version is   at least
@@ -164,6 +165,9 @@ public abstract class TDBProtocol extends SerializationUtils {
     public static final int     REQ_GET_TIME_RANGE_FOR_SPACE = 144;
     public static final int     REQ_PURGE_STREAM_SPACE = 145;
     public static final int     REQ_LIST_IDS_FOR_SPACE = 146;
+    public static final int     REQ_DELETE_SPACES = 147;
+    public static final int     REQ_RENAME_SPACES = 148;
+    public static final int     REQ_DESCRIBE_QUERY = 149;
 
     public static final int     REQ_CREATE_STREAM =     200;
     public static final int     REQ_DELETE_STREAM =     201;
@@ -488,20 +492,20 @@ public abstract class TDBProtocol extends SerializationUtils {
             throw new RuntimeException (x);
         }
     }
-        
-    public static RecordClassSet        readClassSet (
-        DataInputStream                     in
-    ) 
-        throws IOException
+
+    public static ClassSet                  readClassSet (
+            DataInputStream                     in
+    )
+            throws IOException
     {
-        try {            
+        try {
             StringBuilder   sb = new StringBuilder ();
 
             readHugeString (in, sb);
 
             Unmarshaller    u = UHFJAXBContext.createUnmarshaller ();
 
-            return ((RecordClassSet) u.unmarshal (new StringReader (sb.toString ())));
+            return ((ClassSet) u.unmarshal (new StringReader (sb.toString ())));
         } catch (JAXBException x) {
             throw new RuntimeException (x);
         }
@@ -680,7 +684,7 @@ public abstract class TDBProtocol extends SerializationUtils {
         //in.readInt(); // so.notificationsDelay removed
         
         boolean             polymorphic = in.readBoolean ();
-        RecordClassSet      md = readClassSet (in);
+        RecordClassSet      md = (RecordClassSet) readClassSet (in);
 
         so.setMetaData (polymorphic, md);
 
@@ -736,7 +740,7 @@ public abstract class TDBProtocol extends SerializationUtils {
         in.readInt(); // notification delay
 
         boolean             polymorphic = in.readBoolean ();
-        RecordClassSet      md = readClassSet (in);
+        RecordClassSet      md = (RecordClassSet) readClassSet (in);
 
         so.setMetaData (polymorphic, md);
 
@@ -917,8 +921,7 @@ public abstract class TDBProtocol extends SerializationUtils {
         if (in.readBoolean())
             cause = readError(in, resolver);
 
-        Class<?> c = Class.forName(className);
-        Throwable x = resolver.create(c, message, cause);
+        Throwable x = resolver.create(className, message, cause);
         x.setStackTrace(trace);
         return x;
     }

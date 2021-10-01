@@ -174,4 +174,9 @@ public class ClassDescriptorChange implements SchemaChange {
     public ClassDescriptor getTarget() {
         return target;
     }
+
+    @Override
+    public String toString() {
+        return source.getName() + "=>" + target.getName();
+    }
 }

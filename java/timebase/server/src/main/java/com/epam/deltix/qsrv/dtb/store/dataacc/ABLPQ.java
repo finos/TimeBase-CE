@@ -277,4 +277,3 @@ final class ABLPQ {
         return (min);
     }
 }
-

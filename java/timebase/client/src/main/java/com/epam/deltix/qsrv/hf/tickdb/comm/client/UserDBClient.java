@@ -19,6 +19,8 @@ package com.epam.deltix.qsrv.hf.tickdb.comm.client;
 import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.qsrv.hf.pub.ChannelCompression;
 import com.epam.deltix.qsrv.hf.pub.ChannelQualityOfService;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
 import com.epam.deltix.qsrv.hf.pub.md.MetaData;
@@ -30,7 +32,6 @@ import com.epam.deltix.thread.affinity.AffinityConfig;
 import com.epam.deltix.util.concurrent.QuickExecutor;
 import com.epam.deltix.util.lang.GrowthPolicy;
 import com.epam.deltix.util.parsers.CompilationException;
-import com.epam.deltix.util.parsers.Element;
 import com.epam.deltix.util.vsocket.VSChannel;
 import java.io.File;
 import java.io.IOException;
@@ -148,17 +149,6 @@ public class UserDBClient implements DXRemoteDB {
     }
 
     @Override
-    public DXTickStream createFileStream(String key, String dataFile) {
-        final Principal prevUser = UserContext.set(user);
-        try {
-            return new TickStreamClient(this, delegate.createFileStream(key, dataFile));
-
-        } finally {
-            UserContext.set(prevUser);
-        }
-    }
-
-    @Override
     public DXTickStream createStream(String key, String name, String description, int distributionFactor) {
         final Principal prevUser = UserContext.set(user);
         try {
@@ -176,6 +166,11 @@ public class UserDBClient implements DXRemoteDB {
     @Override
     public MetaData getMetaData() {
         return delegate.getMetaData();
+    }
+
+    @Override
+    public ClassSet<ClassDescriptor> describeQuery(String qql, SelectionOptions options, Parameter... params) throws CompilationException {
+        return delegate.describeQuery(qql, options, params);
     }
 
     public InstrumentMessageSource          executeQuery (
@@ -202,6 +197,21 @@ public class UserDBClient implements DXRemoteDB {
     public InstrumentMessageSource          executeQuery (
             String                                  qql,
             SelectionOptions                        options,
+            TickStream []                           streams,
+            CharSequence []                         ids,
+            long                                    time,
+            Parameter ...                           params
+    )
+            throws CompilationException
+    {
+        assertOpen();
+        return TickCursorClientFactory.create(this, options, time, Long.MAX_VALUE, qql, params, ids, null, getAeronContext(), streams);
+    }
+
+    @Override
+    public InstrumentMessageSource          executeQuery (
+            String                                  qql,
+            SelectionOptions                        options,
             CharSequence []                         ids,
             Parameter ...                           params
     )
@@ -210,31 +220,24 @@ public class UserDBClient implements DXRemoteDB {
         return (executeQuery (qql, options, null, ids, Long.MIN_VALUE, params));
     }
 
-    @Override
-    public InstrumentMessageSource          executeQuery (
-            Element                                 qql,
-            SelectionOptions                        options,
-            TickStream []                           streams,
-            CharSequence []                         ids,
-            long                                    time,
-            Parameter ...                           params
-    )
-            throws CompilationException
-    {
-        return (executeQuery (qql.toString (), options, streams, ids, time, params));
-    }
+//    @Override
+//    public InstrumentMessageSource executeQuery(
+//            String              qql,
+//            SelectionOptions    options,
+//            TickStream[]        streams,
+//            String[]            ids,
+//            long                startTimestamp,
+//            long                endTimestamp,
+//            Parameter...        params)
+//            throws CompilationException
+//    {
+//        assertOpen();
+//        return TickCursorClientFactory.create(this, options, startTimestamp, endTimestamp, qql, params, ids, null, getAeronContext(), streams);
+//    }
 
-    public InstrumentMessageSource          executeQuery (
-            String                                  qql,
-            SelectionOptions                        options,
-            TickStream []                           streams,
-            CharSequence []                         ids,
-            long                                    time,
-            Parameter ...                           params
-    )
-            throws CompilationException
-    {
-        return TickCursorClientFactory.create(this, options, time, qql, params, ids, null, getAeronContext(), streams);
+    @Override
+    public InstrumentMessageSource executeQuery(String qql, SelectionOptions options, TickStream[] streams, CharSequence[] ids, long startTimestamp, long endTimestamp, Parameter... params) throws CompilationException {
+        return null;
     }
 
     private void                            assertOpen() {
@@ -261,7 +264,7 @@ public class UserDBClient implements DXRemoteDB {
         if (streams != null && streams.length == 1)
             return streams[0].select(time, options, types, symbols);
 
-        return TickCursorClientFactory.create(this, options, time, null, null, symbols, types, getAeronContext(), streams);
+        return TickCursorClientFactory.create(this, options, time, Long.MAX_VALUE, null, null, symbols, types, getAeronContext(), streams);
     }
 
     @Override

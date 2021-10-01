@@ -318,12 +318,6 @@ public class MessageReader2
         }
 
         curMsg.setNanoTime(nanos);
-
-        //curMsg.setInstrumentType(insType);
-
-//        currentEntity.symbol = insType == InstrumentType.OPTION ?
-//                OptionFilter.getRootSymbol(symbol) : symbol;
-
     }
 
     // TypeSubscriptionController

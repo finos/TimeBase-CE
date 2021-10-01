@@ -16,12 +16,12 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
-import com.epam.deltix.qsrv.hf.pub.md.*;
-import com.epam.deltix.util.jcg.*;
+import com.epam.deltix.qsrv.hf.pub.md.DateTimeDataType;
+import com.epam.deltix.util.jcg.JCompoundStatement;
+import com.epam.deltix.util.jcg.JExpr;
+import com.epam.deltix.util.jcg.JStatement;
 
-import java.util.Date;
-
-import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.*;
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
 
 /**
  *
@@ -68,5 +68,10 @@ public class QDateTimeType extends QType <DateTimeDataType> {
     @Override
     public void                 encode (QValue value, JExpr output, JCompoundStatement addTo) {
         addTo.add (output.call ("writeLong", value.read ()));
+    }
+
+    @Override
+    protected void encodeNullImpl(JExpr output, JCompoundStatement addTo) {
+        addTo.add(output.call("writeLong", NULL));
     }
 }

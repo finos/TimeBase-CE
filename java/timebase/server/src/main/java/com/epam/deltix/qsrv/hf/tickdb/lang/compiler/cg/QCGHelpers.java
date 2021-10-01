@@ -73,7 +73,7 @@ public class QCGHelpers {
             return Character.class;
         else if (clazz.equals(byte.class))
             return Byte.class;
-        else if (clazz.equals(Short.class))
+        else if (clazz.equals(short.class))
             return Short.class;
         else if (clazz.equals(int.class))
             return Integer.class;

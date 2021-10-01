@@ -345,27 +345,27 @@ public class DBMgr {
 
                 return (true);
                 
-            case "mkfilestream": {
-                String []   argx = args.split (" ");
-
-                if (argx.length != 2) {
-                    System.out.println ("Wrong # of arguments. Check help for details.");
-                    return (true);
-                }
-
-                String              streamKey = argx [0];
-                String              dataFile = argx [1];            
-
-                DXTickStream        stream =
-                    db.createFileStream (streamKey, dataFile);
-
-                streams = new DXTickStream [] { stream };
-
-                if (!Util.QUIET)
-                    System.out.println("Created. Current stream is: " + stream.getKey());
-
-                return (true);
-            }
+//            case "mkfilestream": {
+//                String []   argx = args.split (" ");
+//
+//                if (argx.length != 2) {
+//                    System.out.println ("Wrong # of arguments. Check help for details.");
+//                    return (true);
+//                }
+//
+//                String              streamKey = argx [0];
+//                String              dataFile = argx [1];
+//
+//                DXTickStream        stream =
+//                    db.createFileStream (streamKey, dataFile);
+//
+//                streams = new DXTickStream [] { stream };
+//
+//                if (!Util.QUIET)
+//                    System.out.println("Created. Current stream is: " + stream.getKey());
+//
+//                return (true);
+//            }
             
             case "delete":
                 if (args != null)
@@ -384,13 +384,12 @@ public class DBMgr {
 
                 // delete current selected streams/channels
                 if (args != null) {
-                    if (db instanceof TopicDB) {
                         for (DXChannel channel : getChannels(db, args))
+                        if (channel instanceof DXTickStream)
+                            ((DXTickStream) channel).delete();
+                        else if (db instanceof TopicDB)
                             ((TopicDB) db).deleteTopic(channel.getKey());
-                    } else {
-                        for (TickStream s : getStreams(args))
-                            ((DXTickStream) s).delete();
-                    }
+
                     return (true);
                 }
                 
@@ -487,19 +486,18 @@ public class DBMgr {
 
     public DXTickStream []  getStreams (String list) {
         String []               keys = shell.splitSymbols (list);
-        int                     ns = keys.length;
-        DXTickStream []         tmp = new DXTickStream [ns];
 
-        for (int ii = 0; ii < ns; ii++) {
-            tmp [ii] = db.getStream (keys [ii]);
-
-            if (tmp [ii] == null) {
-                System.out.printf ("Stream '%s' was not found.\n", keys [ii]);
-                return (null);
+        DXTickStream[] result = Arrays.stream(keys)
+                .map(key -> {
+                    DXTickStream stream = db.getStream(key);
+                    if (stream == null) {
+                        System.out.printf("Stream '%s' was not found.\n", key);
             }
-        }
-
-        return (tmp);
+                    return stream;
+                })
+                .filter(Objects::nonNull)
+                .toArray(DXTickStream[]::new);
+        return result.length == 0 ? null: result;
     }
 
     public DXChannel []         getChannels (TopicDB tdb, String list) {

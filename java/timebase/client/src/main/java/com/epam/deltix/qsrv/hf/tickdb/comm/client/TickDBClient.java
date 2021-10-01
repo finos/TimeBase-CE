@@ -16,6 +16,9 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.comm.client;
 
+import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.tickdb.comm.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.streaming.MessageChannel;
@@ -29,17 +32,8 @@ import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
-import com.epam.deltix.qsrv.hf.pub.md.MetaData;
-import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
-import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
 import com.epam.deltix.qsrv.hf.spi.conn.DisconnectEventListener;
 import com.epam.deltix.qsrv.hf.spi.conn.ReconnectableImpl;
-import com.epam.deltix.qsrv.hf.tickdb.comm.CompileExceptionResolver;
-import com.epam.deltix.qsrv.hf.tickdb.comm.NotConfiguredException;
-import com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol;
-import com.epam.deltix.qsrv.hf.tickdb.comm.TopicProtocol;
-import com.epam.deltix.qsrv.hf.tickdb.comm.UnknownStreamException;
-import com.epam.deltix.qsrv.hf.tickdb.comm.UserPrincipal;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.AddTopicPublisherRequest;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.AddTopicPublisherResponse;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.AddTopicSubscriberRequest;
@@ -59,15 +53,6 @@ import com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicClientChannel;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicTransferType;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TokenType;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DBStateListener;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DBStateNotifier;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
-import com.epam.deltix.qsrv.hf.tickdb.pub.RemoteTickDB;
-import com.epam.deltix.qsrv.hf.tickdb.pub.SelectionOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.StreamScope;
-import com.epam.deltix.qsrv.hf.tickdb.pub.TickCursor;
-import com.epam.deltix.qsrv.hf.tickdb.pub.TickStream;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.StreamLockedException;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.InstrumentMessageSource;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.Parameter;
@@ -262,6 +247,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
     @Override
     public SessionClient                getSession() {
+        assertOpen();
         return session;
     }
 
@@ -480,7 +466,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 //                    throw new IncompatibleClientVersionException (serverProtocolVersion, serverVersion);
 
             } else if (result == TDBProtocol.RESP_LICENSE_ERROR) {
-                throw new UnlicensedServerException();
+                throw new IllegalStateException("Server is not licensed");
             } else {
                 checkResponse(result, in);
             }
@@ -546,6 +532,8 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
                 throw (StreamLockedException)ex;
             else if (ex instanceof UnknownStreamException)
                 throw (UnknownStreamException)ex;
+            else if (ex instanceof UnknownSpaceException)
+                throw new UnknownSpaceException(ex.getMessage(), ex);
             else if (ex instanceof AccessControlException)
                 throw (AccessControlException)ex;
             else if (ex instanceof TopicApiException && ex instanceof RuntimeException)
@@ -567,7 +555,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
                 throw new com.epam.deltix.util.io.UncheckedIOException(e);
             }
         } else if (code == TDBProtocol.RESP_LICENSE_ERROR) {
-            throw new UnlicensedServerException();
+            throw new IllegalStateException("Server is not licensed");
         }
     }
 
@@ -705,39 +693,39 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         return (session.getStream (key, true));
     }
 
-    public synchronized TickStreamClient     createFileStream (
-        String                      key,
-        String                      dataFile
-    )
-    {
-        assertOpen();
-
-        if (isReadOnly ())
-            throw new IllegalStateException ("Database is open in read-only mode");
-
-        //invalidateStreamCacheNow ();
-
-        VSChannel                  ds = null;
-
-        try {
-            ds = connect ();
-
-            final DataOutputStream  out = ds.getDataOutputStream ();
-
-            out.writeInt (TDBProtocol.REQ_CREATE_FILE_STREAM);
-            out.writeUTF (key);
-            out.writeUTF (dataFile);
-            out.flush ();
-
-            checkResponse (ds);
-        } catch (IOException iox) {
-            throw new com.epam.deltix.util.io.UncheckedIOException(iox);
-        } finally {
-            Util.close (ds);
-        }
-
-        return (session.getStream (key, true));
-    }
+//    public synchronized TickStreamClient     createFileStream (
+//        String                      key,
+//        String                      dataFile
+//    )
+//    {
+//        assertOpen();
+//
+//        if (isReadOnly ())
+//            throw new IllegalStateException ("Database is open in read-only mode");
+//
+//        //invalidateStreamCacheNow ();
+//
+//        VSChannel                  ds = null;
+//
+//        try {
+//            ds = connect ();
+//
+//            final DataOutputStream  out = ds.getDataOutputStream ();
+//
+//            out.writeInt (TDBProtocol.REQ_CREATE_FILE_STREAM);
+//            out.writeUTF (key);
+//            out.writeUTF (dataFile);
+//            out.flush ();
+//
+//            checkResponse (ds);
+//        } catch (IOException iox) {
+//            throw new com.epam.deltix.util.io.UncheckedIOException(iox);
+//        } finally {
+//            Util.close (ds);
+//        }
+//
+//        return (session.getStream (key, true));
+//    }
 
     @Override
     public DirectChannel createTopic(@Nonnull String topicKey, @Nonnull RecordClassDescriptor[] types, @Nullable TopicSettings settings) {
@@ -1061,17 +1049,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         if (streams != null && streams.length == 1)
             return streams[0].select(time, options, types, symbols);
 
-        return TickCursorClientFactory.create(this, options, time, null, null, symbols, types, getAeronContext(), streams);
-    }
-
-    @Override
-    public TickCursor select(long time, SelectionOptions options, String[] types, IdentityKey[] ids, TickStream... streams) {
-        assertOpen();
-
-        if (streams != null && streams.length == 1)
-            return streams[0].select(time, options, types, ids);
-
-        return TickCursorClientFactory.create(this, options, time, null, null, ids, types, getAeronContext(), streams);
+        return TickCursorClientFactory.create(this, options, time, Long.MAX_VALUE, null, null, symbols, types, getAeronContext(), streams);
     }
 
     @Override
@@ -1240,7 +1218,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
             try {
                 ds = sendRequest (TDBProtocol.REQ_GET_METADATA);
 
-                md = TDBProtocol.readClassSet (ds.getDataInputStream());
+                md = (RecordClassSet) TDBProtocol.readClassSet (ds.getDataInputStream());
                 mdVersion = version;
 
                 md.addChangeListener (updater);
@@ -1378,6 +1356,31 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     @Override
+    public ClassSet<ClassDescriptor> describeQuery(String qql, SelectionOptions options, Parameter... params)
+            throws CompilationException {
+
+        VSChannel                  ds = null;
+
+        try {
+            ds = connect ();
+            final DataOutputStream out = ds.getDataOutputStream();
+
+            out.writeInt(TDBProtocol.REQ_DESCRIBE_QUERY);
+            out.writeUTF(qql);
+            SelectionOptionsCodec.write (out, options == null ? new SelectionOptions() : options, getServerProtocolVersion());
+            TDBProtocol.writeParameters(params, out);
+            out.flush();
+
+            checkResponse(ds);
+
+            return TDBProtocol.readClassSet(ds.getDataInputStream());
+        } catch (IOException iox) {
+            throw new com.epam.deltix.util.io.UncheckedIOException(iox);
+        } finally {
+            Util.close(ds);
+        }
+    }
+
     public InstrumentMessageSource          executeQuery (
         String                                  qql,
         Parameter ...                           params
@@ -1410,21 +1413,39 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         return (executeQuery (qql, options, null, ids, Long.MIN_VALUE, params));
     }
 
+//    @Override
+//    public InstrumentMessageSource          executeQuery (
+//        Element                                 qql,
+//        SelectionOptions                        options,
+//        TickStream []                           streams,
+//        CharSequence []                         ids,
+//        long                                    time,
+//        Parameter ...                           params
+//    )
+//        throws CompilationException
+//    {
+//        return (executeQuery (qql.toString (), options, streams, ids, time, params));
+//    }
+
     @Override
-    public InstrumentMessageSource          executeQuery (
-        Element                                 qql,
-        SelectionOptions                        options,
-        TickStream []                           streams,
-        CharSequence []                         ids,
-        long                                    time,
-        Parameter ...                           params
-    )
+    public InstrumentMessageSource executeQuery(
+            String              qql,
+            SelectionOptions    options,
+            TickStream[]        streams,
+            CharSequence[]      ids,
+            long                startTimestamp,
+            long                endTimestamp,
+            Parameter...        params)
         throws CompilationException
     {
-        return (executeQuery (qql.toString (), options, streams, ids, time, params));
+        return TickCursorClientFactory.create(this, options, startTimestamp, endTimestamp, qql, params, ids, null, getAeronContext(), streams);
     }
 
     @Override
+    public TickCursor select(long time, SelectionOptions options, String[] types, IdentityKey[] ids, TickStream... streams) {
+        return TickCursorClientFactory.create(this, options, time, Long.MAX_VALUE, null, null, ids, types, getAeronContext(), streams);
+    }
+
     public InstrumentMessageSource          executeQuery (
         String                                  qql,
         SelectionOptions                        options,
@@ -1436,9 +1457,23 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         throws CompilationException
     {
         assertOpen();
-
-        return TickCursorClientFactory.create(this, options, time, qql, params, ids, null, getAeronContext(), streams);
+        return TickCursorClientFactory.create(this, options, time, Long.MAX_VALUE, qql, params, ids, null, getAeronContext(), streams);
     }
+
+//    @Override
+//    public InstrumentMessageSource executeQuery(
+//            String              qql,
+//            SelectionOptions    options,
+//            TickStream[]        streams,
+//            String[]            ids,
+//            long                startTimestamp,
+//            long                endTimestamp,
+//            Parameter...        params)
+//        throws CompilationException
+//    {
+//        assertOpen();
+//        return TickCursorClientFactory.create(this, options, startTimestamp, endTimestamp, qql, params, ids, null, getAeronContext(), streams);
+//    }
 
     public String                           getHost () {
         return host;
@@ -1521,6 +1556,10 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     @Override
     public String                           toString () {
         return (enableSSL ? TDBProtocol.SSL_PROTOCOL_PREFIX : TDBProtocol.PROTOCOL_PREFIX) + host + ":" + port;
+    }
+
+    public String getServerVersion() {
+        return serverVersion;
     }
 
     DXClientAeronContext getAeronContext() {

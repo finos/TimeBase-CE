@@ -40,7 +40,7 @@ public class SimpleFunction extends CompiledComplexExpression {
     }
 
     @Override
-    protected void                      print (StringBuilder out) {
+    public void print (StringBuilder out) {
         out.append (code);
         out.append (" (");
         printArgs (out);

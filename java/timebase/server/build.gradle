@@ -17,15 +17,16 @@ dependencies {
     api project(':java:timebase:commons')
     api project(':java:timebase:api')
     api project(':java:timebase:aerondirect')
+    api project(':java:timebase:computations-api')
 
     implementation project(':java:timebase:snmpagent')
 
     implementation ('com.epam.deltix:timebase-lang')
-    implementation ('com.epam.deltix:timebase-util')
+    compile ('com.epam.deltix:timebase-util')
     implementation ('com.epam.deltix:timebase-messages')
     implementation ('com.epam.deltix:timebase-collections')
     implementation ('com.epam.deltix:dfp')
-    implementation('com.epam.deltix:containers')
+    implementation ('com.epam.deltix:containers')
     implementation ('com.epam.deltix:thread-affinity')
 
     implementation ('org.apache.commons:commons-lang3')
@@ -44,6 +45,8 @@ dependencies {
     implementation 'javax.xml.bind:jaxb-api'
     implementation 'com.sun.xml.bind:jaxb-impl'
     implementation 'com.sun.xml.bind:jaxb-core'
+
+    implementation group: 'org.ehcache', name: 'ehcache', version: '3.9.3'
 
 //    implementation 'org.apache.hadoop:hadoop-hdfs:3.3.1'
 //    implementation 'org.apache.hadoop:hadoop-common:3.3.1'
@@ -88,6 +91,7 @@ dependencies {
 
     // TODO: Replace by JSR305
     compileOnly 'com.intellij:annotations'
+    compileOnly 'de.jflex:jflex:1.4.3'
 
     // For JMH-based tests
     testImplementation 'org.openjdk.jmh:jmh-core'
@@ -156,3 +160,34 @@ task copyWebapp(type: Copy) {
 }
 
 shadowJar.dependsOn copyWebapp
+
+
+def generatedMainDir = file('build/generated-src/main/src')
+def lexerAndParserPackage = "com/epam/deltix/qsrv/hf/tickdb/lang/parser"
+def lexerAndParserDir = file("src/main/java/com/epam/deltix/qsrv/hf/tickdb/lang/parser")
+
+sourceSets.main.java.srcDirs generatedMainDir
+
+task generateQqlLexer(type: JavaExec) {
+    group = "QQL"
+    description = "Generates QQL lexer via flex library"
+    classpath = configurations.compileOnly
+    main = "JFlex.Main"
+    workingDir = lexerAndParserDir
+    args = ["qql.flex", "-d", "$generatedMainDir/$lexerAndParserPackage"]
+}
+
+task generateQqlParser(type: JavaExec, dependsOn: generateQqlLexer) {
+    group = "QQL"
+    description = "Generates QQL parser via java_cup library"
+    classpath = configurations.compile
+    main = "java_cup.Main"
+    workingDir = "$generatedMainDir/$lexerAndParserPackage"
+    args = ["-package", lexerAndParserPackage,
+            "-parser", "Parser",
+            "-symbols", "Symbols",
+            "$lexerAndParserDir/qql.cup"
+    ]
+}
+
+compileJava.dependsOn generateQqlParser

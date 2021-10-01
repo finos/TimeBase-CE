@@ -41,6 +41,7 @@ public final class ArithmeticExpression extends ComplexExpression {
             case SUB:    op = " - "; p = OpPriority.ADDITION;       break;
             case MUL:    op = " * "; p = OpPriority.MULTIPLICATION; break;
             case DIV:    op = " / "; p = OpPriority.MULTIPLICATION; break;
+            case MOD:    op = " % ";  p = OpPriority.MULTIPLICATION; break;
             default:    throw new RuntimeException ();
         }
 

@@ -16,8 +16,6 @@
  */
 package com.epam.deltix.qsrv.dtb.fs.pub;
 
-import org.apache.commons.lang3.NotImplementedException;
-
 import javax.annotation.CheckReturnValue;
 import java.io.*;
 
@@ -66,7 +64,7 @@ public interface AbstractPath {
      */
     @CheckReturnValue
     default OutputStream         openOutputForAppend() throws IOException {
-        throw new NotImplementedException("openOutputForAppend is not implemented for this FS");
+        throw new UnsupportedOperationException("openOutputForAppend is not implemented for this FS");
     }
     
     long                 length ();
@@ -100,14 +98,14 @@ public interface AbstractPath {
      * @return timestamp (ms) of last file modification
      */
     default long         getModificationTime() throws IOException {
-        throw new NotImplementedException("getModificationTime is not implemented for this FS");
+        throw new UnsupportedOperationException("getModificationTime is not implemented for this FS");
     }
 
     /**
      * Sets timestamp of last file modification.
      */
     default void         setModificationTime(long timestamp) throws IOException {
-        throw new NotImplementedException("setModificationTime is not implemented for this FS");
+        throw new UnsupportedOperationException("setModificationTime is not implemented for this FS");
     }
 
     /**

@@ -29,17 +29,27 @@ import com.epam.deltix.util.lang.Util;
 
 class PDStreamReader implements TickStreamReader {
 
+    enum State {
+        INITIALIZED,
+        PARKED,
+        READING
+    }
+
     private final PDStream                  stream;
+    private final long                      nstime; // start time
     private final DataReader                reader;
     private final TSRoot                    root;
     private boolean                         hasNext = false;
+
+    private volatile State                  state = State.INITIALIZED;
 
     private final MessageConsumer<? extends InstrumentMessage> consumer;
 
     private DisposableListener<PDStreamReader> listener;
 
-    PDStreamReader(PDStream stream, TSRoot root, DataReader reader, MessageConsumer<? extends InstrumentMessage> consumer) {
+    PDStreamReader(PDStream stream, long nstime, TSRoot root, DataReader reader, MessageConsumer<? extends InstrumentMessage> consumer) {
         this.stream = stream;
+        this.nstime = nstime;
         this.reader = reader;
         this.consumer = consumer;
         this.root = root;
@@ -55,7 +65,7 @@ class PDStreamReader implements TickStreamReader {
     }
 
     @Override
-    public boolean isRealTime() {
+    public boolean      isRealTime() {
         return consumer.isRealTime();
     }
 
@@ -71,7 +81,27 @@ class PDStreamReader implements TickStreamReader {
 
     @Override
     public boolean next() {
-        return (hasNext = reader.readNext(consumer));
+        if (state == State.INITIALIZED) {
+            hasNext = reader.readNext(consumer);
+            if (hasNext) {
+                // optimization if we match time
+                if (consumer.getMessage().getNanoTime() == nstime) {
+                    state = State.READING;
+                } else {
+                    reader.park();
+                    state = State.PARKED;
+                }
+            }
+            return (hasNext);
+        }
+
+        if (state == State.PARKED) {
+            reader.reopen(nstime);
+            hasNext = reader.readNext(consumer); // skip first message
+            state = State.READING;
+        }
+
+        return hasNext = reader.readNext(consumer);
     }
 
     @Override
@@ -89,7 +119,7 @@ class PDStreamReader implements TickStreamReader {
             listener.disposed(this);
     }
 
-    public void setAvailabilityListener(Runnable maybeAvailable) {
+    public void                 setAvailabilityListener(Runnable maybeAvailable) {
         reader.setAvailabilityListener(maybeAvailable);
     }
 
@@ -106,12 +136,12 @@ class PDStreamReader implements TickStreamReader {
     }
 
     @Override
-    public TickStream getStream() {
+    public TickStream           getStream() {
         return stream;
     }
 
     @Override
-    public int getCurrentTypeIndex() {
+    public int                  getCurrentTypeIndex() {
         return consumer.getCurrentTypeIndex();
     }
 

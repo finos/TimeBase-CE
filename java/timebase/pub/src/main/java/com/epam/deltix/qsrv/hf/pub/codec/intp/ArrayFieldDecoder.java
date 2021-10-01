@@ -64,7 +64,8 @@ class ArrayFieldDecoder<T> extends FieldDecoder {
         final FieldDecoder fd = FieldCodecFactory.createDecoder(loader, underlineF);
 
         if (f.isBound()) {
-            arrayAdapter = ArraysAdapters.createDecodeAdapter(fieldType, fd, underlineDT instanceof EnumDataType);
+            arrayAdapter = ArraysAdapters.createDecodeAdapter(fieldType, fd, underlineDT instanceof EnumDataType,
+                    underlineDT instanceof VarcharDataType && ((VarcharDataType) underlineDT).getEncodingType() == VarcharDataType.INLINE_VARSIZE);
             rv = null;
             fixedSize = -1;
         } else {
@@ -228,6 +229,24 @@ class ArrayFieldDecoder<T> extends FieldDecoder {
             commit();
             handleNullable(fieldDecoder.isNull(r));
             return r;
+        }
+
+        @Override
+        public byte getByte() throws NullValueException {
+            check();
+            final byte b = fieldDecoder.getByte(ctxt);
+            commit();
+            handleNullable(fieldDecoder.isNull(b));
+            return b;
+        }
+
+        @Override
+        public short getShort() throws NullValueException {
+            check();
+            final short s = fieldDecoder.getShort(ctxt);
+            commit();
+            handleNullable(fieldDecoder.isNull(s));
+            return s;
         }
 
         @Override

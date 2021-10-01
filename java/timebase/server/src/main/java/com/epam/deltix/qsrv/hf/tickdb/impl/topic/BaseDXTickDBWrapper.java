@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
 import com.epam.deltix.data.stream.DXChannel;
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.MetaData;
 import com.epam.deltix.qsrv.hf.tickdb.impl.PQExecutor;
@@ -120,11 +121,6 @@ public abstract class BaseDXTickDBWrapper implements Wrapper<DXTickDB>, DXTickDB
     }
 
     @Override
-    public DXTickStream createFileStream(String key, String dataFile) {
-        return delegate.createFileStream(key, dataFile);
-    }
-
-    @Override
     public DXTickStream createStream(String key, String name, String description, int distributionFactor) {
         return delegate.createStream(key, name, description, distributionFactor);
     }
@@ -142,6 +138,11 @@ public abstract class BaseDXTickDBWrapper implements Wrapper<DXTickDB>, DXTickDB
     @Override
     public MetaData getMetaData() {
         return delegate.getMetaData();
+    }
+
+    @Override
+    public ClassSet describeQuery(String qql, SelectionOptions options, Parameter... params) throws CompilationException {
+        return delegate.describeQuery(qql, options, params);
     }
 
     @Override
@@ -165,8 +166,8 @@ public abstract class BaseDXTickDBWrapper implements Wrapper<DXTickDB>, DXTickDB
     }
 
     @Override
-    public InstrumentMessageSource executeQuery(Element qql, SelectionOptions options, TickStream[] streams, CharSequence[] ids, long time, Parameter... params) throws CompilationException {
-        return delegate.executeQuery(qql, options, streams, ids, time, params);
+    public InstrumentMessageSource executeQuery(String qql, SelectionOptions options, TickStream[] streams, CharSequence[] ids, long startTimestamp, long endTimestamp, Parameter... params) throws CompilationException {
+        return delegate.executeQuery(qql, options, streams, ids, startTimestamp, endTimestamp, params);
     }
 
     @Override

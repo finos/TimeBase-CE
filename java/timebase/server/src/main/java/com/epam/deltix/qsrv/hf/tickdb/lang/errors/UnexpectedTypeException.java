@@ -20,15 +20,18 @@ import com.epam.deltix.util.parsers.CompilationException;
 import com.epam.deltix.qsrv.hf.pub.md.DataType;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 /**
  *
  */
 public class UnexpectedTypeException extends CompilationException {
-    public UnexpectedTypeException (Expression e, DataType expected, DataType actual) {
+    public UnexpectedTypeException(Expression e, DataType actual, DataType ... expected) {
         super (
             "Illegal type in: " + e +
-            "; context requires: " + expected.getBaseName () +
-            "; found: " + actual.getBaseName (),
+                        "; context requires: [" + Arrays.stream(expected).map(DataType::getBaseName).collect(Collectors.joining(",")) +
+                        "]; found: " + actual.getBaseName(),
             e
         );
     }

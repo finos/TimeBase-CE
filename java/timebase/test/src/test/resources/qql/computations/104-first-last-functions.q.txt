@@ -1,0 +1,124 @@
+set printJson false
+test select first{}(boolField), first{}(boolNullableField), last{}(boolField), last{}(boolNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(boolField),FIRST{}(boolNullableField),boolField,boolNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,false,false,true,false
+!end
+test select first{}(binaryField), first{}(binaryNullableField), last{}(binaryField), last{}(binaryNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(binaryField),FIRST{}(binaryNullableField),binaryField,binaryNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,#F6AF422F,#4847DCE1,#0534F809,_
+!end
+test select first{}(byteField), first{}(byteNullableField), last{}(byteField), last{}(byteNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(byteField),FIRST{}(byteNullableField),byteField,byteNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,42,123,-29,-78
+!end
+test select first{}(shortField), first{}(shortNullableField), last{}(shortField), last{}(shortNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(shortField),FIRST{}(shortNullableField),shortField,shortNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,29137,_,-12442,7886
+!end
+test select first{}(intField), first{}(intNullableField), last{}(intField), last{}(intNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(intField),FIRST{}(intNullableField),intField,intNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,1187042131,_,-1291529235,-262869128
+!end
+test select first{}(longField), first{}(longNullableField), last{}(longField), last{}(longNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(longField),FIRST{}(longNullableField),longField,longNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,-4455585974335323739,_,-2505859202681297432,4196738096688441686
+!end
+test select first{}(doubleField), first{}(doubleNullableField), last{}(doubleField), last{}(doubleNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(doubleField),FIRST{}(doubleNullableField),doubleField,doubleNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,575.3601252120983,558.6796537746641,176.94144625685294,988.2214307766836
+!end
+test select first{}(floatField), first{}(floatNullableField), last{}(floatField), last{}(floatNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(floatField),FIRST{}(floatNullableField),floatField,floatNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,722.7768,639.29114,680.54486,_
+!end
+test select first{}(decimalField), first{}(decimalNullableField), last{}(decimalField), last{}(decimalNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(decimalField),FIRST{}(decimalNullableField),decimalField,decimalNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,949.205300891957,651.6746355126851,306.9859898859655,_
+!end
+test select first{}(textAlphaNumericField), first{}(textAlphaNumericNullableField), last{}(textAlphaNumericField), last{}(textAlphaNumericNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(textAlphaNumericField),FIRST{}(textAlphaNumericNullableField),textAlphaNumericField,textAlphaNumericNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,;7]0+$/MX[,A41[(I5[[J,]2/;T/C5Z/,_
+!end
+test select first{}(asciiTextField), first{}(asciiTextNullableField), last{}(asciiTextField), last{}(asciiTextNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(asciiTextField),FIRST{}(asciiTextNullableField),asciiTextField,asciiTextNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,=0n n-WH,_,".C,k+IjS",_
+!end
+test select first{}(timeOfDayField), first{}(timeOfDayNullableField), last{}(timeOfDayField), last{}(timeOfDayNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(timeOfDayField),FIRST{}(timeOfDayNullableField),timeOfDayField,timeOfDayNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,00:00,_,00:00,_
+!end
+test select first{}(timestampField), first{}(timestampNullableField), last{}(timestampField), last{}(timestampNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(timestampField),FIRST{}(timestampNullableField),timestampField,timestampNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,2021-04-06 14:26:34.460,_,2021-04-17 06:24:27.380,_
+!end
+test select first{}(enumField), first{}(enumNullableField), last{}(enumField), last{}(enumNullableField) from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(enumField),FIRST{}(enumNullableField),enumField,enumNullableField
+0,2021-04-19 12:13:16.646,S3,CUSTOM,ZERO,_,THREE,_
+!end
+set printJson true
+#
+# FIRST for lists
+#
+test select first{}(booleanList), first{}(booleanListOfNullable), first{}(nullableBooleanList), first{}(nullableBooleanListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(booleanList)":[false,false,true,true,false,true,true,true,false,true],"FIRST{}(booleanListOfNullable)":[true,false,null,false,null,false,null,null,true,true],"FIRST{}(nullableBooleanList)":[false,true,false,false,false,false,true,true,false,false],"FIRST{}(nullableBooleanListOfNullable)":[null,false,null,null,true,false,null,null,null,true]}
+!end
+test select first{}(byteList), first{}(byteListOfNullable), first{}(nullableByteList), first{}(nullableByteListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(byteList)":[6,-23,17,28,-16,-116,30,57,-23,125],"FIRST{}(byteListOfNullable)":[null,null,null,-95,null,25,null,null,102,null]}
+!end
+test select first{}(shortList), first{}(shortListOfNullable), first{}(nullableShortList), first{}(nullableShortListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(shortList)":[30963,26781,-15151,-21913,-17620,10525,-513,24040,-15875,-29210],"FIRST{}(shortListOfNullable)":[13154,31777,-27359,15304,null,null,null,null,-30892,null],"FIRST{}(nullableShortList)":[9475,-13979,11540,19906,12425,26408,-28644,11575,-12061,12357]}
+!end
+test select first{}(intList), first{}(intListOfNullable), first{}(nullableIntList), first{}(nullableIntListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(intList)":[1262528488,-2122497128,-2077910403,-478513526,-1143156644,1724859815,-1266324187,883512748,-1197510867,822283684],"FIRST{}(intListOfNullable)":[-1018757319,-1939532670,null,1785532403,1666961700,-512027936,772462510,-894982462,null,null],"FIRST{}(nullableIntList)":[-1677315790,-354195965,1698909243,-1090552383,1374215319,-493142998,1997784746,-1535104445,137678300,1068837225]}
+!end
+test select first{}(longList), first{}(longListOfNullable), first{}(nullableLongList), first{}(nullableLongListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(longList)":[1935940707497345668,4984385808988729031,3487467728855718286,1311050048174356433,73553021025330143,4485864432837291411,1927425312313888296,-2873801455691119846,2138428542897620403,3106923632728502582],"FIRST{}(longListOfNullable)":[null,-4231324317233011072,1221130051863666983,3937885215799593151,null,null,null,6492738968048619903,null,null],"FIRST{}(nullableLongList)":[1158928883726588742,6229037282190245393,-3205332788321053804,-550628278850541811,5241220760507560258,-3464397064540754821,3393052524520057880,-1025494829594958623,2024219128927219262,-1453214041500323337]}
+!end
+test select first{}(floatList), first{}(floatListOfNullable), first{}(nullableFloatList), first{}(nullableFloatListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(floatList)":["39.2946","509.15854","856.83264","585.6111","940.3951","882.2372","483.43604","809.2245","506.01495","129.70268"],"FIRST{}(floatListOfNullable)":[null,"254.8452",null,null,null,"65.32681","410.5739",null,"419.23367","365.27078"]}
+!end
+test select first{}(doubleList), first{}(doubleListOfNullable), first{}(nullableDoubleList), first{}(nullableDoubleListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(doubleList)":["246.86188108038408","24.004335751398486","230.67202381306438","364.0613982856349","283.9135178834037","487.0860608842224","531.5289327790946","462.72916702358015","907.8792312475931","580.134419565378"],"FIRST{}(doubleListOfNullable)":[null,"732.7963658614441","269.31193897633864",null,"706.8803737962218","921.1026414447326","808.0260354971961","873.1518764659737",null,null],"FIRST{}(nullableDoubleList)":["717.7608672796374","481.7890673107635","328.62949696304975","230.75804062006645","684.8776046839847","160.8176399331146","550.08418448867","382.8548462873255","67.04534818826757","951.3379133445881"],"FIRST{}(nullableDoubleListOfNullable)":[null,"768.4188150888644",null,"827.5545189998409","787.5456948861028",null,"722.3760510274245","145.8069401338582",null,"993.552487163769"]}
+!end
+test select first{}(decimalList), first{}(decimalListOfNullable), first{}(nullableDecimalList), first{}(nullableDecimalListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(decimalList)":["178.7573780708315","2.241055376462908","256.5835705135586","957.7014770152261","917.2781317189899","88.26199915483224","343.7809797388958","786.8052296534457","447.8698529179869","913.7952304498408"],"FIRST{}(decimalListOfNullable)":[null,null,null,"54.64636886157981","246.9122079663765",null,"119.0004867265886",null,null,null]}
+!end
+test select first{}(timeOfDayList), first{}(timeOfDayListOfNullable), first{}(nullableTimeOfDayList), first{}(nullableTimeOfDayListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(timeOfDayList)":["00:00","00:00","00:00","00:00","00:00","00:00","00:00","00:00","00:00","00:00"],"FIRST{}(timeOfDayListOfNullable)":[null,"00:00","00:00",null,"00:00",null,null,null,null,null],"FIRST{}(nullableTimeOfDayListOfNullable)":[null,"00:00","00:00","00:00","00:00",null,null,"00:00",null,"00:00"]}
+!end
+test select first{}(timestampList), first{}(timestampListOfNullable), first{}(nullableTimestampList), first{}(nullableTimestampListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","FIRST{}(timestampList)":["2021-04-16T02:05:17.819Z","2021-04-15T21:29:23.727Z","2021-04-10T16:06:17.173Z","2021-04-04T17:24:27.957Z","2021-03-30T15:57:51.358Z","2021-04-04T22:55:41.550Z","2021-04-12T11:25:20.001Z","2021-04-18T13:01:06.700Z","2021-04-13T20:37:18.797Z","2021-03-31T05:53:49.273Z"],"FIRST{}(timestampListOfNullable)":[null,"2021-04-09T05:03:00.486Z","2021-04-07T22:06:56.938Z",null,null,"2021-04-14T17:23:34.180Z","2021-04-12T03:53:48.125Z",null,null,null],"FIRST{}(nullableTimestampList)":["2021-04-15T09:45:02.363Z","2021-04-06T00:29:58.061Z","2021-04-01T01:44:39.255Z","2021-03-31T15:05:52.814Z","2021-04-12T09:53:10.123Z","2021-04-17T07:44:19.008Z","2021-04-02T15:26:52.555Z","2021-04-11T17:07:51.570Z","2021-04-14T17:48:48.483Z","2021-04-07T22:34:18.384Z"],"FIRST{}(nullableTimestampListOfNullable)":[null,"2021-04-14T18:48:41.556Z",null,"2021-04-12T07:52:24.762Z","2021-04-13T23:03:13.655Z",null,null,"2021-04-02T00:23:40.138Z","2021-04-15T20:17:02.012Z",null]}
+!end
+#
+# LAST for lists
+#
+test select last{}(booleanList), last{}(booleanListOfNullable), last{}(nullableBooleanList), last{}(nullableBooleanListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","booleanList":[false,false,true,true,false,false,false,false,true,true],"booleanListOfNullable":[true,false,true,null,true,null,true,false,null,null],"nullableBooleanListOfNullable":[true,null,null,false,null,true,true,true,false,null]}
+!end
+test select last{}(byteList), last{}(byteListOfNullable), last{}(nullableByteList), last{}(nullableByteListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","byteList":[-73,38,-25,64,-97,-35,97,10,-46,-67],"byteListOfNullable":[-111,null,-118,null,null,null,-43,null,69,null]}
+!end
+test select last{}(shortList), last{}(shortListOfNullable), last{}(nullableShortList), last{}(nullableShortListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","shortList":[-26802,-12774,31195,-9094,237,17638,-21970,-31020,18072,2761],"shortListOfNullable":[32208,14598,null,null,null,null,null,29333,null,null],"nullableShortList":[6463,-3209,-4396,26332,6942,-9864,9515,-7123,17802,-690]}
+!end
+test select last{}(intList), last{}(intListOfNullable), last{}(nullableIntList), last{}(nullableIntListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","intList":[1110596772,-199945665,-1126931109,736654136,1604364077,-1940166857,352398532,-1634074999,1885996695,-1037950146],"intListOfNullable":[-877059872,-547779933,null,null,-2055058579,null,-1603032575,null,760392655,null],"nullableIntList":[-342044371,-1189510689,-33217396,-1375759587,1168938456,664709546,1840615899,-1206677665,-277542799,1100824469]}
+!end
+test select last{}(longList), last{}(longListOfNullable), last{}(nullableLongList), last{}(nullableLongListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","longList":[6937431875974957698,7845414350217846713,-3544214595265938107,-8387968973061097022,-6568154790957751836,-8083017114574265259,-4437597125776788826,-331956546687108642,-3398692610022232977,-2181934973869662057],"longListOfNullable":[null,null,null,null,null,7615941936799856088,null,-892616440006471519,null,8794844854228122373],"nullableLongList":[528404544524980129,-7199755232300263678,-1083365572888488424,-43387688362627702,8801016220431592132,-6667455812912220040,7137523632624847267,1729245646636273011,1758791776743007431,-5711003639861746144],"nullableLongListOfNullable":[7966273514221452194,-1940811642273586956,-5081508254644134904,-3356494449789615043,1381622388007515636,null,1848709762205389133,8062458265027285022,null,null]}
+!end
+test select last{}(floatList), last{}(floatListOfNullable), last{}(nullableFloatList), last{}(nullableFloatListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","floatList":["191.32799","428.53833","67.20269","412.37323","342.1294","460.85645","841.275","850.4936","652.4518","506.3778"],"floatListOfNullable":[null,null,"936.3647","781.47","812.4743",null,"521.7629","229.42299","60.90337",null],"nullableFloatListOfNullable":["523.1095",null,"732.5105","362.83438","586.8224",null,null,null,null,"977.0279"]}
+!end
+test select last{}(doubleList), last{}(doubleListOfNullable), last{}(nullableDoubleList), last{}(nullableDoubleListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","doubleList":["12.77335019221415","597.7513447868163","706.7624631970301","802.6055134113099","658.8186203363643","88.88123281114868","270.8453053071855","979.7525891709598","202.67631146622378","91.58873628091658"],"doubleListOfNullable":[null,"166.14050022246596",null,"827.317091281751",null,null,null,"365.0862683100521","154.01669285013853",null],"nullableDoubleListOfNullable":["261.1083168602877",null,"901.016681892699",null,"599.6199217200084","956.9338720647272",null,null,null,null]}
+!end
+test select last{}(decimalList), last{}(decimalListOfNullable), last{}(nullableDecimalList), last{}(nullableDecimalListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","decimalList":["186.3685334034594","34.21852955028803","316.4374859921245","599.7439576577814","855.3085902838898","802.1946440657667","456.1690785496401","826.7076635853183","23.30569492337531","488.5905150923596"],"decimalListOfNullable":["68.7565022505694",null,"838.682486514803",null,null,null,null,null,null,"665.7540379312163"]}
+!end
+test select last{}(timeOfDayList), last{}(timeOfDayListOfNullable), last{}(nullableTimeOfDayList), last{}(nullableTimeOfDayListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","timeOfDayList":["00:00","00:00","00:00","00:00","00:00","00:00","00:00","00:00","00:00","00:00"],"timeOfDayListOfNullable":["00:00","00:00",null,null,null,null,null,"00:00",null,"00:00"],"nullableTimeOfDayListOfNullable":["00:00",null,null,"00:00",null,"00:00",null,"00:00",null,null]}
+!end
+test select last{}(timestampList), last{}(timestampListOfNullable), last{}(nullableTimestampList), last{}(nullableTimestampListOfNullable) from "1min-1h-1h-3"
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:16.646Z","timestampList":["2021-04-08T04:48:08.953Z","2021-04-09T02:27:23.693Z","2021-04-18T08:45:07.498Z","2021-04-08T16:48:43.616Z","2021-04-15T17:50:46.241Z","2021-04-08T20:16:14.090Z","2021-03-31T01:14:09.819Z","2021-04-18T20:22:15.091Z","2021-04-12T14:16:40.872Z","2021-04-18T05:58:08.569Z"],"timestampListOfNullable":["2021-04-07T08:49:26.026Z",null,null,"2021-04-03T22:54:07.503Z","2021-04-19T04:24:06.117Z",null,"2021-04-14T05:00:40.097Z",null,"2021-04-01T15:22:15.789Z",null],"nullableTimestampList":["2021-04-05T07:55:50.868Z","2021-04-16T11:25:03.471Z","2021-04-03T23:03:57.587Z","2021-04-03T03:07:24.606Z","2021-04-12T09:35:05.481Z","2021-04-09T21:02:45.331Z","2021-04-03T01:27:01.244Z","2021-04-08T08:42:59.245Z","2021-04-02T10:43:39.989Z","2021-04-18T22:10:31.574Z"]}
+!end

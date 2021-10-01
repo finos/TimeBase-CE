@@ -215,9 +215,6 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
             Util.close(cursor);
 
             if (!wasClientAbort) {
-
-
-
                 try {
                     // must empty GZIP buffer before flush to keep chunk valid for a GZIP client
                     if (gzip_os != null)
@@ -431,6 +428,9 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
         if (!isWithinMessageBlock) {
             dout.write(HTTPProtocol.MESSAGE_BLOCK_ID);
             isWithinMessageBlock = true;
+
+            if (DEBUG_COMM)
+                LOGGER.log(Level.INFO, "Write beginMessageBlock");
         }
     }
 
@@ -440,6 +440,9 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
         if (isWithinMessageBlock) {
             dout.writeInt(HTTPProtocol.TERMINATOR_RECORD);
             isWithinMessageBlock = false;
+
+            if (DEBUG_COMM)
+                LOGGER.log(Level.INFO, "Write endMessageBlock");
         }
     }
 
@@ -450,15 +453,20 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
 
         dout.write(HTTPProtocol.COMMAND_BLOCK_ID);
         dout.writeLong(serial);
+        if (DEBUG_COMM)
+            LOGGER.log(Level.INFO, "Write COMMAND_BLOCK_ID: " + serial);
     }
 
     private void writeInstrumentBlock(RawMessage msg, int entityIndex) throws IOException {
         assert Thread.holdsLock(writeLock);
 
         endMessageBlock();
+
         dout.write(HTTPProtocol.INSTRUMENT_BLOCK_ID);
         dout.writeShort(entityIndex);
-        writeIdentityKey(msg, dout);
+
+        if (DEBUG_COMM)
+            LOGGER.log(Level.INFO, "Write INSTRUMENT_BLOCK_ID: " + entityIndex);
     }
 
     private void writeMessageRecord(RawMessage raw, int typeIndex, int entityIndex, int streamIndex) throws IOException {
@@ -481,10 +489,16 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
     }
 
     private void writeStreamBlock(TickStream stream, int index) throws IOException {
+        endMessageBlock();
+
         dout.write(HTTPProtocol.STREAM_BLOCK_ID);
         dout.writeByte(stream != null ? index : -1);
-        if (stream != null)
+
+        if (stream != null) {
             dout.writeUTF(stream.getKey());
+            if (DEBUG_COMM)
+                LOGGER.info("SERVER: " + cursor + " writeStreamBlock " + stream.getKey());
+        }
     }
 
     private int writeTypeBlock(RecordClassDescriptor type) throws IOException {
@@ -515,6 +529,10 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
                 default:
                     throw new IllegalStateException("invalid typeTransmission=" + typeTransmission);
             }
+
+            if (DEBUG_COMM)
+                LOGGER.info ("SERVER: " + cursor + " writeTypeBlock");
+
         }
 
         return typeIndex;
@@ -522,6 +540,9 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
 
     private void writeTerminatorBlock() throws IOException {
         dout.write(HTTPProtocol.TERMINATOR_BLOCK_ID);
+
+        if (DEBUG_COMM)
+            LOGGER.info ("SERVER: " + cursor + " writeTerminatorBlock");
     }
 
     private void writeError(byte code, String msg) throws IOException {
@@ -532,6 +553,9 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
             dout.write(code);
             dout.writeUTF(msg);
         }
+
+        if (DEBUG_COMM)
+            LOGGER.info ("SERVER: " + cursor + " writeError()");
     }
 
     void        close() {

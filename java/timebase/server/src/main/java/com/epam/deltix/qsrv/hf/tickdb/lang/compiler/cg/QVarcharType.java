@@ -17,7 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
 import com.epam.deltix.qsrv.hf.pub.md.VarcharDataType;
-import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.Varchar;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.Varchar;
 import com.epam.deltix.qsrv.hf.pub.codec.AlphanumericCodec;
 import com.epam.deltix.util.jcg.*;
 import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.*;
@@ -45,7 +45,11 @@ public class QVarcharType extends QType <VarcharDataType> {
         else
             anSizeBits = 0;
     }
-    
+
+    public boolean isAlphanumeric() {
+        return dt.getEncodingType () == VarcharDataType.ALPHANUMERIC;
+    }
+
     @Override
     public QValue               declareValue (
         String                      comment,

@@ -16,18 +16,24 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.errors;
 
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.DataTypeSpec;
+import com.epam.deltix.qsrv.hf.pub.md.DataType;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
 import com.epam.deltix.util.parsers.CompilationException;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  *
  */
 public class IllegalDataTypeException extends CompilationException {
-    public IllegalDataTypeException(DataTypeSpec dts, Class<?> actual, Class<?>... expected) {
-        super("Unexpected type of object. \n" +
-              "Expected: " + Arrays.toString(expected) + "; Actual: " + actual + ".",
-              dts);
+    public IllegalDataTypeException(Expression e, DataType actual, DataType ... required) {
+        super(
+                "Illegal type in: " + e +
+                        "; context requires " + Arrays.stream(required).map(DataType::getBaseName).collect(Collectors.joining(", ")) +
+                        "; found: " + (actual != null ? actual.getBaseName() : "UNKNOWN"),
+                e
+        );
     }
 }
+

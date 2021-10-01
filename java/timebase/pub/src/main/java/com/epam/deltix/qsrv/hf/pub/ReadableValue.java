@@ -28,37 +28,40 @@ public interface ReadableValue {
     /**
      * Always returns <code>false</code> for non-nullable field.
      */
-    public boolean              isNull ();
+    boolean isNull();
 
-    public boolean              getBoolean () throws NullValueException;
+    boolean getBoolean() throws NullValueException;
 
-    public char                 getChar () throws NullValueException;
+    char getChar() throws NullValueException;
 
-    public int                  getInt () throws NullValueException;
+    byte getByte() throws NullValueException;
 
-    public long                 getLong () throws NullValueException;
+    short getShort() throws NullValueException;
 
-    public float                getFloat () throws NullValueException;
+    int getInt() throws NullValueException;
 
-    public double               getDouble () throws NullValueException;
+    long getLong() throws NullValueException;
 
-    public String               getString () throws NullValueException;
+    float getFloat() throws NullValueException;
 
-    public int                  getArrayLength () throws NullValueException;
+    double getDouble() throws NullValueException;
 
-    public ReadableValue        nextReadableElement() throws NullValueException;
+    String getString() throws NullValueException;
 
-    /** Used to read nested objects */
-    public UnboundDecoder       getFieldDecoder() throws NullValueException;
+    int getArrayLength() throws NullValueException;
 
-    public int                  getBinaryLength () throws NullValueException;
+    ReadableValue nextReadableElement() throws NullValueException;
 
-    public void                 getBinary (int offset, int length, OutputStream out)
-        throws NullValueException;
+    /**
+     * Used to read nested objects
+     */
+    UnboundDecoder getFieldDecoder() throws NullValueException;
 
-    public void                 getBinary (int srcOffset, int length, byte [] dest, int destOffset)
-        throws NullValueException;
+    int getBinaryLength() throws NullValueException;
 
-    public InputStream          openBinary ()
-        throws NullValueException;
+    void getBinary(int offset, int length, OutputStream out) throws NullValueException;
+
+    void getBinary(int srcOffset, int length, byte[] dest, int destOffset) throws NullValueException;
+
+    InputStream openBinary() throws NullValueException;
 }

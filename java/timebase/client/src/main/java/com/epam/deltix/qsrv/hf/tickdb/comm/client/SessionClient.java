@@ -247,7 +247,7 @@ public class SessionClient implements Closeable {
 
             case TickStreamProperties.SCHEMA:
                 boolean poly = in.readBoolean();
-                RecordClassSet classSet = TDBProtocol.readClassSet(in);
+                RecordClassSet classSet = (RecordClassSet) TDBProtocol.readClassSet(in);
                 if (stream != null)
                     stream.options.setMetaData(poly, classSet);
                 break;

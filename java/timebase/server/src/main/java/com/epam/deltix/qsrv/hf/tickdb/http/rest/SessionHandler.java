@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http.rest;
 
+import com.epam.deltix.qsrv.hf.tickdb.impl.ServerStreamWrapper;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.comm.StreamState;
@@ -351,8 +352,12 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
 
     private void        closeAll () {
         //TickDBServer.LOGGER.info("Closing server session: " + ds);
-        if(!isClosed) {
+
+        if (isClosed)
+            return;
+
             isClosed = true;
+
             if (db instanceof StreamStateNotifier)
                 ((StreamStateNotifier) db).removeStreamStateListener(this);
 
@@ -369,14 +374,13 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
 
             // clear all stream locks
             DXTickStream[] streams = db.listStreams();
-            for (DXTickStream stream : streams)
+        for (DXTickStream stream : streams) {
+            if (stream instanceof ServerStreamWrapper)
+                stream = ((ServerStreamWrapper)stream).getNestedInstance();
+
+            if (stream instanceof TickStreamImpl)
                 ((TickStreamImpl) stream).clearLocks(id);
         }
-        // TODO: MODULARIZATION
-//        if (GlobalQuantServer.MAC != null)
-//            GlobalQuantServer.MAC.connected(user, ds.getRemoteAddress());
-
-        //TickDBServer.LOGGER.info("Closing db session");
     }
 
     @Override

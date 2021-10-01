@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime.activities;
 
+import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.timebase.messages.service.ErrorLevel;
 import com.epam.deltix.qsrv.hf.pub.ReadableValue;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
@@ -46,4 +47,11 @@ public class StreamCreator extends LoggingActivityLauncher {
             }
         );            
     }    
+
+    @Override
+    public ClassSet<RecordClassDescriptor> getSchema() {
+        ClassSet<RecordClassDescriptor> set = new RecordClassSet();
+        set.addContentClasses(Messages.ERROR_MESSAGE_DESCRIPTOR);
+        return set;
+    }
 }

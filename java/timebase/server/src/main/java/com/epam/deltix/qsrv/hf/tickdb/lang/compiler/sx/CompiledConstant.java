@@ -16,23 +16,26 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx;
 
+import com.epam.deltix.dfp.Decimal;
+import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.DataTypeHelper;
 
 /**
  *
  */
 public final class CompiledConstant extends CompiledExpression <DataType> {
     public static final CompiledConstant    B_False =
-        new CompiledConstant (
-            StandardTypes.CLEAN_BOOLEAN,
-            false
-        );
+            new CompiledConstant (
+                    StandardTypes.CLEAN_BOOLEAN,
+                    false
+            );
 
     public static final CompiledConstant    B_True =
-        new CompiledConstant (
-            StandardTypes.CLEAN_BOOLEAN,
-            true
-        );
+            new CompiledConstant (
+                    StandardTypes.CLEAN_BOOLEAN,
+                    true
+            );
 
     public static CompiledConstant  trueOrFalse (boolean v) {
         return (v ? B_True : B_False);
@@ -40,19 +43,29 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
 
     public final Object         value;
 
+    private final boolean decimalLong;
+
+    public CompiledConstant (DataType type, Object value, boolean decimalLong) {
+        this(type, value, null, decimalLong);
+    }
+
     public CompiledConstant (DataType type, Object value) {
-        super (type);
-        this.value = value;
+        this(type, value, false);
     }
 
     public CompiledConstant (DataType type, Object value, String name) {
+        this(type, value, name, false);
+    }
+
+    public CompiledConstant (DataType type, Object value, String name, boolean decimalLong) {
         super (type);
         this.value = value;
         this.name = name;
+        this.decimalLong = decimalLong;
     }
 
     @Override
-    protected void                  print (StringBuilder out) {
+    public void print (StringBuilder out) {
         out.append (value);
     }
 
@@ -61,14 +74,51 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
     }
 
     public long                     getLong () {
+        if (type == StandardTypes.CLEAN_DECIMAL) {
+            return Decimal64Utils.parse((String) value);
+        }
         return ((Number) value).longValue ();
     }
 
+    @Decimal
+    public long getDecimalLong() {
+        if (value instanceof Long && decimalLong) {
+            return (Long) value;
+        } else if (value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte) {
+            return Decimal64Utils.fromLong(((Number) value).longValue());
+        } else if (value instanceof String) {
+            return Decimal64Utils.parse((String) value);
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public byte getByte() {
+        return ((Number) value).byteValue();
+    }
+
+    public short getShort() {
+        return ((Number) value).shortValue();
+    }
+
+    public int getInteger() {
+        return ((Number) value).intValue();
+    }
+
     public double                   getDouble () {
-        return ((Number) value).doubleValue ();
+        if (value instanceof String) {
+            return Double.parseDouble((String) value);
+        } else if (value instanceof Long && decimalLong) {
+            return Decimal64Utils.toDouble((Long) value);
+        } else {
+            return ((Number) value).doubleValue();
+        }
     }
 
     public float                    getFloat () {
+        if (value instanceof String) {
+            return Float.parseFloat((String) value);
+        }
         return ((Number) value).floatValue ();
     }
 
@@ -84,22 +134,36 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
         return (value.toString ());
     }
 
+    public Object getValue() {
+        if (value instanceof String) {
+            if (type == StandardTypes.CLEAN_DECIMAL) {
+                return Decimal64Utils.parse((String) value);
+            } else if (type == StandardTypes.CLEAN_FLOAT) {
+                return Double.parseDouble((String) value);
+            }
+        }
+        return value;
+    }
+
     @Override
     @SuppressWarnings ("EqualsWhichDoesntCheckParameterClass")
     public boolean                  equals (Object obj) {
         if (!super.equals (obj))
             return (false);
-        
+
         CompiledConstant    b = (CompiledConstant) obj;
-        
+
         if (value == null)
             return (b.value == null);
-        
+
         return (value.equals (b.value));
     }
 
     @Override
     public int                      hashCode () {
-        return super.hashCode () + (value == null ? 772455 : value.hashCode ());
+        int result = super.hashCode();
+        result = result * 31 + (value == null ? 772455 : value.hashCode());
+        result = result * 31 + DataTypeHelper.hashcode(type);
+        return result;
     }
 }

@@ -17,13 +17,19 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime.msgsrcs;
 
 import com.epam.deltix.qsrv.hf.pub.ReadableValue;
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.pub.SelectionOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
 
 /**
  *  PreparedQuery which opens a SingleMessageEmitter.
  */
-public final class SingleMessagePreparedQuery implements PreparedQuery {    
+public final class SingleMessagePreparedQuery implements PreparedQuery {
+
+    private static final RecordClassSet SCHEMA = new RecordClassSet(new RecordClassDescriptor[] {SingleMessageEmitter.VOID_TYPE});
+
     public SingleMessagePreparedQuery () {
         
     }
@@ -41,5 +47,10 @@ public final class SingleMessagePreparedQuery implements PreparedQuery {
     }
 
     public void                     close () {        
+    }
+
+    @Override
+    public ClassSet<RecordClassDescriptor> getSchema() {
+        return new RecordClassSet(SCHEMA);
     }
 }

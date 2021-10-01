@@ -17,15 +17,23 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem;
 
 import com.epam.deltix.qsrv.hf.pub.md.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledConstant;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.activities.*;
-import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.activities.StreamCreator;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.activities.StreamKiller;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.activities.StreamModifier;
+import com.epam.deltix.qsrv.hf.tickdb.pub.BufferOptions;
+import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
+import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
+import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.PreparedQuery;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.StreamChangeTask;
+
 import java.util.*;
-import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.*;
+
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.lookUpType;
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.lookUpVariable;
 
 /**
  *
@@ -294,12 +302,13 @@ public class DDLCompiler {
         StaticAttributeDef                  adef
     ) 
     {        
-        DataType            type = lookUpDataType (senv, adef.typeId).nullableInstance (true);        
+        DataType            type = compileDataTypeSpec (senv, adef.type);
         CompiledConstant    c = xc.computeStatic (adef.value, type);
         StaticDataField     sdf =
-            new StaticDataField (adef.id, adef.title, type, type.toString (c.value));
+            new StaticDataField (adef.id, adef.title, type, type.toString (c.getValue()));
         
         sdf.setDescription (adef.comment);
+        sdf.setAttributes(adef.tags);
         return (sdf);
     }
 
@@ -319,7 +328,8 @@ public class DDLCompiler {
                 false,
                 relativeId == null ? null : relativeId.id
             );
-        
+
+        nsdf.setAttributes(adef.tags);
         nsdf.setDescription (adef.comment);
         
         if (outDefaults != null) {
@@ -380,7 +390,7 @@ public class DDLCompiler {
         DataType elementType = compileDataTypeCheckAbstract(senv, elementDts);
 
         if (!(elementType instanceof EnumDataType) && !(elementType instanceof ClassDataType))
-            throw new IllegalDataTypeException(
+            throw new IllegalTypeException(
                     elementDts, elementType.getClass(),
                     ClassDataType.class, EnumDataType.class);
 
@@ -397,7 +407,7 @@ public class DDLCompiler {
             if (type instanceof ClassDataType)
                 descriptorsList.addAll(Arrays.asList(((ClassDataType) type).getDescriptors()));
             else
-                throw new IllegalDataTypeException(spec, type.getClass(), ClassDataType.class);
+                throw new IllegalTypeException(spec, type.getClass(), ClassDataType.class);
         }
 
         return new ClassDataType(

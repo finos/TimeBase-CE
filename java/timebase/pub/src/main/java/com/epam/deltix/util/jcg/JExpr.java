@@ -36,6 +36,8 @@ public interface JExpr {
 
     public JExpr        not ();
 
+    public JExpr        negate ();
+
     public JExpr        incAndGet ();
 
     public JExpr        decAndGet ();

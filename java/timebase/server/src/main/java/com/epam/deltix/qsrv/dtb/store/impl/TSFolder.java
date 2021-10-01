@@ -68,7 +68,7 @@ abstract class TSFolder extends TSFolderEntry {
     private int                                 nextChildId;
     
     /**
-     *  Child files or folders. Guarded by this.
+     *  Child files or folders. Guarded by structure lock
      */
     private ObjectArrayList <TSFolderEntry>     children = null;
 

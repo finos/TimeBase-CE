@@ -27,6 +27,10 @@ public class CallExpression extends ComplexExpression {
         this.name = name;
     }
 
+    public static CallExpression create(long location, String name, Expression[] initArgs, Expression[] args) {
+        return new CallExpression(location, name, concat(args, initArgs));
+    }
+
     public CallExpression (String name, Expression ... args) {
         this (NO_LOCATION, name, args);
     }
@@ -42,8 +46,19 @@ public class CallExpression extends ComplexExpression {
     }
     
     @Override
-    @SuppressWarnings ("EqualsWhichDoesntCheckParameterClass")
     public boolean                  equals (Object obj) {
+        if (!(obj instanceof CallExpression)) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (this.name.equalsIgnoreCase("NOW")) {
+            return false;
+        }
+        if (((CallExpression) obj).name.equalsIgnoreCase("NOW")) {
+            return false;
+        }
         return (
             super.equals (obj) &&
             name.equals (((CallExpression) obj).name)
@@ -53,5 +68,18 @@ public class CallExpression extends ComplexExpression {
     @Override
     public int                      hashCode () {
         return (super.hashCode () * 41 + name.hashCode ());
+    }
+
+    public static Expression[] concat(Expression[] arr1, Expression[] arr2) {
+        if (arr1 == null || arr1.length == 0) {
+            return arr2;
+        } else if (arr2 == null || arr2.length == 0) {
+            return arr1;
+        } else {
+            Expression[] result = new Expression[arr1.length + arr2.length];
+            System.arraycopy(arr1, 0, result, 0, arr1.length);
+            System.arraycopy(arr2, 0, result, arr1.length, arr2.length);
+            return result;
+        }
     }
 }

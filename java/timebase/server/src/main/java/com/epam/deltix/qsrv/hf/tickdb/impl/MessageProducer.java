@@ -82,5 +82,3 @@ class Producer extends MessageProducer<InstrumentMessage> {
         encoders[code].encode(message, out);
     }
 }
-
-

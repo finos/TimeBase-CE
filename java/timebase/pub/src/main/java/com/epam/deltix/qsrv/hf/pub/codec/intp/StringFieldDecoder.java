@@ -68,6 +68,10 @@ class StringFieldDecoder extends FieldDecoder {
         return (ctxt.in.readCharSequence ());
     }
 
+    CharSequence getStringBuilder(DecodingContext ctxt) {
+        return ctxt.readCharSequence(ctxt.in);
+    }
+
     @Override
     public String   getString (DecodingContext ctxt) {
         CharSequence    cs = getCharSequence (ctxt);

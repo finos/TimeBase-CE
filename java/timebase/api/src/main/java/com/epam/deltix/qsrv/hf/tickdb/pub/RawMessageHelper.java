@@ -23,7 +23,6 @@ import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.WritableValue;
 import com.epam.deltix.qsrv.hf.pub.codec.*;
 import com.epam.deltix.qsrv.hf.pub.md.*;
-import com.epam.deltix.qsrv.util.json.JSONRawMessageParser;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import com.epam.deltix.util.memory.MemoryDataInput;

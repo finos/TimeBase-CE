@@ -18,6 +18,8 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
 
 import com.epam.deltix.util.parsers.Location;
 
+import java.util.Hashtable;
+
 /**
  *
  */
@@ -33,10 +35,11 @@ public class NonStaticAttributeDef extends AttributeDef {
         String                  comment, 
         DataTypeSpec            type,
         Identifier              relativeId,
-        Expression              defval
+        Expression              defval,
+        Hashtable<String, String> tags
     )
     {
-        super (id, title, comment, location);
+        super (id, title, tags, comment, location);
         this.type = type;
         this.relativeId = relativeId;
         this.defval = defval;
@@ -48,10 +51,11 @@ public class NonStaticAttributeDef extends AttributeDef {
         String                  comment, 
         DataTypeSpec            type,
         Identifier              relativeId,
-        Expression              defval
+        Expression              defval,
+        Hashtable<String, String> tags
     )
     {
-        this (Location.NONE, id, title, comment, type, relativeId, defval);
+        this (Location.NONE, id, title, comment, type, relativeId, defval, tags);
     }
 
     @Override
@@ -69,7 +73,8 @@ public class NonStaticAttributeDef extends AttributeDef {
             s.append (" DEFAULT ");
             defval.print (s);
         }
-        
+
+        printTags(s);
         printComment (s);
     }        
 }

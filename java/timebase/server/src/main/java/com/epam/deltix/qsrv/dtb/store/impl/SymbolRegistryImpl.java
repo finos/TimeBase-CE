@@ -31,7 +31,7 @@ import java.util.Collection;
 /**
  *
  */
-class SymbolRegistryImpl implements SymbolRegistry {
+public class SymbolRegistryImpl implements SymbolRegistry {
     private static final Log LOGGER = PDSImpl.LOGGER;
     private final int                           VERSION = 501;
 
@@ -42,7 +42,7 @@ class SymbolRegistryImpl implements SymbolRegistry {
 
     private static class SymbolEntry {
 
-        public SymbolEntry(String name, String data, int index, boolean active) {
+        SymbolEntry(String name, String data, int index, boolean active) {
             // TODO: Consider using .intern() on name and data.
             // Note: We must be sure that ne not just store interned value in fields
             // but share interned value with other value holders. Example: we have a string and use that string
@@ -71,7 +71,7 @@ class SymbolRegistryImpl implements SymbolRegistry {
         TimeRange       range;
     }
 
-    SymbolRegistryImpl () {
+    public SymbolRegistryImpl () {
     }
         
     private int                         oneSymbolToId (CharSequence symbol) {
@@ -332,7 +332,7 @@ class SymbolRegistryImpl implements SymbolRegistry {
         isDirty = true;
     }
 
-    synchronized boolean               load (AbstractPath folder)
+    public synchronized boolean               load (AbstractPath folder)
             throws IOException
     {
         symbols = new ObjectArrayList <> ();

@@ -30,6 +30,13 @@ class ClassDescriptorMapping {
     public UnboundDecoder               decoder;
     public FixedUnboundEncoder          encoder;
 
+    public boolean                      hasChanges = true;
+
+    public ClassDescriptorMapping(RecordClassDescriptor source) {
+        this.source = source;
+        this.mappings = new FieldMapping[0];
+    }
+
     ClassDescriptorMapping(RecordClassDescriptor source,
                            RecordClassDescriptor target,
                            SchemaMapping schemaMapping)
@@ -57,5 +64,11 @@ class ClassDescriptorMapping {
             for (AbstractFieldChange fieldChange : fieldChanges)
                 mapping.resolution = fieldChange.resolution;
         }
+
+        hasChanges = change.getChangeImpact() != SchemaChange.Impact.None;
+    }
+
+    public boolean      isValid() {
+        return target != null && decoder != null;
     }
 }

@@ -33,6 +33,10 @@ class InitVariableImpl
         super (context, modifiers, type, name);
     }
 
+    InitVariableImpl(JContextImpl context, int modifiers, String type, String[] typeArgs, String name) {
+        super (context, modifiers, type, typeArgs, name, null);
+    }
+
     public void         printDeclaration (SourceCodePrinter out)
         throws IOException
     {

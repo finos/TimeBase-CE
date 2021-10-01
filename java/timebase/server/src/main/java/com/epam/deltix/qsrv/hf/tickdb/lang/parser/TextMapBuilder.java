@@ -18,11 +18,8 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.parser;
 
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
-import com.epam.deltix.qsrv.hf.codec.ClassCodecFactory;
 import com.epam.deltix.util.parsers.Location;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
-import com.epam.deltix.util.lang.Util;
-import java.util.logging.Level;
 import java_cup.runtime.*;
 
 /**

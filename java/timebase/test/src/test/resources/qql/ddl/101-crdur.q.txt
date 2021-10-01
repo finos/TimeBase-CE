@@ -1,0 +1,138 @@
+#
+#   Create stream mimicking alltypes via qql
+#
+testqql
+CREATE DURABLE STREAM test1 (
+    ENUM "deltix.qsrv.hf.tickdb.testframework.TestBitmask" (
+        BIT0,
+        BIT1,
+        BIT2 = 4,
+        BIT3
+    ) FLAGS COMMENT 'This enum is a bitmask';
+
+    ENUM "deltix.qsrv.hf.tickdb.testframework.TestEnum" 'Test Enum Title' (
+        RED,
+        GREEN = 1,
+        BLUE
+    );
+
+    CLASS "deltix.qsrv.hf.tickdb.testframework.TestAllTypesMessage" 'Test Class Title' (
+        "sequence" 'Sequence' INTEGER SIGNED (32) COMMENT 'Sequence field',
+        "bool_c" 'Non-nullable BOOLEAN' BOOLEAN NOT NULL,
+        "bool_n" 'Nullable BOOLEAN' BOOLEAN,
+        "float_c_32" 'Non-nullable FLOAT:IEEE32' FLOAT NOT NULL BINARY (32) TAGS ("adjustmentType":"Size", "displayIdentifier":"true"),
+        "float_n_32" 'Nullable FLOAT:IEEE32' FLOAT BINARY (32) TAGS ("adjustmentType":"Size"),
+        "float_c_64" 'Non-nullable FLOAT:IEEE64' FLOAT NOT NULL BINARY (64) TAGS ("displayIdentifier":"true"),
+        "float_n_64" 'Nullable FLOAT:IEEE32' FLOAT BINARY (64),
+        "float_c_dec" 'Non-nullable FLOAT:DECIMAL' FLOAT NOT NULL DECIMAL,
+        "float_n_dec" 'Nullable FLOAT:IEEE32' FLOAT DECIMAL,
+        "float_c_dec2" 'Non-nullable FLOAT:DECIMAL(2)' FLOAT NOT NULL DECIMAL (2),
+        "float_n_dec2" 'Nullable FLOAT:DECIMAL(2)' FLOAT DECIMAL (2),
+        "int_c_8" 'Non-nullable INTEGER:INT8' INTEGER NOT NULL SIGNED (8),
+        "int_n_8" 'Nullable INTEGER:INT8' INTEGER SIGNED (8),
+        "int_c_16" 'Non-nullable INTEGER:INT16' INTEGER NOT NULL SIGNED (16),
+        "int_n_16" 'Nullable INTEGER:INT16' INTEGER SIGNED (16),
+        "int_c_32" 'Non-nullable INTEGER:INT32' INTEGER NOT NULL SIGNED (32),
+        "int_n_32" 'Nullable INTEGER:INT32' INTEGER SIGNED (32),
+        "int_c_64" 'Non-nullable INTEGER:INT64' INTEGER NOT NULL SIGNED (64),
+        "int_n_64" 'Nullable INTEGER:INT64' INTEGER SIGNED (64),
+        "puint_c_30" 'Non-nullable INTEGER:PUINT30' INTEGER NOT NULL UNSIGNED (30),
+        "puint_n_30" 'Nullable INTEGER:PUINT30' INTEGER UNSIGNED (30),
+        "puint_c_61" 'Non-nullable INTEGER:PUINT61' INTEGER NOT NULL UNSIGNED (61),
+        "puint_n_61" 'Nullable INTEGER:PUINT61' INTEGER UNSIGNED (61),
+        "char_c" 'Non-nullable CHAR' CHAR NOT NULL,
+        "char_n" 'Nullable CHAR' CHAR,
+        "varchar_c_utf8" 'Non-nullable VARCHAR:UTF8' VARCHAR NOT NULL,
+        "varchar_n_utf8" 'Nullable CHAR:UTF8' VARCHAR,
+        "varchar_c_alpha10" 'Non-nullable VARCHAR:ALPHANUMERIC(10):long' VARCHAR NOT NULL,
+        "varchar_n_alpha10" 'Nullable VARCHAR:ALPHANUMERIC(10):long' VARCHAR,
+        "varchar_c_alpha5_s" 'Non-nullable VARCHAR:ALPHANUMERIC(5)' VARCHAR NOT NULL,
+        "varchar_n_alpha5_s" 'Nullable VARCHAR:ALPHANUMERIC(5)' VARCHAR,
+        "tod_c" 'Non-nullable TIMEOFDAY' TIMEOFDAY NOT NULL,
+        "tod_n" 'Nullable TIMEOFDAY' TIMEOFDAY,
+        "date_c" 'Non-nullable DATE' TIMESTAMP NOT NULL,
+        "date_n" 'Nullable DATE' TIMESTAMP,
+        "enum_c" 'Non-nullable ENUM' deltix.qsrv.hf.tickdb.testframework.TestEnum NOT NULL,
+        "enum_n" 'Nullable ENUM' deltix.qsrv.hf.tickdb.testframework.TestEnum,
+        "bitmask_c" 'Non-nullable BITMASK' deltix.qsrv.hf.tickdb.testframework.TestBitmask NOT NULL,
+        "binary_n" 'Nullable BINARY' BINARY
+    )
+    COMMENT 'This class tests the majority of field types';    
+)
+OPTIONS (DF = 1)
+/
+>deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,SYSTEM,_,SUCCESS,INFO,Stream created,0
+!end
+#
+#   Describe
+#
+testdesc TEST1
+DURABLE STREAM TEST1 (
+    ENUM "deltix.qsrv.hf.tickdb.testframework.TestEnum" 'Test Enum Title' (
+        "RED" = 0,
+        "GREEN" = 1,
+        "BLUE" = 2
+    );
+    ENUM "deltix.qsrv.hf.tickdb.testframework.TestBitmask" (
+        "BIT0" = 1,
+        "BIT1" = 2,
+        "BIT2" = 4,
+        "BIT3" = 8
+    ) 
+        FLAGS
+        COMMENT 'This enum is a bitmask';
+    CLASS "deltix.qsrv.hf.tickdb.testframework.TestAllTypesMessage" 'Test Class Title' (
+        "sequence" 'Sequence' INTEGER SIGNED (32) COMMENT 'Sequence field',
+        "bool_c" 'Non-nullable BOOLEAN' BOOLEAN NOT NULL,
+        "bool_n" 'Nullable BOOLEAN' BOOLEAN,
+        "float_c_32" 'Non-nullable FLOAT:IEEE32' FLOAT NOT NULL BINARY (32) TAGS ("adjustmentType":"Size","displayIdentifier":"true"),
+        "float_n_32" 'Nullable FLOAT:IEEE32' FLOAT BINARY (32) TAGS ("adjustmentType":"Size"),
+        "float_c_64" 'Non-nullable FLOAT:IEEE64' FLOAT NOT NULL TAGS ("displayIdentifier":"true"),
+        "float_n_64" 'Nullable FLOAT:IEEE32' FLOAT,
+        "float_c_dec" 'Non-nullable FLOAT:DECIMAL' FLOAT NOT NULL DECIMAL,
+        "float_n_dec" 'Nullable FLOAT:IEEE32' FLOAT DECIMAL,
+        "float_c_dec2" 'Non-nullable FLOAT:DECIMAL(2)' FLOAT NOT NULL DECIMAL (2),
+        "float_n_dec2" 'Nullable FLOAT:DECIMAL(2)' FLOAT DECIMAL (2),
+        "int_c_8" 'Non-nullable INTEGER:INT8' INTEGER NOT NULL SIGNED (8),
+        "int_n_8" 'Nullable INTEGER:INT8' INTEGER SIGNED (8),
+        "int_c_16" 'Non-nullable INTEGER:INT16' INTEGER NOT NULL SIGNED (16),
+        "int_n_16" 'Nullable INTEGER:INT16' INTEGER SIGNED (16),
+        "int_c_32" 'Non-nullable INTEGER:INT32' INTEGER NOT NULL SIGNED (32),
+        "int_n_32" 'Nullable INTEGER:INT32' INTEGER SIGNED (32),
+        "int_c_64" 'Non-nullable INTEGER:INT64' INTEGER NOT NULL,
+        "int_n_64" 'Nullable INTEGER:INT64' INTEGER,
+        "puint_c_30" 'Non-nullable INTEGER:PUINT30' INTEGER NOT NULL UNSIGNED (30),
+        "puint_n_30" 'Nullable INTEGER:PUINT30' INTEGER UNSIGNED (30),
+        "puint_c_61" 'Non-nullable INTEGER:PUINT61' INTEGER NOT NULL UNSIGNED (61),
+        "puint_n_61" 'Nullable INTEGER:PUINT61' INTEGER UNSIGNED (61),
+        "char_c" 'Non-nullable CHAR' CHAR NOT NULL,
+        "char_n" 'Nullable CHAR' CHAR,
+        "varchar_c_utf8" 'Non-nullable VARCHAR:UTF8' VARCHAR NOT NULL,
+        "varchar_n_utf8" 'Nullable CHAR:UTF8' VARCHAR,
+        "varchar_c_alpha10" 'Non-nullable VARCHAR:ALPHANUMERIC(10):long' VARCHAR NOT NULL,
+        "varchar_n_alpha10" 'Nullable VARCHAR:ALPHANUMERIC(10):long' VARCHAR,
+        "varchar_c_alpha5_s" 'Non-nullable VARCHAR:ALPHANUMERIC(5)' VARCHAR NOT NULL,
+        "varchar_n_alpha5_s" 'Nullable VARCHAR:ALPHANUMERIC(5)' VARCHAR,
+        "tod_c" 'Non-nullable TIMEOFDAY' TIMEOFDAY NOT NULL,
+        "tod_n" 'Nullable TIMEOFDAY' TIMEOFDAY,
+        "date_c" 'Non-nullable DATE' TIMESTAMP NOT NULL,
+        "date_n" 'Nullable DATE' TIMESTAMP,
+        "enum_c" 'Non-nullable ENUM' "deltix.qsrv.hf.tickdb.testframework.TestEnum" NOT NULL,
+        "enum_n" 'Nullable ENUM' "deltix.qsrv.hf.tickdb.testframework.TestEnum",
+        "bitmask_c" 'Non-nullable BITMASK' "deltix.qsrv.hf.tickdb.testframework.TestBitmask" NOT NULL,
+        "binary_n" 'Nullable BINARY' BINARY
+    )
+        COMMENT 'This class tests the majority of field types';
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; DF = 1; HIGHAVAILABILITY = FALSE)
+!end
+#
+#   Drop stream via qql
+#
+test drop stream test1
+>deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,SYSTEM,_,SUCCESS,INFO,Stream dropped,0
+!end

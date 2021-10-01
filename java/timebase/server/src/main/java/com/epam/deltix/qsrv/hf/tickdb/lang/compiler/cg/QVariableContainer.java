@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
 import com.epam.deltix.util.jcg.*;
+
 import java.lang.reflect.Modifier;
 
 /**
@@ -70,5 +71,16 @@ public class QVariableContainer {
             container.addComment (comment);
                 
         return (container.addVar (m, type, prefix + (counter++), initValue));
+    }
+
+    public JVariable addVar(String comment, boolean forceFinal, Class<?> type, Class<?>[] typeArgs, JExpr initValue) {
+        int m = modifiers;
+        if (forceFinal)
+            m |= Modifier.FINAL;
+
+        if (comment != null)
+            container.addComment(comment);
+
+        return container.addVar(m, type, typeArgs,prefix + counter++, initValue);
     }
 }

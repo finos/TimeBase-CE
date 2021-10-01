@@ -123,12 +123,12 @@ public class StreamChangeProcessor {
         task.change = change;
         //task.setBackground(false);
 
-        if (options.scope == StreamScope.DURABLE && options.distributionFactor != optionsBean.distributionFactor) {
-            if (confirm == ConversionConfirmation.DROP_DATA)
-                task.df = optionsBean.distributionFactor;
-            else
-                throw new ConstraintViolationException("Cannot change Distribution Factor: " + options.distributionFactor + " due to conversion constraint: " + confirm, 0);
-        }
+//        if (options.scope == StreamScope.DURABLE && options.distributionFactor != optionsBean.distributionFactor) {
+//            if (confirm == ConversionConfirmation.DROP_DATA)
+//                task.df = optionsBean.distributionFactor;
+//            else
+//                throw new ConstraintViolationException("Cannot change Distribution Factor: " + options.distributionFactor + " due to conversion constraint: " + confirm, 0);
+//        }
 
 //        for (Map.Entry <DataField, CompiledConstant> e : defaults.entrySet ()) {
 //            System.out.println (e.getKey ().getName () + " = " + e.getValue ().value);

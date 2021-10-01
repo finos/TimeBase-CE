@@ -25,7 +25,7 @@ import com.epam.deltix.util.concurrent.QuickExecutor;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Adds support of {@link deltix.qsrv.hf.tickdb.pub.topic.TopicDB} for embedded TimeBase instances.
+ * Adds support of {@link com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDB} for embedded TimeBase instances.
  *
  * @author Alexei Osipov
  */
@@ -50,7 +50,7 @@ public class TopicSupportWrapper extends BaseDXTickDBWrapper {
     }
 
     /**
-     * This is factory method that is used by {@link deltix.qsrv.hf.tickdb.pub.TopicDBFactory}.
+     * This is factory method that is used by {@link com.epam.deltix.qsrv.hf.tickdb.pub.TopicDBFactory}.
      */
     @SuppressWarnings("unused")
     public static DXTickDB wrapStandalone(DXTickDB delegate) {

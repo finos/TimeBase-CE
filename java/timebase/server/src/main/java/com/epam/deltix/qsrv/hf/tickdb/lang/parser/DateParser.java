@@ -16,7 +16,6 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.parser;
 
-import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.IllegalDateLiteralException;
 import com.epam.deltix.util.time.GMT;
 import java.util.*;

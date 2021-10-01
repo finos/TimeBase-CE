@@ -20,6 +20,7 @@ import com.epam.deltix.util.jcg.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  *  Generates Java source code.
@@ -166,32 +167,36 @@ public class JavaSrcGenContext extends JContextImpl {
         out.printModifiers (mods);
     }
 
+    private static final Set<String> IGNORE_SET = new HashSet<>(Arrays.asList(
+            "boolean", "boolean[]",
+            "char", "char[]",
+            "byte", "byte[]",
+            "short", "short[]",
+            "int", "int[]",
+            "long", "long[]",
+            "float", "float[]",
+            "double", "double[]",
+            "void"
+    ));
+
     @Override
     protected void printType(String type, SourceCodePrinter out)
             throws IOException {
-
-        String[] primitiveTypes = new String[]{
-                "boolean",
-                "char",
-                "byte",
-                "short",
-                "int",
-                "long",
-                "float",
-                "double"
-        };
-        HashSet<String> ignoreSet = new HashSet<>(Arrays.asList(primitiveTypes));
-        ignoreSet.add("void");
-
-        for (String t : primitiveTypes) {
-            ignoreSet.add(t + "[]");
-        }
-        if (ignoreSet.contains(type)) {
+        if (IGNORE_SET.contains(type)) {
             out.print(type);
         } else {
             out.printRefClassName(type);
         }
     }
     
-           
+    @Override
+    protected void printType(String type, String[] typeArgs, SourceCodePrinter out) throws IOException {
+        if (typeArgs == null) {
+            printType(type, out);
+        } else {
+            out.printRefClassName(type, typeArgs);
+        }
+    }
+
+
 }

@@ -75,7 +75,7 @@ public class StreamOptions {
 
     /**
      * Unique streams maintain in-memory cache of resent messages.
-     * This concept assumes that stream messages will have some field(s) marked as primary key {@link deltix.timebase.messages.PrimaryKey}.
+     * This concept assumes that stream messages will have some field(s) marked as primary key {@link com.epam.deltix.timebase.messages.PrimaryKey}.
      * Primary key may be a simple field (e.g. symbol) or composite (e.g. symbol and portfolio ID).
      * For each key TimeBase runtime maintains a copy of the last message received for this key (cache).
      * Each new consumer will receive a snapshot of current cache at the beginning of live data subscription.

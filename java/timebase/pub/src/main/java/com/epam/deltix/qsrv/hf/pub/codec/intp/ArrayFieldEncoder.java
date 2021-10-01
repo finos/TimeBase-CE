@@ -57,7 +57,8 @@ class ArrayFieldEncoder<T> extends FieldEncoder implements ContainerEncoder {
         this.encoder = FieldCodecFactory.createEncoder(loader, layout);
 
         if (f.isBound())
-            arrayAdapter = ArraysAdapters.createEncodeAdapter(fieldType, encoder, elementType instanceof EnumDataType);
+            arrayAdapter = ArraysAdapters.createEncodeAdapter(fieldType, encoder, elementType instanceof EnumDataType,
+                    elementType instanceof VarcharDataType && ((VarcharDataType) elementType).getEncodingType() == VarcharDataType.INLINE_VARSIZE);
         else
             arrayAdapter = null;
 

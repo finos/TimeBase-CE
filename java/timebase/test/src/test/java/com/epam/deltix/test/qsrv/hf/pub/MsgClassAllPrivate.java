@@ -17,7 +17,7 @@
 package com.epam.deltix.test.qsrv.hf.pub;
 
 import com.epam.deltix.qsrv.hf.pub.md.*;
-import com.epam.deltix.test.qsrv.hf.tickdb.testframework.TestEnum;
+import com.epam.deltix.qsrv.test.messages.TestEnum;
 import com.epam.deltix.timebase.messages.*;
 
 /**
@@ -102,7 +102,7 @@ public class MsgClassAllPrivate {
         s1 = "Hi Kolia";
         mString = "IBM";
         mCharSequence = "MSFT";
-        mEnum = TestEnum.RED;
+        mEnum = TestEnum.ONE;
         mByte = 1;
         mShort = 2;
         mInt = 3;

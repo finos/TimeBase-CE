@@ -1,0 +1,29 @@
+set printJson false
+test select byteField + byteField as "sum", byteField - byteField as "sub", byteField * byteField as "mul", byteField / byteField as "div", byteField % byteField as "mod", -byteField as "neg" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,sum,sub,mul,div,mod,neg
+0,2021-04-19 01:13:16.646,S1,CUSTOM,84,0,1764,1,0,-42
+!end
+test select shortField + shortField as "sum", shortField - shortField as "sub", shortField * shortField as "mul", shortField / shortField as "div", shortField % shortField as "mod", -shortField as "neg" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,sum,sub,mul,div,mod,neg
+0,2021-04-19 01:13:16.646,S1,CUSTOM,58274,0,848964769,1,0,-29137
+!end
+test select intField + intField as "sum", intField - intField as "sub", intField * intField as "mul", intField / intField as "div", intField % intField as "mod", -intField as "neg" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,sum,sub,mul,div,mod,neg
+0,2021-04-19 01:13:16.646,S1,CUSTOM,-1920883034,0,250735849,1,0,-1187042131
+!end
+test select longField + longField as "sum", longField - longField as "sub", longField * longField as "mul", longField / longField as "div", longField % longField as "mod", -longField as "neg" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,sum,sub,mul,div,mod,neg
+0,2021-04-19 01:13:16.646,S1,CUSTOM,-8911171948670647478,0,-2893410179984903079,1,0,4455585974335323739
+!end
+test select floatField + floatField as "sum", floatField - floatField as "sub", floatField * floatField as "mul", floatField / floatField as "div", -floatField as "neg" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,sum,sub,mul,div,neg
+0,2021-04-19 01:13:16.646,S1,CUSTOM,1445.5536,0,522406.28,1.0,-722.7768
+!end
+test select doubleField + doubleField as "sum", doubleField - doubleField as "sub", doubleField * doubleField as "mul", doubleField / doubleField as "div", -doubleField as "neg" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,sum,sub,mul,div,neg
+0,2021-04-19 01:13:16.646,S1,CUSTOM,1150.7202504241966,0,331039.27368408145,1.0,-575.3601252120983
+!end
+test select decimalField + decimalField as "sum", decimalField - decimalField as "sub", decimalField * decimalField as "mul", decimalField / decimalField as "div", -decimalField as "neg" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,sum,sub,mul,div,neg
+0,2021-04-19 01:13:16.646,S1,CUSTOM,1898.410601783914,0,900990.7032413906,1,-949.205300891957
+!end

@@ -228,7 +228,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
                         case TDBProtocol.REQ_GET_LOCK_STATE:            doGetLockState (ds); break;
                         
                         case TDBProtocol.REQ_CREATE_STREAM:             doCreateStream (ds); break;
-                        case TDBProtocol.REQ_CREATE_FILE_STREAM:        doCreateFileStream (ds); break;
+                        //case TDBProtocol.REQ_CREATE_FILE_STREAM:        doCreateFileStream (ds); break;
                         case TDBProtocol.REQ_DELETE_STREAM:             doDeleteStream (ds); break;
                         case TDBProtocol.REQ_RENAME_STREAM:             doRenameStream (ds); break;
                         case TDBProtocol.REQ_GET_STREAM:                doGetStream(ds); break;
@@ -429,7 +429,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
     private void                doSetMetadata (VSChannel ds)
         throws IOException
     {
-        RecordClassSet  rcs = TDBProtocol.readClassSet (ds.getDataInputStream());
+        RecordClassSet  rcs = (RecordClassSet) TDBProtocol.readClassSet (ds.getDataInputStream());
 
         MetaData        md = db.getMetaData ();
 
@@ -630,18 +630,18 @@ public class RequestHandler extends QuickExecutor.QuickTask {
             UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), UserLogger.CREATE_STREAM_PATTERN, key);
     }
 
-    private void                doCreateFileStream (VSChannel ds) throws IOException {
-
-        DataInputStream     in = ds.getDataInputStream();       
-        String              key  = in.readUTF ();
-        String              dataFile  = in.readUTF ();
-
-        db.createFileStream(key, dataFile);
-        out.writeInt (TDBProtocol.RESP_OK);
-
-        if (UserLogger.canTrace(user))
-            UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), UserLogger.CREATE_STREAM_PATTERN, key);
-    }
+//    private void                doCreateFileStream (VSChannel ds) throws IOException {
+//
+//        DataInputStream     in = ds.getDataInputStream();
+//        String              key  = in.readUTF ();
+//        String              dataFile  = in.readUTF ();
+//
+//        db.createFileStream(key, dataFile);
+//        out.writeInt (TDBProtocol.RESP_OK);
+//
+//        if (UserLogger.canTrace(user))
+//            UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), UserLogger.CREATE_STREAM_PATTERN, key);
+//    }
     
     private DXTickStream          getStream (VSChannel ds) throws IOException {
         String              key = ds.getDataInputStream().readUTF ();
@@ -738,7 +738,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         final DXTickStream          stream = getStream (ds);
         DataInputStream             in = ds.getDataInputStream();
         boolean                     polymorphic = in.readBoolean ();
-        RecordClassSet              md = TDBProtocol.readClassSet (in);
+        RecordClassSet              md = (RecordClassSet) TDBProtocol.readClassSet (in);
 
         stream.verify(readLock(ds), LockType.WRITE);
         
@@ -857,7 +857,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
     /**
      * Check if address represents local client.
      *
-     * @param remoteAddress Address has format: "[hostname]/ip_address:port". See {@link InetSocketAddress.InetSocketAddressHolder#toString} (for resolved address).
+     * @param remoteAddress Address has format: "[hostname]/ip_address:port". See {@link InetSocketAddress#toString} (for resolved address).
      *
      */
     // TODO: Move this to a library class?
@@ -1394,4 +1394,3 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         }
     }
 }
-

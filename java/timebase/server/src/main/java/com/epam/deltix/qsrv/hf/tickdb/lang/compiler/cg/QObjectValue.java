@@ -16,42 +16,53 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
-import com.epam.deltix.util.jcg.*;
+import com.epam.deltix.util.jcg.JCompoundStatement;
+import com.epam.deltix.util.jcg.JExpr;
+import com.epam.deltix.util.jcg.JStatement;
+
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
 
 /**
  *
  */
 public class QObjectValue extends QValue {
-    private final JExpr             variable;
-    
-    public QObjectValue (QObjectType type, JExpr variable) {
-        super (type);
-        
+    protected final JExpr variable;
+
+    public QObjectValue(QObjectType type, JExpr variable) {
+        super(type);
+
         this.variable = variable;
     }
 
-    public void         skip (
-        JExpr                       input,
-        JCompoundStatement          addTo
-    )
-    {
-        
-    }
-    
-    @Override
-    public JExpr        read () {
-        return (variable);
+    public void skip(JExpr input, JCompoundStatement addTo) {
+
     }
 
     @Override
-    public JExpr        readIsNull (boolean eq) {
-        JExpr   e = variable.call ("isNull");
-        
-        return (eq ? e : e.not ());
+    public JExpr read() {
+        return variable;
     }
-    
+
     @Override
-    public JStatement   write (JExpr arg) {
-        return (variable.call ("set", arg).asStmt ());
-    }        
+    public JExpr readIsNull(boolean eq) {
+        JExpr e = variable.call("isNull");
+        return eq ? e : e.not();
+    }
+
+    @Override
+    public JStatement write(JExpr arg) {
+        return variable.call("set", arg).asStmt();
+    }
+
+    public JExpr adjustType(int adjustTypeIndex) {
+        return variable.call("adjustTypeId", CTXT.intLiteral(adjustTypeIndex));
+    }
+
+    public JExpr copy(JExpr another) {
+        return variable.call("copyFrom", another);
+    }
+
+    public JExpr reset() {
+        return variable.call("reset");
+    }
 }

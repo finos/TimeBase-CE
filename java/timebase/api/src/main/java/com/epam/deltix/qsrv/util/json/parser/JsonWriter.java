@@ -22,9 +22,13 @@ import com.epam.deltix.qsrv.hf.pub.WritableValue;
 import com.epam.deltix.qsrv.hf.pub.codec.*;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.util.json.DateFormatter;
-import com.epam.deltix.util.collections.generated.*;
+import com.epam.deltix.util.collections.generated.ByteArrayList;
+import com.epam.deltix.util.collections.generated.LongArrayList;
+import com.epam.deltix.util.collections.generated.ObjectArrayList;
+import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 import com.epam.deltix.util.text.CharSequenceParser;
+import com.epam.deltix.util.time.TimeFormatter;
 import org.apache.commons.io.output.StringBuilderWriter;
 
 import java.nio.ByteBuffer;
@@ -33,14 +37,17 @@ import java.util.Collections;
 
 public class JsonWriter {
 
+    private final JsonPool jsonPool;
+    private final String typeField;
+
     public CodecMetaFactory factory = CompiledCodecMetaFactory.INSTANCE;
     private final MemoryDataOutput output = new MemoryDataOutput();
     private ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
-    private final JsonPool jsonPool;
     private final DateFormatter dateFormatter = new DateFormatter();
 
-    public JsonWriter(JsonPool pool) {
+    public JsonWriter(JsonPool pool, String typeField) {
         this.jsonPool = pool;
+        this.typeField = typeField;
     }
 
     private final ObjectToObjectHashMap<String, FixedUnboundEncoder> encoders = new ObjectToObjectHashMap<String, FixedUnboundEncoder>();
@@ -83,9 +90,13 @@ public class JsonWriter {
                     writeVarchar((StringBuilderWriter) value, encoder);
                 else if (type instanceof DateTimeDataType)
                     writeDateTime((StringBuilderWriter) value, encoder);
-                else if (type instanceof TimeOfDayDataType)
-                    encoder.writeInt(((Number)value).intValue());
-                else if (type instanceof BinaryDataType) {
+                else if (type instanceof TimeOfDayDataType) {
+                    if (value instanceof Number) {
+                        encoder.writeInt(((Number) value).intValue());
+                    } else {
+                        writeTimeOfDay((StringBuilderWriter) value, encoder);
+                    }
+                } else if (type instanceof BinaryDataType) {
                     writeBinary((LongArrayList) value, encoder);
                 } else if (type instanceof ArrayDataType) {
                     writeArray((ArrayDataType) type, encoder, value);
@@ -125,11 +136,7 @@ public class JsonWriter {
         if (type.isFloat()) {
             encoder.writeFloat(CharSequenceParser.parseFloat(writer.getBuilder()));
         } else if (type.isDecimal64()) {
-            try {
-                encoder.writeLong(Decimal64Utils.fromDouble(CharSequenceParser.parseDouble(writer.getBuilder())));
-            } catch (NumberFormatException exc) {
-                System.out.println();
-            }
+            encoder.writeLong(Decimal64Utils.parse(writer.getBuilder()));
         } else {
             encoder.writeDouble(CharSequenceParser.parseDouble(writer.getBuilder()));
         }
@@ -162,6 +169,11 @@ public class JsonWriter {
         jsonPool.returnToPool(writer);
     }
 
+    private void writeTimeOfDay(StringBuilderWriter writer, WritableValue encoder) {
+        encoder.writeInt(TimeFormatter.parseTimeOfDayMillis(writer.getBuilder()));
+        jsonPool.returnToPool(writer);
+    }
+
     private void writeObject(ObjectToObjectHashMap<String, Object> object, WritableValue encoder, ClassDataType type) {
         RecordClassDescriptor rcd = matchObjectType(object, type.getDescriptors());
         UnboundEncoder objectEncoder = encoder.getFieldEncoder(rcd);
@@ -173,20 +185,26 @@ public class JsonWriter {
 
     private void writeArray(ArrayDataType type, WritableValue encoder, Object value) throws ParseException {
         DataType elementType = type.getElementDataType();
-        if (value.equals(Collections.EMPTY_LIST)) {
+        if (value instanceof Integer) {
+            writeNullsArray((int) value, encoder);
+        } else if (value.equals(Collections.EMPTY_LIST)) {
             writeEmptyArray(encoder);
         } else if (elementType instanceof IntegerDataType) {
             writeLongArray((LongArrayList) value, (IntegerDataType) elementType, encoder);
         } else if (elementType instanceof FloatDataType) {
-            writeFloatArray(value, (FloatDataType) elementType, encoder);
+            writeFloatArray((ObjectArrayList<Object>) value, (FloatDataType) elementType, encoder);
         } else if (elementType instanceof BooleanDataType) {
-            writeBooleanArray((BooleanArrayList) value, encoder);
+            writeBooleanArray((ByteArrayList) value, encoder);
         } else if (elementType instanceof ClassDataType) {
             writeClassArray((ObjectArrayList<Object>) value, encoder, (ClassDataType) elementType);
         } else if (elementType instanceof DateTimeDataType) {
             writeDateTimeArray((ObjectArrayList<Object>) value, encoder);
         } else if (elementType instanceof TimeOfDayDataType) {
-            writeTimeOfDayArray((LongArrayList) value, encoder);
+            if (value instanceof LongArrayList) {
+                writeTimeOfDayArray((LongArrayList) value, encoder);
+            } else {
+                writeTimeOfDayArray((ObjectArrayList<Object>) value, encoder);
+            }
         } else if (elementType instanceof VarcharDataType) {
             writeVarcharArray((ObjectArrayList<Object>) value, encoder);
         } else if (elementType instanceof EnumDataType) {
@@ -202,117 +220,105 @@ public class JsonWriter {
 
     private void writeLongArray(LongArrayList list, IntegerDataType type, WritableValue encoder) {
         encoder.setArrayLength(list.size());
-        switch (type.getSize()) {
+        switch (type.getNativeTypeSize()) {
             case 1:
-                for (Long l : list) {
-                    WritableValue writable = encoder.nextWritableElement();
-                    writable.writeInt(l.byteValue());
-                }
-                break;
             case 2:
-                for (Long l : list) {
-                    WritableValue writable = encoder.nextWritableElement();
-                    writable.writeInt(l.shortValue());
-                }
-                break;
             case 4:
-            case IntegerDataType.PACKED_UNSIGNED_INT:
-            case IntegerDataType.PACKED_INTERVAL:
-                for (Long l : list) {
+                for (int i = 0; i < list.size(); i++) {
                     WritableValue writable = encoder.nextWritableElement();
-                    writable.writeInt(l.intValue());
+                    long l = list.getLong(i);
+                    if (l == Long.MIN_VALUE) {
+                        writable.writeNull();
+                    } else {
+                        writable.writeInt((int) l);
+                    }
                 }
                 break;
             default:
-                for (Long l : list) {
+                for (int i = 0; i < list.size(); i++) {
+                    long l = list.getLong(i);
                     WritableValue writable = encoder.nextWritableElement();
-                    writable.writeLong(l);
+                    if (l == Long.MIN_VALUE) {
+                        writable.writeNull();
+                    } else {
+                        writable.writeLong(l);
+                    }
                 }
                 break;
         }
     }
 
-    private void writeFloatArray(Object list, FloatDataType type, WritableValue encoder) {
-        if (type.isFloat()) {
-            if (list instanceof DoubleArrayList) {
-                DoubleArrayList dl = (DoubleArrayList) list;
-                encoder.setArrayLength(dl.size());
-                for (Double d : dl) {
-                    WritableValue writable = encoder.nextWritableElement();
-                    writable.writeFloat(d.floatValue());
-                }
-                jsonPool.returnToPool(dl);
-            } else {
-                ObjectArrayList<Object> l = (ObjectArrayList<Object>) list;
-                encoder.setArrayLength(l.size());
-                for (Object o : l) {
-                    WritableValue writable = encoder.nextWritableElement();
-                    writeFloat((StringBuilderWriter) o, writable, type);
-                }
-                jsonPool.returnToPool(l);
-            }
-        } else if (type.isDecimal64()) {
-            if (list instanceof DoubleArrayList) {
-                DoubleArrayList dl = (DoubleArrayList) list;
-                encoder.setArrayLength(dl.size());
-                for (Double d : dl) {
-                    WritableValue writable = encoder.nextWritableElement();
-                    writable.writeLong(Decimal64Utils.fromDouble(d));
-                }
-                jsonPool.returnToPool(dl);
-            } else {
-                ObjectArrayList<Object> l = (ObjectArrayList<Object>) list;
-                encoder.setArrayLength(l.size());
-                for (Object o : l) {
-                    WritableValue writable = encoder.nextWritableElement();
-                    writeFloat((StringBuilderWriter) o, writable, type);
-                }
-                jsonPool.returnToPool(l);
-            }
-        } else {
-            if (list instanceof DoubleArrayList) {
-                DoubleArrayList dl = (DoubleArrayList) list;
-                encoder.setArrayLength(dl.size());
-                for (Double d : dl) {
-                    WritableValue writable = encoder.nextWritableElement();
-                    writable.writeDouble(d);
-                }
-                jsonPool.returnToPool(dl);
-            } else {
-                ObjectArrayList<Object> l = (ObjectArrayList<Object>) list;
-                encoder.setArrayLength(l.size());
-                for (Object o : l) {
-                    WritableValue writable = encoder.nextWritableElement();
-                    writeFloat((StringBuilderWriter) o, writable, type);
-                }
-                jsonPool.returnToPool(l);
-            }
-        }
-    }
-
-    private void writeBooleanArray(BooleanArrayList list, WritableValue encoder) {
+    private void writeFloatArray(ObjectArrayList<Object> list, FloatDataType type, WritableValue encoder) {
         encoder.setArrayLength(list.size());
-        for (Boolean b : list) {
+        for (Object o : list) {
             WritableValue writable = encoder.nextWritableElement();
-            writable.writeBoolean(b);
+            if (o == null) {
+                writable.writeNull();
+            } else {
+                writeFloat((StringBuilderWriter) o, writable, type);
+            }
         }
         jsonPool.returnToPool(list);
+    }
+
+    private void writeBooleanArray(ByteArrayList list, WritableValue encoder) {
+        encoder.setArrayLength(list.size());
+        for (int i = 0; i < list.size(); i++) {
+            WritableValue writable = encoder.nextWritableElement();
+            byte v = list.getByte(i);
+            if (v == BooleanDataType.NULL) {
+                writable.writeNull();
+            } else {
+                writable.writeBoolean(v == BooleanDataType.TRUE);
+            }
+        }
+        jsonPool.returnToPool(list);
+    }
+
+    private void writeNullsArray(int nulls, WritableValue encoder) {
+        encoder.setArrayLength(nulls);
+        for (int i = 0; i < nulls; i++) {
+            WritableValue writable = encoder.nextWritableElement();
+            writable.writeNull();
+        }
     }
 
     private void writeDateTimeArray(ObjectArrayList<Object> list, WritableValue encoder) throws ParseException {
         encoder.setArrayLength(list.size());
         for (Object o : list) {
             WritableValue writable = encoder.nextWritableElement();
-            writeDateTime((StringBuilderWriter) o, writable);
+            if (o == null) {
+                writable.writeNull();
+            } else {
+                writeDateTime((StringBuilderWriter) o, writable);
+            }
         }
         jsonPool.returnToPool(list);
     }
 
     private void writeTimeOfDayArray(LongArrayList list, WritableValue encoder) {
         encoder.setArrayLength(list.size());
-        for (Long o : list) {
+        for (int i = 0; i < list.size(); i++) {
             WritableValue writable = encoder.nextWritableElement();
-            writable.writeInt(o.intValue());
+            long l = list.getLong(i);
+            if (l == Long.MIN_VALUE) {
+                writable.writeNull();
+            } else {
+                writable.writeInt((int) l);
+            }
+        }
+        jsonPool.returnToPool(list);
+    }
+
+    private void writeTimeOfDayArray(ObjectArrayList<Object> list, WritableValue encoder) {
+        encoder.setArrayLength(list.size());
+        for (Object o : list) {
+            WritableValue writable = encoder.nextWritableElement();
+            if (o == null) {
+                writable.writeNull();
+            } else {
+                writeTimeOfDay((StringBuilderWriter) o, writable);
+            }
         }
         jsonPool.returnToPool(list);
     }
@@ -321,7 +327,11 @@ public class JsonWriter {
         encoder.setArrayLength(list.size());
         for (Object o : list) {
             WritableValue writable = encoder.nextWritableElement();
-            writeVarchar((StringBuilderWriter) o, writable);
+            if (o == null) {
+                writable.writeNull();
+            } else {
+                writeVarchar((StringBuilderWriter) o, writable);
+            }
         }
         jsonPool.returnToPool(list);
     }
@@ -330,7 +340,11 @@ public class JsonWriter {
         encoder.setArrayLength(list.size());
         for (Object o : list) {
             WritableValue writable = encoder.nextWritableElement();
-            writeEnum((StringBuilderWriter) o, writable, type);
+            if (o == null) {
+                writable.writeNull();
+            } else {
+                writeEnum((StringBuilderWriter) o, writable, type);
+            }
         }
         jsonPool.returnToPool(list);
     }
@@ -339,13 +353,17 @@ public class JsonWriter {
         encoder.setArrayLength(list.size());
         for (Object o : list) {
             WritableValue writable = encoder.nextWritableElement();
-            writeObject((ObjectToObjectHashMap<String, Object>) o, writable, type);
+            if (o == null) {
+                writable.writeNull();
+            } else {
+                writeObject((ObjectToObjectHashMap<String, Object>) o, writable, type);
+            }
         }
         jsonPool.returnToPool(list);
     }
 
-    private RecordClassDescriptor    matchObjectType(ObjectToObjectHashMap<String, Object> value, RecordClassDescriptor[] rcds) {
-        StringBuilderWriter name = (StringBuilderWriter) value.get("type", null);
+    private RecordClassDescriptor matchObjectType(ObjectToObjectHashMap<String, Object> value, RecordClassDescriptor[] rcds) {
+        StringBuilderWriter name = (StringBuilderWriter) value.get(typeField, null);
         RecordClassDescriptor rcd = null;
         if (name != null) {
             String stringName = name.getBuilder().toString();
@@ -355,12 +373,15 @@ public class JsonWriter {
                     break;
                 }
             }
-            value.remove("type");
+            value.remove(typeField);
             jsonPool.returnToPool(name);
         } else if (rcds.length == 1) {
             rcd = rcds[0];
         } else {
             throw new IllegalStateException("Undefined object type for the " + value);
+        }
+        if (rcd == null) {
+            throw new IllegalStateException("Couldn't find type for name: " + name);
         }
         return rcd;
     }
@@ -374,9 +395,5 @@ public class JsonWriter {
             encoders.put(guid, encoder);
         }
         return encoder;
-    }
-
-    public static void main(String[] args) {
-        System.out.println();
     }
 }

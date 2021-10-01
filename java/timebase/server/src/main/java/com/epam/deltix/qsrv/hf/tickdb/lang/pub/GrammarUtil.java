@@ -23,6 +23,8 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.util.io.UncheckedIOException;
 
 import java.io.*;
+import java.util.Hashtable;
+import java.util.Map;
 
 /**
  *
@@ -284,9 +286,6 @@ public class GrammarUtil {
         throws IOException
     {
         escapeIdentifier(NamedObjectType.TYPE, type.getBaseName(), out);
-        
-        if (baseOnly)
-            return;
 
         if (type instanceof ArrayDataType)
             describeArrayContentType((ArrayDataType) type, out);
@@ -509,9 +508,40 @@ public class GrammarUtil {
                 out.write (" RELATIVE TO ");
                 escapeIdentifier (NamedObjectType.VARIABLE, r2, out);
             }
-        }                
-        
+        }
+
+        describe(out, df.getAttributes());
+
         printComment (" ", df, out);
+    }
+
+    private static void describe(Writer out, Hashtable<String, String> allTags) throws IOException {
+        if (allTags != null) {
+            // todo: temporary hack (displayIdentifier is always presents in the map)
+            // skip displayIdentifier if it false
+            Hashtable<String, String> tags = new Hashtable<>(allTags);
+            String displayIdentifier = tags.get("displayIdentifier");
+            if ("false".equalsIgnoreCase(displayIdentifier)) {
+                tags.remove("displayIdentifier");
+            }
+
+            if (tags.size() > 0) {
+                out.append(" TAGS (");
+                boolean first = true;
+                for (Map.Entry<String, String> tag : tags.entrySet()) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        out.append(",");
+                    }
+
+                    escapeIdentifier(NamedObjectType.VARIABLE, tag.getKey(), out);
+                    out.append(":");
+                    escapeIdentifier(NamedObjectType.VARIABLE, tag.getValue(), out);
+                }
+                out.append(")");
+            }
+        }
     }
     
     public static void      describe (

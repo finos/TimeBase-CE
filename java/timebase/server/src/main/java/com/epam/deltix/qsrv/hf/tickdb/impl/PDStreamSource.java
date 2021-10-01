@@ -29,10 +29,9 @@ import com.epam.deltix.util.collections.ElementsEnumeration;
 import com.epam.deltix.util.collections.KeyEntry;
 import com.epam.deltix.util.collections.generated.*;
 import com.epam.deltix.util.lang.DisposableListener;
+import com.epam.deltix.util.lang.Util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 class PDStreamSource extends AbstractStreamSource implements DisposableListener<PDStreamReader> {
 
@@ -147,8 +146,8 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
             if (subscribed == null)
                 subscribed = new ObjectHashSet<>();
 
-                while (ids.hasNext())
-                    subscribed.add(ids.next());
+            while (ids.hasNext())
+                subscribed.add(ids.next());
         }
 
         public void                         remove(Iterable<IdentityKey> ids) {
@@ -235,7 +234,6 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
         } else {
             return new Filter(symbols, sub.subscribed, subscription);
         }
-
     }
 
     /*
@@ -263,21 +261,7 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
 
             // create reader which will get data from range [nstime, limit]
             if (!sub.isEmpty() && nstime < limit) {
-                TSRoot[] roots = stream.getRoots(sub, options.live, options.space);
-
-                for (TSRoot root : roots) {
-                    EntityFilter filter = createFilter(root.getSymbolRegistry(), sub);
-                    if (filter.restrictAll())
-                        continue;
-
-                    PDStreamReader reader = stream.createReader(root, nstime, options, filter);
-                    reader.setDisposableListener(this);
-                    reader.setLimitTimestamp(limit);
-                    sources.put(reader, sub);
-
-                    mx.add(reader, timestamp, root.getSpaceIndex());
-                    changed = true;
-                }
+                changed = addSources(timestamp, nstime, sub, limit);
             }
 
         } else {
@@ -294,21 +278,7 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
 
             // create reader which will get data from range [limit, nstime] reverse
             if (!sub.isEmpty() && nstime > limit) {
-                TSRoot[] roots = stream.getRoots(sub, options.live, options.space);
-
-                for (TSRoot root : roots) {
-                    EntityFilter filter = createFilter(root.getSymbolRegistry(), sub);
-                    if (filter.restrictAll())
-                        continue;
-
-                    PDStreamReader reader = stream.createReader(root, nstime, options, filter);
-                    reader.setDisposableListener(this);
-                    reader.setLimitTimestamp(limit);
-                    sources.put(reader, sub);
-
-                    mx.add(reader, timestamp, root.getSpaceIndex());
-                    changed = true;
-                }
+                changed = addSources(timestamp, nstime, sub, limit);
             }
         }
 
@@ -317,6 +287,44 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
         else
             addSpecialReader(stream, timestamp, VERSIONS_READER);
     }
+
+    private boolean addSources(long timestamp, long nstime, SourceSubscription sub, long limit) {
+        TSRoot[] roots = stream.getRoots(sub, nstime, options.live, options.space);
+        return addSources(timestamp, nstime, sub, limit, roots);
+    }
+
+    private boolean addSources(long timestamp, long nstime, SourceSubscription sub, long limit, TSRoot[] roots) {
+        Arrays.sort(roots, ROOT_BY_SPACE_COMPARATOR);
+
+        boolean changed = false;
+
+        for (int i = 0; i < roots.length; i++) {
+            TSRoot root = roots[i];
+
+            EntityFilter filter = createFilter(root.getSymbolRegistry(), sub);
+            if (filter.restrictAll())
+                continue;
+
+            if (!root.isOpen())
+                continue;
+
+            PDStreamReader reader = stream.createReader(root, nstime, options, filter);
+            reader.setDisposableListener(this);
+            reader.setLimitTimestamp(limit);
+            sources.put(reader, sub);
+
+            int spaceIndex = i + 1;
+            mx.add(reader, timestamp, spaceIndex);
+            changed = true;
+        }
+        return changed;
+    }
+
+    private static final Comparator<TSRoot> ROOT_BY_SPACE_COMPARATOR = (o1, o2) -> {
+        String s1 = o1.getSpace();
+        String s2 = o2.getSpace();
+        return Util.compare(s1, s2, false);
+    };
 
 
     @Override
@@ -446,6 +454,25 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
     @Override
     public boolean          entityCreated(IdentityKey id) {
         return false;
+    }
+
+    @Override
+    public boolean          spaceCreated(String space) {
+        // we subscribed to the single space
+        if (options.space != null && !space.equals(options.space))
+            return false;
+
+        long timestamp = mx.getCurrentTime();
+        long nstime = TimeStamp.getNanoTime(timestamp);
+
+        SourceSubscription sub = isSubscribedToAllEntities ?
+                new SourceSubscription(timestamp) : new SourceSubscription(subscription.keyIterator());
+        long limit = options.reversed ? Long.MIN_VALUE : Long.MAX_VALUE;
+
+        TSRoot[] roots = stream.getRoots(sub, nstime, options.live, space);
+        addSources(timestamp,nstime, sub, limit, roots);
+
+        return true;
     }
 
     @Override

@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem;
 
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.util.parsers.Location;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.*;
@@ -62,6 +63,7 @@ public class EnvironmentFrame implements Environment {
     private final Map <Key, Object>         local = new HashMap <Key, Object> ();
     private final Map <Key, Object>         cilocal = new HashMap <Key, Object> ();
     private Key                             buffer = new Key ();
+    private RecordClassDescriptor[]         topTypes;
     
     public EnvironmentFrame () {
         this (null);
@@ -69,6 +71,14 @@ public class EnvironmentFrame implements Environment {
 
     public EnvironmentFrame (Environment parent) {
         this.parent = parent;
+    }
+
+    public void                 setTopTypes(RecordClassDescriptor[] topTypes) {
+        this.topTypes = topTypes;
+    }
+
+    public RecordClassDescriptor[] getTopTypes() {
+        return topTypes;
     }
 
     public Object               lookUpExactLocal (NamedObjectType type, String id) {
@@ -164,5 +174,23 @@ public class EnvironmentFrame implements Environment {
 
         if (prev != null && prev != AMBIGUOUS)
             cilocal.put (ukey, AMBIGUOUS);
+    }
+
+    public boolean unbind(NamedObjectType type, String id) {
+        Key key = new Key(type, id);
+
+        boolean removed = false;
+        if (local.containsKey(key)) {
+            local.remove(key);
+            removed = true;
+        }
+
+        Key ukey = new Key(type, id.toUpperCase());
+        if (cilocal.containsKey(ukey)) {
+            cilocal.remove(ukey);
+            removed = true;
+        }
+
+        return removed;
     }
 }

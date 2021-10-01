@@ -34,6 +34,9 @@ public class QPluginArgValue extends QValue {
 
     @Override
     public JExpr                read () {
+        if (type instanceof QArrayType) {
+            return instance.call("get");
+        }
         throw new UnsupportedOperationException ("Can't read plugin args");
     }
 

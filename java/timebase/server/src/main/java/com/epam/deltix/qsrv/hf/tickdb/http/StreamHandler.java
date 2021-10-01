@@ -59,11 +59,11 @@ public final class StreamHandler {
         response.setStatus(HttpServletResponse.SC_OK);
     }
 
-    static void     createStream(DXTickDB db, CreateFileStreamRequest request, HttpServletResponse response) throws IOException {
-        db.createFileStream(request.key, request.dataFile);
-
-        response.setStatus(HttpServletResponse.SC_OK);
-    }
+//    static void     createStream(DXTickDB db, CreateFileStreamRequest request, HttpServletResponse response) throws IOException {
+//        db.createFileStream(request.key, request.dataFile);
+//
+//        response.setStatus(HttpServletResponse.SC_OK);
+//    }
 
     static void processGetRange(DXTickDB db, GetRangeRequest req, HttpServletResponse response) throws IOException {
         DXTickStream stream = getStream(db, req, response);
@@ -383,6 +383,60 @@ public final class StreamHandler {
                 stream.rename(req.key);
         } catch (Exception e) {
             sendError(response, e);
+        }
+    }
+
+    static void processListSpaces(DXTickDB db, ListSpacesRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+
+        if (stream != null) {
+            final ListSpacesResponse r = new ListSpacesResponse();
+            r.spaces = stream.listSpaces();
+
+            marshall(r, response.getOutputStream());
+        }
+    }
+
+    public static void processRenameSpace(DXTickDB db, RenameSpaceRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null)
+                stream.renameSpace(req.newName, req.oldName);
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    public static void processDeleteSpaces(DXTickDB db, DeleteSpacesRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null && req.spaces != null && req.spaces.length > 0)
+                stream.deleteSpaces(req.spaces);
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    static void processGetSpaceRange(DXTickDB db, GetSpaceTimeRangeRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+
+        if (stream != null) {
+            final long[] range = stream.getTimeRange(req.space);
+
+            final GetRangeResponse r = new GetRangeResponse();
+            if (range != null)
+                r.timeRange = new TimeRange(range[0], range[1]);
+
+            marshall(r, response.getOutputStream());
+        }
+    }
+
+    static void processDescribeStreamRequest(DXTickDB db, DescribeStreamRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+
+        if (stream != null) {
+            final DescribeStreamResponse r = new DescribeStreamResponse(stream.describe());
+            marshall(r, response.getOutputStream());
         }
     }
 }

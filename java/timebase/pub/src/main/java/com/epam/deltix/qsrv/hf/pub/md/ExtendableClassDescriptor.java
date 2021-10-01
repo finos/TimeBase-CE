@@ -128,4 +128,17 @@ public abstract class ExtendableClassDescriptor <T extends ExtendableClassDescri
         else
             parent = null;
     }
+
+    @Override
+    protected void readFieldsWithoutGuid(DataInputStream in, TypeResolver resolver, int serial) throws IOException {
+        super.readFieldsWithoutGuid(in, resolver, serial);
+
+        isAbstract = in.readBoolean ();
+        boolean     hasParent = in.readBoolean ();
+
+        if (hasParent)
+            parent = (T) readReference (in, resolver);
+        else
+            parent = null;
+    }
 }

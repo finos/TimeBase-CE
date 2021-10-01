@@ -1,0 +1,536 @@
+Running QQL: select entries.price as res1 from packages
+res1 : 6 [2010.0, 1989.0, 2010.0, 1988.0, 5000.0, 4989.0]
+res1 : 6 [2020.0, 1979.0, 2020.0, 1977.0, 5000.0, 4979.0]
+res1 : 8 [2030.0, 1969.0, 2032.0, 2030.0, 1966.0, 5000.0, 4969.0, 5064.0]
+res1 : 20 [5040.0, 5041.0, 5042.0, 5043.0, 5044.0, 5045.0, 5046.0, 5047.0, 5048.0, 5049.0, 4960.0, 4959.0, 4958.0, 4957.0, 4956.0, 4955.0, 4954.0, 4953.0, 4952.0, 4951.0]
+res1 : 6 [2050.0, 1949.0, 2050.0, 1944.0, 5000.0, 4949.0]
+res1 : 8 [2060.0, 1939.0, 2062.0, 2060.0, 1933.0, 5000.0, 4939.0, 5124.0]
+res1 : 2 [2070.0, 1922.0]
+res1 : 20 [5080.0, 5081.0, 5082.0, 5083.0, 5084.0, 5085.0, 5086.0, 5087.0, 5088.0, 5089.0, 4920.0, 4919.0, 4918.0, 4917.0, 4916.0, 4915.0, 4914.0, 4913.0, 4912.0, 4911.0]
+res1 : 8 [2090.0, 1909.0, 2092.0, 2090.0, 1900.0, 5000.0, 4909.0, 5184.0]
+res1 : 6 [2100.0, 1899.0, 2100.0, 1889.0, 5000.0, 4899.0]
+!END
+Running QQL: select entries[this is deltix.entries.L1Entry] as res1 from packages
+res1 : 2 [L1Entry{side=BUY, price=2010.0, size=20010.0}, L1Entry{side=SELL, price=1988.0, size=19988.0}]
+res1 : 2 [L1Entry{side=BUY, price=2020.0, size=20020.0}, L1Entry{side=SELL, price=1977.0, size=19977.0}]
+res1 : 2 [L1Entry{side=BUY, price=2030.0, size=20030.0}, L1Entry{side=SELL, price=1966.0, size=19966.0}]
+res1 : NULL
+res1 : 2 [L1Entry{side=BUY, price=2050.0, size=20050.0}, L1Entry{side=SELL, price=1944.0, size=19944.0}]
+res1 : 2 [L1Entry{side=BUY, price=2060.0, size=20060.0}, L1Entry{side=SELL, price=1933.0, size=19933.0}]
+res1 : 2 [L1Entry{side=BUY, price=2070.0, size=20070.0}, L1Entry{side=SELL, price=1922.0, size=19922.0}]
+res1 : NULL
+res1 : 2 [L1Entry{side=BUY, price=2090.0, size=20090.0}, L1Entry{side=SELL, price=1900.0, size=19900.0}]
+res1 : 2 [L1Entry{side=BUY, price=2100.0, size=20100.0}, L1Entry{side=SELL, price=1889.0, size=19889.0}]
+!END
+Running QQL: select entries[this is deltix.entries.L2Entry] as res1 from packages
+res1 : 2 [L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}]
+res1 : 2 [L2Entry{level=2, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}]
+res1 : 3 [L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=4, side=SELL, price=4969.0, size=49969.0}, L2Entry{level=5, side=BUY, price=5064.0, size=50064.0}]
+res1 : 20 [L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=0, side=SELL, price=4960.0, size=49960.0}, L2Entry{level=1, side=SELL, price=4959.0, size=49959.0}, L2Entry{level=2, side=SELL, price=4958.0, size=49958.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=5, side=SELL, price=4955.0, size=49955.0}, L2Entry{level=6, side=SELL, price=4954.0, size=49954.0}, L2Entry{level=7, side=SELL, price=4953.0, size=49953.0}, L2Entry{level=8, side=SELL, price=4952.0, size=49952.0}, L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}]
+res1 : 2 [L2Entry{level=5, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}]
+res1 : 3 [L2Entry{level=6, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=7, side=SELL, price=4939.0, size=49939.0}, L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}]
+res1 : NULL
+res1 : 20 [L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=0, side=SELL, price=4920.0, size=49920.0}, L2Entry{level=1, side=SELL, price=4919.0, size=49919.0}, L2Entry{level=2, side=SELL, price=4918.0, size=49918.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=5, side=SELL, price=4915.0, size=49915.0}, L2Entry{level=6, side=SELL, price=4914.0, size=49914.0}, L2Entry{level=7, side=SELL, price=4913.0, size=49913.0}, L2Entry{level=8, side=SELL, price=4912.0, size=49912.0}, L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}]
+res1 : 3 [L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=0, side=SELL, price=4909.0, size=49909.0}, L2Entry{level=1, side=BUY, price=5184.0, size=50184.0}]
+res1 : 2 [L2Entry{level=0, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}]
+!END
+Running QQL: select entries[this is deltix.entries.TradeEntry] as res1 from packages
+res1 : 2 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, TradeEntry{price=1989.0, size=19989.0, side=SELL}]
+res1 : 2 [TradeEntry{price=2020.0, size=20020.0, side=BUY}, TradeEntry{price=1979.0, size=19979.0, side=SELL}]
+res1 : 3 [TradeEntry{price=2030.0, size=20030.0, side=BUY}, TradeEntry{price=1969.0, size=19969.0, side=SELL}, TradeEntry{price=2032.0, size=20032.0, side=BUY}]
+res1 : NULL
+res1 : 2 [TradeEntry{price=2050.0, size=20050.0, side=BUY}, TradeEntry{price=1949.0, size=19949.0, side=SELL}]
+res1 : 3 [TradeEntry{price=2060.0, size=20060.0, side=BUY}, TradeEntry{price=1939.0, size=19939.0, side=SELL}, TradeEntry{price=2062.0, size=20062.0, side=BUY}]
+res1 : NULL
+res1 : NULL
+res1 : 3 [TradeEntry{price=2090.0, size=20090.0, side=BUY}, TradeEntry{price=1909.0, size=19909.0, side=SELL}, TradeEntry{price=2092.0, size=20092.0, side=BUY}]
+res1 : 2 [TradeEntry{price=2100.0, size=20100.0, side=BUY}, TradeEntry{price=1899.0, size=19899.0, side=SELL}]
+!END
+Running QQL: select entries.price[0] as res1 from packages
+2010.0
+2020.0
+2030.0
+5040.0
+2050.0
+2060.0
+2070.0
+5080.0
+2090.0
+2100.0
+!END
+Running QQL: select entries.price[2] as res1 from packages
+2010.0
+2020.0
+2032.0
+5042.0
+2050.0
+2062.0
+NaN
+5082.0
+2092.0
+2100.0
+!END
+Running QQL: select entries.price[5] as res1 from packages
+4989.0
+4979.0
+5000.0
+5045.0
+4949.0
+5000.0
+NaN
+5085.0
+5000.0
+4899.0
+!END
+Running QQL: select entries.price[10] as res1 from packages
+NaN
+NaN
+NaN
+4960.0
+NaN
+NaN
+NaN
+4920.0
+NaN
+NaN
+!END
+Running QQL: select entries.price[-10] as res1 from packages
+NaN
+NaN
+NaN
+4960.0
+NaN
+NaN
+NaN
+4920.0
+NaN
+NaN
+!END
+Running QQL: select entries.price[this < 2050] as res1 from packages
+res1 : 4 [2010.0, 1989.0, 2010.0, 1988.0]
+res1 : 4 [2020.0, 1979.0, 2020.0, 1977.0]
+res1 : 5 [2030.0, 1969.0, 2032.0, 2030.0, 1966.0]
+res1 : NULL
+res1 : 2 [1949.0, 1944.0]
+res1 : 2 [1939.0, 1933.0]
+res1 : 1 [1922.0]
+res1 : NULL
+res1 : 2 [1909.0, 1900.0]
+res1 : 2 [1899.0, 1889.0]
+!END
+Running QQL: select entries.price[this < 2050 and this >= 1910] as res1 from packages
+res1 : 4 [2010.0, 1989.0, 2010.0, 1988.0]
+res1 : 4 [2020.0, 1979.0, 2020.0, 1977.0]
+res1 : 5 [2030.0, 1969.0, 2032.0, 2030.0, 1966.0]
+res1 : NULL
+res1 : 2 [1949.0, 1944.0]
+res1 : 2 [1939.0, 1933.0]
+res1 : 1 [1922.0]
+res1 : NULL
+res1 : NULL
+res1 : NULL
+!END
+Running QQL: select entries.exchange[this == 'GDAX'] as res1 from packages
+res1 : 2 [GDAX, GDAX]
+res1 : 2 [GDAX, GDAX]
+res1 : 3 [GDAX, GDAX, GDAX]
+res1 : 20 [GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX]
+res1 : 2 [GDAX, GDAX]
+res1 : 3 [GDAX, GDAX, GDAX]
+res1 : NULL
+res1 : 20 [GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX, GDAX]
+res1 : 3 [GDAX, GDAX, GDAX]
+res1 : 2 [GDAX, GDAX]
+!END
+Running QQL: select entries[1].price as res1, entries[3].size as res2, entries[0].exchange as res3, entries[5].level as res4, entries[10].price as res5 from packages
+1989.0, 19988.0, BINANCE, 2, NaN
+1979.0, 19977.0, BINANCE, 3, NaN
+1969.0, 20030.0, BINANCE, 3, NaN
+5041.0, 50043.0, GDAX, 5, 4960.0
+1949.0, 19944.0, BINANCE, 6, NaN
+1939.0, 20060.0, BINANCE, 6, NaN
+1922.0, NaN, BINANCE, -2147483648, NaN
+5081.0, 50083.0, GDAX, 5, 4920.0
+1909.0, 20090.0, BINANCE, 9, NaN
+1899.0, 19889.0, BINANCE, 1, NaN
+!END
+Running QQL: select entries[-1].price as res1, entries[-3].size as res2, entries[-1].exchange as res3, entries[-5].level as res4, entries[-10].price as res5 from packages
+4989.0, 19988.0, GDAX, -2147483648, NaN
+4979.0, 19977.0, GDAX, -2147483648, NaN
+5064.0, 50000.0, GDAX, -2147483648, NaN
+4951.0, 49953.0, GDAX, 5, 4960.0
+4949.0, 19944.0, GDAX, -2147483648, NaN
+5124.0, 50000.0, GDAX, -2147483648, NaN
+1922.0, NaN, BINANCE, -2147483648, NaN
+4911.0, 49913.0, GDAX, 5, 4920.0
+5184.0, 50000.0, GDAX, -2147483648, NaN
+4899.0, 19889.0, GDAX, -2147483648, NaN
+!END
+Running QQL: select entries[this is deltix.entries.TradeEntry].price as res1, entries[this is deltix.entries.TradeEntry].size as res2 from packages
+res1 : 2 [2010.0, 1989.0] | res2 : 2 [20010.0, 19989.0]
+res1 : 2 [2020.0, 1979.0] | res2 : 2 [20020.0, 19979.0]
+res1 : 3 [2030.0, 1969.0, 2032.0] | res2 : 3 [20030.0, 19969.0, 20032.0]
+res1 : NULL | res2 : NULL
+res1 : 2 [2050.0, 1949.0] | res2 : 2 [20050.0, 19949.0]
+res1 : 3 [2060.0, 1939.0, 2062.0] | res2 : 3 [20060.0, 19939.0, 20062.0]
+res1 : NULL | res2 : NULL
+res1 : NULL | res2 : NULL
+res1 : 3 [2090.0, 1909.0, 2092.0] | res2 : 3 [20090.0, 19909.0, 20092.0]
+res1 : 2 [2100.0, 1899.0] | res2 : 2 [20100.0, 19899.0]
+!END
+Running QQL: select entries[this is deltix.entries.L2Entry].level as res1 from packages
+res1 : 2 [1, 2]
+res1 : 2 [2, 3]
+res1 : 3 [3, 4, 5]
+res1 : 20 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+res1 : 2 [5, 6]
+res1 : 3 [6, 7, 8]
+res1 : NULL
+res1 : 20 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+res1 : 3 [9, 0, 1]
+res1 : 2 [0, 1]
+!END
+Running QQL: select entries[this.price > 2000 and size <= 30000] as res1 from packages
+res1 : 2 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, L1Entry{side=BUY, price=2010.0, size=20010.0}]
+res1 : 2 [TradeEntry{price=2020.0, size=20020.0, side=BUY}, L1Entry{side=BUY, price=2020.0, size=20020.0}]
+res1 : 3 [TradeEntry{price=2030.0, size=20030.0, side=BUY}, TradeEntry{price=2032.0, size=20032.0, side=BUY}, L1Entry{side=BUY, price=2030.0, size=20030.0}]
+res1 : NULL
+res1 : 2 [TradeEntry{price=2050.0, size=20050.0, side=BUY}, L1Entry{side=BUY, price=2050.0, size=20050.0}]
+res1 : 3 [TradeEntry{price=2060.0, size=20060.0, side=BUY}, TradeEntry{price=2062.0, size=20062.0, side=BUY}, L1Entry{side=BUY, price=2060.0, size=20060.0}]
+res1 : 1 [L1Entry{side=BUY, price=2070.0, size=20070.0}]
+res1 : NULL
+res1 : 3 [TradeEntry{price=2090.0, size=20090.0, side=BUY}, TradeEntry{price=2092.0, size=20092.0, side=BUY}, L1Entry{side=BUY, price=2090.0, size=20090.0}]
+res1 : 2 [TradeEntry{price=2100.0, size=20100.0, side=BUY}, L1Entry{side=BUY, price=2100.0, size=20100.0}]
+!END
+Running QQL: select entries[price > 2000] as res1 from packages
+res1 : 4 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, L1Entry{side=BUY, price=2010.0, size=20010.0}, L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}]
+res1 : 4 [TradeEntry{price=2020.0, size=20020.0, side=BUY}, L1Entry{side=BUY, price=2020.0, size=20020.0}, L2Entry{level=2, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}]
+res1 : 6 [TradeEntry{price=2030.0, size=20030.0, side=BUY}, TradeEntry{price=2032.0, size=20032.0, side=BUY}, L1Entry{side=BUY, price=2030.0, size=20030.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=4, side=SELL, price=4969.0, size=49969.0}, L2Entry{level=5, side=BUY, price=5064.0, size=50064.0}]
+res1 : 20 [L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=0, side=SELL, price=4960.0, size=49960.0}, L2Entry{level=1, side=SELL, price=4959.0, size=49959.0}, L2Entry{level=2, side=SELL, price=4958.0, size=49958.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=5, side=SELL, price=4955.0, size=49955.0}, L2Entry{level=6, side=SELL, price=4954.0, size=49954.0}, L2Entry{level=7, side=SELL, price=4953.0, size=49953.0}, L2Entry{level=8, side=SELL, price=4952.0, size=49952.0}, L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}]
+res1 : 4 [TradeEntry{price=2050.0, size=20050.0, side=BUY}, L1Entry{side=BUY, price=2050.0, size=20050.0}, L2Entry{level=5, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}]
+res1 : 6 [TradeEntry{price=2060.0, size=20060.0, side=BUY}, TradeEntry{price=2062.0, size=20062.0, side=BUY}, L1Entry{side=BUY, price=2060.0, size=20060.0}, L2Entry{level=6, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=7, side=SELL, price=4939.0, size=49939.0}, L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}]
+res1 : 1 [L1Entry{side=BUY, price=2070.0, size=20070.0}]
+res1 : 20 [L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=0, side=SELL, price=4920.0, size=49920.0}, L2Entry{level=1, side=SELL, price=4919.0, size=49919.0}, L2Entry{level=2, side=SELL, price=4918.0, size=49918.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=5, side=SELL, price=4915.0, size=49915.0}, L2Entry{level=6, side=SELL, price=4914.0, size=49914.0}, L2Entry{level=7, side=SELL, price=4913.0, size=49913.0}, L2Entry{level=8, side=SELL, price=4912.0, size=49912.0}, L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}]
+res1 : 6 [TradeEntry{price=2090.0, size=20090.0, side=BUY}, TradeEntry{price=2092.0, size=20092.0, side=BUY}, L1Entry{side=BUY, price=2090.0, size=20090.0}, L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=0, side=SELL, price=4909.0, size=49909.0}, L2Entry{level=1, side=BUY, price=5184.0, size=50184.0}]
+res1 : 4 [TradeEntry{price=2100.0, size=20100.0, side=BUY}, L1Entry{side=BUY, price=2100.0, size=20100.0}, L2Entry{level=0, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}]
+!END
+Running QQL: select entries[this.price > 2000] as res1 from packages
+res1 : 4 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, L1Entry{side=BUY, price=2010.0, size=20010.0}, L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}]
+res1 : 4 [TradeEntry{price=2020.0, size=20020.0, side=BUY}, L1Entry{side=BUY, price=2020.0, size=20020.0}, L2Entry{level=2, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}]
+res1 : 6 [TradeEntry{price=2030.0, size=20030.0, side=BUY}, TradeEntry{price=2032.0, size=20032.0, side=BUY}, L1Entry{side=BUY, price=2030.0, size=20030.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=4, side=SELL, price=4969.0, size=49969.0}, L2Entry{level=5, side=BUY, price=5064.0, size=50064.0}]
+res1 : 20 [L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=0, side=SELL, price=4960.0, size=49960.0}, L2Entry{level=1, side=SELL, price=4959.0, size=49959.0}, L2Entry{level=2, side=SELL, price=4958.0, size=49958.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=5, side=SELL, price=4955.0, size=49955.0}, L2Entry{level=6, side=SELL, price=4954.0, size=49954.0}, L2Entry{level=7, side=SELL, price=4953.0, size=49953.0}, L2Entry{level=8, side=SELL, price=4952.0, size=49952.0}, L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}]
+res1 : 4 [TradeEntry{price=2050.0, size=20050.0, side=BUY}, L1Entry{side=BUY, price=2050.0, size=20050.0}, L2Entry{level=5, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}]
+res1 : 6 [TradeEntry{price=2060.0, size=20060.0, side=BUY}, TradeEntry{price=2062.0, size=20062.0, side=BUY}, L1Entry{side=BUY, price=2060.0, size=20060.0}, L2Entry{level=6, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=7, side=SELL, price=4939.0, size=49939.0}, L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}]
+res1 : 1 [L1Entry{side=BUY, price=2070.0, size=20070.0}]
+res1 : 20 [L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=0, side=SELL, price=4920.0, size=49920.0}, L2Entry{level=1, side=SELL, price=4919.0, size=49919.0}, L2Entry{level=2, side=SELL, price=4918.0, size=49918.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=5, side=SELL, price=4915.0, size=49915.0}, L2Entry{level=6, side=SELL, price=4914.0, size=49914.0}, L2Entry{level=7, side=SELL, price=4913.0, size=49913.0}, L2Entry{level=8, side=SELL, price=4912.0, size=49912.0}, L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}]
+res1 : 6 [TradeEntry{price=2090.0, size=20090.0, side=BUY}, TradeEntry{price=2092.0, size=20092.0, side=BUY}, L1Entry{side=BUY, price=2090.0, size=20090.0}, L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=0, side=SELL, price=4909.0, size=49909.0}, L2Entry{level=1, side=BUY, price=5184.0, size=50184.0}]
+res1 : 4 [TradeEntry{price=2100.0, size=20100.0, side=BUY}, L1Entry{side=BUY, price=2100.0, size=20100.0}, L2Entry{level=0, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}]
+!END
+Running QQL: select entries[this.price > 2000].price as res1 from packages
+res1 : 4 [2010.0, 2010.0, 5000.0, 4989.0]
+res1 : 4 [2020.0, 2020.0, 5000.0, 4979.0]
+res1 : 6 [2030.0, 2032.0, 2030.0, 5000.0, 4969.0, 5064.0]
+res1 : 20 [5040.0, 5041.0, 5042.0, 5043.0, 5044.0, 5045.0, 5046.0, 5047.0, 5048.0, 5049.0, 4960.0, 4959.0, 4958.0, 4957.0, 4956.0, 4955.0, 4954.0, 4953.0, 4952.0, 4951.0]
+res1 : 4 [2050.0, 2050.0, 5000.0, 4949.0]
+res1 : 6 [2060.0, 2062.0, 2060.0, 5000.0, 4939.0, 5124.0]
+res1 : 1 [2070.0]
+res1 : 20 [5080.0, 5081.0, 5082.0, 5083.0, 5084.0, 5085.0, 5086.0, 5087.0, 5088.0, 5089.0, 4920.0, 4919.0, 4918.0, 4917.0, 4916.0, 4915.0, 4914.0, 4913.0, 4912.0, 4911.0]
+res1 : 6 [2090.0, 2092.0, 2090.0, 5000.0, 4909.0, 5184.0]
+res1 : 4 [2100.0, 2100.0, 5000.0, 4899.0]
+!END
+Running QQL: select entries[entries.price > 2000].price as res1 from packages
+res1 : 4 [2010.0, 2010.0, 5000.0, 4989.0]
+res1 : 4 [2020.0, 2020.0, 5000.0, 4979.0]
+res1 : 6 [2030.0, 2032.0, 2030.0, 5000.0, 4969.0, 5064.0]
+res1 : 20 [5040.0, 5041.0, 5042.0, 5043.0, 5044.0, 5045.0, 5046.0, 5047.0, 5048.0, 5049.0, 4960.0, 4959.0, 4958.0, 4957.0, 4956.0, 4955.0, 4954.0, 4953.0, 4952.0, 4951.0]
+res1 : 4 [2050.0, 2050.0, 5000.0, 4949.0]
+res1 : 6 [2060.0, 2062.0, 2060.0, 5000.0, 4939.0, 5124.0]
+res1 : 1 [2070.0]
+res1 : 20 [5080.0, 5081.0, 5082.0, 5083.0, 5084.0, 5085.0, 5086.0, 5087.0, 5088.0, 5089.0, 4920.0, 4919.0, 4918.0, 4917.0, 4916.0, 4915.0, 4914.0, 4913.0, 4912.0, 4911.0]
+res1 : 6 [2090.0, 2092.0, 2090.0, 5000.0, 4909.0, 5184.0]
+res1 : 4 [2100.0, 2100.0, 5000.0, 4899.0]
+!END
+Running QQL: select entries.attributes[attributeId.id > 7300].attributeId.id as res1 from packages
+res1 : 4 [8101, 8103, 8111, 8113]
+res1 : 4 [8201, 8203, 8211, 8213]
+res1 : 14 [8301, 7302, 8303, 7304, 7310, 8311, 7312, 8313, 7314, 7320, 8321, 7322, 8323, 7324]
+res1 : NULL
+res1 : NULL
+res1 : 15 [7600, 8601, 7602, 8603, 7604, 7610, 8611, 7612, 8613, 7614, 7620, 8621, 7622, 8623, 7624]
+res1 : NULL
+res1 : NULL
+res1 : 15 [7900, 8901, 7902, 8903, 7904, 7910, 8911, 7912, 8913, 7914, 7920, 8921, 7922, 8923, 7924]
+res1 : NULL
+!END
+Running QQL: select entries.attributes[size(entries.price) - 2].attributeId.id as res1 from packages
+7110
+7210
+8311
+-2147483648
+-2147483648
+8611
+-2147483648
+-2147483648
+8911
+-2147483648
+!END
+Running QQL: select entries.attributes[size(this.extendedAttributes.keys) > 1].attributeId.id as res1 from packages
+res1 : 7 [7100, 8101, 7102, 8103, 7110, 7112, 8113]
+res1 : 6 [7200, 7202, 8203, 7210, 8211, 7212]
+res1 : 13 [7300, 8301, 7302, 7304, 7310, 8311, 7312, 8313, 7314, 7320, 7322, 8323, 7324]
+res1 : NULL
+res1 : NULL
+res1 : 13 [7600, 8601, 7602, 7604, 7610, 8611, 7612, 8613, 7614, 7620, 7622, 8623, 7624]
+res1 : NULL
+res1 : NULL
+res1 : 13 [7900, 8901, 7902, 7904, 7910, 8911, 7912, 8913, 7914, 7920, 7922, 8923, 7924]
+res1 : NULL
+!END
+Running QQL: select entries[all(attributes.attributeId.id > 7300)] as res1 from packages
+res1 : NULL
+res1 : NULL
+res1 : 2 [TradeEntry{price=1969.0, size=19969.0, side=SELL}, TradeEntry{price=2032.0, size=20032.0, side=BUY}]
+res1 : NULL
+res1 : NULL
+res1 : 3 [TradeEntry{price=2060.0, size=20060.0, side=BUY}, TradeEntry{price=1939.0, size=19939.0, side=SELL}, TradeEntry{price=2062.0, size=20062.0, side=BUY}]
+res1 : NULL
+res1 : NULL
+res1 : 3 [TradeEntry{price=2090.0, size=20090.0, side=BUY}, TradeEntry{price=1909.0, size=19909.0, side=SELL}, TradeEntry{price=2092.0, size=20092.0, side=BUY}]
+res1 : NULL
+!END
+Running QQL: select entries[this is deltix.entries.TradeEntry].attributes[attributeId.id > 7300].extendedAttributes.keys[this < 541000] as res1 from packages
+res1 : 108 [181800, 181801, 181802, 181803, 181804, 181805, 181806, 181807, 181808, 181809, 181810, 181811, 181818, 181819, 181820, 181821, 181822, 181823, 181824, 181825, 181826, 181827, 181828, 181829, 181836, 181837, 181838, 181839, 181840, 181841, 181842, 181843, 181844, 181845, 181846, 181847, 185400, 185401, 185402, 185403, 185404, 185405, 185406, 185407, 185408, 185409, 185410, 185411, 185418, 185419, 185420, 185421, 185422, 185423, 185424, 185425, 185426, 185427, 185428, 185429, 185436, 185437, 185438, 185439, 185440, 185441, 185442, 185443, 185444, 185445, 185446, 185447, 203400, 203401, 203402, 203403, 203404, 203405, 203406, 203407, 203408, 203409, 203410, 203411, 203418, 203419, 203420, 203421, 203422, 203423, 203424, 203425, 203426, 203427, 203428, 203429, 203436, 203437, 203438, 203439, 203440, 203441, 203442, 203443, 203444, 203445, 203446, 203447]
+res1 : 72 [365400, 365401, 365402, 365403, 365404, 365405, 365406, 365407, 365408, 365409, 365410, 365411, 365418, 365419, 365420, 365421, 365422, 365423, 365424, 365425, 365426, 365427, 365428, 365429, 365436, 365437, 365438, 365439, 365440, 365441, 365442, 365443, 365444, 365445, 365446, 365447, 379800, 379801, 379802, 379803, 379804, 379805, 379806, 379807, 379808, 379809, 379810, 379811, 379818, 379819, 379820, 379821, 379822, 379823, 379824, 379825, 379826, 379827, 379828, 379829, 379836, 379837, 379838, 379839, 379840, 379841, 379842, 379843, 379844, 379845, 379846, 379847]
+res1 : NULL
+res1 : NULL
+res1 : NULL
+res1 : NULL
+res1 : NULL
+res1 : NULL
+res1 : NULL
+res1 : NULL
+!END
+Running QQL: select entries.attributes[entries.attributes.attributeId.id > 7300].attributeId.id as res1 from packages
+res1 : 4 [8101, 8103, 8111, 8113]
+res1 : 4 [8201, 8203, 8211, 8213]
+res1 : 14 [8301, 7302, 8303, 7304, 7310, 8311, 7312, 8313, 7314, 7320, 8321, 7322, 8323, 7324]
+res1 : NULL
+res1 : NULL
+res1 : 15 [7600, 8601, 7602, 8603, 7604, 7610, 8611, 7612, 8613, 7614, 7620, 8621, 7622, 8623, 7624]
+res1 : NULL
+res1 : NULL
+res1 : 15 [7900, 8901, 7902, 8903, 7904, 7910, 8911, 7912, 8913, 7914, 7920, 8921, 7922, 8923, 7924]
+res1 : NULL
+!END
+Running QQL: select (entries.attributes as array(deltix.FixAttribute)).key as res1 from packages
+res1 : 4 [5100, 5102, 5110, 5112]
+res1 : 4 [5200, 5202, 5210, 5212]
+res1 : 9 [5300, 5302, 5304, 5310, 5312, 5314, 5320, 5322, 5324]
+res1 : NULL
+res1 : NULL
+res1 : 9 [5600, 5602, 5604, 5610, 5612, 5614, 5620, 5622, 5624]
+res1 : NULL
+res1 : NULL
+res1 : 9 [5900, 5902, 5904, 5910, 5912, 5914, 5920, 5922, 5924]
+res1 : NULL
+!END
+Running QQL: select (entries.attributes[(this as deltix.FixAttribute).key > 5100] as array(deltix.FixAttribute)).key as res1 from packages
+res1 : 3 [5102, 5110, 5112]
+res1 : 4 [5200, 5202, 5210, 5212]
+res1 : 9 [5300, 5302, 5304, 5310, 5312, 5314, 5320, 5322, 5324]
+res1 : NULL
+res1 : NULL
+res1 : 9 [5600, 5602, 5604, 5610, 5612, 5614, 5620, 5622, 5624]
+res1 : NULL
+res1 : NULL
+res1 : 9 [5900, 5902, 5904, 5910, 5912, 5914, 5920, 5922, 5924]
+res1 : NULL
+!END
+Running QQL: select (entries[price > 2000])[price <= 3000] as res1 from packages
+res1 : 2 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, L1Entry{side=BUY, price=2010.0, size=20010.0}]
+res1 : 2 [TradeEntry{price=2020.0, size=20020.0, side=BUY}, L1Entry{side=BUY, price=2020.0, size=20020.0}]
+res1 : 3 [TradeEntry{price=2030.0, size=20030.0, side=BUY}, TradeEntry{price=2032.0, size=20032.0, side=BUY}, L1Entry{side=BUY, price=2030.0, size=20030.0}]
+res1 : NULL
+res1 : 2 [TradeEntry{price=2050.0, size=20050.0, side=BUY}, L1Entry{side=BUY, price=2050.0, size=20050.0}]
+res1 : 3 [TradeEntry{price=2060.0, size=20060.0, side=BUY}, TradeEntry{price=2062.0, size=20062.0, side=BUY}, L1Entry{side=BUY, price=2060.0, size=20060.0}]
+res1 : 1 [L1Entry{side=BUY, price=2070.0, size=20070.0}]
+res1 : NULL
+res1 : 3 [TradeEntry{price=2090.0, size=20090.0, side=BUY}, TradeEntry{price=2092.0, size=20092.0, side=BUY}, L1Entry{side=BUY, price=2090.0, size=20090.0}]
+res1 : 2 [TradeEntry{price=2100.0, size=20100.0, side=BUY}, L1Entry{side=BUY, price=2100.0, size=20100.0}]
+!END
+Running QQL: select entries[size(attributes[all(extendedAttributes.keys > 300000)]) > 0].attributes as res1 from packages
+res1 : NULL
+res1 : 8 [FixAttribute{key=5200, value='null'}, CustomAttribute{key='Key #5201', value='Value #6201'}, FixAttribute{key=5202, value='Value #6202'}, CustomAttribute{key='Key #5203', value='Value #6203'}, FixAttribute{key=5210, value='Value #6210'}, CustomAttribute{key='Key #5211', value='Value #6211'}, FixAttribute{key=5212, value='null'}, CustomAttribute{key='Key #5213', value='Value #6213'}]
+res1 : 15 [FixAttribute{key=5300, value='null'}, CustomAttribute{key='Key #5301', value='Value #6301'}, FixAttribute{key=5302, value='Value #6302'}, CustomAttribute{key='Key #5303', value='Value #6303'}, FixAttribute{key=5304, value='null'}, FixAttribute{key=5310, value='Value #6310'}, CustomAttribute{key='Key #5311', value='Value #6311'}, FixAttribute{key=5312, value='null'}, CustomAttribute{key='Key #5313', value='Value #6313'}, FixAttribute{key=5314, value='Value #6314'}, FixAttribute{key=5320, value='null'}, CustomAttribute{key='Key #5321', value='Value #6321'}, FixAttribute{key=5322, value='Value #6322'}, CustomAttribute{key='Key #5323', value='Value #6323'}, FixAttribute{key=5324, value='null'}]
+res1 : NULL
+res1 : NULL
+res1 : 15 [FixAttribute{key=5600, value='null'}, CustomAttribute{key='Key #5601', value='Value #6601'}, FixAttribute{key=5602, value='Value #6602'}, CustomAttribute{key='Key #5603', value='Value #6603'}, FixAttribute{key=5604, value='null'}, FixAttribute{key=5610, value='Value #6610'}, CustomAttribute{key='Key #5611', value='Value #6611'}, FixAttribute{key=5612, value='null'}, CustomAttribute{key='Key #5613', value='Value #6613'}, FixAttribute{key=5614, value='Value #6614'}, FixAttribute{key=5620, value='null'}, CustomAttribute{key='Key #5621', value='Value #6621'}, FixAttribute{key=5622, value='Value #6622'}, CustomAttribute{key='Key #5623', value='Value #6623'}, FixAttribute{key=5624, value='null'}]
+res1 : NULL
+res1 : NULL
+res1 : 15 [FixAttribute{key=5900, value='null'}, CustomAttribute{key='Key #5901', value='Value #6901'}, FixAttribute{key=5902, value='Value #6902'}, CustomAttribute{key='Key #5903', value='Value #6903'}, FixAttribute{key=5904, value='null'}, FixAttribute{key=5910, value='Value #6910'}, CustomAttribute{key='Key #5911', value='Value #6911'}, FixAttribute{key=5912, value='null'}, CustomAttribute{key='Key #5913', value='Value #6913'}, FixAttribute{key=5914, value='Value #6914'}, FixAttribute{key=5920, value='null'}, CustomAttribute{key='Key #5921', value='Value #6921'}, FixAttribute{key=5922, value='Value #6922'}, CustomAttribute{key='Key #5923', value='Value #6923'}, FixAttribute{key=5924, value='null'}]
+res1 : NULL
+!END
+Running QQL: select entries[all((this.attributes as array(deltix.FixAttribute)).key > 5300)].attributes as res1 from packages
+res1 : NULL
+res1 : NULL
+res1 : 10 [FixAttribute{key=5310, value='Value #6310'}, CustomAttribute{key='Key #5311', value='Value #6311'}, FixAttribute{key=5312, value='null'}, CustomAttribute{key='Key #5313', value='Value #6313'}, FixAttribute{key=5314, value='Value #6314'}, FixAttribute{key=5320, value='null'}, CustomAttribute{key='Key #5321', value='Value #6321'}, FixAttribute{key=5322, value='Value #6322'}, CustomAttribute{key='Key #5323', value='Value #6323'}, FixAttribute{key=5324, value='null'}]
+res1 : NULL
+res1 : NULL
+res1 : 15 [FixAttribute{key=5600, value='null'}, CustomAttribute{key='Key #5601', value='Value #6601'}, FixAttribute{key=5602, value='Value #6602'}, CustomAttribute{key='Key #5603', value='Value #6603'}, FixAttribute{key=5604, value='null'}, FixAttribute{key=5610, value='Value #6610'}, CustomAttribute{key='Key #5611', value='Value #6611'}, FixAttribute{key=5612, value='null'}, CustomAttribute{key='Key #5613', value='Value #6613'}, FixAttribute{key=5614, value='Value #6614'}, FixAttribute{key=5620, value='null'}, CustomAttribute{key='Key #5621', value='Value #6621'}, FixAttribute{key=5622, value='Value #6622'}, CustomAttribute{key='Key #5623', value='Value #6623'}, FixAttribute{key=5624, value='null'}]
+res1 : NULL
+res1 : NULL
+res1 : 15 [FixAttribute{key=5900, value='null'}, CustomAttribute{key='Key #5901', value='Value #6901'}, FixAttribute{key=5902, value='Value #6902'}, CustomAttribute{key='Key #5903', value='Value #6903'}, FixAttribute{key=5904, value='null'}, FixAttribute{key=5910, value='Value #6910'}, CustomAttribute{key='Key #5911', value='Value #6911'}, FixAttribute{key=5912, value='null'}, CustomAttribute{key='Key #5913', value='Value #6913'}, FixAttribute{key=5914, value='Value #6914'}, FixAttribute{key=5920, value='null'}, CustomAttribute{key='Key #5921', value='Value #6921'}, FixAttribute{key=5922, value='Value #6922'}, CustomAttribute{key='Key #5923', value='Value #6923'}, FixAttribute{key=5924, value='null'}]
+res1 : NULL
+!END
+Running QQL: select entries.attributes[this is deltix.FixAttribute] as res1 from packages where any((entries.attributes as array(deltix.FixAttribute)).key < 5300)
+res1 : 4 [FixAttribute{key=5100, value='null'}, FixAttribute{key=5102, value='Value #6102'}, FixAttribute{key=5110, value='Value #6110'}, FixAttribute{key=5112, value='null'}]
+res1 : 4 [FixAttribute{key=5200, value='null'}, FixAttribute{key=5202, value='Value #6202'}, FixAttribute{key=5210, value='Value #6210'}, FixAttribute{key=5212, value='null'}]
+!END
+Running QQL: select entries[size(attributes.extendedAttributes[id > 3000000]) > 0].attributes.extendedAttributes.id as res1 from packages
+res1 : NULL
+res1 : NULL
+res1 : 39 [3330000, 3330111, 3330222, 3341100, 3341211, 3341322, 3352200, 3352311, 3352422, 3374400, 3374511, 3374622, 3441000, 3441111, 3441222, 3452100, 3452211, 3452322, 3463200, 3463311, 3463422, 3474300, 3474411, 3474522, 3485400, 3485511, 3485622, 3552000, 3552111, 3552222, 3574200, 3574311, 3574422, 3585300, 3585411, 3585522, 3596400, 3596511, 3596622]
+res1 : NULL
+res1 : NULL
+res1 : 39 [6660000, 6660111, 6660222, 6671100, 6671211, 6671322, 6682200, 6682311, 6682422, 6704400, 6704511, 6704622, 6771000, 6771111, 6771222, 6782100, 6782211, 6782322, 6793200, 6793311, 6793422, 6804300, 6804411, 6804522, 6815400, 6815511, 6815622, 6882000, 6882111, 6882222, 6904200, 6904311, 6904422, 6915300, 6915411, 6915522, 6926400, 6926511, 6926622]
+res1 : NULL
+res1 : NULL
+res1 : 39 [9990000, 9990111, 9990222, 10001100, 10001211, 10001322, 10012200, 10012311, 10012422, 10034400, 10034511, 10034622, 10101000, 10101111, 10101222, 10112100, 10112211, 10112322, 10123200, 10123311, 10123422, 10134300, 10134411, 10134522, 10145400, 10145511, 10145622, 10212000, 10212111, 10212222, 10234200, 10234311, 10234422, 10245300, 10245411, 10245522, 10256400, 10256511, 10256622]
+res1 : NULL
+!END
+Running QQL: select entries.attributes[this is deltix.FixAttribute] as res1 from packages where where any((entries.attributes as array(deltix.FixAttribute).key < 5300)
+res1 : 4 [FixAttribute{key=5100, value='null'}, FixAttribute{key=5102, value='Value #6102'}, FixAttribute{any((entrikey=5110, value='Value #6110'}, FixAttribute{key=5112, value='null'}]
+res1 : 4 [FixAttribute{key=5200, value='null'}, FixAttribute{key=5202, value='Value #6202'}, FixAttribute{key=5210, value='Value #6210'}, FixAttribute{key=5212, value='null'}]
+!END
+Running QQL: select entries[entries.level] as res1 from packages
+res1 : 2 [TradeEntry{price=1989.0, size=19989.0, side=SELL}, L1Entry{side=BUY, price=2010.0, size=20010.0}]
+res1 : 2 [L1Entry{side=BUY, price=2020.0, size=20020.0}, L1Entry{side=SELL, price=1977.0, size=19977.0}]
+res1 : 3 [L1Entry{side=BUY, price=2030.0, size=20030.0}, L1Entry{side=SELL, price=1966.0, size=19966.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}]
+res1 : 20 [L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}]
+res1 : 2 [L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}, [NULL]]
+res1 : 3 [L2Entry{level=7, side=SELL, price=4939.0, size=49939.0}, L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}, [NULL]]
+res1 : NULL
+res1 : 20 [L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}]
+res1 : 3 [[NULL], TradeEntry{price=2090.0, size=20090.0, side=BUY}, TradeEntry{price=1909.0, size=19909.0, side=SELL}]
+res1 : 2 [TradeEntry{price=2100.0, size=20100.0, side=BUY}, TradeEntry{price=1899.0, size=19899.0, side=SELL}]
+!END
+Running QQL: select entries[entries.level + 5] as res1 from packages
+res1 : 2 [[NULL], [NULL]]
+res1 : 2 [[NULL], [NULL]]
+res1 : 3 [[NULL], [NULL], [NULL]]
+res1 : 20 [L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=0, side=SELL, price=4960.0, size=49960.0}, L2Entry{level=1, side=SELL, price=4959.0, size=49959.0}, L2Entry{level=2, side=SELL, price=4958.0, size=49958.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=0, side=SELL, price=4960.0, size=49960.0}, L2Entry{level=1, side=SELL, price=4959.0, size=49959.0}, L2Entry{level=2, side=SELL, price=4958.0, size=49958.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}]
+res1 : 2 [[NULL], [NULL]]
+res1 : 3 [[NULL], [NULL], [NULL]]
+res1 : NULL
+res1 : 20 [L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=0, side=SELL, price=4920.0, size=49920.0}, L2Entry{level=1, side=SELL, price=4919.0, size=49919.0}, L2Entry{level=2, side=SELL, price=4918.0, size=49918.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=0, side=SELL, price=4920.0, size=49920.0}, L2Entry{level=1, side=SELL, price=4919.0, size=49919.0}, L2Entry{level=2, side=SELL, price=4918.0, size=49918.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}]
+res1 : 3 [[NULL], L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=0, side=SELL, price=4909.0, size=49909.0}]
+res1 : 2 [L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}, [NULL]]
+!END
+Running QQL: select entries[entries.level - 7] as res1 from packages
+res1 : 2 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, TradeEntry{price=1989.0, size=19989.0, side=SELL}]
+res1 : 2 [TradeEntry{price=1979.0, size=19979.0, side=SELL}, L1Entry{side=BUY, price=2020.0, size=20020.0}]
+res1 : 3 [L1Entry{side=SELL, price=1966.0, size=19966.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=4, side=SELL, price=4969.0, size=49969.0}]
+res1 : 20 [L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=5, side=SELL, price=4955.0, size=49955.0}, L2Entry{level=6, side=SELL, price=4954.0, size=49954.0}, L2Entry{level=7, side=SELL, price=4953.0, size=49953.0}, L2Entry{level=8, side=SELL, price=4952.0, size=49952.0}, L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}, L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=5, side=SELL, price=4955.0, size=49955.0}, L2Entry{level=6, side=SELL, price=4954.0, size=49954.0}, L2Entry{level=7, side=SELL, price=4953.0, size=49953.0}, L2Entry{level=8, side=SELL, price=4952.0, size=49952.0}, L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}, L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}]
+res1 : 2 [L2Entry{level=5, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}]
+res1 : 3 [L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}, TradeEntry{price=2060.0, size=20060.0, side=BUY}, TradeEntry{price=1939.0, size=19939.0, side=SELL}]
+res1 : NULL
+res1 : 20 [L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=5, side=SELL, price=4915.0, size=49915.0}, L2Entry{level=6, side=SELL, price=4914.0, size=49914.0}, L2Entry{level=7, side=SELL, price=4913.0, size=49913.0}, L2Entry{level=8, side=SELL, price=4912.0, size=49912.0}, L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}, L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=5, side=SELL, price=4915.0, size=49915.0}, L2Entry{level=6, side=SELL, price=4914.0, size=49914.0}, L2Entry{level=7, side=SELL, price=4913.0, size=49913.0}, L2Entry{level=8, side=SELL, price=4912.0, size=49912.0}, L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}, L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}]
+res1 : 3 [TradeEntry{price=2092.0, size=20092.0, side=BUY}, TradeEntry{price=1909.0, size=19909.0, side=SELL}, TradeEntry{price=2092.0, size=20092.0, side=BUY}]
+res1 : 2 [[NULL], TradeEntry{price=2100.0, size=20100.0, side=BUY}]
+!END
+Running QQL: select entries[position() > 3] as res1 from packages
+res1 : 2 [L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}]
+res1 : 2 [L2Entry{level=2, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}]
+res1 : 4 [L1Entry{side=SELL, price=1966.0, size=19966.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=4, side=SELL, price=4969.0, size=49969.0}, L2Entry{level=5, side=BUY, price=5064.0, size=50064.0}]
+res1 : 16 [L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=0, side=SELL, price=4960.0, size=49960.0}, L2Entry{level=1, side=SELL, price=4959.0, size=49959.0}, L2Entry{level=2, side=SELL, price=4958.0, size=49958.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=5, side=SELL, price=4955.0, size=49955.0}, L2Entry{level=6, side=SELL, price=4954.0, size=49954.0}, L2Entry{level=7, side=SELL, price=4953.0, size=49953.0}, L2Entry{level=8, side=SELL, price=4952.0, size=49952.0}, L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}]
+res1 : 2 [L2Entry{level=5, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}]
+res1 : 4 [L1Entry{side=SELL, price=1933.0, size=19933.0}, L2Entry{level=6, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=7, side=SELL, price=4939.0, size=49939.0}, L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}]
+res1 : NULL
+res1 : 16 [L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=0, side=SELL, price=4920.0, size=49920.0}, L2Entry{level=1, side=SELL, price=4919.0, size=49919.0}, L2Entry{level=2, side=SELL, price=4918.0, size=49918.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=5, side=SELL, price=4915.0, size=49915.0}, L2Entry{level=6, side=SELL, price=4914.0, size=49914.0}, L2Entry{level=7, side=SELL, price=4913.0, size=49913.0}, L2Entry{level=8, side=SELL, price=4912.0, size=49912.0}, L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}]
+res1 : 4 [L1Entry{side=SELL, price=1900.0, size=19900.0}, L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=0, side=SELL, price=4909.0, size=49909.0}, L2Entry{level=1, side=BUY, price=5184.0, size=50184.0}]
+res1 : 2 [L2Entry{level=0, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}]
+!END
+Running QQL: select entries[position() == last()] as res1 from packages
+res1 : 1 [L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}]
+res1 : 1 [L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}]
+res1 : 1 [L2Entry{level=5, side=BUY, price=5064.0, size=50064.0}]
+res1 : 1 [L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}]
+res1 : 1 [L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}]
+res1 : 1 [L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}]
+res1 : 1 [L1Entry{side=SELL, price=1922.0, size=19922.0}]
+res1 : 1 [L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}]
+res1 : 1 [L2Entry{level=1, side=BUY, price=5184.0, size=50184.0}]
+res1 : 1 [L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}]
+!END
+Running QQL: select entries[1:3] as res1 from packages
+res1 : 2 [TradeEntry{price=1989.0, size=19989.0, side=SELL}, L1Entry{side=BUY, price=2010.0, size=20010.0}]
+res1 : 2 [TradeEntry{price=1979.0, size=19979.0, side=SELL}, L1Entry{side=BUY, price=2020.0, size=20020.0}]
+res1 : 2 [TradeEntry{price=1969.0, size=19969.0, side=SELL}, TradeEntry{price=2032.0, size=20032.0, side=BUY}]
+res1 : 2 [L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}]
+res1 : 2 [TradeEntry{price=1949.0, size=19949.0, side=SELL}, L1Entry{side=BUY, price=2050.0, size=20050.0}]
+res1 : 2 [TradeEntry{price=1939.0, size=19939.0, side=SELL}, TradeEntry{price=2062.0, size=20062.0, side=BUY}]
+res1 : 1 [L1Entry{side=SELL, price=1922.0, size=19922.0}]
+res1 : 2 [L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}]
+res1 : 2 [TradeEntry{price=1909.0, size=19909.0, side=SELL}, TradeEntry{price=2092.0, size=20092.0, side=BUY}]
+res1 : 2 [TradeEntry{price=1899.0, size=19899.0, side=SELL}, L1Entry{side=BUY, price=2100.0, size=20100.0}]
+!END
+Running QQL: select entries[1:6:2] as res1 from packages
+res1 : 3 [TradeEntry{price=1989.0, size=19989.0, side=SELL}, L1Entry{side=SELL, price=1988.0, size=19988.0}, L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}]
+res1 : 3 [TradeEntry{price=1979.0, size=19979.0, side=SELL}, L1Entry{side=SELL, price=1977.0, size=19977.0}, L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}]
+res1 : 3 [TradeEntry{price=1969.0, size=19969.0, side=SELL}, L1Entry{side=BUY, price=2030.0, size=20030.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}]
+res1 : 3 [L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}]
+res1 : 3 [TradeEntry{price=1949.0, size=19949.0, side=SELL}, L1Entry{side=SELL, price=1944.0, size=19944.0}, L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}]
+res1 : 3 [TradeEntry{price=1939.0, size=19939.0, side=SELL}, L1Entry{side=BUY, price=2060.0, size=20060.0}, L2Entry{level=6, side=SELL, price=5000.0, size=50000.0}]
+res1 : 1 [L1Entry{side=SELL, price=1922.0, size=19922.0}]
+res1 : 3 [L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}]
+res1 : 3 [TradeEntry{price=1909.0, size=19909.0, side=SELL}, L1Entry{side=BUY, price=2090.0, size=20090.0}, L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}]
+res1 : 3 [TradeEntry{price=1899.0, size=19899.0, side=SELL}, L1Entry{side=SELL, price=1889.0, size=19889.0}, L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}]
+!END
+Running QQL: select entries[6:0:-1] as res1 from packages
+res1 : 5 [L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}, L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1988.0, size=19988.0}, L1Entry{side=BUY, price=2010.0, size=20010.0}, TradeEntry{price=1989.0, size=19989.0, side=SELL}]
+res1 : 5 [L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}, L2Entry{level=2, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1977.0, size=19977.0}, L1Entry{side=BUY, price=2020.0, size=20020.0}, TradeEntry{price=1979.0, size=19979.0, side=SELL}]
+res1 : 6 [L2Entry{level=4, side=SELL, price=4969.0, size=49969.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1966.0, size=19966.0}, L1Entry{side=BUY, price=2030.0, size=20030.0}, TradeEntry{price=2032.0, size=20032.0, side=BUY}, TradeEntry{price=1969.0, size=19969.0, side=SELL}]
+res1 : 6 [L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}]
+res1 : 5 [L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}, L2Entry{level=5, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1944.0, size=19944.0}, L1Entry{side=BUY, price=2050.0, size=20050.0}, TradeEntry{price=1949.0, size=19949.0, side=SELL}]
+res1 : 6 [L2Entry{level=7, side=SELL, price=4939.0, size=49939.0}, L2Entry{level=6, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1933.0, size=19933.0}, L1Entry{side=BUY, price=2060.0, size=20060.0}, TradeEntry{price=2062.0, size=20062.0, side=BUY}, TradeEntry{price=1939.0, size=19939.0, side=SELL}]
+res1 : 1 [L1Entry{side=SELL, price=1922.0, size=19922.0}]
+res1 : 6 [L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}]
+res1 : 6 [L2Entry{level=0, side=SELL, price=4909.0, size=49909.0}, L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1900.0, size=19900.0}, L1Entry{side=BUY, price=2090.0, size=20090.0}, TradeEntry{price=2092.0, size=20092.0, side=BUY}, TradeEntry{price=1909.0, size=19909.0, side=SELL}]
+res1 : 5 [L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}, L2Entry{level=0, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1889.0, size=19889.0}, L1Entry{side=BUY, price=2100.0, size=20100.0}, TradeEntry{price=1899.0, size=19899.0, side=SELL}]
+!END
+Running QQL: select entries[::] as res1 from packages
+res1 : 6 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, TradeEntry{price=1989.0, size=19989.0, side=SELL}, L1Entry{side=BUY, price=2010.0, size=20010.0}, L1Entry{side=SELL, price=1988.0, size=19988.0}, L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}]
+res1 : 6 [TradeEntry{price=2020.0, size=20020.0, side=BUY}, TradeEntry{price=1979.0, size=19979.0, side=SELL}, L1Entry{side=BUY, price=2020.0, size=20020.0}, L1Entry{side=SELL, price=1977.0, size=19977.0}, L2Entry{level=2, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}]
+res1 : 8 [TradeEntry{price=2030.0, size=20030.0, side=BUY}, TradeEntry{price=1969.0, size=19969.0, side=SELL}, TradeEntry{price=2032.0, size=20032.0, side=BUY}, L1Entry{side=BUY, price=2030.0, size=20030.0}, L1Entry{side=SELL, price=1966.0, size=19966.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=4, side=SELL, price=4969.0, size=49969.0}, L2Entry{level=5, side=BUY, price=5064.0, size=50064.0}]
+res1 : 20 [L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=0, side=SELL, price=4960.0, size=49960.0}, L2Entry{level=1, side=SELL, price=4959.0, size=49959.0}, L2Entry{level=2, side=SELL, price=4958.0, size=49958.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=5, side=SELL, price=4955.0, size=49955.0}, L2Entry{level=6, side=SELL, price=4954.0, size=49954.0}, L2Entry{level=7, side=SELL, price=4953.0, size=49953.0}, L2Entry{level=8, side=SELL, price=4952.0, size=49952.0}, L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}]
+res1 : 6 [TradeEntry{price=2050.0, size=20050.0, side=BUY}, TradeEntry{price=1949.0, size=19949.0, side=SELL}, L1Entry{side=BUY, price=2050.0, size=20050.0}, L1Entry{side=SELL, price=1944.0, size=19944.0}, L2Entry{level=5, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}]
+res1 : 8 [TradeEntry{price=2060.0, size=20060.0, side=BUY}, TradeEntry{price=1939.0, size=19939.0, side=SELL}, TradeEntry{price=2062.0, size=20062.0, side=BUY}, L1Entry{side=BUY, price=2060.0, size=20060.0}, L1Entry{side=SELL, price=1933.0, size=19933.0}, L2Entry{level=6, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=7, side=SELL, price=4939.0, size=49939.0}, L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}]
+res1 : 2 [L1Entry{side=BUY, price=2070.0, size=20070.0}, L1Entry{side=SELL, price=1922.0, size=19922.0}]
+res1 : 20 [L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=0, side=SELL, price=4920.0, size=49920.0}, L2Entry{level=1, side=SELL, price=4919.0, size=49919.0}, L2Entry{level=2, side=SELL, price=4918.0, size=49918.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=5, side=SELL, price=4915.0, size=49915.0}, L2Entry{level=6, side=SELL, price=4914.0, size=49914.0}, L2Entry{level=7, side=SELL, price=4913.0, size=49913.0}, L2Entry{level=8, side=SELL, price=4912.0, size=49912.0}, L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}]
+res1 : 8 [TradeEntry{price=2090.0, size=20090.0, side=BUY}, TradeEntry{price=1909.0, size=19909.0, side=SELL}, TradeEntry{price=2092.0, size=20092.0, side=BUY}, L1Entry{side=BUY, price=2090.0, size=20090.0}, L1Entry{side=SELL, price=1900.0, size=19900.0}, L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=0, side=SELL, price=4909.0, size=49909.0}, L2Entry{level=1, side=BUY, price=5184.0, size=50184.0}]
+res1 : 6 [TradeEntry{price=2100.0, size=20100.0, side=BUY}, TradeEntry{price=1899.0, size=19899.0, side=SELL}, L1Entry{side=BUY, price=2100.0, size=20100.0}, L1Entry{side=SELL, price=1889.0, size=19889.0}, L2Entry{level=0, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}]
+!END
+Running QQL: select entries[::-1] as res1 from packages
+res1 : 6 [L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}, L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1988.0, size=19988.0}, L1Entry{side=BUY, price=2010.0, size=20010.0}, TradeEntry{price=1989.0, size=19989.0, side=SELL}, TradeEntry{price=2010.0, size=20010.0, side=BUY}]
+res1 : 6 [L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}, L2Entry{level=2, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1977.0, size=19977.0}, L1Entry{side=BUY, price=2020.0, size=20020.0}, TradeEntry{price=1979.0, size=19979.0, side=SELL}, TradeEntry{price=2020.0, size=20020.0, side=BUY}]
+res1 : 8 [L2Entry{level=5, side=BUY, price=5064.0, size=50064.0}, L2Entry{level=4, side=SELL, price=4969.0, size=49969.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1966.0, size=19966.0}, L1Entry{side=BUY, price=2030.0, size=20030.0}, TradeEntry{price=2032.0, size=20032.0, side=BUY}, TradeEntry{price=1969.0, size=19969.0, side=SELL}, TradeEntry{price=2030.0, size=20030.0, side=BUY}]
+res1 : 20 [L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}, L2Entry{level=8, side=SELL, price=4952.0, size=49952.0}, L2Entry{level=7, side=SELL, price=4953.0, size=49953.0}, L2Entry{level=6, side=SELL, price=4954.0, size=49954.0}, L2Entry{level=5, side=SELL, price=4955.0, size=49955.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=2, side=SELL, price=4958.0, size=49958.0}, L2Entry{level=1, side=SELL, price=4959.0, size=49959.0}, L2Entry{level=0, side=SELL, price=4960.0, size=49960.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}]
+res1 : 6 [L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}, L2Entry{level=5, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1944.0, size=19944.0}, L1Entry{side=BUY, price=2050.0, size=20050.0}, TradeEntry{price=1949.0, size=19949.0, side=SELL}, TradeEntry{price=2050.0, size=20050.0, side=BUY}]
+res1 : 8 [L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}, L2Entry{level=7, side=SELL, price=4939.0, size=49939.0}, L2Entry{level=6, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1933.0, size=19933.0}, L1Entry{side=BUY, price=2060.0, size=20060.0}, TradeEntry{price=2062.0, size=20062.0, side=BUY}, TradeEntry{price=1939.0, size=19939.0, side=SELL}, TradeEntry{price=2060.0, size=20060.0, side=BUY}]
+res1 : 2 [L1Entry{side=SELL, price=1922.0, size=19922.0}, L1Entry{side=BUY, price=2070.0, size=20070.0}]
+res1 : 20 [L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}, L2Entry{level=8, side=SELL, price=4912.0, size=49912.0}, L2Entry{level=7, side=SELL, price=4913.0, size=49913.0}, L2Entry{level=6, side=SELL, price=4914.0, size=49914.0}, L2Entry{level=5, side=SELL, price=4915.0, size=49915.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=2, side=SELL, price=4918.0, size=49918.0}, L2Entry{level=1, side=SELL, price=4919.0, size=49919.0}, L2Entry{level=0, side=SELL, price=4920.0, size=49920.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}]
+res1 : 8 [L2Entry{level=1, side=BUY, price=5184.0, size=50184.0}, L2Entry{level=0, side=SELL, price=4909.0, size=49909.0}, L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1900.0, size=19900.0}, L1Entry{side=BUY, price=2090.0, size=20090.0}, TradeEntry{price=2092.0, size=20092.0, side=BUY}, TradeEntry{price=1909.0, size=19909.0, side=SELL}, TradeEntry{price=2090.0, size=20090.0, side=BUY}]
+res1 : 6 [L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}, L2Entry{level=0, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1889.0, size=19889.0}, L1Entry{side=BUY, price=2100.0, size=20100.0}, TradeEntry{price=1899.0, size=19899.0, side=SELL}, TradeEntry{price=2100.0, size=20100.0, side=BUY}]
+!END
+Running QQL: select entries[size(entries)::-1] as res1 from packages
+res1 : 6 [L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}, L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1988.0, size=19988.0}, L1Entry{side=BUY, price=2010.0, size=20010.0}, TradeEntry{price=1989.0, size=19989.0, side=SELL}, TradeEntry{price=2010.0, size=20010.0, side=BUY}]
+res1 : 6 [L2Entry{level=3, side=SELL, price=4979.0, size=49979.0}, L2Entry{level=2, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1977.0, size=19977.0}, L1Entry{side=BUY, price=2020.0, size=20020.0}, TradeEntry{price=1979.0, size=19979.0, side=SELL}, TradeEntry{price=2020.0, size=20020.0, side=BUY}]
+res1 : 8 [L2Entry{level=5, side=BUY, price=5064.0, size=50064.0}, L2Entry{level=4, side=SELL, price=4969.0, size=49969.0}, L2Entry{level=3, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1966.0, size=19966.0}, L1Entry{side=BUY, price=2030.0, size=20030.0}, TradeEntry{price=2032.0, size=20032.0, side=BUY}, TradeEntry{price=1969.0, size=19969.0, side=SELL}, TradeEntry{price=2030.0, size=20030.0, side=BUY}]
+res1 : 20 [L2Entry{level=9, side=SELL, price=4951.0, size=49951.0}, L2Entry{level=8, side=SELL, price=4952.0, size=49952.0}, L2Entry{level=7, side=SELL, price=4953.0, size=49953.0}, L2Entry{level=6, side=SELL, price=4954.0, size=49954.0}, L2Entry{level=5, side=SELL, price=4955.0, size=49955.0}, L2Entry{level=4, side=SELL, price=4956.0, size=49956.0}, L2Entry{level=3, side=SELL, price=4957.0, size=49957.0}, L2Entry{level=2, side=SELL, price=4958.0, size=49958.0}, L2Entry{level=1, side=SELL, price=4959.0, size=49959.0}, L2Entry{level=0, side=SELL, price=4960.0, size=49960.0}, L2Entry{level=9, side=BUY, price=5049.0, size=50049.0}, L2Entry{level=8, side=BUY, price=5048.0, size=50048.0}, L2Entry{level=7, side=BUY, price=5047.0, size=50047.0}, L2Entry{level=6, side=BUY, price=5046.0, size=50046.0}, L2Entry{level=5, side=BUY, price=5045.0, size=50045.0}, L2Entry{level=4, side=BUY, price=5044.0, size=50044.0}, L2Entry{level=3, side=BUY, price=5043.0, size=50043.0}, L2Entry{level=2, side=BUY, price=5042.0, size=50042.0}, L2Entry{level=1, side=BUY, price=5041.0, size=50041.0}, L2Entry{level=0, side=BUY, price=5040.0, size=50040.0}]
+res1 : 6 [L2Entry{level=6, side=SELL, price=4949.0, size=49949.0}, L2Entry{level=5, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1944.0, size=19944.0}, L1Entry{side=BUY, price=2050.0, size=20050.0}, TradeEntry{price=1949.0, size=19949.0, side=SELL}, TradeEntry{price=2050.0, size=20050.0, side=BUY}]
+res1 : 8 [L2Entry{level=8, side=BUY, price=5124.0, size=50124.0}, L2Entry{level=7, side=SELL, price=4939.0, size=49939.0}, L2Entry{level=6, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1933.0, size=19933.0}, L1Entry{side=BUY, price=2060.0, size=20060.0}, TradeEntry{price=2062.0, size=20062.0, side=BUY}, TradeEntry{price=1939.0, size=19939.0, side=SELL}, TradeEntry{price=2060.0, size=20060.0, side=BUY}]
+res1 : 2 [L1Entry{side=SELL, price=1922.0, size=19922.0}, L1Entry{side=BUY, price=2070.0, size=20070.0}]
+res1 : 20 [L2Entry{level=9, side=SELL, price=4911.0, size=49911.0}, L2Entry{level=8, side=SELL, price=4912.0, size=49912.0}, L2Entry{level=7, side=SELL, price=4913.0, size=49913.0}, L2Entry{level=6, side=SELL, price=4914.0, size=49914.0}, L2Entry{level=5, side=SELL, price=4915.0, size=49915.0}, L2Entry{level=4, side=SELL, price=4916.0, size=49916.0}, L2Entry{level=3, side=SELL, price=4917.0, size=49917.0}, L2Entry{level=2, side=SELL, price=4918.0, size=49918.0}, L2Entry{level=1, side=SELL, price=4919.0, size=49919.0}, L2Entry{level=0, side=SELL, price=4920.0, size=49920.0}, L2Entry{level=9, side=BUY, price=5089.0, size=50089.0}, L2Entry{level=8, side=BUY, price=5088.0, size=50088.0}, L2Entry{level=7, side=BUY, price=5087.0, size=50087.0}, L2Entry{level=6, side=BUY, price=5086.0, size=50086.0}, L2Entry{level=5, side=BUY, price=5085.0, size=50085.0}, L2Entry{level=4, side=BUY, price=5084.0, size=50084.0}, L2Entry{level=3, side=BUY, price=5083.0, size=50083.0}, L2Entry{level=2, side=BUY, price=5082.0, size=50082.0}, L2Entry{level=1, side=BUY, price=5081.0, size=50081.0}, L2Entry{level=0, side=BUY, price=5080.0, size=50080.0}]
+res1 : 8 [L2Entry{level=1, side=BUY, price=5184.0, size=50184.0}, L2Entry{level=0, side=SELL, price=4909.0, size=49909.0}, L2Entry{level=9, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1900.0, size=19900.0}, L1Entry{side=BUY, price=2090.0, size=20090.0}, TradeEntry{price=2092.0, size=20092.0, side=BUY}, TradeEntry{price=1909.0, size=19909.0, side=SELL}, TradeEntry{price=2090.0, size=20090.0, side=BUY}]
+res1 : 6 [L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}, L2Entry{level=0, side=SELL, price=5000.0, size=50000.0}, L1Entry{side=SELL, price=1889.0, size=19889.0}, L1Entry{side=BUY, price=2100.0, size=20100.0}, TradeEntry{price=1899.0, size=19899.0, side=SELL}, TradeEntry{price=2100.0, size=20100.0, side=BUY}]
+!END

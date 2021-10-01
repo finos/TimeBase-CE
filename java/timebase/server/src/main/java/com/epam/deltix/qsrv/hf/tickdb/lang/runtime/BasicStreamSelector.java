@@ -17,8 +17,11 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime;
 
 import com.epam.deltix.qsrv.hf.pub.ReadableValue;
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
+import com.epam.deltix.qsrv.hf.tickdb.schema.SimpleClassSet;
 
 /**
  *  Executable stream selector.
@@ -86,6 +89,11 @@ public final class BasicStreamSelector implements PreparedQuery {
         return (db.createCursor (options, streams));
     }
 
-    public void                     close () {       
+    @Override
+    public ClassSet<RecordClassDescriptor> getSchema() {
+        return new SimpleClassSet(Streams.catTypes(streams));
+    }
+
+    public void                     close () {
     }
 }

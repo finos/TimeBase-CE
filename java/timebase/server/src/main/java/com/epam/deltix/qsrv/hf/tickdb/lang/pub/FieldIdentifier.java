@@ -18,6 +18,8 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
 
 import com.epam.deltix.util.parsers.Element;
 
+import java.util.Objects;
+
 /**
  *
  */
@@ -36,15 +38,16 @@ public class FieldIdentifier extends Element {
 
     @Override
     @SuppressWarnings ("EqualsWhichDoesntCheckParameterClass")
-    public boolean                  equals (Object obj) {
-        return (
-            super.equals (obj) &&
-            fieldName.equals (((FieldIdentifier) obj).fieldName)
-        );
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        FieldIdentifier that = (FieldIdentifier) o;
+        return Objects.equals(fieldName, that.fieldName);
     }
 
     @Override
-    public int                      hashCode () {
-        return (super.hashCode () * 41 + fieldName.hashCode ());
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), fieldName);
     }
 }

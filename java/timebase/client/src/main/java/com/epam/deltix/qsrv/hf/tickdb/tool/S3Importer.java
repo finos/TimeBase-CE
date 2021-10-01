@@ -33,6 +33,7 @@ public class S3Importer extends DefaultApplication {
     protected void run() throws Throwable {
         String timebaseUrl = getArgValue("-timebase", "dxtick://localhost:8011");
         String streamKey = getMandatoryArgValue("-stream");
+        String targetStream = getArgValue("-targetStream", streamKey);
         String bucket = getMandatoryArgValue("-bucket");
         String region = getMandatoryArgValue("-region");
         String accessKeyId = getArgValue("-accessKeyId", System.getenv().get("AWS_ACCESS_KEY_ID"));
@@ -55,11 +56,11 @@ public class S3Importer extends DefaultApplication {
             throw new IllegalArgumentException("There are no replicated spaces for stream " + streamKey + ".");
         }
         try (DXTickDB db = TickDBFactory.openFromUrl(timebaseUrl, false)) {
-            final DXTickStream stream = db.getStream(streamKey);
+            final DXTickStream stream = db.getStream(targetStream);
             if (stream == null) {
                 throw new IllegalArgumentException("Stream " + streamKey + " does not exist");
             }
-            new S3StreamImporter(stream, spaces, dataStore, startTime, endTime, importMode).run();
+            new S3StreamImporter(streamKey, stream, spaces, dataStore, startTime, endTime, importMode).run();
         }
     }
 

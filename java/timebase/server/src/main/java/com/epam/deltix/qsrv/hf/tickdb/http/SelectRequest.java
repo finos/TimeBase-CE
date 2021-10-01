@@ -54,7 +54,4 @@ public class SelectRequest extends DownloadRequest {
 
     @XmlElement()
     public boolean              realTimeNotification = false;
-
-
-
 }

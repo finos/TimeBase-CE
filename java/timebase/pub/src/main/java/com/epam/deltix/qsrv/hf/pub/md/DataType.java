@@ -87,6 +87,10 @@ public abstract class DataType implements Serializable, Cloneable {
         return nullable;
     }
 
+    public void                     setNullable(boolean nullable) {
+        this.nullable = nullable;
+    }
+
     public void                     parseEncoding(String encoding) {
         if (encoding != null && encoding.length() > 0)
             throw new IllegalArgumentException(encoding);

@@ -330,4 +330,17 @@ public final class RecordClassDescriptor
             fields[ii] = DataField.readFrom(in, resolver, serial);
         }
     }
+
+    @Override
+    protected void readFieldsWithoutGuid(DataInputStream in, TypeResolver resolver, int serial) throws IOException {
+        super.readFieldsWithoutGuid(in, resolver, serial);
+
+        int numFields = in.readUnsignedShort();
+
+        fields = new DataField[numFields];
+
+        for (int ii = 0; ii < numFields; ii++) {
+            fields[ii] = DataField.readFrom(in, resolver, serial);
+        }
+    }
 }

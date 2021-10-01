@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.hf.tickdb.ui.tbshell;
 import com.epam.deltix.qsrv.hf.pub.*;
 import com.epam.deltix.qsrv.hf.pub.md.DataType;
 import com.epam.deltix.qsrv.hf.pub.md.StandardTypes;
+import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.util.parsers.CompilationException;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
@@ -110,21 +111,17 @@ public class DBQueryRunner {
         DXTickDB            db,
         SelectionOptions    options,
         String              query,
-        long                from,
-        int                 numResults
-    )    
-        throws IOException
+        long                startTimestamp,
+        long                endTimestamp,
+        int                 numResults,
+        boolean             printJson
+    ) throws IOException
     {
-        IMSPrinter          imsp = new IMSPrinter (out);
-        
-        imsp.setMaxCount (numResults);
-        
         try {
-            InstrumentMessageSource ims = 
-                db.executeQuery (query, opts, null, null, from, getParams ());
-                
-            imsp.setIMS (ims, true);   
-                
+            InstrumentMessageSource ims = db.executeQuery(query, opts, null, null, startTimestamp, endTimestamp, getParams());
+            IMSPrinter imsp = printJson ? new JsonIMSPrinter(out) : new SimpleIMSPrinter(out);
+            imsp.setMaxCount (numResults);
+            imsp.setIMS (ims, true);
             imsp.printAll ();                
         } catch (CompilationException x) {
             DefaultApplication.printException (x, false, out);

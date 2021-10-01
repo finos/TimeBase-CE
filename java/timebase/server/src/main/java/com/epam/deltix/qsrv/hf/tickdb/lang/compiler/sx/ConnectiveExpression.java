@@ -39,7 +39,7 @@ public class ConnectiveExpression extends CompiledComplexExpression {
     }
 
     @Override
-    protected void          print(StringBuilder out) {
+    public void print(StringBuilder out) {
         String code = conjunction ? " AND " : " OR ";
 
         out.append (" (");

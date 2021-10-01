@@ -16,10 +16,14 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
+import com.epam.deltix.qsrv.hf.pub.md.DataField;
+import com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.DataFieldRef;
-import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
+
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  *
@@ -86,10 +90,14 @@ class SourceClassMap {
         CompiledExpression                          e
     )
     {
-        if (e instanceof FieldSelector)
-            register ((FieldSelector) e);
-        else if (e instanceof TypeCheck)
-            register ((TypeCheck) e);
+        if (e instanceof FieldSelector) {
+            register((FieldSelector) e);
+        } else if (e instanceof TypeCheck) {
+            TypeCheck typeCheck = (TypeCheck) e;
+            if (typeCheck.args[0] instanceof ThisSelector) {
+                register((TypeCheck) e);
+            }
+        }
 
         if (e instanceof CompiledComplexExpression) {
             CompiledComplexExpression   ccx = (CompiledComplexExpression) e;
@@ -99,11 +107,27 @@ class SourceClassMap {
         }
     }
 
-    private void                                register (
-        TypeCheck                                   typeCheck
-    )
-    {
-        typeChecks.add (new TypeCheckInfo (typeCheck));
+    public void discoverFieldAccessors(CompiledExpression e) {
+        if (e instanceof FieldAccessor) {
+            register((FieldAccessor) e);
+        }
+
+        if (e instanceof CompiledComplexExpression) {
+            CompiledComplexExpression ccx = (CompiledComplexExpression) e;
+
+            if (ccx instanceof Predicate) {
+                // skip discover predicate expression
+                discoverFieldAccessors(((Predicate) e).compiledSelector);
+            } else {
+                for (CompiledExpression arg : ccx.args) {
+                    discoverFieldAccessors(arg);
+                }
+            }
+        }
+    }
+
+    private void register(TypeCheck typeCheck) {
+        typeChecks.add(new TypeCheckInfo(typeCheck));
     }
 
     private void                                register (
@@ -116,7 +140,65 @@ class SourceClassMap {
         if (!(df instanceof NonStaticDataField))
             return;
         
-        for (ClassSelectorInfo csi : map.values ())
-            csi.nonStaticFieldUsedFrom (fieldSelector);
+        for (ClassSelectorInfo csi : map.values ()) {
+            csi.nonStaticFieldUsedFrom(fieldSelector, fieldRef);
+        }
+    }
+
+    private void register(FieldAccessor fieldAccessor) {
+        for (ClassSelectorInfo csi : map.values()) {
+            DataFieldRef[] fieldRef = fieldAccessor.fieldRefs;
+
+            for (int i = 0; i < fieldRef.length; ++i) {
+                DataField df = fieldRef[i].field;
+                if (!(df instanceof NonStaticDataField))
+                    return;
+
+                csi.nonStaticFieldUsedFrom(fieldAccessor, fieldRef[i]);
+            }
+        }
+    }
+
+    public void forEachField(Consumer<FieldSelectorInfo> consumer) {
+        for (int i = 0; i < concreteTypes.length; i++) {
+            ClassSelectorInfo csi = getSelectorInfo(concreteTypes[i]);
+            if (csi.hasUsedFields()) {
+                for (int j = 0; j < csi.highestUsedIdx + 1; j++) {
+                    consumer.accept(csi.fields[j]);
+                }
+            }
+        }
+    }
+
+    protected void forEachValue(Consumer<QValue> consumer) {
+        Set<QValue> values = new HashSet<>();
+        for (int i = 0; i < concreteTypes.length; i++) {
+            ClassSelectorInfo csi = getSelectorInfo(concreteTypes[i]);
+            if (csi.hasUsedFields()) {
+                for (int j = 0; j < csi.highestUsedIdx + 1; j++) {
+                    QValue value = csi.fields[j].cache;
+                    if (value != null && !values.contains(value)) {
+                        values.add(value);
+                        consumer.accept(value);
+                    }
+                }
+            }
+        }
+    }
+
+    protected void forEachFieldSelector(Consumer<FieldSelectorInfo> consumer) {
+        Set<QValue> values = new HashSet<>();
+        for (int i = 0; i < concreteTypes.length; i++) {
+            ClassSelectorInfo csi = getSelectorInfo(concreteTypes[i]);
+            if (csi.hasUsedFields()) {
+                for (int j = 0; j < csi.highestUsedIdx + 1; j++) {
+                    QValue value = csi.fields[j].cache;
+                    if (value != null && !values.contains(value)) {
+                        values.add(value);
+                        consumer.accept(csi.fields[j]);
+                    }
+                }
+            }
+        }
     }
 }

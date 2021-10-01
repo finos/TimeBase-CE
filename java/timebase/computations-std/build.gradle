@@ -1,0 +1,9 @@
+evaluationDependsOn(':java')
+
+dependencies {
+    compile project(':java:timebase:computations-api')
+
+    implementation ('com.epam.deltix:timebase-messages')
+    implementation ('com.epam.deltix:dfp')
+    implementation ('com.epam.deltix:containers')
+}

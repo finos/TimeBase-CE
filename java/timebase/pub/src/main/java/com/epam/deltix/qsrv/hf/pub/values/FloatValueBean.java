@@ -56,6 +56,16 @@ public final class FloatValueBean extends ValueBean {
     }
 
     @Override
+    public byte getByte() throws NullValueException {
+        throw new UnsupportedOperationException("Illegal");
+    }
+
+    @Override
+    public short getShort() throws NullValueException {
+        throw new UnsupportedOperationException("Illegal");
+    }
+
+    @Override
     public float        getFloat () throws NullValueException {
         if (Float.isNaN (value))
             throw NullValueException.INSTANCE;

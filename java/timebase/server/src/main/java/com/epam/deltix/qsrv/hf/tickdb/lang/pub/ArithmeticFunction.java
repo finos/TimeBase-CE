@@ -20,8 +20,26 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
  *
  */
 public enum ArithmeticFunction {
-    ADD,
-    SUB,
-    MUL,
-    DIV
+
+    ADD("+", "add"),
+    SUB("-", "subtract"),
+    MUL("*", "multiply"),
+    DIV("/", "divide"),
+    MOD("%", null);
+
+    private final String operator;
+    private final String decimalMethod;
+
+    ArithmeticFunction(String operator, String decimalMethod) {
+        this.operator = operator;
+        this.decimalMethod = decimalMethod;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public String getDecimalMethod() {
+        return decimalMethod;
+    }
 };

@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.schema;
 
+import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.pub.*;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.pub.codec.*;
@@ -24,6 +25,7 @@ import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.qsrv.hf.tickdb.schema.encoders.MixedWritableValue;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.util.collections.SmallArrays;
+import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 import com.epam.deltix.util.memory.MemoryDataInput;
 
@@ -39,8 +41,8 @@ public class SchemaConverter {
 
     private byte[] tmp;
 
-    private HashMap<RecordClassDescriptor, ClassDescriptorMapping> typeMappings = new
-            HashMap<RecordClassDescriptor, ClassDescriptorMapping>();
+    private final ObjectToObjectHashMap<RecordClassDescriptor, ClassDescriptorMapping> typeMappings = new
+            ObjectToObjectHashMap<>();
 
     public SchemaConverter(MetaDataChange change) {
         this.change = change;        
@@ -70,10 +72,10 @@ public class SchemaConverter {
             if (typeChange.getSource() instanceof RecordClassDescriptor) {
                 RecordClassDescriptor source = (RecordClassDescriptor)typeChange.getSource();
 
-                if (!typeMappings.containsKey(source) && typeChange.getTarget() != null)
-                    typeMappings.put(source, new ClassDescriptorMapping(typeChange, change.mapping));
+                if (!typeMappings.containsKey(source))
+                    typeMappings.put(source, typeChange.getTarget() != null ?
+                            new ClassDescriptorMapping(typeChange, change.mapping) : new ClassDescriptorMapping(source));
             }
-
         }
     }
 
@@ -96,13 +98,18 @@ public class SchemaConverter {
     }
 
     public final RawMessage convert(RawMessage msg) {
-        ClassDescriptorMapping mapping = typeMappings.get(msg.type);
+        ClassDescriptorMapping mapping = typeMappings.get(msg.type, null);
         
-        if (mapping != null && mapping.mappings != null) {
+        if (mapping != null && mapping.isValid()) {
 
             if (mapping.decoder == null)
                 throw new IllegalStateException("Decoder for " + msg.type + " is not defined.");
 
+            result.type = mapping.target;
+            result.setSymbol(msg.getSymbol());
+            result.setNanoTime(msg.getNanoTime());
+
+            if (mapping.hasChanges) {
             buffer.reset(0);
             mapping.encoder.beginWrite(buffer);
 
@@ -116,16 +123,10 @@ public class SchemaConverter {
             }
 
             mapping.encoder.endWrite();
-
-            result.type = mapping.target;
-            result.setSymbol(msg.getSymbol());
-            result.setNanoTime(msg.getNanoTime());
             result.setBytes(buffer, 0);
-
-            return result;
-        } else if (mapping != null && mapping.decoder != null) {
-            result.copyFrom(msg);
-            result.type = mapping.target;
+            } else {
+                result.setBytes(msg.data, msg.offset, msg.length);
+            }
 
             return result;
         }
@@ -139,18 +140,21 @@ public class SchemaConverter {
 
         RecordClassDescriptor descriptor = decoder.getClassInfo().getDescriptor();
 
-        ClassDescriptorMapping mapping = typeMappings.get(descriptor);
+        ClassDescriptorMapping mapping = typeMappings.get(descriptor, null);
 
         if (mapping != null) {
 
-            UnboundEncoder encoder = writable.getFieldEncoder(mapping.target);
+            if (mapping.target != null) {
+                UnboundEncoder encoder = writable.getFieldEncoder(mapping.target);
 
-            for (FieldMapping fieldMapping : mapping.mappings) {
-                encoder.nextField();
-
-                convertField(fieldMapping, decoder, encoder);
+                for (FieldMapping fieldMapping : mapping.mappings) {
+                    encoder.nextField();
+                    convertField(fieldMapping, decoder, encoder);
+                }
+                encoder.endWrite();
+            } else {
+                return false;
             }
-            encoder.endWrite();
 
             return true;
         } else { // type is not changed - copy "as is"
@@ -190,6 +194,10 @@ public class SchemaConverter {
             decoder.seekField(mapping.sourceIndex);
             convertField(decoder, mapping.sourceType, mapping.sourceTypeIndex, writable, mapping.targetType, mapping.targetTypeIndex);
         }
+    }
+
+    private static boolean isDecimal64(DataType type) {
+        return ((type instanceof FloatDataType) && ((FloatDataType)type).isDecimal64());
     }
 
     private boolean convertField(ReadableValue in, DataType inType, DataTypeIndex inTypeIndex,
@@ -232,8 +240,21 @@ public class SchemaConverter {
                         case Boolean: out.writeBoolean(lValue != 0); break;
                         case Int: out.writeInt(lValue); break;
                         case Long: out.writeLong(lValue); break;
-                        case Float: out.writeFloat(lValue); break;
-                        case Double: out.writeDouble(lValue); break;
+
+                        case Float: {
+                            if (isDecimal64(inType))
+                                out.writeFloat(Decimal64Utils.toDouble(lValue));
+                           else
+                                out.writeFloat(lValue);
+                            break;
+                        }
+                        case Double: {
+                            if (isDecimal64(inType))
+                                out.writeDouble(Decimal64Utils.toDouble(lValue));
+                            else
+                                out.writeDouble(lValue);
+                            break;
+                        }
                         case String: out.writeString(String.valueOf(lValue)); break;
                         case Enum: out.writeEnum(String.valueOf(lValue)); break;
                     }
@@ -257,7 +278,13 @@ public class SchemaConverter {
                     switch (to) {
                         case Boolean: out.writeBoolean(dValue); break;
                         case Int: out.writeInt(dValue); break;
-                        case Long: out.writeLong(dValue); break;
+                        case Long: {
+                            if (isDecimal64(outType))
+                                out.writeLong(Decimal64Utils.fromDouble(dValue));
+                            else
+                                out.writeLong(dValue);
+                            break;
+                        }
                         case Float: out.writeFloat(dValue); break;
                         case Double: out.writeDouble(dValue); break;
                         case String: out.writeString(String.valueOf(dValue)); break;
@@ -284,14 +311,33 @@ public class SchemaConverter {
                         DataType outArrayType = ((ArrayDataType)outType).getElementDataType();
                         DataTypeIndex outArrayTypeIndex = FieldMapping.getTypeIndex(outArrayType);
 
-                        int length = in.getArrayLength();
-                        out.setArrayLength(length);
+                        int count = 0;
+                        out.setArrayLength(in.getArrayLength());
 
-                        for (int i = 0; i < length; i++)
-                            convertField(
+                        MixedWritableValue element = null;
+                        boolean converted = true;
+
+                        for (int i = 0, length = in.getArrayLength(); i < length; i++) {
+
+                            // move to next element when previous was converter only
+                            if (converted)
+                                element = out.clone(out.nextWritableElement());
+
+                            converted = convertField(
                                     in.nextReadableElement(), inArrayType, inArrayTypeIndex,
-                                    out.clone(out.nextWritableElement()), outArrayType, outArrayTypeIndex
+                                    element, outArrayType, outArrayTypeIndex
                             );
+
+                            count = converted ? count + 1 : count;
+                        }
+
+                        out.setArrayLength(count);
+
+                        // when no elements converted - then just set array length to 0 and call endWrite()
+                        if (count == 0) {
+                            if (out instanceof UnboundEncoder)
+                                ((UnboundEncoder)out).endWrite();
+                        }
 
                     } else {
                         out.writeDefault();
@@ -300,7 +346,7 @@ public class SchemaConverter {
 
                 case Object:
                     if (to == DataTypeIndex.Object)
-                        convertObject(in, (ClassDataType) inType, out, (ClassDataType) outType);
+                        return convertObject(in, (ClassDataType) inType, out, (ClassDataType) outType);
                     else
                         out.writeDefault();
                     break;

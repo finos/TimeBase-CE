@@ -70,4 +70,3 @@ public class PolyBoundDecoder implements RecordDecoder<InstrumentMessage> {
         return code;
     }
 }
-

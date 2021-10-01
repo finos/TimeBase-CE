@@ -298,4 +298,3 @@ public final class PriorityQueueGeneralizedWithDataNoHeadRemoval<T> {
         return getInternal (1);
     }
 }
-

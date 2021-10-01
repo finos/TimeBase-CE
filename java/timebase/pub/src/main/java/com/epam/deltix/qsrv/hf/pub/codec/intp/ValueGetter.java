@@ -41,4 +41,3 @@ public interface ValueGetter {
 
     Object get(Object obj) throws IllegalAccessException, InvocationTargetException;
 }
-

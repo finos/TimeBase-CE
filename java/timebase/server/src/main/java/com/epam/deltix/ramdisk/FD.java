@@ -228,7 +228,11 @@ public class FD implements Disposable  {
             throw new IllegalStateException (this + " is closed");
     }
 
-    protected final void        directForce ()
+    protected final void        directForce () throws IOException {
+        directForce(false);
+    }
+
+    protected final void        directForce (boolean metadata)
         throws IOException
     {
         assertOpen ();
@@ -239,7 +243,7 @@ public class FD implements Disposable  {
             synchronized (raf) {
                 FileChannel     fc = raf.getChannel ();
 
-                fc.force (false);
+                fc.force (metadata);
 
                 //  For some reason we can be here without any exceptions
                 //  but with a suddenly closed file.

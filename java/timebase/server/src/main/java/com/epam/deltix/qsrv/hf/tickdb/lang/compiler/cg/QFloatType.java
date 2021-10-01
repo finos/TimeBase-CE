@@ -16,10 +16,15 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
+import com.epam.deltix.dfp.Decimal;
+import com.epam.deltix.dfp.Decimal64;
+import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.pub.md.FloatDataType;
-import com.epam.deltix.util.jcg.*;
+import com.epam.deltix.util.jcg.JCompoundStatement;
+import com.epam.deltix.util.jcg.JExpr;
+import com.epam.deltix.util.jcg.JStatement;
 
-import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.*;
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
 
 /**
  *
@@ -42,49 +47,83 @@ public final class QFloatType extends QNumericType <FloatDataType> {
 
     @Override
     public Class <?>            getJavaClass () {
-        switch (kind) {
-            case KIND_FLOAT:    return (float.class);
-            case KIND_DOUBLE:   return (double.class);
-            default:            throw new RuntimeException ("kind = " + kind);
+        if (dt.getScale() == FloatDataType.SCALE_DECIMAL64) {
+            return long.class;
+        }
+        switch (dt.getScale ()) {
+            case FloatDataType.FIXED_FLOAT:
+                return float.class;
+            case FloatDataType.SCALE_DECIMAL64:
+                return long.class;
+            case FloatDataType.FIXED_DOUBLE:
+            default:
+                return double.class;
         }
     }
 
     @Override
     public JExpr                getLiteral (Number value) {
-        switch (kind) {
-            case KIND_FLOAT:    return (CTXT.floatLiteral (value.floatValue ()));
-            case KIND_DOUBLE:   return (CTXT.doubleLiteral (value.doubleValue ()));
-            default:            throw new RuntimeException ("kind = " + kind);
+        switch (dt.getScale()) {
+            case FloatDataType.FIXED_FLOAT:
+                return CTXT.floatLiteral(value.floatValue());
+            case FloatDataType.SCALE_DECIMAL64:
+                if (value instanceof Decimal64) {
+                    return CTXT.longLiteral(Decimal64.toUnderlying((Decimal64) value));
+                }
+                return CTXT.longLiteral(fromNumber(value.doubleValue()));
+            default:
+                return CTXT.doubleLiteral(value.doubleValue());
         }
     }
 
     @Override
+    public JExpr makeConstantExpr(Object obj) {
+        if (obj instanceof String) {
+            String s = (String) obj;
+            switch (dt.getScale()) {
+                case FloatDataType.FIXED_FLOAT:
+                    return CTXT.floatLiteral(Float.parseFloat(s));
+                case FloatDataType.SCALE_DECIMAL64:
+                    return CTXT.longLiteral(Decimal64Utils.parse(s));
+                default:
+                    return CTXT.doubleLiteral(Double.parseDouble(s));
+            }
+        } else {
+            return super.makeConstantExpr(obj);
+        }
+    }
+
+    //     JExpr getLiteral(String literal)
+
+    @Override
     public JExpr                getNullLiteral () {
-        switch (kind) {
-            case KIND_FLOAT:    return (CTXT.staticVarRef (Float.class, "NaN"));
-            case KIND_DOUBLE:   return (CTXT.staticVarRef (Double.class, "NaN"));
-            default:            throw new RuntimeException ("kind = " + kind);
+        switch (dt.getScale()) {
+            case FloatDataType.FIXED_FLOAT:
+                return CTXT.staticVarRef(Float.class, "NaN");
+            case FloatDataType.SCALE_DECIMAL64:
+                return CTXT.staticVarRef(Decimal64Utils.class, "NULL");
+            default:
+                return (CTXT.staticVarRef(Double.class, "NaN"));
         }
     }
 
     @Override
     public JExpr                checkNull (JExpr e, boolean eq) {
-        JExpr       isNull;
+        JExpr isNull;
 
-        switch (kind) {
-            case KIND_FLOAT:
-                isNull = CTXT.staticCall (Float.class, "isNaN", e);
+        switch (dt.getScale()) {
+            case FloatDataType.FIXED_FLOAT:
+                isNull = CTXT.staticCall(Float.class, "isNaN", e);
                 break;
-                
-            case KIND_DOUBLE:
-                isNull = CTXT.staticCall (Double.class, "isNaN", e);
+            case FloatDataType.SCALE_DECIMAL64:
+                isNull = CTXT.binExpr(e, "==", CTXT.staticVarRef(Decimal64Utils.class, "NULL"));
                 break;
-
             default:
-                throw new RuntimeException ("kind = " + kind);
+                isNull = CTXT.staticCall(Double.class, "isNaN", e);
+                break;
         }
 
-        return (eq ? isNull : isNull.not ());
+        return (eq ? isNull : isNull.not());
     }
 
     @Override
@@ -94,6 +133,9 @@ public final class QFloatType extends QNumericType <FloatDataType> {
                 return (4);
 
             case FloatDataType.FIXED_DOUBLE:
+                return (8);
+
+            case FloatDataType.SCALE_DECIMAL64:
                 return (8);
 
             default:
@@ -140,7 +182,7 @@ public final class QFloatType extends QNumericType <FloatDataType> {
                 break;
 
             case FloatDataType.SCALE_DECIMAL64:
-                writeExpr = output.call ("writeDecimal64", value);
+                writeExpr = output.call ("writeLong", value);
                 break;
 
             default:
@@ -164,7 +206,7 @@ public final class QFloatType extends QNumericType <FloatDataType> {
                 break;
 
             case FloatDataType.SCALE_DECIMAL64:
-                function = "readDecimal64";
+                function = "readLong";
                 break;
 
             default:
@@ -200,7 +242,7 @@ public final class QFloatType extends QNumericType <FloatDataType> {
                 break;
 
             case FloatDataType.SCALE_DECIMAL64:
-                writeExpr = output.call ("writeDecimal64", e);
+                writeExpr = output.call ("writeLong", e);
                 break;
 
             default:
@@ -209,5 +251,16 @@ public final class QFloatType extends QNumericType <FloatDataType> {
         }
 
         addTo.add (writeExpr);
-    }   
+    }
+
+    @Decimal
+    private static long fromNumber(Number number) {
+        if (number instanceof Integer || number instanceof Short || number instanceof Byte) {
+            return Decimal64Utils.fromInt(number.intValue());
+        } else if (number instanceof Long) {
+            return Decimal64Utils.fromLong(number.longValue());
+        } else {
+            return Decimal64Utils.fromDouble(number.doubleValue());
+        }
+    }
 }

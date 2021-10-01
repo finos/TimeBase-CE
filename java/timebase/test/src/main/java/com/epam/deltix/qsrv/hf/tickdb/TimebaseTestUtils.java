@@ -51,13 +51,6 @@ public final class TimebaseTestUtils {
         }
     }
 
-    public static void createFileStream(String timebasePath, String streamKey, String messageFilePath) throws Throwable {
-        DXTickDB db = TickDBFactory.create(timebasePath);
-        db.open(false);
-        db.createFileStream(streamKey, messageFilePath);
-        db.close();
-    }
-
     public static void importFromFile(String timebasePath, String streamKey, int df, String messageFilePath) throws Throwable {
         DXTickDB db = TickDBFactory.create(timebasePath);
         db.open(false);

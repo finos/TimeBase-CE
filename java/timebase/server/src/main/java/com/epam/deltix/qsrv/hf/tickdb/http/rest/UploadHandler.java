@@ -84,20 +84,25 @@ public class UploadHandler extends RestHandler implements Runnable {
 
         final LoadingOptions.WriteMode writeMode = LoadingOptions.WriteMode.values()[din.readByte()];
 
+        boolean hasSpace = din.readBoolean();
+        String space = hasSpace ? din.readUTF() : null;
+
         final DXTickStream stream = db.getStream(streamKey);
         if (stream == null)
             throw new UnknownStreamException(String.format("stream \"%s\" doesn't exist", streamKey));
 
         LoadingOptions options = new LoadingOptions(true);
         options.writeMode = writeMode;
+        options.space = space;
 
         concreteTypes = stream.getStreamOptions().getMetaData().getTopTypes();
 
         TickLoader loader = null;
+        int count = 0;
         try {
             loader = stream.createLoader(options);
 
-            log(streamKey, "Upload started");
+            log(Level.INFO, stream.getKey(), "Upload started.");
 
             loader.addEventListener(listener);
             loader.addSubscriptionListener(listener);
@@ -111,7 +116,7 @@ public class UploadHandler extends RestHandler implements Runnable {
 
                         log(streamKey, "recieved MESSAGE_BLOCK_ID");
                         while (readMessageRecord(loader))
-                            ;
+                            count++;
                         break;
                     case HTTPProtocol.INSTRUMENT_BLOCK_ID:
 
@@ -133,7 +138,7 @@ public class UploadHandler extends RestHandler implements Runnable {
             closeLoader(loader);
         }
 
-        log(streamKey, "Upload finished.");
+        log(Level.INFO, stream.getKey(), "Upload finished. Recieved " + count + " messages.");
     }
 
     private void                        log(String stream, String message) {

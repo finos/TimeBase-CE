@@ -16,8 +16,11 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime;
 
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
+import com.epam.deltix.qsrv.hf.tickdb.schema.SimpleClassSet;
 
 /**
  *  Base class for compiled filters.
@@ -28,6 +31,8 @@ public abstract class FilterBase implements PreparedQuery {
     public RecordClassDescriptor []     inputTypes;
     public RecordClassDescriptor []     outputTypes;
 
+    protected DXTickDB                  db;
+
     public boolean                      isReverse () {
         return (sourceQuery.isReverse ());
     }
@@ -36,5 +41,18 @@ public abstract class FilterBase implements PreparedQuery {
         sourceQuery.close ();
         sourceQuery = null;
         types = null;
+    }
+
+    @Override
+    public ClassSet<RecordClassDescriptor> getSchema() {
+        return new SimpleClassSet(outputTypes);
+    }
+
+    public DXTickDB getDb() {
+        return db;
+    }
+
+    public void setDb(DXTickDB db) {
+        this.db = db;
     }
 }

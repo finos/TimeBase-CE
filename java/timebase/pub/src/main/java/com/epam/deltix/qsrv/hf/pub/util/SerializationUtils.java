@@ -20,6 +20,7 @@ import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.util.io.IOUtil;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
@@ -123,6 +124,21 @@ public class SerializationUtils {
                 out.writeChar (c);
             }
         }
+    }
+
+    // allocations
+    public static void writeUTFString(DataOutput out, String value) throws IOException {
+        out.writeInt(value.length());
+        if (value.length() > 0)
+            out.write(value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static String readUTFString(DataInput in) throws IOException {
+        int size = in.readInt();
+        // allocations
+        byte[] bytes = new byte[size];
+        in.readFully(bytes);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     public static void                  readHugeString (

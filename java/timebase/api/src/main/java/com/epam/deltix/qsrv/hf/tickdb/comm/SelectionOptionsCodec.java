@@ -56,9 +56,8 @@ public abstract class SelectionOptionsCodec {
         if (serverVersion >= VERSION_WITH_FIXED_STREAM_TYPE_SUPPORT)
             out.writeBoolean(options.restrictStreamType);
 
-        if (serverVersion >= VERSION_WITH_SPACES_SUPPORT) {
+        if (serverVersion >= VERSION_WITH_SPACES_SUPPORT)
             SerializationUtils.writeNullableString(options.space, out);
-        }
     }
 
     public static void read(DataInputStream in, SelectionOptions options, int clientVersion) throws IOException {

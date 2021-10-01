@@ -73,11 +73,7 @@ public class QuantServiceConfig {
 
     public enum Type {
         TimeBase,
-        UHF,
-        Aggregator,
-        QuantServer,
-        ExecutionServer,
-        StrategyServer
+        QuantServer
     }
 
     private final Type              myType;

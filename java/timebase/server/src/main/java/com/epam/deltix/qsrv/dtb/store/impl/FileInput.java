@@ -33,7 +33,7 @@ class FileInput {
     private InputStream             is;
     private InputStream             bis;
 
-    private boolean                 opened = false;
+    private volatile boolean        opened = false;
     private ByteArray               buffer;
 
     void        open(AbstractPath path, int offset) throws IOException {

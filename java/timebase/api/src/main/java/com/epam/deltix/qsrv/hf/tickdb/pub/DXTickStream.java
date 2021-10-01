@@ -180,6 +180,19 @@ public interface DXTickStream extends WritableTickStream, AuthorizationControlle
      */
     String                   describe();
 
+    /**
+     * Removed given 'spaces' permanently
+     * @param names list of spaces names to delete
+     */
+    void                    deleteSpaces(String ... names);
+
+    /**
+     * Renames space
+     * @param newName new name
+     * @param oldName space to rename
+     */
+    void                    renameSpace(String newName, String oldName);
+
     /// locking support
 
     /**

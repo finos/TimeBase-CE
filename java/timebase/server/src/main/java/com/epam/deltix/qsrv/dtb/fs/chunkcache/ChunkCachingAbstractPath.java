@@ -60,7 +60,11 @@ final class ChunkCachingAbstractPath extends DelegatingAbstractPath<ChunkCaching
 
     @Override
     public InputStream openInput(long offset) throws IOException {
+        if (exists())
         return new ChunkCacheInputStream(this, cfs.getCache(), offset);
+
+        cfs.getCache().invalidateIfExists(this);
+        throw new IOException("Cannot access file: " + getPathString());
     }
 
     @Override

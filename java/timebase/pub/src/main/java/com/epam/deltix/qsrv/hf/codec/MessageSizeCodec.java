@@ -193,6 +193,19 @@ public final class MessageSizeCodec {
             throw new IllegalArgumentException (t + " is too large");        
     }
 
+    public static int sizeOf(int t) {
+        if (t < 0)
+            throw new IllegalArgumentException(t + " is negative");
+        else if (t < 0x80)
+            return 1;
+        else if (t < 0x4000) {
+            return 2;
+        } else if (t < 0x400000) {
+            return 3;
+        } else
+            throw new IllegalArgumentException(t + " is too large");
+    }
+
     public static void          write (int t, ByteQueue out) {
         if (t < 0)
             throw new IllegalArgumentException (t + " is negative");

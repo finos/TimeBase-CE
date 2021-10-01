@@ -20,6 +20,7 @@ import com.epam.deltix.util.jcg.*;
 import com.epam.deltix.util.lang.StringUtils;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  *  Contains code common for Java and C# implementations.
@@ -99,6 +100,10 @@ public abstract class JContextImpl implements JContext {
                 }
             }
         );
+    }
+
+    JType[] classesToType(final Class<?>[] classes) {
+        return Arrays.stream(classes).map(this::classToType).toArray(JType[]::new);
     }
 
     static JType            typeToArray (final JType type) {
@@ -265,6 +270,18 @@ public abstract class JContextImpl implements JContext {
     }
 
     @Override
+    public JExpr thisLiteral() {
+        return (
+            new JExprImplBase(this) {
+                @Override
+                public void print(int outerPriority, SourceCodePrinter out) throws IOException {
+                    out.print("this");
+                }
+            }
+        );
+    }
+
+    @Override
     public JExpr        trueLiteral () {
         return (
             new JExprImplBase (this) {
@@ -388,6 +405,101 @@ public abstract class JContextImpl implements JContext {
     }
 
     @Override
+    public JStatement ifStmt(JExpr cond1, JStatement then1, JExpr cond2, JExpr then2, JStatement els) {
+        return new JStatementImplBase(this) {
+            @Override
+            public void printElement(SourceCodePrinter out) throws IOException {
+                out.print ("if (", cond1, ")");
+                out.newLine();
+                if (then1 instanceof JCompoundStatement)
+                    ((JStatementImplBase) then1).printElement(out);
+                else {
+                    out.indent(+1);
+                    ((JStatementImplBase) then1).printElement(out);
+                    out.indent(-1);
+                }
+
+                out.print("else if (", cond2, ")");
+                out.newLine();
+
+                if (then2 instanceof JCompoundStatement)
+                    ((JStatementImplBase) then2).printElement(out);
+                else {
+                    out.indent(+1);
+                    ((JStatementImplBase) then2).printElement(out);
+                    out.indent(-1);
+                }
+
+                if (els != null) {
+                    out.newLine ();
+                    out.print ("else");
+                    out.newLine ();
+                    if (els instanceof JCompoundStatement)
+                        ((JStatementImplBase) els).printElement (out);
+                    else {
+                        out.indent(+1);
+                        ((JStatementImplBase) els).printElement (out);
+                        out.indent(-1);
+                    }
+                }
+            }
+        };
+    }
+
+    @Override
+    public JStatement ifStmt(JExpr left, JExpr right, JStatement bothTrue, JStatement leftTrue, JStatement rightTrue, JStatement bothFalse) {
+        return new JStatementImplBase(this) {
+            @Override
+            public void printElement(SourceCodePrinter out) throws IOException {
+                out.print ("if (", binExpr(left, "&&", right), ")");
+                out.newLine();
+                if (bothTrue instanceof JCompoundStatement)
+                    ((JStatementImplBase) bothTrue).printElement(out);
+                else {
+                    out.indent(+1);
+                    ((JStatementImplBase) bothTrue).printElement(out);
+                    out.indent(-1);
+                }
+
+                out.print("else if (", left, ")");
+                out.newLine();
+
+                if (leftTrue instanceof JCompoundStatement)
+                    ((JStatementImplBase) leftTrue).printElement(out);
+                else {
+                    out.indent(+1);
+                    ((JStatementImplBase) leftTrue).printElement(out);
+                    out.indent(-1);
+                }
+
+                out.print("else if (", right, ")");
+                out.newLine();
+
+                if (rightTrue instanceof JCompoundStatement)
+                    ((JStatementImplBase) rightTrue).printElement(out);
+                else {
+                    out.indent(+1);
+                    ((JStatementImplBase) rightTrue).printElement(out);
+                    out.indent(-1);
+                }
+
+                if (bothFalse != null) {
+                    out.newLine ();
+                    out.print ("else");
+                    out.newLine ();
+                    if (bothFalse instanceof JCompoundStatement)
+                        ((JStatementImplBase) bothFalse).printElement (out);
+                    else {
+                        out.indent(+1);
+                        ((JStatementImplBase) bothFalse).printElement (out);
+                        out.indent(-1);
+                    }
+                }
+            }
+        };
+    }
+
+    @Override
     public JExpr        binExpr (final JExpr left, final String op, final JExpr right) {
         return (
             new JExprImplBase (this) {
@@ -479,6 +591,40 @@ public abstract class JContextImpl implements JContext {
     }
 
     @Override
+    public JExpr conjunction(JExpr... args) {
+        return new JExprImplBase(this) {
+            @Override
+            public void print(int outerPriority, SourceCodePrinter out) throws IOException {
+                int p = JavaOpPriority.BOOL_AND;
+                out.print("(");
+                ((JExprImplBase) args[0]).print(p, out);
+                for (int i = 1; i < args.length; i++) {
+                    out.print(" && ");
+                    ((JExprImplBase) args[1]).print(p, out);
+                }
+                out.print(")");
+            }
+        };
+    }
+
+    @Override
+    public JExpr disjunction(JExpr... args) {
+        return new JExprImplBase(this) {
+            @Override
+            public void print(int outerPriority, SourceCodePrinter out) throws IOException {
+                int p = JavaOpPriority.BOOL_AND;
+                out.print("(");
+                ((JExprImplBase) args[0]).print(p, out);
+                for (int i = 1; i < args.length; i++) {
+                    out.print(" || ");
+                    ((JExprImplBase) args[1]).print(p, out);
+                }
+                out.print(")");
+            }
+        };
+    }
+
+    @Override
     public JExpr        sum (JExpr ... es) {
         JExpr   ret = null;
 
@@ -517,6 +663,18 @@ public abstract class JContextImpl implements JContext {
                         out.print (".", fieldName);
                     }
                 }
+        );
+    }
+
+    @Override
+    public JExpr localVarRef(final String fieldName) {
+        return (
+            new JExprImplBase(this) {
+                @Override
+                public void print(int outerPriority, SourceCodePrinter out) throws IOException {
+                    out.print(fieldName);
+                }
+            }
         );
     }
 
@@ -591,6 +749,57 @@ public abstract class JContextImpl implements JContext {
     @Override
     public JStatement   breakStmt (final String label) {
         return (mkbreak (label));
+    }
+
+    @Override
+    public JStatement continueStmt() {
+        return new JStatementImplBase (this) {
+            @Override
+            public void printElement (SourceCodePrinter out) throws IOException {
+                out.print ("continue;");
+            }
+        };
+    }
+
+    @Override
+    public JExpr newGenericExpr(Class<?> cls, JExpr... args) {
+        return new JExprImplBase(this) {
+            @Override
+            void print(int outerPriority, SourceCodePrinter out) throws IOException {
+                out.print("new ");
+                out.printRefClassName (cn (cls));
+                out.print("<>(");
+                px(out, args);
+                out.print(")");
+            }
+        };
+    }
+
+    @Override
+    public JExpr supplierWithNew(Class<?> cls, JExpr... args) {
+        return new JExprImplBase(this) {
+            @Override
+            void print(int outerPriority, SourceCodePrinter out) throws IOException {
+                out.print("() -> new ");
+                if (cls.isArray()) {
+                    if (args.length > 2)
+                        throw new IllegalArgumentException("invalid number of arguments for array constructor " + args.length);
+                    out.printRefClassName(cls.getComponentType().getCanonicalName());
+                    out.print("[");
+                    // TODO: That is a hack for initializer case
+                    if (args.length == 1)
+                        out.print(args[0]);
+                    out.print("]");
+                    if (args.length == 2)
+                        out.print(args[1]);
+                } else {
+                    out.printRefClassName (cn (cls));
+                    out.print(" (");
+                    px(out, args);
+                    out.print(")");
+                }
+            }
+        };
     }
 
     @Override
@@ -686,7 +895,7 @@ public abstract class JContextImpl implements JContext {
 
     @Override
     public JArrayInitializer arrayInitializer (JType type) {
-        return new JArrayInitializerImpl (this, type);
+        return new JArrayInitializerImpl (this);
     }
 
     @Override
@@ -731,7 +940,10 @@ public abstract class JContextImpl implements JContext {
 
     protected abstract void     printType(String type, SourceCodePrinter out) 
         throws IOException;
-    
+
+    protected abstract void     printType(String type, String[] typeArgs, SourceCodePrinter out)
+            throws IOException;
+
     abstract ClassImpl          newClassImpl (
         int                         modifiers,
         String                      packageName,

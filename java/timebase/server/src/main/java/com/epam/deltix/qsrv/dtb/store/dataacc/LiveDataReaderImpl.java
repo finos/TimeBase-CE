@@ -21,8 +21,6 @@ import com.epam.deltix.util.collections.generated.IntegerEnumeration;
 import com.epam.deltix.util.collections.generated.IntegerToObjectHashMap;
 import com.epam.deltix.util.concurrent.*;
 
-import javax.annotation.Nullable;
-
 /**
  *
  */
@@ -66,7 +64,16 @@ public final class LiveDataReaderImpl
     //
     @Override
     public synchronized void    close () {
+        closeInternal();
+        currentFilter = null;
+    }
 
+    @Override
+    public void                 park() {
+        closeInternal();
+    }
+
+    protected void    closeInternal () {
         // already closed
         if (pq == null)
             return;
@@ -74,7 +81,6 @@ public final class LiveDataReaderImpl
         store.removeSliceListener(this);
 
         pq = null;
-        currentFilter = null;
         currentTimestamp = Long.MAX_VALUE;
 
         synchronized (waiting) {
@@ -159,7 +165,7 @@ public final class LiveDataReaderImpl
 
     public synchronized void                 reopen(long timestamp) {
         EntityFilter filter = currentFilter;
-        close();
+        closeInternal();
         open(timestamp, forward, filter);
     }
 
@@ -226,6 +232,11 @@ public final class LiveDataReaderImpl
         if (processor.processRealTime(currentTimestamp))
             return true;
 
+        if (currentTimeSlice != null && currentTimeSlice.isCheckoutOnly(this)) {
+            release(currentTimeSlice);
+            currentTimeSlice = null;
+        }
+
         if (listener != null)
             throw UnavailableResourceException.INSTANCE;
 
@@ -248,11 +259,14 @@ public final class LiveDataReaderImpl
         for (;;) {
 
             if (currentTimeSlice == null) {
+
+                if (pq == null) // is closed?
+                    return false;
+
                 try {
                     //  filter should be empty to not miss any symbol updates,
                     //    for example we subscribed to "A", but next slice contains only "B" at the moment
                     currentTimeSlice = store.checkOutTimeSliceForRead(this, currentTimestamp, null);
-
                     pqIsLoaded = false;
                 } catch (InterruptedException e) {
                     throw new UncheckedInterruptedException (e);
@@ -339,8 +353,11 @@ public final class LiveDataReaderImpl
     }
 
     private void                release(TimeSlice slice) {
-        if (slice != null)
+        if (slice != null) {
+            clearCurrent();
             slice.getStore().checkInTimeSlice(this, slice);
+            clearBuffers();
+        }
     }
 
     public void                 setAvailabilityListener (Runnable lnr) {

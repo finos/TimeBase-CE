@@ -24,7 +24,15 @@ public class DefaultExceptionResolver implements ExceptionResolver {
     public static final DefaultExceptionResolver INSTANCE = new DefaultExceptionResolver();
 
     @Override
-    public Throwable        create(Class<?> c, String message, Throwable cause) {
+    public Throwable        create(String className, String message, Throwable cause) {
+
+        Class<?> c;
+        try {
+            c = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException("Cannot load class:" + className);
+        }
+
         Constructor<?> two = null;
         try {
             two = c.getConstructor(String.class, Throwable.class);
@@ -40,7 +48,7 @@ public class DefaultExceptionResolver implements ExceptionResolver {
         }
 
         if (two == null && one == null)
-            throw new IllegalStateException("Cannot find public constructors for the " + c.getName());
+            throw new IllegalArgumentException("Cannot find public constructors for the " + c.getName());
 
         Throwable x;
         try {
@@ -50,7 +58,7 @@ public class DefaultExceptionResolver implements ExceptionResolver {
                 x = (Throwable) one.newInstance(message);
 
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException(e);
         }
 
         return x;

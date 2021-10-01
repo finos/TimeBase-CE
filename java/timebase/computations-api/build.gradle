@@ -1,0 +1,8 @@
+evaluationDependsOn(':java')
+
+dependencies {
+    api project(':java:timebase:pub')
+
+    implementation ('com.epam.deltix:dfp')
+    implementation ('com.epam.deltix:timebase-collections')
+}

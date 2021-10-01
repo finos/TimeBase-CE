@@ -33,5 +33,6 @@ public class QExprValue extends QValue {
     @Override
     public JExpr        read () {
         return (variable);
-    }      
+    }
+
 }

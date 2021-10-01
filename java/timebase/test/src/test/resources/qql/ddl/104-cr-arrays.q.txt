@@ -1,0 +1,128 @@
+#
+#   Create stream mimicking alltypes via qql
+#
+testqql
+CREATE DURABLE STREAM TEST_ARR (
+    ENUM "deltix.qsrv.hf.tickdb.testframework.TestBitmask" (
+        BIT0,
+        BIT1,
+        BIT2 = 4,
+        BIT3
+    ) FLAGS COMMENT 'This enum is a bitmask';
+
+    ENUM "deltix.qsrv.hf.tickdb.testframework.TestEnum" 'Test Enum Title' (
+        RED,
+        GREEN = 1,
+        BLUE
+    );
+
+    CLASS "deltix.qsrv.hf.server.es.db.tb.data.OrderAttribute" (
+    )
+        NOT INSTANTIABLE;
+
+    CLASS "deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute" UNDER "deltix.qsrv.hf.server.es.db.tb.data.OrderAttribute" (
+        "key" 'Key' VARCHAR NOT NULL,
+        "value" 'Value' VARCHAR,
+        "test" TIMESTAMP
+    );
+
+    CLASS "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute" UNDER "deltix.qsrv.hf.server.es.db.tb.data.OrderAttribute" (
+        "key" 'Key' INTEGER NOT NULL SIGNED (32),
+        "value" 'Value' VARCHAR
+    );
+
+    CLASS "deltix.qsrv.hf.tickdb.testframework.TestAllTypesMessage" 'Test Class Title' (
+        "obj0" 'obj0' OBJECT("deltix.qsrv.hf.tickdb.testframework.TestEnum"),
+        "obj0_1" 'obj0_1' OBJECT("deltix.qsrv.hf.tickdb.testframework.TestEnum") not null,
+        "obj0_2" 'obj0_2' OBJECT("deltix.qsrv.hf.tickdb.testframework.TestEnum"),
+        "obj0_3" 'obj0_3' OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute") not null,
+        "obj2" 'obj2' OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute"),
+
+        "arr0" 'arr0' ARRAY(INTEGER),
+        "arr0_1" 'arr0_1' ARRAY(INTEGER not null),
+        "arr0_2" 'arr0_2' ARRAY(INTEGER not null) not null,
+        "arr1" 'arr1' ARRAY("deltix.qsrv.hf.tickdb.testframework.TestEnum"),
+        "arr1_1" 'arr1_1' ARRAY("deltix.qsrv.hf.tickdb.testframework.TestEnum" not null),
+        "arr2" 'arr2' ARRAY("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute"),
+        "arr2_1" 'arr2_1' ARRAY("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute" not null) not null,
+        "arr3" 'arr3' ARRAY("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute"),
+        "arr3_1" 'arr3_1' ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute") not null),
+        "arr3_2" 'arr3_2' ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute"), OBJECT("deltix.qsrv.hf.server.es.db.tb.data.FixAttribute")),
+        "arr4" 'arr5' ARRAY(ARRAY("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute")),
+        "arr5" 'arr5' ARRAY(ARRAY(ARRAY("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute"))),
+        "arr6" 'arr6' ARRAY(ARRAY(ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute") not null)) not null),
+        "arr7" 'arr7' ARRAY(ARRAY(ARRAY(INTEGER))),
+        "arr7_1" 'arr7_1' ARRAY(ARRAY(ARRAY("deltix.qsrv.hf.tickdb.testframework.TestBitmask" not null) not null) not null) not null
+    )
+    COMMENT 'This class tests the majority of field types';
+)
+OPTIONS (DF = 1)
+/
+>deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,SYSTEM,_,SUCCESS,INFO,Stream created,0
+!end
+#
+#   Describe
+#
+testdesc TEST_ARR
+DURABLE STREAM "TEST_ARR" (
+    CLASS "deltix.qsrv.hf.server.es.db.tb.data.OrderAttribute" (
+    )
+        NOT INSTANTIABLE;
+    CLASS "deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute" UNDER "deltix.qsrv.hf.server.es.db.tb.data.OrderAttribute" (
+        "key" 'Key' VARCHAR NOT NULL,
+        "value" 'Value' VARCHAR,
+        "test" TIMESTAMP
+    );
+    CLASS "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute" UNDER "deltix.qsrv.hf.server.es.db.tb.data.OrderAttribute" (
+        "key" 'Key' INTEGER NOT NULL SIGNED (32),
+        "value" 'Value' VARCHAR
+    );
+    ENUM "deltix.qsrv.hf.tickdb.testframework.TestEnum" 'Test Enum Title' (
+        "RED" = 0,
+        "GREEN" = 1,
+        "BLUE" = 2
+    );
+    ENUM "deltix.qsrv.hf.tickdb.testframework.TestBitmask" (
+        "BIT0" = 1,
+        "BIT1" = 2,
+        "BIT2" = 4,
+        "BIT3" = 8
+    )
+        FLAGS
+        COMMENT 'This enum is a bitmask';
+    CLASS "deltix.qsrv.hf.tickdb.testframework.TestAllTypesMessage" 'Test Class Title' (
+        "obj0" "deltix.qsrv.hf.tickdb.testframework.TestEnum",
+        "obj0_1" "deltix.qsrv.hf.tickdb.testframework.TestEnum" NOT NULL,
+        "obj0_2" "deltix.qsrv.hf.tickdb.testframework.TestEnum",
+        "obj0_3" OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute") NOT NULL,
+        "obj2" OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute"),
+        "arr0" ARRAY(INTEGER),
+        "arr0_1" ARRAY(INTEGER NOT NULL),
+        "arr0_2" ARRAY(INTEGER NOT NULL) NOT NULL,
+        "arr1" ARRAY("deltix.qsrv.hf.tickdb.testframework.TestEnum"),
+        "arr1_1" ARRAY("deltix.qsrv.hf.tickdb.testframework.TestEnum" NOT NULL),
+        "arr2" ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute")),
+        "arr2_1" ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute") NOT NULL) NOT NULL,
+        "arr3" ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute")),
+        "arr3_1" ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute") NOT NULL),
+        "arr3_2" ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute")),
+        "arr4" 'arr5' ARRAY(ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute"))),
+        "arr5" ARRAY(ARRAY(ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute")))),
+        "arr6" ARRAY(ARRAY(ARRAY(OBJECT("deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute", "deltix.qsrv.hf.server.es.db.tb.data.FixAttribute") NOT NULL)) NOT NULL),
+        "arr7" ARRAY(ARRAY(ARRAY(INTEGER))),
+        "arr7_1" ARRAY(ARRAY(ARRAY("deltix.qsrv.hf.tickdb.testframework.TestBitmask" NOT NULL) NOT NULL) NOT NULL) NOT NULL
+    )
+        COMMENT 'This class tests the majority of field types';
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; DF = 1; HIGHAVAILABILITY = FALSE)
+!end
+#
+#   Drop stream via qql
+#
+test drop stream TEST_ARR
+>deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,SYSTEM,_,SUCCESS,INFO,Stream dropped,0
+!end

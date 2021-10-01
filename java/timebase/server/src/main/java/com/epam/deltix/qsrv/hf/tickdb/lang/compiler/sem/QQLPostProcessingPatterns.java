@@ -16,15 +16,20 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem;
 
-import java.util.*;
+import com.epam.deltix.qsrv.hf.pub.md.StandardTypes;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.BinaryLogicalOperation;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OrderRelation;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  */
 abstract class QQLPostProcessingPatterns {
     public static boolean       isConjunction (CompiledExpression e) {
-        return (isSimpleFunction (e, SimpleFunctionCode.AND));
+        return e instanceof LogicalOperation && ((LogicalOperation) e).getOperation() == BinaryLogicalOperation.AND;
     }
     
     public static boolean       isNull (CompiledExpression e) {
@@ -47,11 +52,11 @@ abstract class QQLPostProcessingPatterns {
         List <CompiledExpression>               out
     )
     {
-        if (isConjunction (e)) {
-            SimpleFunction       ae = (SimpleFunction) e;
-            
-            flattenConjunction (ae.args [0], out);
-            flattenConjunction (ae.args [1], out);
+        if (isConjunction(e)) {
+            LogicalOperation ae = (LogicalOperation) e;
+
+            flattenConjunction(ae.args[0], out);
+            flattenConjunction(ae.args[1], out);
         }
         else
             out.add (e);
@@ -80,63 +85,58 @@ abstract class QQLPostProcessingPatterns {
         CompiledExpression      e = list.get (0);
         
         for (int ii = 1; ii < n; ii++)
-            e = new SimpleFunction (SimpleFunctionCode.AND, e, list.get (ii));
+            e = new LogicalOperation(BinaryLogicalOperation.AND, e, list.get (ii));
         
         return (e);
     }
     
-    public static boolean       isStatic (CompiledExpression e) {        
+    public static boolean       isStatic (CompiledExpression e) {
         return (e instanceof CompiledConstant || e instanceof ParamAccess);
     }
-    
-    public static TimestampLimits extractTimestampLimits (
-        List <CompiledExpression>       condition
-    )
-    {
-        TimestampLimits     range = null;
-        
-        for (int ii = 0; ii < condition.size (); ) {
-            CompiledExpression      e = condition.get (ii);
-            boolean                 matched = false;
-            
-            if (e instanceof SimpleFunction) {
-                SimpleFunction      sf = (SimpleFunction) e;
-                SimpleFunctionCode  code = sf.code;
-                
-                switch (code) {
-                    case TIMESTAMP_LT:
-                    case TIMESTAMP_LE:
-                    case TIMESTAMP_GE:
-                    case TIMESTAMP_GT:
-                    case TIMESTAMP_EQ: {
-                        CompiledExpression  left = sf.args [0];
-                        CompiledExpression  right = sf.args [1];
 
-                        if (left instanceof TimestampSelector && isStatic (right)) {
-                            if (range == null)
-                                range = new TimestampLimits ();
-                            
-                            range.update (right, code, false);
-                            matched = true;
-                        }
-                        else if (right instanceof TimestampSelector && isStatic (left)) {
-                            if (range == null)
-                                range = new TimestampLimits ();
-                            
-                            range.update (left, code, true);
-                            matched = true;
-                        }
-                        break;
-                    }                       
-                }                
+    public static TimestampLimits adjustTimestampLimits(List<CompiledExpression> condition, long endTimestamp) {
+        if (endTimestamp == Long.MIN_VALUE) {
+            return extractTimestampLimits(condition);
+        }
+        TimestampLimits limits = extractTimestampLimits(condition);
+        if (limits == null) {
+            limits = new TimestampLimits();
+        }
+        limits.update(new CompiledConstant(StandardTypes.CLEAN_TIMESTAMP, endTimestamp), OrderRelation.LE, false);
+        return limits;
+    }
+
+    public static TimestampLimits extractTimestampLimits(List<CompiledExpression> condition) {
+        TimestampLimits range = null;
+
+        for (int ii = 0; ii < condition.size(); ) {
+            CompiledExpression<?> e = condition.get(ii);
+            boolean matched = false;
+            if (e instanceof ComparisonOperation) {
+                ComparisonOperation operation = (ComparisonOperation) e;
+                CompiledExpression<?> left = operation.args[0];
+                CompiledExpression<?> right = operation.args[1];
+                if (left instanceof TimestampSelector && isStatic(right)) {
+                    if (range == null)
+                        range = new TimestampLimits();
+
+                    range.update(right, operation.getRelation(), false);
+                    matched = true;
+                } else if (right instanceof TimestampSelector && isStatic(left)) {
+                    if (range == null)
+                        range = new TimestampLimits();
+
+                    range.update(left, operation.getRelation(), true);
+                    matched = true;
+                }
             }
-            
+
             if (matched)
-                condition.remove (ii);
+                condition.remove(ii);
             else
                 ii++;
         }
-        
+
         return (range);
     }
 }

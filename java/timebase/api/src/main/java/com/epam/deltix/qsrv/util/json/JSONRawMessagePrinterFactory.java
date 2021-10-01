@@ -23,11 +23,16 @@ package com.epam.deltix.qsrv.util.json;
 public class JSONRawMessagePrinterFactory {
 
     public static JSONRawMessagePrinter createForTimebaseWebGateway() {
-        return new JSONRawMessagePrinter(false, true, DataEncoding.STANDARD, true, false, PrintType.FULL);
+        return new JSONRawMessagePrinter(false, true, DataEncoding.STANDARD,
+                true, false, PrintType.FULL, true, "$type");
     }
 
     public static JSONRawMessagePrinter create(String typeField) {
+        return new JSONRawMessagePrinter(false, true, DataEncoding.STANDARD, true, false, PrintType.FULL, typeField);
+    }
+
+    public static JSONRawMessagePrinter createForTickDBShell() {
         return new JSONRawMessagePrinter(false, true, DataEncoding.STANDARD, true,
-                false, PrintType.FULL, typeField);
+                false, PrintType.FULL, true, "$type");
     }
 }

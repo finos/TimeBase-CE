@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.codec.cg;
 
 import com.epam.deltix.util.collections.ElementsEnumeration;
+import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import com.epam.deltix.util.memory.MemoryDataInput;
 
@@ -26,6 +27,7 @@ import com.epam.deltix.util.memory.MemoryDataInput;
 public final class ObjectManager {
 
     private final CharSequencePool charSequencePool;
+    private final CharSequenceListPool charSequenceListPool;
     private final ObjectToObjectHashMap<String, ManagerObjectPool> collections;
     private final ElementsEnumeration<ManagerObjectPool> ce;
 
@@ -46,6 +48,7 @@ public final class ObjectManager {
         oe = objects.elements();
 
         charSequencePool = new CharSequencePool();
+        charSequenceListPool = new CharSequenceListPool();
         isClean = true;
     }
 
@@ -90,6 +93,7 @@ public final class ObjectManager {
 
     public void                 clean() {
         charSequencePool.reset();
+        charSequenceListPool.reset();
 
         if (!isClean) {
             ce.reset();
@@ -102,6 +106,10 @@ public final class ObjectManager {
 
             isClean = true;
         }
+    }
+
+    public ObjectArrayList<CharSequence> useCharSequenceList() {
+        return charSequenceListPool.borrow();
     }
 
     public CharSequence readCharSequence(MemoryDataInput input) {

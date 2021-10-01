@@ -5,7 +5,9 @@ import java.util.*;
 import com.epam.deltix.util.parsers.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.*;
+import com.epam.deltix.containers.ObjObjPair;
 
 parser code {:
     @Override
@@ -25,10 +27,11 @@ action code {:
 
 /* Punctuation. */
 terminal            SEMICOLON,  PLUS,       MINUS,      STAR;
-terminal            LPAREN,     RPAREN,     LBRACKET,   RBRACKET;
+terminal            LPAREN,     RPAREN,     LBRACKET,   RBRACKET, LBRACE, RBRACE;
 terminal            COLON,      SLASH,      PERCENT,    DOT;
-terminal            EQ,         NEQ,        COMMA;
+terminal            EQ,         NEQ,        STRICT_EQ,  STRICT_NEQ,  ASSIGN, COMMA;
 terminal            LE,         GE,         LT,         GT;
+terminal            QUESTION;
 
 /* Keywords. Please keep UNION first, it is used for range checks... */
 
@@ -42,17 +45,22 @@ terminal            TRANSIENT,  DURABLE,    CLASS,      INSTANTIABLE;
 terminal            RELATIVE,   TO,         COMMENT,    ENUM;
 terminal            FLAGS,      UNDER,      STATIC,     DROP;
 terminal            ALTER,      MODIFY,     DEFAULT,    CONFIRM;
-terminal            LIKE;
+terminal            LIKE,       TAGS,       JOIN,       LEFT;
+terminal            TRIGGER,    RESET,      OVER,       EVERY;
+terminal            TYPE,       WITH,       LIMIT,      OFFSET;
 
 /* Please keep IDENTIFIER first, it is used for range checks... */
 
 terminal String     IDENTIFIER;
 terminal String     UINT;
+terminal String     ULONG;
 terminal String     FP;
+terminal String     DOUBLE;
 terminal String     STRING;
 terminal String     DATE_LITERAL;
 terminal String     TIME_LITERAL;
 terminal String     BIN_LITERAL;
+terminal String     TIME_INTERVAL_LITERAL;
 terminal char       CHAR_LITERAL;
 
 /* Specials */
@@ -63,13 +71,16 @@ terminal            X_TYPE;
 non terminal Element                Clause;
 non terminal Expression             Expression;
 non terminal Expression             Arithmetic_Expression;
-non terminal CallExpression         Call_Expression;
+non terminal Expression             Call_Expression;
 non terminal SelectExpression       Select_Expression;
+non terminal SelectExpression       Select_With_Expression;
 non terminal TupleExpression        New_Expression;
 non terminal Expression []          Expression_List;
 non terminal ArrayList              Non_Empty_Expression_List;
+non terminal ArrayList              Non_Empty_Arithmetic_Expression_List;
 non terminal TypeIdentifier         Type_Id;
 non terminal FieldIdentifier        Field_Id;
+non terminal FieldIdentifierPath    Field_Path;
 non terminal ArrayList              Field_List;
 non terminal Integer                Select_Mode;
 non terminal Statement              Data_Definition_Statement;
@@ -90,30 +101,67 @@ non terminal ArrayList              Non_Empty_Attribute_Definition_List;
 non terminal AttributeDef           Attribute_Definition;
 non terminal StaticAttributeDef     Static_Attribute_Definition;
 non terminal NonStaticAttributeDef  Non_Static_Attribute_Definition;
+non terminal Hashtable              Key_Value_Map;
 non terminal ArrayList              Enumeration;
 non terminal EnumValueDef           Enum_Value;
 non terminal DataTypeSpec           Data_Type;
+non terminal DataTypeSpec           Static_Data_Type;
 non terminal ArrayList              Data_Type_List;
 non terminal ArrayList              Object_Content_DataType_List;
 non terminal Identifier             Identifier;
 non terminal EncodingInfo           Encoding_Info;
 non terminal Expression []          Limits;
+non terminal ArraySlicingExpression Array_Slicing_Expression;
+non terminal ArrayJoin              Array_Join_Expression;
+non terminal Expression             Int_Literal;
+non terminal Expression             Float_Literal;
+non terminal Expression             Int_Constant;
+non terminal Expression             Float_Constant;
+non terminal Expression             Numeric_Constant;
+non terminal Expression             Bool_Constant;
+non terminal ArrayList              Numeric_List;
+non terminal NumericArrayConstant   Numeric_Array;
+non terminal ArrayList              String_List;
+non terminal StringArrayConstant    String_Array;
+non terminal ArrayList              Char_List;
+non terminal CharArrayConstant      Char_Array;
+non terminal ArrayList              Bool_List;
+non terminal BooleanArrayConstant   Bool_Array;
+non terminal ArrayList              Date_List;
+non terminal DateArrayConstant      Date_Array;
+non terminal ArrayConstant          Array;
+non terminal ObjObjPair             Pair;
+non terminal Map                    Non_Empty_Pair_List;
+non terminal Map                    Dictionary;
+non terminal Expression             Constant;
+non terminal ArrayList              Non_Empty_Constants_List;
+non terminal Expression[]           Init_Body;
+non terminal ArrayList              Cast_TypeId_List;
+non terminal CastTypeExpression     Cast_Type_Expression;
+non terminal CastTypeIdExpression   Cast_TypeId_Expression;
+non terminal TimeIntervalConstant   Time_Expression;
+non terminal Integer                Count_Expression;
+non terminal OverExpression         Over_Expression;
+non terminal LimitExpression        Select_Limit;
 
 /* Precedences */
 precedence left UNION;
-precedence left DISTINCT, SELECT, FROM, WHERE, GROUP;
+precedence left DISTINCT, SELECT, FROM, WHERE, GROUP, ARRAY, JOIN, LEFT, TYPE, WITH;
+precedence left TRIGGER, RESET, OVER, EVERY, OFFSET, LIMIT;
 precedence left COMMA;
+precedence right AS;
+precedence left COLON;
 precedence left OR;
 precedence left BETWEEN, AND;
 precedence right NOT;
 precedence left IN;
-precedence left EQ, NEQ, LE, GE, LT, GT;
+precedence left EQ, NEQ, STRICT_EQ, STRICT_NEQ, ASSIGN, LE, GE, LT, GT;
 precedence left LIKE;
 precedence left PLUS, MINUS;
-precedence left STAR, SLASH;
+precedence left STAR, SLASH, PERCENT;
 precedence left IS;
-precedence left LPAREN, DOT;
-precedence right AS;
+precedence left DOT, QUESTION;
+precedence left LPAREN, LBRACKET;
 
 /* The grammar */
 Clause ::=
@@ -139,6 +187,8 @@ Expression ::=
         {: RESULT = new BetweenExpression (lx (e1left, e3right), e1, e2, e3); :} |
     Select_Expression:s
         {: RESULT = s; :} |
+    Select_With_Expression:ws
+        {: RESULT = ws; :} |
     Expression:e1 OR Expression:e2
         {: RESULT = new OrExpression (lx (e1left, e2right), e1, e2); :} |
     Expression:e1 AND Expression:e2
@@ -146,9 +196,13 @@ Expression ::=
     NOT:n Expression:e
         {: RESULT = new NotExpression (lx (nleft, eright), e); :} |
     Expression:e1 EQ Expression:e2
-        {: RESULT = new EqualsExpression (lx (e1left, e2right), e1, e2, true); :} |
+        {: RESULT = new EqualsExpression (lx (e1left, e2right), e1, e2, true, false); :} |
     Expression:e1 NEQ Expression:e2
-        {: RESULT = new EqualsExpression (lx (e1left, e2right), e1, e2, false); :} |
+        {: RESULT = new EqualsExpression (lx (e1left, e2right), e1, e2, false, false); :} |
+    Expression:e1 STRICT_EQ Expression:e2
+        {: RESULT = new EqualsExpression (lx (e1left, e2right), e1, e2, true, true); :} |
+    Expression:e1 STRICT_NEQ Expression:e2
+        {: RESULT = new EqualsExpression (lx (e1left, e2right), e1, e2, false, true); :} |
     Expression:e1 GT Expression:e2
         {: RESULT = new RelationExpression (lx (e1left, e2right), OrderRelation.GT, e1, e2); :} |
     Expression:e1 GE Expression:e2
@@ -166,11 +220,42 @@ Expression ::=
     Expression:e1 NOT LIKE Expression:e2
         {: RESULT = new LikeExpression (lx (e1left, e2right), e1, e2, true); :} |
     Expression:q1 UNION Expression:q2
-        {: RESULT = new UnionExpression (lx (q1left, q2right), q1, q2); :};
+        {: RESULT = new UnionExpression(lx(q1left, q2right), q1, q2); :} |
+    LPAREN Expression:q1 RPAREN Select_Limit:limit
+        {:
+            if (q1 instanceof UnionExpression) {
+                UnionExpression e = (UnionExpression) q1;
+                RESULT = new UnionExpression(lx(q1left - 1, limitright), e.args[0], e.args[1], (LimitExpression) limit);
+            } else {
+                throw new CompilationException("Limit clause can be applied only to Union expression", q1);
+            }
+        :};
 
-Arithmetic_Expression ::=    
-    Type_Id:t COLON Field_Id:f
-        {: RESULT = new FieldAccessExpression (lx (tleft, fright), t, f); :} |
+
+Arithmetic_Expression ::=
+    IDENTIFIER:t COLON Field_Id:f
+        {: RESULT = new FieldAccessExpression(lx (tleft, fright), new TypeIdentifier(lx(tleft, tright), t), f); :} |
+
+    // nested fields
+    Arithmetic_Expression:e1 DOT IDENTIFIER:id
+        {: RESULT = new FieldAccessorExpression(lx(e1left, idright), e1, new FieldIdentifier(lx(idleft, idright), id)); :} |
+    Arithmetic_Expression:e1 DOT QUESTION IDENTIFIER:id
+        {: RESULT = new FieldAccessorExpression(lx(e1left, idright), e1, new FieldIdentifier(lx(idleft, idright), id), true); :} |
+    Arithmetic_Expression:e1 DOT STAR:s
+        {: RESULT = new ThisObject(lx(e1left, sright), e1); :} |
+
+    // array predicates
+    Arithmetic_Expression:e1 LBRACKET Expression:e2 RBRACKET
+        {: RESULT = new PredicateExpression(lx(e1left, e2right + 1), e1, e2); :} |
+    Arithmetic_Expression:e1 LBRACKET Array_Slicing_Expression:e2 RBRACKET
+        {: RESULT = new PredicateExpression(lx(e1left, e2right + 1), e1, e2); :} |
+
+    // cast and named expressions
+    Arithmetic_Expression:e1 AS Cast_Type_Expression:ct
+        {: RESULT = new AsExpression(lx(e1left, ctleft), e1, ct); :} |
+    Arithmetic_Expression:e AS STRING:s
+        {: RESULT = new NamedExpression(lx (eleft, sright), e, s); :} |
+
     Arithmetic_Expression:e1 PLUS Arithmetic_Expression:e2
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
     Arithmetic_Expression:e1 MINUS Arithmetic_Expression:e2
@@ -179,6 +264,8 @@ Arithmetic_Expression ::=
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MUL, e1, e2); :} |
     Arithmetic_Expression:e1 SLASH Arithmetic_Expression:e2
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.DIV, e1, e2); :} |
+    Arithmetic_Expression:e1 PERCENT Arithmetic_Expression:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MOD, e1, e2); :} |
     New_Expression:t
         {: RESULT = t; :} |
     Call_Expression:c
@@ -191,14 +278,16 @@ Arithmetic_Expression ::=
         {: RESULT = new NullCheckExpression (lx (eleft, nright), e, true); :} |
     Arithmetic_Expression:e IS NOT NULL:n
         {: RESULT = new NullCheckExpression (lx (eleft, nright), e, false); :} |
-    Arithmetic_Expression:e AS IDENTIFIER:id
-        {: RESULT = new NamedExpression (lx (eleft, idright), e, id); :} |
     NULL:n
         {: RESULT = new Null (lx (nleft, nright)); :} |
     UINT:n
         {: RESULT = new IntegerConstant (lx (nleft, nright), Long.parseLong (n)); :} |
+    ULONG:n
+        {: RESULT = new LongConstant (lx (nleft, nright), n); :} |
     FP:n
-        {: RESULT = FloatConstant.parseText (lx (nleft, nright), n); :} |
+        {: RESULT = FloatConstant.parseDecimal(lx (nleft, nright), n); :} |
+    DOUBLE:n
+        {: RESULT = FloatConstant.parseDouble(lx (nleft, nright), n); :} |
     STRING:s
         {: RESULT = new StringConstant (lx (sleft, sright), s); :} |
     DATE_LITERAL:s
@@ -209,8 +298,12 @@ Arithmetic_Expression ::=
         {: RESULT = new CharConstant (lx (cleft, cright), c); :} |
     BIN_LITERAL:s
         {: RESULT = new BinConstant (lx (sleft, sright), s); :} |
+    TIME_INTERVAL_LITERAL:s
+        {: RESULT = new TimeIntervalConstant( lx (sleft, sright), s); :} |
     Identifier:id
         {: RESULT = id; :} |
+    TYPE:t
+        {: RESULT = new Identifier(lx(tleft, tright), "TYPE"); :} |
     FALSE:c
         {: RESULT = new BooleanConstant (lx (cleft, cright), false); :} |
     TRUE:c
@@ -218,7 +311,165 @@ Arithmetic_Expression ::=
     STAR:s
         {: RESULT = new This (lx (sleft, sright)); :} |
     LPAREN Expression:e RPAREN
+        {: RESULT = e; :} |
+    Array:a
+        {: RESULT = a; :};
+
+Array ::=
+    Numeric_Array:a
+        {: RESULT = a; :} |
+    String_Array:a
+        {: RESULT = a; :} |
+    Bool_Array:a
+        {: RESULT = a; :} |
+    Char_Array:a
+        {: RESULT = a; :} |
+    Date_Array:a
+        {: RESULT = a; :};
+
+Constant ::=
+    Int_Constant:c
+        {: RESULT = c; :} |
+    Float_Constant:c
+        {: RESULT = c; :} |
+    Bool_Constant:c
+        {: RESULT = c; :} |
+    Array:c
+        {: RESULT = c; :} |
+    STRING:s
+        {: RESULT = new StringConstant (lx (sleft, sright), s); :} |
+    DATE_LITERAL:s
+        {: RESULT = new DateConstant (lx (sleft, sright), s); :} |
+    TIME_LITERAL:s
+        {: RESULT = new TimeConstant (lx (sleft, sright), s); :} |
+    CHAR_LITERAL:c
+        {: RESULT = new CharConstant (lx (cleft, cright), c); :};
+
+Numeric_Constant ::=
+    Int_Constant:c
+        {: RESULT = c; :} |
+    Float_Constant:c
+        {: RESULT = c; :};
+
+Int_Literal ::=
+    ULONG:n
+        {: RESULT = new LongConstant(lx(nleft, nright), n); :} |
+    UINT:n
+        {: RESULT = new IntegerConstant(lx(nleft, nright), Long.parseLong(n)); :} |
+    TIME_INTERVAL_LITERAL:s
+        {: RESULT = new TimeIntervalConstant(lx(sleft, sright), s); :};
+        
+Int_Constant ::=
+    Int_Literal:c
+        {: RESULT = c; :} |
+    MINUS:m Int_Constant:n
+        {: RESULT = new UnaryMinusExpression(lx(mleft, nright), n); :} |
+    Int_Constant:e1 PLUS Int_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
+    Int_Constant:e1 MINUS Int_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.SUB, e1, e2); :} |
+    Int_Constant:e1 STAR Int_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MUL, e1, e2); :} |
+    Int_Constant:e1 SLASH Int_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.DIV, e1, e2); :} |
+    Int_Constant:e1 PERCENT Int_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MOD, e1, e2); :} |
+    LPAREN Int_Constant:e RPAREN
         {: RESULT = e; :};
+        
+Float_Literal ::=
+    FP:n
+        {: RESULT = FloatConstant.parseDecimal (lx (nleft, nright), n); :} |
+    DOUBLE:n
+        {: RESULT = FloatConstant.parseDouble (lx (nleft, nright), n); :};
+
+Float_Constant ::=
+    Float_Literal:c
+        {: RESULT = c; :} |
+    MINUS:m Float_Constant:n
+        {: RESULT = new UnaryMinusExpression(lx(mleft, nright), n); :} |
+    Float_Constant:e1 PLUS Float_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
+    Float_Constant:e1 MINUS Float_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.SUB, e1, e2); :} |
+    Float_Constant:e1 STAR Float_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MUL, e1, e2); :} |
+    Float_Constant:e1 SLASH Float_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.DIV, e1, e2); :} |
+    Int_Constant:e1 PLUS Float_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
+    Int_Constant:e1 MINUS Float_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.SUB, e1, e2); :} |
+    Int_Constant:e1 STAR Float_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MUL, e1, e2); :} |
+    Int_Constant:e1 SLASH Float_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.DIV, e1, e2); :} |
+    Float_Constant:e1 PLUS Int_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
+    Float_Constant:e1 MINUS Int_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.SUB, e1, e2); :} |
+    Float_Constant:e1 STAR Int_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MUL, e1, e2); :} |
+    Float_Constant:e1 SLASH Int_Constant:e2
+        {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.DIV, e1, e2); :} |
+    LPAREN Float_Constant:e RPAREN
+        {: RESULT = e; :};
+
+Numeric_List ::=
+    Numeric_Constant:i
+        {: RESULT = new ArrayList(); RESULT.add(i); :} |
+    Numeric_List:list COMMA Numeric_Constant:i
+        {: list.add(i); RESULT = list; :};
+
+Numeric_Array ::=
+    LBRACKET:lb Numeric_List:list RBRACKET:rb
+        {: RESULT = new NumericArrayConstant(lx(lbleft, rbright), list); :};
+
+String_List ::=
+    STRING:s
+        {: RESULT = new ArrayList(); RESULT.add(new StringConstant(lx(sleft, sright), s)); :} |
+    String_List:list COMMA STRING:s
+        {: list.add(new StringConstant(lx(sleft, sright), s)); RESULT = list; :};
+
+String_Array ::=
+    LBRACKET:lb String_List:list RBRACKET:rb
+        {: RESULT = new StringArrayConstant(lx(lbleft, rbright), list); :};
+
+Bool_Constant ::=
+    FALSE:c
+        {: RESULT = new BooleanConstant (lx (cleft, cright), false); :} |
+    TRUE:c
+        {: RESULT = new BooleanConstant (lx (cleft, cright), true); :};
+
+Bool_List ::=
+    Bool_Constant:c
+        {: RESULT = new ArrayList(); RESULT.add(c); :} |
+    Bool_List:list COMMA Bool_Constant:c
+        {: list.add(c); RESULT = list; :};
+
+Bool_Array ::=
+    LBRACKET:lb Bool_List:list RBRACKET:rb
+        {: RESULT = new BooleanArrayConstant(lx(lbleft, rbright), list); :};
+
+Char_List ::=
+    CHAR_LITERAL:c
+        {: RESULT = new ArrayList(); RESULT.add(new CharConstant(lx(cleft, cright), c)); :} |
+    Char_List:list COMMA CHAR_LITERAL:c
+        {: list.add(new CharConstant(lx(cleft, cright), c)); RESULT = list; :};
+
+Char_Array ::=
+    LBRACKET:lb Char_List:list RBRACKET:rb
+        {: RESULT = new CharArrayConstant(lx(lbleft, rbright), list); :};
+
+Date_List ::=
+    DATE_LITERAL:s
+        {: RESULT = new ArrayList(); RESULT.add(new DateConstant (lx (sleft, sright), s)); :} |
+    Date_List:list COMMA DATE_LITERAL:s
+        {: list.add(new DateConstant (lx (sleft, sright), s)); RESULT = list; :};
+
+Date_Array ::=
+    LBRACKET:lb Date_List:list RBRACKET:rb
+        {: RESULT = new DateArrayConstant(lx(lbleft, rbright), list); :};
 
 Expression_List ::=
     /* empty */ 
@@ -232,32 +483,93 @@ Non_Empty_Expression_List ::=
     Non_Empty_Expression_List:list COMMA Expression:e
         {: list.add (e); RESULT = list; :};
 
+Non_Empty_Arithmetic_Expression_List ::=
+    Arithmetic_Expression:e
+        {: RESULT = new ArrayList(); RESULT.add(e); :} |
+    Non_Empty_Arithmetic_Expression_List:list COMMA Arithmetic_Expression:e
+        {: list.add(e); RESULT = list; :};
+
 Field_List ::=
     Field_Id:id 
         {: RESULT = new ArrayList (); RESULT.add (id); :} |
     Field_List:list COMMA Field_Id:id
         {: list.add (id); RESULT = list; :};
+    
+Time_Expression ::=
+    IDENTIFIER:id LPAREN TIME_INTERVAL_LITERAL:s RPAREN:rp
+        {:
+            if (!id.equalsIgnoreCase("time")) {
+                throw new SyntaxErrorException("Expected TIME, but got " + id, lx(idleft, rpright));
+            }
+            RESULT = new TimeIntervalConstant( lx (sleft, sright), s);
+        :};
+    
+Count_Expression ::=
+    IDENTIFIER:id LPAREN UINT:n RPAREN:rp
+        {:
+            if (!id.equalsIgnoreCase("count")) {
+                throw new SyntaxErrorException("Expected COUNT, but got " + id, lx(idleft, rpright));
+            }
+            RESULT = Integer.parseInt(n);
+        :};
+
+Over_Expression ::=
+    OVER:o Count_Expression:c
+        {: RESULT = new OverCountExpression(lx(oleft, cright), true, c); :} |
+    TRIGGER:r OVER:o Count_Expression:c
+        {: RESULT = new OverCountExpression(lx(rleft, cright), false, c); :} |
+    OVER:o Time_Expression:t
+        {: RESULT = new OverTimeExpression(lx(oleft, tright), false, false, false, t); :} |
+    OVER:o EVERY:e Time_Expression:t
+        {: RESULT = new OverTimeExpression(lx(oleft, tright), false, true, false, t); :} |
+    RESET:r OVER:o Time_Expression:t
+        {: RESULT = new OverTimeExpression(lx(rleft, tright), true, false, false, t); :} |
+    RESET:r OVER:o EVERY:e Time_Expression:t
+        {: RESULT = new OverTimeExpression(lx(rleft, tright), true, true, false, t); :} |
+    TRIGGER:r OVER:o Time_Expression:t
+        {: RESULT = new OverTimeExpression(lx(rleft, tright), false, false, true, t); :} |
+    TRIGGER:r OVER:o EVERY:e Time_Expression:t
+        {: RESULT = new OverTimeExpression(lx(rleft, tright), false, true, true, t); :};
+
+Select_With_Expression ::=
+    WITH Expression_List:w Select_Expression:sel
+        {:
+            sel.setWithExpressions(w);
+            RESULT = sel;
+        :};
 
 Select_Expression ::=
     SELECT:s  
         Select_Mode:m
-        Expression_List:sel        
+        Expression_List:sel
+        [ TYPE IDENTIFIER:tn {: RESULT = new TypeIdentifier(lx(tnleft - 1, tnright), tn); :} ]:t
         [ FROM Expression:q {: RESULT = q; :} ]:src
+        [ Array_Join_Expression:aj {: RESULT = aj; :} ]:arrayJoin
+        [ Over_Expression:o {: RESULT = o; :} ]:over
         [ WHERE Expression:e  {: RESULT = e; :} ]:filter
-        [ GROUP BY Field_List:gby {: RESULT = gby; :} ]:gby
-        {: 
-            ArrayList <FieldIdentifier>     gl = (ArrayList <FieldIdentifier>) gby;
-
+        [ GROUP BY Expression_List:gby {: RESULT = gby; :} ]:gby
+        [ Select_Limit:l {: RESULT = l; :} ]:limit
+        {:
             RESULT =
                 new SelectExpression (
                     lx (sleft, gbyright),
                     (Expression) src,
+                    (ArrayJoin) arrayJoin,
                     (Expression) filter,
+                    (TypeIdentifier) t,
                     m,
-                    gby == null ? null : gl.toArray (new FieldIdentifier [gl.size ()]),
+                    (Expression[]) gby,
+                    (OverExpression) over,
+                    (LimitExpression) limit,
                     sel
                 );
         :};
+
+Array_Join_Expression ::=
+    ARRAY JOIN Non_Empty_Arithmetic_Expression_List:joins
+        {: RESULT = new ArrayJoin(lx(joinsleft - 2, joinsright), (Expression[]) joins.toArray(new Expression[0]), false); :} |
+    LEFT ARRAY JOIN Non_Empty_Arithmetic_Expression_List:joins
+        {: RESULT = new ArrayJoin(lx(joinsleft - 3, joinsright), (Expression[]) joins.toArray(new Expression[0]), true); :};
 
 Select_Mode ::=
     /* empty */ {: RESULT = 0; :} |
@@ -270,13 +582,65 @@ New_Expression ::=
 
 Call_Expression ::=
     IDENTIFIER:id LPAREN Expression_List:args RPAREN:rp
-        {: RESULT = new CallExpression (lx (idleft, rpright), id, args); :};
+        {: RESULT = new CallExpression (lx (idleft, rpright), id, args); :} |
+    IDENTIFIER:id LPAREN Expression_List:initArgs RPAREN LPAREN Expression_List:args RPAREN:rp
+        {: RESULT = CallExpression.create (lx (idleft, rpright), id, initArgs, args); :} |
+    IDENTIFIER:id Dictionary:d LPAREN Expression_List:args RPAREN:rp
+        {: RESULT = new CallExpressionWithDict(lx (idleft, rpright), id, d, args); :} |
+    IDENTIFIER:id Init_Body:d LPAREN Expression_List:args RPAREN:rp
+        {: RESULT = new CallExpressionWithInit(lx (idleft, rpright), id, d, args); :};
 
 Type_Id ::=
     IDENTIFIER:id
         {: RESULT = new TypeIdentifier (lx (idleft, idright), id); :} |
     Type_Id:pack DOT IDENTIFIER:id
         {: RESULT = new TypeIdentifier (pack, id, idright); :};
+
+Cast_Type_Expression ::=
+    Cast_TypeId_Expression:t
+        {: RESULT = t; :} |
+    OBJECT:o LPAREN Cast_TypeId_List:tidlist RPAREN
+        {: RESULT = new CastObjectTypeExpression(lx(oleft, tidlistright + 1), tidlist, true); :} |
+    ARRAY:a LPAREN Cast_TypeId_List:tidlist RPAREN
+        {: RESULT = new CastArrayTypeExpression(lx(aleft, tidlistright + 1), tidlist, true); :} |
+    ARRAY:a LPAREN OBJECT:o LPAREN Cast_TypeId_List:tidlist RPAREN RPAREN
+        {: RESULT = new CastArrayTypeExpression(lx(aleft, tidlistright + 2), tidlist, true); :};
+
+Cast_TypeId_Expression ::=
+    Type_Id:t
+        {: RESULT = new CastTypeIdExpression(lx(tleft, tright), t); :};
+
+Cast_TypeId_List ::=
+    Cast_TypeId_Expression:tid
+        {: RESULT = new ArrayList(); RESULT.add(tid); :} |
+    Cast_TypeId_List:objlist COMMA Cast_TypeId_Expression:tid
+        {: objlist.add(tid); RESULT = objlist; :};
+
+Array_Slicing_Expression ::=
+    Arithmetic_Expression:e1 COLON Arithmetic_Expression:e2
+        {: RESULT = new ArraySlicingExpression(lx(e1left, e2right), e1, e2); :} |
+    Arithmetic_Expression:e1 COLON
+        {: RESULT = new ArraySlicingExpression(lx(e1left, e1right + 1), e1, null); :} |
+    COLON Arithmetic_Expression:e2
+        {: RESULT = new ArraySlicingExpression(lx(e2left - 1, e2right), null, e2); :} |
+    COLON:c
+        {: RESULT = new ArraySlicingExpression(lx(cleft, cright), null, null); :} |
+    Arithmetic_Expression:e1 COLON Arithmetic_Expression:e2 COLON Arithmetic_Expression:e3
+        {: RESULT = new ArraySlicingExpression(lx(e1left, e3right), e1, e2, e3); :} |
+    Arithmetic_Expression:e1 COLON Arithmetic_Expression:e2 COLON
+        {: RESULT = new ArraySlicingExpression(lx(e1left, e2right + 1), e1, e2, null); :} |
+    Arithmetic_Expression:e1 COLON COLON Arithmetic_Expression:e3
+        {: RESULT = new ArraySlicingExpression(lx(e1left, e3right), e1, null, e3); :} |
+    COLON Arithmetic_Expression:e2 COLON Arithmetic_Expression:e3
+        {: RESULT = new ArraySlicingExpression(lx(e2left - 1, e3right), null, e2, e3); :} |
+    Arithmetic_Expression:e1 COLON COLON
+        {: RESULT = new ArraySlicingExpression(lx(e1left, e1right + 2), e1, null, null); :} |
+    COLON Arithmetic_Expression:e2 COLON
+        {: RESULT = new ArraySlicingExpression(lx(e2left - 1, e2right + 1), null, e2, null); :} |
+    COLON COLON Arithmetic_Expression:e3
+        {: RESULT = new ArraySlicingExpression(lx(e3left - 2, e3right), null, null, e3); :} |
+    COLON:c1 COLON:c2
+        {: RESULT = new ArraySlicingExpression(lx(c1left, c2right), null, null, null); :};
 
 Field_Id ::=
     IDENTIFIER:id
@@ -368,7 +732,7 @@ Option_List ::=
         :};
 
 Option ::= 
-    Identifier:id [ EQ Expression:value {: RESULT = value; :} ]:value
+    Identifier:id [ ASSIGN Expression:value {: RESULT = value; :} ]:value
         {: 
             RESULT = new OptionElement (lx (idleft, valueright), id, (Expression) value); 
         :};
@@ -427,14 +791,16 @@ Attribute_Definition ::=
 Static_Attribute_Definition ::=
     STATIC:s IDENTIFIER:id 
     [ STRING:title {: RESULT = title; :} ]:title
-    Type_Id:tid 
-    EQ Expression:e 
+    Static_Data_Type:dt
+    ASSIGN Expression:e
+    [ TAGS LPAREN Key_Value_Map:tags RPAREN {: RESULT = tags; :} ]:tags
     [ COMMENT STRING:comment  {: RESULT = comment; :} ]:comment
         {:            
             RESULT = 
                 new StaticAttributeDef (
                     lx (sleft, commentright),
-                    id, (String) title, (String) comment, tid, e
+                    id, (String) title, (String) comment, dt, e,
+                    (Hashtable<String, String>) tags
                 );
         :};
 
@@ -444,6 +810,7 @@ Non_Static_Attribute_Definition ::=
     Data_Type:dt
     [ RELATIVE TO Identifier:relid {: RESULT = relid; :} ]:relid
     [ DEFAULT Expression:defval {: RESULT = defval; :} ]:defval
+    [ TAGS LPAREN Key_Value_Map:tags RPAREN {: RESULT = tags; :} ]:tags
     [ COMMENT STRING:comment {: RESULT = comment; :} ]:comment
         {:
             RESULT = 
@@ -452,9 +819,25 @@ Non_Static_Attribute_Definition ::=
                     id, (String) title, (String) comment, 
                     dt,
                     (Identifier) relid,
-                    (Expression) defval
+                    (Expression) defval,
+                    (Hashtable<String, String>) tags
                 );
         :};
+
+Key_Value_Map ::=
+    IDENTIFIER:key COLON IDENTIFIER:value
+        {: RESULT = new Hashtable<>(); RESULT.put(key, value); :} |
+    Key_Value_Map:kvmap COMMA IDENTIFIER:key COLON IDENTIFIER:value
+        {: kvmap.put(key, value); RESULT = kvmap; :};
+
+Select_Limit ::=
+    LIMIT Arithmetic_Expression:l [ OFFSET Arithmetic_Expression:off {: RESULT = off; :} ]:o
+        {: RESULT = o != null ?
+                new LimitExpression(lx(lleft - 1, oright), (Expression) o, l) :
+                new LimitExpression(lx(lleft - 1, lright), l);
+        :} |
+    LIMIT Arithmetic_Expression:o COMMA Arithmetic_Expression:l
+        {: RESULT = new LimitExpression(lx(oleft - 1, lright), o, l); :};
 
 Limits ::= 
     /* empty */
@@ -469,6 +852,21 @@ Encoding_Info ::=
         {: RESULT = new EncodingInfo (enc, SimpleDataTypeSpec.NO_DIMENSION); :} |
     IDENTIFIER:enc LPAREN UINT:dim RPAREN:rp
         {: RESULT = new EncodingInfo (enc, Integer.parseInt (dim)); :};
+
+Static_Data_Type ::=
+    Type_Id:tid [ NOT NULL {: RESULT = ""; :} ]:nn Encoding_Info:ei Limits:lim
+        {:
+            RESULT =
+                new SimpleDataTypeSpec (
+                    lx (tidleft, limright),
+                    tid,
+                    nn == null,
+                    ei.encoding,
+                    ei.dimension,
+                    lim [0],
+                    lim [1]
+                );
+        :};
 
 Data_Type ::=    
     Type_Id:tid [ NOT NULL {: RESULT = ""; :} ]:nn Encoding_Info:ei Limits:lim    
@@ -567,7 +965,7 @@ Enumeration ::=
 
 Enum_Value ::=
     Identifier:id 
-    [ EQ Expression:value {: RESULT = value; :} ]:value
+    [ ASSIGN Expression:value {: RESULT = value; :} ]:value
         {: 
             RESULT = 
                 new EnumValueDef (
@@ -583,3 +981,29 @@ Identifier ::=
 Drop_Stream_Statement ::=
     DROP:d STREAM Identifier:id
         {: RESULT = new DropStreamStatement (lx (dleft, idright), id); :};
+
+Pair ::=
+    IDENTIFIER:s COLON Constant:c
+        {: RESULT = new ObjObjPair(s, c); :};
+
+Non_Empty_Pair_List ::=
+    Pair:p
+        {: RESULT = new HashMap(); RESULT.put(p.getFirst(), p.getSecond()); :} |
+    Non_Empty_Pair_List:map COMMA Pair:p
+        {: map.put(p.getFirst(), p.getSecond()); RESULT = map; :};
+
+Dictionary ::=
+    LBRACE RBRACE
+        {: RESULT = new HashMap(); :} |
+    LBRACE Non_Empty_Pair_List:map RBRACE
+        {: RESULT = map; :};
+
+Non_Empty_Constants_List ::=
+    Constant:e
+        {: RESULT = new ArrayList (); RESULT.add (e); :} |
+    Non_Empty_Constants_List:list COMMA Constant:e
+        {: list.add (e); RESULT = list; :};
+
+Init_Body ::=
+    LBRACE Non_Empty_Constants_List:list RBRACE
+        {: RESULT = (Expression []) list.toArray(new Expression[list.size()]); :};

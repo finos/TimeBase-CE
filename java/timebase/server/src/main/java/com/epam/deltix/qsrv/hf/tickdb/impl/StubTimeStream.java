@@ -120,6 +120,8 @@ class StubTimeStream extends ServerStreamImpl implements Disposable {
         return 0;
     }
 
+
+
     @Override
     public int getFormatVersion() {
         return 5;
@@ -329,7 +331,12 @@ class StubTimeStream extends ServerStreamImpl implements Disposable {
     }
 
     @Override
-    public IdentityKey[] getComposition(IdentityKey... ids) {
+    public void deleteSpaces(String... names) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void renameSpace(String newName, String oldName) {
         throw new UnsupportedOperationException();
     }
 
@@ -371,5 +378,10 @@ class StubTimeStream extends ServerStreamImpl implements Disposable {
     @Override
     public MessageChannel<InstrumentMessage> createPublisher(ChannelPreferences options) {
         return null;
+    }
+
+    @Override
+    public IdentityKey[] getComposition(IdentityKey... entities) {
+        return entities;
     }
 }

@@ -16,8 +16,11 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx;
 
-import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDataType;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.QueryDataType;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.msgsrcs.SingleMessageEmitter;
+
 import java.util.Set;
 
 /**
@@ -40,7 +43,7 @@ public class SingleMessageSource extends CompiledQuery {
     }
     
     @Override
-    protected void              print (StringBuilder out) {
+    public void print (StringBuilder out) {
         out.append ("<void source>");
     }        
     

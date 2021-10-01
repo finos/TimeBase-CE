@@ -1,0 +1,46 @@
+set printJson true
+test select length('hello, it\'s me')
+0: {"$type":"","symbol":"","LENGTH (hello, it's me)":14}
+!end
+test select length(['hello', 'it\'s', 'me'])
+0: {"$type":"","symbol":"","LENGTH ([hello,it's,me])":[5,4,2]}
+!end
+test select indexOf('hello', 'll'), indexOf('dfhdfhdfjhdf', 'aaa')
+0: {"$type":"","symbol":"","INDEXOF (hello, ll)":2,"INDEXOF (dfhdfhdfjhdf, aaa)":-1}
+!end
+test select indexOf(['Don\'t Panic', 'Hello', 'supercalifragilisticexpialidocious', 'aaaa'], 'o')
+0: {"$type":"","symbol":"","INDEXOF ([Don't Panic,Hello,supercalifragilisticexpialidocious,aaaa], o)":[1,4,28,-1]}
+!end
+test select upperCase('Don\'t Panic') as "upperCase"
+0: {"$type":"","symbol":"","upperCase":"DON\u0027T PANIC"}
+!end
+test select upperCase(['Don\'t Panic', 'Hello', 'supercalifragilisticexpialidocious', 'aaaa', '123']) as "upperCase"
+0: {"$type":"","symbol":"","upperCase":["DON\u0027T PANIC","HELLO","SUPERCALIFRAGILISTICEXPIALIDOCIOUS","AAAA","123"]}
+!end
+test select lowerCase('Don\'t Panic') as "lowerCase"
+0: {"$type":"","symbol":"","lowerCase":"don\u0027t panic"}
+!end
+test select lowerCase(['Don\'t Panic', 'Hello', 'supercaLiFragilisticExpialidocious', 'AAAA', '123']) as "lowerCase"
+0: {"$type":"","symbol":"","lowerCase":["don\u0027t panic","hello","supercalifragilisticexpialidocious","aaaa","123"]}
+!end
+test select reversed('Don\'t Panic') as "reversed"
+0: {"$type":"","symbol":"","reversed":"cinaP t\u0027noD"}
+!end
+test select reversed(['Don\'t Panic', 'Hello', 'supercaLiFragilisticExpialidocious', 'AAAA', '123']) as "reversed"
+0: {"$type":"","symbol":"","reversed":["cinaP t\u0027noD","olleH","suoicodilaipxEcitsiligarFiLacrepus","AAAA","321"]}
+!end
+test select substr('Don\'t Panic', 3, 5) as "substr"
+0: {"$type":"","symbol":"","substr":"\u0027t"}
+!end
+test select substr(['Don\'t Panic', 'Hello', 'supercaLiFragilisticExpialidocious', 'AAAA', '123'], 2, 8) as substr
+0: {"$type":"","symbol":"","SUBSTR":["n\u0027t Pa","llo","percaL","AA","3"]}
+!end
+test select length(textField) from "1min-1h-1h-3" limit 1
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:13:16.646Z","LENGTH (textField)":10}
+!end
+test select length(textNullableField) from "1min-1h-1h-3" limit 1
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:13:16.646Z"}
+!end
+test select length(textList), length(textListOfNullable), length(nullableTextList), length(nullableTextListOfNullable) from "1min-1h-1h-3" limit 1
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:13:16.646Z","LENGTH (textList)":[10,10,10,10,10,10,10,10,10,10],"LENGTH (textListOfNullable)":[null,null,10,null,null,null,10,10,null,10],"LENGTH (nullableTextList)":[10,10,10,10,10,10,10,10,10,10],"LENGTH (nullableTextListOfNullable)":[10,10,null,null,null,null,null,10,10,10]}
+!end

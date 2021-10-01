@@ -45,26 +45,32 @@ public class RealtimePlayerThread extends Thread {
     private final MessageChannel<InstrumentMessage> dest;
     private final SchemaConverter converter;
     private final Runnable streamRestarter;
-    private volatile long timeOffset = Long.MIN_VALUE;
+    private final double speed;
+    private volatile long timeOffset = Long.MIN_VALUE; // Time offset between timestamp on the base message and wall clock
+    private long firstMessageTimestamp = Long.MIN_VALUE; // Timestamp on a message that we use as base
+    private long firstRealTimestamp = Long.MIN_VALUE; // Timestamp when (in real time) we processed the base message
     private volatile long endTimeNano = Long.MAX_VALUE;
     protected long count = 1;
 
     /**
      * @param streamRestarter will be executed (if not null) when source stream depletes (ends) to restart (cycle) it
+     * @param speed
      */
     public RealtimePlayerThread(
             MessageSource<InstrumentMessage> src,
             MessageChannel<InstrumentMessage> dest,
             SchemaConverter converter,
             @Nullable
-            Runnable streamRestarter) {
+            Runnable streamRestarter,
+            double speed) {
         super("Player Thread");
 
         this.src = src;
         this.dest = dest;
         this.converter = converter;
         this.streamRestarter = streamRestarter;
-        
+        this.speed = speed;
+
         this.setDaemon(false);
     }
 
@@ -119,18 +125,26 @@ public class RealtimePlayerThread extends Thread {
                 long now = TimeKeeper.currentTimeNanos;
 
                 if (timeOffset != Long.MIN_VALUE) {
-                    long time = mt + timeOffset;
-
                     if (playMode == PlayMode.SKIP)
                         playMode = PlayMode.PLAY;
                     else {
-                        int wait = (int) TimeStamp.getMilliseconds(time - now);
+                        long sourceTimePassed = mt - firstMessageTimestamp;
+                        // Higher speed means less time to wait
+                        long expectedRealTimePassed = speed == 1 ? sourceTimePassed : Math.round(sourceTimePassed / speed);
+                        long expectedRealTimestamp = firstRealTimestamp + expectedRealTimePassed;
+
+                        long timeToWait = expectedRealTimestamp - now;
+
+                        int wait = (int) TimeStamp.getMilliseconds(timeToWait);
 
                         if (wait > 2)
                             Thread.sleep(wait);
                     }
-                } else
+                } else {
                     timeOffset = now - mt;
+                    firstMessageTimestamp = mt;
+                    firstRealTimestamp = now;
+                }
 
                 RawMessage outMsg = converter.convert(inMsg);
 

@@ -16,20 +16,42 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx;
 
-import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDataType;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+
+import java.util.Arrays;
 
 /**
  *
  */
-public class ThisSelector extends CompiledExpression <ClassDataType> {
-    public ThisSelector (ClassDataType type) {
-        super (type);
+public class ThisSelector extends CompiledExpression<ClassDataType> {
+
+    public final RecordClassDescriptor[] descriptors;
+
+    public ThisSelector(ClassDataType type) {
+        super(type);
+
+        this.descriptors = type.getDescriptors();
     }
 
     @Override
-    protected void                  print (StringBuilder out) {
-        out.append ("this {");
-        out.append (type);
-        out.append ("}");
-    }   
+    public void print(StringBuilder out) {
+        out.append("this");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        ThisSelector that = (ThisSelector) o;
+        return Arrays.equals(descriptors, that.descriptors);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Arrays.hashCode(descriptors);
+        return result;
+    }
 }

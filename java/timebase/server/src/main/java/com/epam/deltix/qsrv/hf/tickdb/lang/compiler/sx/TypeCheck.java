@@ -16,7 +16,8 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx;
 
-import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.StandardTypes;
 
 /**
  *
@@ -48,7 +49,7 @@ public class TypeCheck extends CompiledComplexExpression {
     }
 
     @Override
-    protected void                  print (StringBuilder out) {
+    public void print (StringBuilder out) {
         printArgs (out);
         out.append (" is ");
         out.append (checkType.getName ());

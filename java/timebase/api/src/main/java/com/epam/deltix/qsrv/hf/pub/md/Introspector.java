@@ -194,11 +194,7 @@ public final class Introspector {
             for (int ii = 0; ii < num; ii++) {
                 Enum<?> eval = (Enum<?>) consts[ii];
 
-                values[ii] =
-                        new EnumValue(
-                                eval.name(),
-                                bitmask ? (1 << ii) : ii
-                        );
+                values[ii] = new EnumValue(eval.name(),bitmask ? (1 << ii) : ii);
 
             }
         } else {
@@ -733,6 +729,23 @@ public final class Introspector {
             );
     }
 
+//    public DataType parseSchemaType (SchemaStaticType schemaType, String fieldName, Class<?> cls, Class<?> genericCls) throws Introspector.IntrospectionException {
+//        SchemaDataType type = schemaType.dataType();
+//        if (type.equals(SchemaDataType.DEFAULT))
+//            return getDataType(fieldName, cls, genericCls, schemaType.isNullable(), schemaType.encoding(), schemaType.minimum(), schemaType.maximum(), true, null, null, null);
+//        else
+//            return getDataType(
+//                    schemaType.dataType(),
+//                    schemaType.encoding(),
+//                    null,
+//                    schemaType.isNullable(),
+//                    schemaType.minimum(),
+//                    schemaType.maximum(),
+//                    cls,
+//                    fieldName
+//            );
+//    }
+
     private DataType getDataType (SchemaDataType dataType,
                                   String encoding,
                                   Class<?>[] nestedTypes,
@@ -787,7 +800,10 @@ public final class Introspector {
         }
     }
 
-    private DataType getElementDataType(String memberName, Class declaredType, Class[] nestedTypes, boolean isNullable) throws IntrospectionException {
+    private DataType getElementDataType(String memberName, Class<?> declaredType, Class<?>[] nestedTypes, boolean isNullable) throws IntrospectionException {
+        if (declaredType == CharSequence.class) {
+            return new VarcharDataType(VarcharDataType.ENCODING_INLINE_VARSIZE, isNullable, true);
+        }
         return declaredType.isEnum() ? getEnumDataType(nestedTypes, declaredType, isNullable) :
                 getClassDataType(memberName, nestedTypes, isNullable);
     }
@@ -906,7 +922,7 @@ public final class Introspector {
             // ARRAY fields
         else if (ArrayTypeUtil.isSupported(cls)) {
             if (cls == ObjectArrayList.class) {
-                if (genericCls.isInterface())
+                if (genericCls.isInterface() && genericCls != CharSequence.class)
                     throw new IntrospectionException("Generic interfaces does not support in array field without @SchemaArrayType annotation. Field: \"" + fieldName + "\".");
 
                 DataType elementType = getElementDataType(fieldName, genericCls, new Class[] {genericCls}, elementNullable);

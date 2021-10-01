@@ -59,15 +59,16 @@ public class TickDBShell extends AbstractShell {
 
     public static final String SECURITIES_STREAM = "securities";
 
-    public final DBMgr              dbmgr = new DBMgr (this);
-    public final Selector           selector = new Selector (this);
-//    public final L2Processor        l2processor = new L2Processor (this);
-    public final Replicator         replicator = new Replicator (this);
-    public final PlayerCommandProcessor player = new PlayerCommandProcessor(this);
-    public final BenchmarkCommandProcessor benchmark = new BenchmarkCommandProcessor(this);
+    public final DBMgr                      dbmgr = new DBMgr (this);
+    public final Selector                   selector = new Selector (this);
+    public final Replicator                 replicator = new Replicator (this);
+    public final PlayerCommandProcessor     player = new PlayerCommandProcessor(this);
+    public final BenchmarkCommandProcessor  benchmark = new BenchmarkCommandProcessor(this);
     
-    private boolean                 spaceSep = true;
-    private boolean                 timing = false;
+    private boolean                         spaceSep = true;
+    private boolean                         timing = false;
+    private LoadingOptions.WriteMode        writeMode = LoadingOptions.WriteMode.REWRITE;
+
     private TimeZone                tz = TimeZone.getTimeZone ("America/New_York");
     private SimpleDateFormat        df = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss.SSS");
     private File                    srcMsgFile = null;
@@ -76,7 +77,7 @@ public class TickDBShell extends AbstractShell {
     private List<IdentityKey> toEntities = new ArrayList<>();
     
     private final ArrayList<Job>    jobs = new ArrayList<Job>();
-        
+
     private TickDBShell (String [] args) {
         super (args);
         df.setTimeZone (tz);
@@ -178,6 +179,18 @@ public class TickDBShell extends AbstractShell {
                 confirm("Cannot read " + srcMsgFile.getPath());
 
             return (true);
+        }
+
+        if (option.equalsIgnoreCase("writemode")) {
+            try {
+                writeMode = LoadingOptions.WriteMode.valueOf(value);
+                if (!Util.QUIET) {
+                    confirm("writemode: " + writeMode);
+                }
+            } catch (IllegalArgumentException exc) {
+                confirm("Invalid value for 'writemode'. Available values: " + Arrays.toString(LoadingOptions.WriteMode.values()));
+            }
+            return true;
         }
 
         return (super.doSet (option, value));
@@ -397,20 +410,30 @@ public class TickDBShell extends AbstractShell {
                 if (!dbmgr.checkSingleStream ())
                     return (true);
 
-                ImportExportHelper.filterMessageFile(srcMsgFile, dbmgr.getStreams()[0], selector);
+                ImportExportHelper.filterMessageFile(srcMsgFile, dbmgr.getStreams()[0], selector, writeMode);
             } else if (args.length() > 0) {
                 DXTickStream stream = dbmgr.getStream(args);
                 if (stream == null) {
-                    MessageFileHeader header = Protocol.readHeader(srcMsgFile);
+                    //MessageFileHeader header = Protocol.readHeader(srcMsgFile);
+                    MessageFileHeader header = MessageFileHeader.migrate(Protocol.readHeader(srcMsgFile));
+                    RecordClassDescriptor[] types = header.getTypes();
+
+                    RecordClassSet set = new RecordClassSet();
+                    for (RecordClassDescriptor type : types) {
+                        if (set.getClassDescriptor(type.getName()) == null)
+                            set.addContentClasses(type);
+                        else
+                            System.out.println("Skipped RCD " + type + " as duplicate");
+                    }
 
                     StreamOptions options = new StreamOptions();
                     options.name = args;
-                    options.setPolymorphic(header.getTypes());
                     options.distributionFactor = dbmgr.getDF();
+                    options.setMetaData(set.getContentClasses().length > 1, set);
 
-                    DXTickStream target = dbmgr.getDB().createStream(options.name, options);
-                    ImportExportHelper.filterMessageFile(srcMsgFile, target, selector);
+                    stream = dbmgr.getDB().createStream(options.name, options);
                 }
+                ImportExportHelper.filterMessageFile(srcMsgFile, stream, selector, writeMode);
             }
 
             return (true);
@@ -581,8 +604,9 @@ public class TickDBShell extends AbstractShell {
 
             try {
                 JSONHelper.parseAndLoad(args, dbmgr.getSingleStream());
-            } catch (Exception e) {
-                System.out.println("Got exception while performing operation:" + e.getMessage());
+            } catch (Exception exc) {
+                System.out.println("Got exception while performing operation.");
+                exc.printStackTrace(System.out);
             }
             if (!Util.QUIET)
                 System.out.println("total time (ms): " + (TimeKeeper.currentTime - ts));

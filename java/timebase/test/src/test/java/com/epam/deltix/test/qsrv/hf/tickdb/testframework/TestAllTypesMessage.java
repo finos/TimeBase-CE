@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb.testframework;
 
+import com.epam.deltix.qsrv.test.messages.TestEnum;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.md.Introspector;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
@@ -361,7 +362,7 @@ public class TestAllTypesMessage extends InstrumentMessage {
     @SchemaType(
             isNullable = false
     )
-    public TestEnum             enum_c;
+    public TestEnum enum_c;
     
     @SchemaElement(
             title = "Nullable ENUM"

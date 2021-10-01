@@ -18,9 +18,9 @@ package com.epam.deltix.qsrv.dtb.store.tools.shell;
 
 import com.epam.deltix.qsrv.dtb.fs.local.*;
 import com.epam.deltix.qsrv.dtb.fs.pub.*;
+import com.epam.deltix.qsrv.dtb.store.impl.SymbolRegistryImpl;
 import com.epam.deltix.qsrv.dtb.store.raw.*;
 import com.epam.deltix.qsrv.util.cmd.AbstractShellEx;
-import com.epam.deltix.util.cmdline.*;
 import com.epam.deltix.util.time.*;
 import java.io.*;
 
@@ -34,7 +34,8 @@ public class DTBShell extends AbstractShellEx {
     private int                             maxPathDispLength = 30;    
     private final AbstractFileSystem        fs = FSFactory.getLocalFS();
     private AbstractPath                    path;
-    
+    private SymbolRegistryImpl              registry;
+
     @Override
     protected String                        getPrompt () {
         if (path == null)
@@ -69,7 +70,12 @@ public class DTBShell extends AbstractShellEx {
     
     public void                             cmd_show (String arg) throws IOException {
         AbstractPath        f = getPath (arg);
-        
+
+        if (registry == null && f != null) {
+            registry = new SymbolRegistryImpl();
+            registry.load(f);
+        }
+
         if (f == null)
             System.out.println ("cd <...> first");
         else if (RawFolder.isTSFolder (f)) {
@@ -112,11 +118,17 @@ public class DTBShell extends AbstractShellEx {
             int entities = tsf.getNumEntities ();
             for (int i = 0; i < entities; i++) {
                 RawDataBlock block = tsf.getBlock(i);
+                String symbol = registry != null ? registry.idToSymbol(block.getEntity()) : null;
+                String data = registry != null ? registry.getEntityData(block.getEntity()) : null;
+
+                assert registry == null || symbol != null;
+                assert registry == null || data != null;
+
                 System.out.printf ("    Block #:        %,d\n", i);
                 System.out.printf ("        Length:     %,d\n", block.getDataLength());
+                System.out.printf("        Entity:     %,d (%s:%s)\n", block.getEntity(), symbol, data);
                 System.out.printf ("        Start time: %s\n", formatTime(block.getFirstTimestamp()));
                 System.out.printf ("        Last  time: %s\n", formatTime (block.getLastTimestamp()));
-
             }
         }
     }
@@ -168,6 +180,7 @@ public class DTBShell extends AbstractShellEx {
     @Override
     protected boolean doCommand(String key, String args) throws Exception {
         if ("show".equalsIgnoreCase(key)) {
+            registry = null;
             cmd_show(args);
         }
         return super.doCommand(key, args);

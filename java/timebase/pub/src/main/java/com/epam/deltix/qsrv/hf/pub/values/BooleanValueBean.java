@@ -26,7 +26,7 @@ import com.epam.deltix.util.lang.Util;
 public final class BooleanValueBean extends ValueBean {
     private static final long serialVersionUID = 1L;
 
-    private int                 value;
+    private byte                 value;
     private final boolean       isNullable;
 
     public BooleanValueBean (VarcharDataType type) {
@@ -47,6 +47,10 @@ public final class BooleanValueBean extends ValueBean {
         return (value == BooleanDataType.TRUE);
     }
 
+    @Override
+    public byte getByte() throws NullValueException {
+        return value;
+    }
 
     @Override
     public String       getString () throws NullValueException {
@@ -75,6 +79,6 @@ public final class BooleanValueBean extends ValueBean {
     
     @Override
     protected Object getBoxedValue() {
-        return (isNull () ? null : Boolean.valueOf (getBoolean ()));
+        return (isNull () ? null : getBoolean());
     }
 }

@@ -16,20 +16,53 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
 
+import java.util.Objects;
+
 /**
  *
  */
 public final class UnionExpression extends ComplexExpression {
-    public UnionExpression (long location, Expression left, Expression right) {
-        super (location, left, right);
+
+    public Expression left;
+    public Expression right;
+    public LimitExpression limit;
+
+    public UnionExpression(long location, Expression left, Expression right) {
+        super(location, left, right);
+
+        this.left = left;
+        this.right = right;
     }
 
-    public UnionExpression (Expression left, Expression right) {
-        this (NO_LOCATION, left, right);
+    public UnionExpression(long location, Expression left, Expression right, LimitExpression limit) {
+        super(location, left, right);
+
+        this.left = left;
+        this.right = right;
+        this.limit = limit;
     }
 
     @Override
-    protected void              print (int outerPriority, StringBuilder s) {
-        printBinary (outerPriority, " UNION ", OpPriority.UNION, InfixAssociation.LEFT, s);
+    protected void print(int outerPriority, StringBuilder s) {
+        s.append("(");
+        printBinary(outerPriority, " UNION ", OpPriority.UNION, InfixAssociation.LEFT, s);
+        s.append(") ");
+        if (limit != null) {
+            limit.print(outerPriority, s);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        UnionExpression that = (UnionExpression) o;
+        return Objects.equals(limit, that.limit);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), limit);
     }
 }

@@ -187,10 +187,29 @@ public abstract class ClassImpl
     }
 
     @Override
+    public JInitVariable addVar(int modifiers, Class<?> type, Class<?>[] typeArgs, String name, JExpr initValue) {
+        return addVar(modifiers, context.classToType(type), Arrays.stream(typeArgs).map(context::classToType)
+                .toArray(JType[]::new), name, initValue, false);
+    }
+
+    @Override
     public JInitMemberVariable  addVar (int modifiers, JType type, String name, JExpr initValue, boolean nullable) {
         MemberVariableImpl vdecl =
             new MemberVariableImpl (
                 this, modifiers, context.translateType (cn (type)), name);
+
+        if (initValue != null)
+            vdecl.setInitValue (initValue);
+
+        members.add (vdecl);
+
+        return (vdecl);
+    }
+
+    @Override
+    public JInitMemberVariable addVar(int modifiers, JType type, JType[] typeArgs, String name, JExpr initValue, boolean nullable) {
+        MemberVariableImpl vdecl = new MemberVariableImpl(this, modifiers, context.translateType(cn(type)),
+                Arrays.stream(typeArgs).map(c -> context.translateType(cn(c))).toArray(String[]::new), name);
 
         if (initValue != null)
             vdecl.setInitValue (initValue);

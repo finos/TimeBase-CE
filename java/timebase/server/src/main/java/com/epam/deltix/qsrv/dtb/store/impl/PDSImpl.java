@@ -52,14 +52,12 @@ class PDSImpl implements PersistentDataStore {
     // Number of Writer Threads
     private static final int NUMBER_OF_WRITERS = Integer.getInteger("TimeBase.storage.writers", 1);
 
+    // limit of minimum available memory (500MB default)
+    private static final long MEMORY_LIMIT = Long.getLong("TimeBase.storage.memoryLimit", 1024L * 1024 * 500);
+
     final Runtime RUNTIME = Runtime.getRuntime();
 
     private long maxFileSize;
-
-//    //For debugging
-//    static {
-//        LogFactory.getLog("deltix.dtb").setLevel(LogLevel.DEBUG);
-//    }
 
     private boolean                         isStarted = false;
     private boolean                         shutdownInProgress = false;
@@ -195,8 +193,9 @@ class PDSImpl implements PersistentDataStore {
         synchronized (cleanLock) {
             for (;;) {
 
-                long freeMemory = RUNTIME.maxMemory() - (RUNTIME.totalMemory() - RUNTIME.freeMemory());
-                if (freeMemory > maxFileSize * 5)
+                long freeMemory = RUNTIME.maxMemory() - RUNTIME.totalMemory() + RUNTIME.freeMemory();
+
+                if (freeMemory > MEMORY_LIMIT)
                     return;
 
                 if (numDirtyFiles == 0)
@@ -204,7 +203,7 @@ class PDSImpl implements PersistentDataStore {
 
                 try {
                     if (!logged) {
-                        LOGGER.warn("Write Queue is overloaded [dirty files = %s]. Waiting ... ").with(numDirtyFiles);
+                        LOGGER.warn("Low available memory: %s. Write Queue size = %s. Waiting ... ").with(freeMemory).with(numDirtyFiles);
                         logged = true;
                     }
 
@@ -245,7 +244,7 @@ class PDSImpl implements PersistentDataStore {
             dirtyFiles = numDirtyFiles;
         }
 
-        LOGGER.info("Writers successfully stopped, files in queue = " + dirtyFiles);
+        LOGGER.info("Writers successfully stopped, files in queue = %s").with(dirtyFiles);
 
         return (true);
     }
@@ -397,6 +396,9 @@ class PDSImpl implements PersistentDataStore {
         //  It is CRITICAL to first unuse the file, as the below notification
         //  is usually the last step on the way to closing the root.
         //
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("%s stored successfully. state = %s").with(tsf.getPathString()).with(tsf.getState());
+
         TreeOps.unuse (tsf);
         fileProcessed(tsf);
     }
@@ -445,6 +447,9 @@ class PDSImpl implements PersistentDataStore {
             assert dirtyFiles.indexOf (tsf) < 0 : tsf + " is already queued";
 
             tsf.queued = true;
+
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Adding to the write queue: " + tsf.getPathString());
 
             dirtyFiles.add (tsf);
             dirtyFiles.notify ();

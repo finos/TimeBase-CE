@@ -20,39 +20,25 @@ package com.epam.deltix.util.jcg;
  *
  */
 public interface JCompoundStatement
-    extends JStatement, JVariableContainer
-{
-    public void             add (JStatement stmt);
+        extends JStatement, JVariableContainer {
 
-    public void             addFront (JStatement stmt);
+    void add(JStatement stmt);
 
-    public void             add (JExpr e);
+    void addFront(JStatement stmt);
 
-    public void             addComment (String text);
+    void add(JExpr e);
 
-    public JLocalVariable   addVar (
-        int                     modifiers,
-        JType                   type,
-        String                  name
-    );
+    void addComment(String text);
 
-    public JLocalVariable   addVar (
-        int                     modifiers,
-        JType                   type,
-        String                  name,
-        JExpr                   initValue
-    );
+    boolean isEmpty();
 
-    public JLocalVariable   addVar (
-        int                     modifiers,
-        Class <?>               type,
-        String                  name
-    );
+    JLocalVariable addVar(int modifiers, JType type, String name);
 
-    public JLocalVariable   addVar (
-        int                     modifiers,
-        Class <?>               type,
-        String                  name,
-        JExpr                   initValue
-    );
+    JLocalVariable addVar(int modifiers, JType type, String name, JExpr initValue);
+
+    JLocalVariable addVar(int modifiers, Class<?> type, String name);
+
+    JLocalVariable addVar(int modifiers, Class<?> type, String name, JExpr initValue);
+
+    JLocalVariable addVar(int modifiers, JType type, JType[] typeArgs, String name, JExpr initValue);
 }

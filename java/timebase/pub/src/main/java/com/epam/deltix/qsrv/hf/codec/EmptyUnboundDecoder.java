@@ -99,6 +99,16 @@ public final class EmptyUnboundDecoder implements UnboundDecoder {
     }
 
     @Override
+    public byte getByte() throws NullValueException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public short getShort() throws NullValueException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int getInt() throws NullValueException {
         throw new UnsupportedOperationException();
     }

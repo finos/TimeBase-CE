@@ -99,13 +99,14 @@ public class DownloadHandlerFactory {
             assert !options.restrictStreamType;
 
             String              qql = din.readUTF ();
+            long                endTimestamp = clientVersion >= 131 ? din.readLong(): Long.MIN_VALUE; // added in 114 protocol version
             Parameter[]        params = TDBProtocol.readParameters (din);
 
             if (UserLogger.canTrace(user))
                 UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), UserLogger.CREATE_CURSOR_PATTERN, qql);
 
             try {
-                cursor = db.executeQuery (qql, options, streams, ids, initTime, params);
+                cursor = db.executeQuery (qql, options, streams, ids, initTime, endTimestamp, params);
             } catch (CompilationException x) {
                 UserLogger.severe(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "Query stream error: ", x);
 

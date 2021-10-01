@@ -195,5 +195,3 @@ public class StreamDef {
         public boolean                      lossless = false;
     }
 }
-
-

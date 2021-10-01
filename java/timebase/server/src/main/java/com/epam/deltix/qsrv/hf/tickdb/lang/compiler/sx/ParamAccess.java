@@ -32,7 +32,7 @@ public class ParamAccess extends CompiledExpression <DataType> {
     }
 
     @Override
-    protected void                  print (StringBuilder out) {
+    public void print (StringBuilder out) {
         out.append ("[");
         out.append (ref);
         out.append ("]");

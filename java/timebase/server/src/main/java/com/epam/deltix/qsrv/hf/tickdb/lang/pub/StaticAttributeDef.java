@@ -18,37 +18,43 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
 
 import com.epam.deltix.util.parsers.Location;
 
+import java.util.Hashtable;
+
 /**
  *
  */
 public final class StaticAttributeDef extends AttributeDef {
-    public final TypeIdentifier     typeId;
+    public final DataTypeSpec       type;
     public final Expression         value;
+    public final Hashtable<String, String> tags;
     
     public StaticAttributeDef (
         long                        location,
         String                      id,
         String                      title, 
         String                      comment,
-        TypeIdentifier              typeId,
-        Expression                  value
+        DataTypeSpec                type,
+        Expression                  value,
+        Hashtable<String, String>   tags
     ) 
     {
-        super (id, title, comment, location);
+        super (id, title, tags, comment, location);
         
-        this.typeId = typeId;
+        this.type = type;
         this.value = value;
+        this.tags = tags;
     }
     
     public StaticAttributeDef (
         String                      id,
         String                      title, 
         String                      comment,
-        TypeIdentifier              typeId,
-        Expression                  value
+        DataTypeSpec                type,
+        Expression                  value,
+        Hashtable<String, String>   tags
     ) 
     {
-        this (Location.NONE, id, title, comment, typeId, value);
+        this (Location.NONE, id, title, comment, type, value, tags);
     }
 
     @Override
@@ -56,9 +62,10 @@ public final class StaticAttributeDef extends AttributeDef {
         s.append ("STATIC ");
         printHeader (s);
         s.append (' ');
-        typeId.print (s);
+        type.print (s);
         s.append (" = ");
         value.print (s);
+        printTags(s);
         printComment (s);
     }        
 }

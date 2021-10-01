@@ -28,21 +28,6 @@ public class TomcatConfig {
         if (config.tb != null)
             processProps("TimeBase", config.tb.getProps(), tomcatConfig);
 
-        if (config.uhf != null)
-            processProps("UHF", config.uhf.getProps(), tomcatConfig);
-
-        if(config.agg != null)
-            processProps("Aggregator", config.agg.getProps(), tomcatConfig);
-
-        if(config.quantServer != null)
-            processProps("QuantServer", config.quantServer.getProps(), tomcatConfig);
-
-        if (config.es != null)
-            processProps("ExecutionServer", config.es.getProps(), tomcatConfig);
-
-        if(config.sts != null)
-             processProps("StrategyServer", config.sts.getProps(), tomcatConfig);
-
         return tomcatConfig;
     }
 

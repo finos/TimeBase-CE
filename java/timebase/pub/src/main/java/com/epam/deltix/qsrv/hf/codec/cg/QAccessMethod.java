@@ -20,7 +20,6 @@ import com.epam.deltix.qsrv.hf.pub.codec.FieldLayout;
 import com.epam.deltix.qsrv.hf.pub.codec.NonStaticFieldLayout;
 import com.epam.deltix.qsrv.hf.pub.codec.StaticFieldLayout;
 import com.epam.deltix.qsrv.hf.pub.md.BooleanDataType;
-import com.epam.deltix.timebase.messages.SchemaElement;
 import com.epam.deltix.util.jcg.JCompoundStatement;
 import com.epam.deltix.util.jcg.JExpr;
 import com.epam.deltix.util.jcg.JLocalVariable;

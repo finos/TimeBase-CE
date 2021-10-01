@@ -1,0 +1,9 @@
+#
+#   Preparation
+#
+set db ${home}/testdata/tickdb/qqltest
+open ro
+set confirm off
+set exitOnError off
+set max 10
+set printJson true

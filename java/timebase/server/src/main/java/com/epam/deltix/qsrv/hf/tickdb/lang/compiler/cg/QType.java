@@ -16,11 +16,29 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
-import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.QRT;
-import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.dfp.Decimal64Utils;
+import com.epam.deltix.qsrv.hf.pub.md.ArrayDataType;
+import com.epam.deltix.qsrv.hf.pub.md.BinaryDataType;
+import com.epam.deltix.qsrv.hf.pub.md.BooleanDataType;
+import com.epam.deltix.qsrv.hf.pub.md.CharDataType;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDataType;
+import com.epam.deltix.qsrv.hf.pub.md.DataType;
+import com.epam.deltix.qsrv.hf.pub.md.DateTimeDataType;
+import com.epam.deltix.qsrv.hf.pub.md.EnumDataType;
+import com.epam.deltix.qsrv.hf.pub.md.FloatDataType;
+import com.epam.deltix.qsrv.hf.pub.md.IntegerDataType;
+import com.epam.deltix.qsrv.hf.pub.md.QueryDataType;
+import com.epam.deltix.qsrv.hf.pub.md.TimeOfDayDataType;
+import com.epam.deltix.qsrv.hf.pub.md.VarcharDataType;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.StdEnvironment;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledExpression;
-import com.epam.deltix.util.jcg.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.FieldAccessor;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.PluginSimpleFunction;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.QRT;
+import com.epam.deltix.util.jcg.JCompoundStatement;
+import com.epam.deltix.util.jcg.JExpr;
+import com.epam.deltix.util.jcg.JStatement;
+import com.epam.deltix.util.jcg.JVariable;
 
 import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
 
@@ -31,10 +49,11 @@ import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
 public abstract class QType <T extends DataType> {
     public static final int     SIZE_VARIABLE = -1;
 
-//    public static final QType   INSTRUMENT_TYPE =
-//        new QEnumType (StdEnvironment.INSTR_TYPE_ENUM);
-    
     public static QType     forDataType (DataType type) {
+        return forDataType(type, false);
+    }
+
+    private static QType forDataType(DataType type, boolean typed) {
         Class <?>               tc = type.getClass ();
 
         if (tc == IntegerDataType.class)
@@ -66,18 +85,41 @@ public abstract class QType <T extends DataType> {
 
         if (tc == QueryDataType.class)
             return (new QQueryType ((QueryDataType) type));
-        
-        if (tc == ClassDataType.class)
-            return (new QObjectType ((ClassDataType) type));
 
-        if (tc == ArrayDataType.class)
+        if (tc == ClassDataType.class) {
+            ClassDataType cdt = (ClassDataType) type;
+            if (cdt.isFixed()) {
+                try {
+                    return new QExtendedObjectType(cdt);
+                } catch (ClassNotFoundException ignored) {
+                }
+            }
+            return new QObjectType(cdt);
+        }
+
+        if (tc == ArrayDataType.class) {
             return (new QArrayType((ArrayDataType) type));
-                
+        }
+
         throw new UnsupportedOperationException (tc.getSimpleName ());
     }
 
-    public static QType     forExpr (CompiledExpression e) {
-        return (forDataType (e.type));
+    public static QType forExpr(CompiledExpression e) {
+        QType type;
+        if (e instanceof PluginSimpleFunction) {
+            type = forDataType(e.type, true);
+        } else {
+            type = forDataType(e.type);
+        }
+
+        if (e instanceof FieldAccessor) {
+            FieldAccessor fs = (FieldAccessor) e;
+            if (fs.slicedType != null) {
+                type = new QArrayType((ArrayDataType) fs.type, QType.forDataType(fs.slicedType));
+            }
+        }
+
+        return type;
     }
 
     public final T      dt;
@@ -270,7 +312,7 @@ public abstract class QType <T extends DataType> {
                 CTXT.ifStmt (
                     arg.readIsNull (true),
                     out.type.isNullable () ? 
-                        out.write (out.type.getNullLiteral ()) : 
+                        out.writeNull() :
                         QCGHelpers.throwNVX (),
                     s
                 )
@@ -309,7 +351,7 @@ public abstract class QType <T extends DataType> {
         JExpr               rightArg = right.read ();
 
         JExpr               e;
-        
+
         if (op.startsWith ("QRT."))
             e = CTXT.staticCall (QRT.class, op.substring (4), leftArg, rightArg);
         else {
@@ -326,6 +368,97 @@ public abstract class QType <T extends DataType> {
         s = wrapWithNullCheck (s, right, out);
 
         addTo.add (s);
+    }
+
+    public static void          genDecimalBinOp (
+            QValue                      left,
+            String                      op,
+            QValue                      right,
+            QValue                      out,
+            JCompoundStatement          addTo
+    ) {
+        JExpr leftArg = left.read();
+        JExpr rightArg = right.read();
+        JExpr e = CTXT.staticCall(Decimal64Utils.class, op, leftArg, rightArg);
+        JStatement s = out.write(e);
+        s = wrapWithNullCheck(s, left, out);
+        s = wrapWithNullCheck(s, right, out);
+        addTo.add(s);
+    }
+
+    public static void          genDecimalComparison (
+            QValue                      left,
+            QValue                      right,
+            String                      operator,
+            int                         value,
+            QValue                      out,
+            JCompoundStatement          addTo
+    ) {
+        JExpr leftArg = left.read();
+        JExpr rightArg = right.read();
+        JExpr e = CTXT.binExpr(CTXT.staticCall(Decimal64Utils.class, "compareTo", leftArg, rightArg), operator, CTXT.intLiteral(value));
+        e = CTXT.staticCall(QRT.class, "bpos", e);
+        JStatement s = out.write(e);
+        s = wrapWithNullCheck(s, left, out);
+        s = wrapWithNullCheck(s, right, out);
+        addTo.add(s);
+    }
+
+    public static void          genNegate (
+            QValue                      arg,
+            QValue                      out,
+            JCompoundStatement          addTo
+    ) {
+        JExpr argExpr = arg.read();
+        JExpr e = argExpr.negate();
+        JStatement s = out.write(e);
+        s = wrapWithNullCheck(s, arg, out);
+        addTo.add(s);
+    }
+
+    public static void          genDecimalNegate (
+            QValue                      arg,
+            QValue                      out,
+            JCompoundStatement          addTo
+    ) {
+        JExpr argExpr = arg.read();
+        JExpr e = CTXT.staticCall(Decimal64Utils.class, "negate", argExpr);
+        JStatement s = out.write(e);
+        s = wrapWithNullCheck(s, arg, out);
+        addTo.add(s);
+    }
+
+    public static void          decimalToFloat (
+            QValue                      from,
+            QValue                      to,
+            JCompoundStatement          addTo
+    ) {
+        if (from.type.isNullable() && !to.type.isNullable())
+            addTo.add(CTXT.ifStmt(from.readIsNull(true), QCGHelpers.throwNVX()));
+
+        addTo.add(to.write(CTXT.staticCall(Decimal64Utils.class, "toDouble", from.read())));
+    }
+
+    public static void          integerToDecimal (
+            QValue                      from,
+            QValue                      to,
+            JCompoundStatement          addTo
+    ) {
+        if (from.type.isNullable() && !to.type.isNullable())
+            addTo.add(CTXT.ifStmt(from.readIsNull(true), QCGHelpers.throwNVX()));
+
+        addTo.add(to.write(CTXT.staticCall(Decimal64Utils.class, "fromLong", from.read())));
+    }
+
+    public static void          negate (
+            QValue                      from,
+            QValue                      to,
+            JCompoundStatement          addTo
+    ) {
+        if (from.type.isNullable() && !to.type.isNullable())
+            addTo.add(CTXT.ifStmt(from.readIsNull(true), QCGHelpers.throwNVX()));
+
+        addTo.add(to.write(from.read().negate()));
     }
     
     public static void          genEqOp (
@@ -395,5 +528,17 @@ public abstract class QType <T extends DataType> {
         }                
 
         addTo.add (s);
+    }
+
+    public static void          genArrayLen (
+            QValue                      arg,
+            QValue                      out,
+            JCompoundStatement          addTo
+    ) {
+        JExpr argExpr = arg.read();
+        JExpr e = argExpr.call("size");
+        JStatement s = out.write(e);
+        s = wrapWithNullCheck(s, arg, out);
+        addTo.add(s);
     }
 }

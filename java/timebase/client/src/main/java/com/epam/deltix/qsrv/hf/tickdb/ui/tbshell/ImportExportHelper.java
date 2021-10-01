@@ -88,7 +88,7 @@ public class ImportExportHelper {
         }
     }
 
-    public static void filterMessageFile(@NotNull File src, @NotNull DXTickStream stream) throws IOException {
+    public static void filterMessageFile(@NotNull File src, @NotNull DXTickStream stream, Selector selector, LoadingOptions.WriteMode writeMode) throws IOException {
         if (!Util.QUIET)
             System.out.println("Importing; hit <Enter> to abort ...");
         DBLock lock = null;
@@ -108,17 +108,58 @@ public class ImportExportHelper {
 
             if (firstVersion) {
                 throw new IllegalArgumentException("Supported built-in messages only.");
-            } else if (!firstVersion) {
-                inTypes = header.getTypes();
-                if (!isCompatible(inTypes, outTypes)) {
-                    throw new IllegalArgumentException("Input types (" + MessageProcessor.toDetailedString(inTypes) +
-                            ") \nis not compatible with \noutput types (" +
-                            MessageProcessor.toDetailedString(outTypes) + ")");
-                }
+            }
+
+            inTypes = header.getTypes();
+            if (!isCompatible(inTypes, outTypes)) {
+                throw new IllegalArgumentException("Input types (" + MessageProcessor.toDetailedString(inTypes) +
+                        ") \nis not compatible with \noutput types (" +
+                        MessageProcessor.toDetailedString(outTypes) + ")");
             }
 
 
-            final TickLoader loader = stream.createLoader(new LoadingOptions(!firstVersion));
+            LoadingOptions options = new LoadingOptions(true);
+            options.writeMode = writeMode;
+            try (TickLoader loader = stream.createLoader(options)) {
+
+                final ConsumableMessageSource<InstrumentMessage> reader =
+                        MessageReader2.createRaw(src);
+
+                loadData(reader, loader, stream, getSchemaMapping(inTypes, outTypes));
+            }
+        } finally {
+            if (lock != null)
+                lock.release();
+        }
+    }
+
+    public static void filterMessageFile(@NotNull File src, @NotNull DXTickStream stream) throws IOException {
+        if (!Util.QUIET)
+            System.out.println("Importing; hit <Enter> to abort ...");
+        DBLock lock = null;
+        try {
+            if (TickDBShell.SECURITIES_STREAM.equalsIgnoreCase(stream.getKey()))
+                lock = stream.tryLock(LockType.WRITE, 5000L);
+
+            MessageFileHeader header = Protocol.readHeader(src);
+
+            if (header.version == 0) {
+                throw new IllegalArgumentException("Supported built-in messages only.");
+            }
+
+            RecordClassDescriptor[] inTypes = header.getTypes();
+            RecordClassDescriptor[] outTypes = stream.isFixedType() ?
+                    new RecordClassDescriptor[]{stream.getFixedType()} :
+                    stream.getPolymorphicDescriptors();
+
+            if (!isCompatible(inTypes, outTypes)) {
+                throw new IllegalArgumentException("Input types (" + MessageProcessor.toDetailedString(inTypes) +
+                        ") \nis not compatible with \noutput types (" +
+                        MessageProcessor.toDetailedString(outTypes) + ")");
+            }
+
+
+            final TickLoader loader = stream.createLoader(new LoadingOptions(true));
 
             final ConsumableMessageSource<InstrumentMessage> reader =
                     MessageReader2.createRaw(src);

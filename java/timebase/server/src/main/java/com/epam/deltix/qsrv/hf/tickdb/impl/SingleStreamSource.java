@@ -28,13 +28,13 @@ import java.util.Collection;
 
 class SingleStreamSource extends AbstractStreamSource implements QuickMessageFilter {
 
-    private final DXTickStream                  stream;
+    protected final DXTickStream                    stream;
 
-    private final CharSequenceSet               subscribedEntities = new CharSequenceSet();
-    private boolean                             isSubscribedToAllEntities = false;
-    private long                                time;
+    private final CharSequenceSet                   subscribedEntities = new CharSequenceSet();
+    private boolean                                 isSubscribedToAllEntities = false;
+    protected long                                  time;
 
-    private MessageSource <InstrumentMessage>   source;
+    protected MessageSource <InstrumentMessage>     source;
 
     SingleStreamSource(PrioritizedMessageSourceMultiplexer<InstrumentMessage> mx, DXTickStream s, SelectionOptions options) {
         super(mx, options);
@@ -42,20 +42,12 @@ class SingleStreamSource extends AbstractStreamSource implements QuickMessageFil
         this.stream = s;
     }
 
-    private boolean     checkSource() {
+    protected boolean     checkSource() {
 
         if (source != null)
             return false;
 
-        if (stream instanceof FileStreamImpl) {
-            if (isSubscribedToAllEntities || !subscribedEntities.isEmpty()) {
-                SingleChannelStream fsi = (SingleChannelStream) stream;
-
-                source = fsi.createSource (time, options, this);
-                mx.add (source, time);
-            }
-        }
-        else if (stream instanceof TransientStreamImpl) {
+        if (stream instanceof TransientStreamImpl) {
             if (isSubscribedToAllEntities || !subscribedEntities.isEmpty()) {
                 SingleChannelStream fsi = (SingleChannelStream) stream;
                 source = fsi.createSource(time, options, this);
@@ -192,6 +184,11 @@ class SingleStreamSource extends AbstractStreamSource implements QuickMessageFil
 
     @Override
     public boolean              entityCreated(IdentityKey id) {
+        return false;
+    }
+
+    @Override
+    public boolean              spaceCreated(String space) {
         return false;
     }
 

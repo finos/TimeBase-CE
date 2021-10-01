@@ -16,6 +16,9 @@
  */
 package com.epam.deltix.qsrv.hf.pub.md;
 
+import com.epam.deltix.dfp.Decimal;
+import com.epam.deltix.dfp.Decimal64;
+import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor.TypeResolver;
 import com.epam.deltix.util.memory.*;
 
@@ -239,7 +242,17 @@ public final class FloatDataType extends DataType {
         if (!(obj instanceof Number))
             throw unsupportedType (obj);
         
-        if (obj instanceof Double) {
+        if (obj instanceof Long) {
+            @Decimal long value = (Long) obj;
+            @Decimal long rmin = Decimal64Utils.fromDouble(getMinNotNull().doubleValue());
+            @Decimal long rmax = Decimal64Utils.fromDouble(getMaxNotNull().doubleValue());
+
+            if (Decimal64Utils.isLess(value, rmin) || Decimal64Utils.isGreater(value, rmax)) {
+                if (value < rmin || value > rmax)
+                    throw outOfRange(Decimal64.fromUnderlying(value), Decimal64.fromUnderlying(rmin),
+                            Decimal64.fromUnderlying(rmax));
+            }
+        } else if (obj instanceof Double) {
             double          value = ((Double) obj).doubleValue ();        
             double          rmin = getMinNotNull ().doubleValue ();
             double          rmax = getMaxNotNull ().doubleValue ();
@@ -279,6 +292,10 @@ public final class FloatDataType extends DataType {
         return (String.valueOf (d));
     }
     
+    public static String    staticFormat (@Decimal long decimal) {
+        return Decimal64Utils.toString(decimal);
+    }
+
     @Override
     protected Object        toBoxedImpl (CharSequence text) {
         if (isFloat ())
@@ -289,7 +306,13 @@ public final class FloatDataType extends DataType {
     
     @Override
     protected String        toStringImpl (Object obj) {
-        return (obj instanceof Float ? staticFormat ((Float) obj) : staticFormat ((Double) obj));
+        if (obj instanceof Long) {
+            return staticFormat((Long) obj);
+        } else if (obj instanceof Float) {
+            return staticFormat((Float) obj);
+        } else {
+            return staticFormat ((Double) obj);
+        }
     }
 
     public Number[]         getRange() {

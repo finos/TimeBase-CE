@@ -16,41 +16,42 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx;
 
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.FunctionDescriptor;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.FunctionInfoDescriptor;
 
 /**
  *
  */
 public class PluginFunction extends CompiledComplexExpression {
-    public final FunctionDescriptor fd;
+    public final FunctionInfoDescriptor fd;
 
-    public PluginFunction (FunctionDescriptor fd, CompiledExpression ... args) {
-        super (fd.returnType, args);
+    public PluginFunction(FunctionInfoDescriptor fd, CompiledExpression<?> ... args) {
+        super(fd.returnType(), args);
         this.fd = fd;
-        this.name = toString ();
+        this.name = toString();
     }
 
     @Override
-    public boolean                  impliesAggregation () {
-        return (fd.aggregate || super.impliesAggregation ());
-    }
-    
-    @Override
-    @SuppressWarnings ("EqualsWhichDoesntCheckParameterClass")
-    public boolean                  equals (Object obj) {
-        return super.equals (obj) && fd.equals (((PluginFunction) obj).fd);
+    public boolean impliesAggregation() {
+        return (fd.isAggregate() || super.impliesAggregation());
     }
 
     @Override
-    public int                      hashCode () {
-        return super.hashCode () + fd.hashCode ();
+    public boolean equals(Object obj) {
+        if (!(obj instanceof PluginFunction))
+            return false;
+        return super.equals(obj) && fd.equals(((PluginFunction) obj).fd);
     }
 
     @Override
-    protected void                  print (StringBuilder out) {
-        out.append (fd.info.id ());
-        out.append (" (");
-        printArgs (out);
-        out.append (")");
+    public int hashCode() {
+        return super.hashCode() + fd.hashCode();
+    }
+
+    @Override
+    public void print(StringBuilder out) {
+        out.append(fd.id());
+        out.append(" (");
+        printArgs(out);
+        out.append(")");
     }
 }

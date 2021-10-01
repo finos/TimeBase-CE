@@ -16,6 +16,8 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.pub;
 
+import com.epam.deltix.util.lang.Util;
+
 /**
  * Timebase RAM Disk options.
  */
@@ -23,8 +25,8 @@ public class DataCacheOptions {
 
     public static final long  DEFAULT_CACHE_SIZE = 100*1024*1024;
 
-    public int          maxNumOpenFiles = Integer.MAX_VALUE;
-    public long         cacheSize = DEFAULT_CACHE_SIZE;
+    public int          maxNumOpenFiles = Util.getIntSystemProperty("TimeBase.dataCache.maxOpenFiles", Integer.MAX_VALUE, 100, Integer.MAX_VALUE);
+    public long         cacheSize = Util.getLongSystemProperty("TimeBase.dataCache.size", DEFAULT_CACHE_SIZE);
     public double       preallocateRatio = 0;
     public long         shutdownTimeout = Long.MAX_VALUE;
     public FSOptions    fs = new FSOptions(); // File-System related options

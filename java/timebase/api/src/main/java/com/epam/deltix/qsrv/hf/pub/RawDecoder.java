@@ -25,7 +25,7 @@ import java.util.*;
 import static com.epam.deltix.qsrv.hf.pub.RawMessageManipulator.OBJECT_CLASS_NAME;
 
 /**
- * Created by Alex Karpovich on 4/11/2018.
+ * Helper class for unbound raw decoder
  */
 public class RawDecoder {
 

@@ -16,10 +16,20 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
-import com.epam.deltix.qsrv.hf.pub.codec.*;
-import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.pub.codec.NonStaticFieldLayout;
+import com.epam.deltix.qsrv.hf.pub.codec.RecordLayout;
+import com.epam.deltix.qsrv.hf.pub.md.DataType;
+import com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.DataFieldRef;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledExpression;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.FieldAccessor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.FieldSelector;
-import java.util.*;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -94,8 +104,9 @@ class ClassSelectorInfo {
         return (highestUsedIdx >= 0);
     }
 
-    boolean                     nonStaticFieldUsedFrom (FieldSelector fs) {
-        NonStaticDataField      field = (NonStaticDataField) fs.fieldRef.field;
+    boolean                     nonStaticFieldUsedFrom (CompiledExpression<DataType> fs, DataFieldRef fr) {
+        DataFieldRef            fieldRef = fr;
+        NonStaticDataField      field = (NonStaticDataField) fieldRef.field;
         int                     idx = -1;
         FieldSelectorInfo       fsi = null;
         
@@ -117,7 +128,13 @@ class ClassSelectorInfo {
         // If first use detected:
         //
         if (fsi.fieldSelector == null) {
-            fsi.fieldSelector = fs;
+            if (fs instanceof FieldSelector) {
+                fsi.fieldSelector = (FieldSelector) fs;
+            } else if (fs instanceof FieldAccessor) {
+                fsi.fieldAccessor = (FieldAccessor) fs;
+            } else {
+                throw new RuntimeException("Illegal type of selector: " + fs.getClass());
+            }
                        
             String              relName = field.getRelativeTo ();
 

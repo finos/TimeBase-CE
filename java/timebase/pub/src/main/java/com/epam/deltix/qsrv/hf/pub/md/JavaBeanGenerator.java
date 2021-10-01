@@ -1109,5 +1109,3 @@ public class JavaBeanGenerator extends BeanGenerator {
         );
     }
 }
-
-

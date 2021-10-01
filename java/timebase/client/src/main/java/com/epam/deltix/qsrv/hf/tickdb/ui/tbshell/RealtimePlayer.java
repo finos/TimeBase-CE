@@ -28,6 +28,7 @@ import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.util.cmdline.ShellCommandException;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.time.GMT;
+import com.epam.deltix.util.time.TimeKeeper;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -56,17 +57,21 @@ public class RealtimePlayer implements PlayerInterface {
         private volatile PlayerCommandProcessor.LogMode logMode = PlayerCommandProcessor.LogMode.time;
 
         private long nextRepTime = 0;
+        private long lastReportedCount;
 
-        public ShellPlayerThread(MessageSource<InstrumentMessage> src, MessageChannel<InstrumentMessage> dest, SchemaConverter converter, TickDBShell shell, @Nullable Runnable streamRestarter) {
-            super(src, dest, converter, streamRestarter);
+        public ShellPlayerThread(MessageSource <InstrumentMessage> src, MessageChannel<InstrumentMessage> dest, SchemaConverter converter, TickDBShell shell, @Nullable Runnable streamRestarter, double speed) {
+            super(src, dest, converter, streamRestarter, speed);
             this.shell = shell;
         }
 
         @Override
         public void             run () {
+            lastReportedCount = 0;
             shell.confirm("Playback started. 'pause', 'next' and 'stop' control playback.");
             super.run();
             shell.confirm("Playback finished");
+
+            printFinalLog(TimeKeeper.currentTimeNanos);
         }
 
         @Override
@@ -86,17 +91,30 @@ public class RealtimePlayer implements PlayerInterface {
 
                 case time:
                     if (now > nextRepTime) {
-                        System.out.printf (
-                            "%,d msgs; t=%s\n",
-                            count,
-                            GMT.formatNanos(mt)
-                        );
+                        printProgress(mt);
                         nextRepTime = now + 2000 * TimeStamp.NANOS_PER_MS;
                     }
                     break;
 
                 default:
                     throw new UnsupportedOperationException ();
+            }
+        }
+
+        private void printProgress(long timeNanos) {
+            lastReportedCount = count;
+            System.out.printf(
+                    "%,d msgs; t=%s\n",
+                    count,
+                    GMT.formatNanos(timeNanos)
+            );
+        }
+
+        protected void printFinalLog(long now) {
+            if (logMode == PlayerCommandProcessor.LogMode.time) {
+                if (count > lastReportedCount) {
+                    printProgress(now);
+                }
             }
         }
     }
@@ -226,7 +244,7 @@ public class RealtimePlayer implements PlayerInterface {
             }
 
             Runnable streamRestarter = config.cyclic ? () -> finalCur.reset(startTime) : null;
-            playerThread = new ShellPlayerThread(finalCur, out, converter, shell, streamRestarter);
+            playerThread = new ShellPlayerThread(finalCur, out, converter, shell, streamRestarter, config.speed);
 
             cur = null; // let them escape
             out = null;

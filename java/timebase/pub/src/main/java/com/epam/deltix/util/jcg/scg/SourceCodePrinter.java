@@ -77,6 +77,10 @@ public class SourceCodePrinter {
         print (cn);
     }
     
+    public void                     printRefClassName (String className, String[] typeArgs) throws IOException {
+        print(className, "<", String.join(",", typeArgs), ">");
+    }
+
     public void                     print (String s)
         throws IOException
     {

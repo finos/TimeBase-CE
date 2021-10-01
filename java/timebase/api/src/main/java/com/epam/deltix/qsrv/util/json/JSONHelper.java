@@ -33,7 +33,7 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.TickLoader;
 public class JSONHelper {
 
     public static void parseAndLoad(JsonArray jsonArray, DXTickStream stream) {
-        JSONRawMessageParser parser = new JSONRawMessageParser(stream.getTypes());
+        JSONRawMessageParser parser = new JSONRawMessageParser(stream.getTypes(), "$type");
         try (TickLoader loader = stream.createLoader(new LoadingOptions(true))) {
             for (int i = 0; i < jsonArray.size(); i++) {
                 JsonElement msg = jsonArray.get(i);

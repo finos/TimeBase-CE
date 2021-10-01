@@ -16,8 +16,10 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
-import com.epam.deltix.util.jcg.*;
-import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.*;
+import com.epam.deltix.util.jcg.JExpr;
+import com.epam.deltix.util.jcg.JStatement;
+
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
 
 /**
  *
@@ -34,6 +36,10 @@ public class QVarcharValue extends QValue {
     @Override
     public JExpr        read () {
         return (variable.call ("get"));
+    }
+
+    public JExpr        getStringBuilder() {
+        return variable.call("getStringBuilder");
     }
 
     @Override

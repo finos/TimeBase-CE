@@ -26,16 +26,21 @@ import java.util.Arrays;
 class PQKey {
     public final ParamSignature []      paramSignature;
     public final Element                select;
+    public final long                   endTimestamp;
 
-    public PQKey (Element select, ParamSignature [] paramSignature) {
+    public PQKey (Element select, ParamSignature [] paramSignature, long endTimestamp) {
         this.select = select;
-        this.paramSignature = paramSignature;        
+        this.paramSignature = paramSignature;
+        this.endTimestamp = endTimestamp;
     }
 
     @Override
     @SuppressWarnings ("EqualsWhichDoesntCheckParameterClass")
     public boolean      equals (Object obj) {
         final PQKey other = (PQKey) obj;
+
+        if (endTimestamp != ((PQKey) obj).endTimestamp)
+            return false;
         
         if (!Arrays.equals (this.paramSignature, other.paramSignature))
             return false;
@@ -47,8 +52,10 @@ class PQKey {
     }
 
     @Override
-    public int          hashCode () {
-        return (4 * Arrays.hashCode (paramSignature) + select.hashCode ());
-    }           
+    public int hashCode() {
+        int result = Arrays.hashCode(paramSignature);
+        result = 31 * result + (select != null ? select.hashCode() : 0);
+        result = 31 * result + (int) (endTimestamp ^ (endTimestamp >>> 32));
+        return result;
+    }
 }
-

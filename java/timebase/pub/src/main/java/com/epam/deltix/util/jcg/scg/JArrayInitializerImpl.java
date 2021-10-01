@@ -39,7 +39,7 @@ public class JArrayInitializerImpl extends JExprImplBase implements JArrayInitia
         out.print(" }");
     }
 
-    public JArrayInitializerImpl (JContextImpl context, JType javaType) {
+    public JArrayInitializerImpl (JContextImpl context) {
         super (context);
     }
 

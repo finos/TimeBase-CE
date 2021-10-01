@@ -16,12 +16,16 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx;
 
-import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.SelectionMode;
-import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDataType;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.QueryDataType;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.GrammarUtil;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.SelectionMode;
 import com.epam.deltix.qsrv.hf.tickdb.pub.Messages;
 import com.epam.deltix.qsrv.hf.tickdb.pub.Streams;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickStream;
+
 import java.util.Set;
 
 /**
@@ -88,7 +92,7 @@ public class StreamSelector extends CompiledQuery {
     }
         
     @Override
-    protected void              print (StringBuilder out) {
+    public void print (StringBuilder out) {
         int         n = streams.length;
 
         if (mode != SelectionMode.NORMAL) {

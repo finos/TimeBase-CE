@@ -22,32 +22,38 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.DataFieldRef;
 /**
  *
  */
-public class FieldSelector extends CompiledExpression <DataType> {
-    public final DataFieldRef          fieldRef;
+public class FieldSelector extends CompiledExpression<DataType> {
+    public final DataFieldRef fieldRef;
 
-    public FieldSelector (DataFieldRef fieldRef) {
-        super (fieldRef.field.getType ().nullableInstance (true));
+    public FieldSelector(DataFieldRef fieldRef) {
+        super(fieldRef.field.getType().nullableInstance(true));
+
         this.fieldRef = fieldRef;
-        this.name = fieldRef.field.getName ();
+        this.name = name();
+    }
+
+    private String name() {
+        StringBuilder sb = new StringBuilder();
+        print(sb);
+
+        return sb.toString();
     }
 
     @Override
-    protected void                  print (StringBuilder out) {
-        out.append (fieldRef.field.getName ());
+    public void print(StringBuilder out) {
+        out.append(fieldRef.field.getName());
     }
 
     @Override
-    @SuppressWarnings ("EqualsWhichDoesntCheckParameterClass")
-    public boolean                  equals (Object obj) {
-        return
-            super.equals (obj) &&
-            fieldRef.equals (((FieldSelector) obj).fieldRef);
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
+    public boolean equals(Object obj) {
+        return super.equals(obj) &&
+            fieldRef.equals(((FieldSelector) obj).fieldRef);
     }
 
     @Override
-    public int                      hashCode () {
-        return super.hashCode () + fieldRef.hashCode ();
+    public int hashCode() {
+        return super.hashCode() + fieldRef.hashCode();
     }
-
 
 }

@@ -1,0 +1,87 @@
+set printJson true
+test select decimalField from "1min-1h-1h-3" over count(5)
+0: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:17:16.646Z","decimalField":"706.1560784509762"}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:22:16.646Z","decimalField":"475.9250400213633"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:27:16.646Z","decimalField":"622.6596394857357"}
+3: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:32:16.646Z","decimalField":"983.5038175524223"}
+4: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:37:16.646Z","decimalField":"254.9253660684936"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:42:16.646Z","decimalField":"759.8951422753881"}
+6: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:47:16.646Z","decimalField":"184.533005663978"}
+7: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:52:16.646Z","decimalField":"870.4533275265156"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:57:16.646Z","decimalField":"18.48849694699195"}
+9: {"$type":"","symbol":"S2","timestamp":"2021-04-19T02:02:16.646Z","decimalField":"141.2810161290866"}
+!end
+test select decimalField from "1min-1h-1h-3" over count(5) group by symbol
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:25:16.646Z","decimalField":"653.7222433440731"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:26:16.646Z","decimalField":"116.8716284002856"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:27:16.646Z","decimalField":"622.6596394857357"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:40:16.646Z","decimalField":"898.4671026976248"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:41:16.646Z","decimalField":"411.0528108433426"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:42:16.646Z","decimalField":"759.8951422753881"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:55:16.646Z","decimalField":"372.3525999868322"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:56:16.646Z","decimalField":"153.3856773966298"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:57:16.646Z","decimalField":"18.48849694699195"}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T02:10:16.646Z","decimalField":"156.1281763173372"}
+!end
+test select max{}(decimalField), min{}(decimalField) from "1min-1h-1h-3" over count(5)
+0: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:17:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"7.868776715648451"}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:22:16.646Z","MAX{}(decimalField)":"879.2005448282691","MIN{}(decimalField)":"254.697647376261"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:27:16.646Z","MAX{}(decimalField)":"653.7222433440731","MIN{}(decimalField)":"116.8716284002856"}
+3: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:32:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"30.5215676534214"}
+4: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:37:16.646Z","MAX{}(decimalField)":"852.5208542550955","MIN{}(decimalField)":"107.2404499380734"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:42:16.646Z","MAX{}(decimalField)":"898.4671026976248","MIN{}(decimalField)":"411.0528108433426"}
+6: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:47:16.646Z","MAX{}(decimalField)":"472.2215593808118","MIN{}(decimalField)":"184.533005663978"}
+7: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:52:16.646Z","MAX{}(decimalField)":"887.5358134003666","MIN{}(decimalField)":"380.1945313052249"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:57:16.646Z","MAX{}(decimalField)":"977.823746477618","MIN{}(decimalField)":"18.48849694699195"}
+9: {"$type":"","symbol":"S2","timestamp":"2021-04-19T02:02:16.646Z","MAX{}(decimalField)":"814.9392149175902","MIN{}(decimalField)":"141.2810161290866"}
+!end
+test select max{}(decimalField), min{}(decimalField) from "1min-1h-1h-3" over count(5) group by symbol
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:25:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"330.7719239673901"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:26:16.646Z","MAX{}(decimalField)":"706.1560784509762","MIN{}(decimalField)":"7.868776715648451"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:27:16.646Z","MAX{}(decimalField)":"879.2005448282691","MIN{}(decimalField)":"254.697647376261"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:40:16.646Z","MAX{}(decimalField)":"898.4671026976248","MIN{}(decimalField)":"30.5215676534214"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:41:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"107.2404499380734"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:42:16.646Z","MAX{}(decimalField)":"759.8951422753881","MIN{}(decimalField)":"192.433598024801"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:55:16.646Z","MAX{}(decimalField)":"887.5358134003666","MIN{}(decimalField)":"266.2156911294418"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:56:16.646Z","MAX{}(decimalField)":"746.2460986369373","MIN{}(decimalField)":"153.3856773966298"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:57:16.646Z","MAX{}(decimalField)":"977.823746477618","MIN{}(decimalField)":"18.48849694699195"}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T02:10:16.646Z","MAX{}(decimalField)":"814.9392149175902","MIN{}(decimalField)":"156.1281763173372"}
+!end
+test select max{}(decimalField), min{}(decimalField) from "1min-1h-1h-3" trigger over count(5)
+0: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:17:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"7.868776715648451"}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:22:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"7.868776715648451"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:27:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"7.868776715648451"}
+3: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:32:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"7.868776715648451"}
+4: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:37:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"7.868776715648451"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:42:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"7.868776715648451"}
+6: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:47:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"7.868776715648451"}
+7: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:52:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"7.868776715648451"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:57:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"7.868776715648451"}
+9: {"$type":"","symbol":"S2","timestamp":"2021-04-19T02:02:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"7.868776715648451"}
+!end
+test select max{}(decimalField), min{}(decimalField) from "1min-1h-1h-3" trigger over count(5) group by symbol
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:25:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"330.7719239673901"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:26:16.646Z","MAX{}(decimalField)":"706.1560784509762","MIN{}(decimalField)":"7.868776715648451"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:27:16.646Z","MAX{}(decimalField)":"879.2005448282691","MIN{}(decimalField)":"254.697647376261"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:40:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"30.5215676534214"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:41:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"7.868776715648451"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:42:16.646Z","MAX{}(decimalField)":"879.2005448282691","MIN{}(decimalField)":"192.433598024801"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:55:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"30.5215676534214"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:56:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"7.868776715648451"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:57:16.646Z","MAX{}(decimalField)":"977.823746477618","MIN{}(decimalField)":"18.48849694699195"}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T02:10:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"30.5215676534214"}
+!end
+test select max{}(decimalField), min{}(decimalField) from "1min-1h-1h-3" over count(5) limit 5
+0: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:17:16.646Z","MAX{}(decimalField)":"949.205300891957","MIN{}(decimalField)":"7.868776715648451"}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:22:16.646Z","MAX{}(decimalField)":"879.2005448282691","MIN{}(decimalField)":"254.697647376261"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:27:16.646Z","MAX{}(decimalField)":"653.7222433440731","MIN{}(decimalField)":"116.8716284002856"}
+3: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:32:16.646Z","MAX{}(decimalField)":"983.5038175524223","MIN{}(decimalField)":"30.5215676534214"}
+4: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:37:16.646Z","MAX{}(decimalField)":"852.5208542550955","MIN{}(decimalField)":"107.2404499380734"}
+!end
+test select max{}(decimalField), min{}(decimalField) from "1min-1h-1h-3" over count(5) limit 5 offset 5
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:42:16.646Z","MAX{}(decimalField)":"898.4671026976248","MIN{}(decimalField)":"411.0528108433426"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:47:16.646Z","MAX{}(decimalField)":"472.2215593808118","MIN{}(decimalField)":"184.533005663978"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:52:16.646Z","MAX{}(decimalField)":"887.5358134003666","MIN{}(decimalField)":"380.1945313052249"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:57:16.646Z","MAX{}(decimalField)":"977.823746477618","MIN{}(decimalField)":"18.48849694699195"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T02:02:16.646Z","MAX{}(decimalField)":"814.9392149175902","MIN{}(decimalField)":"141.2810161290866"}
+!end

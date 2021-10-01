@@ -26,6 +26,7 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TextMap;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
 import com.epam.deltix.util.io.BasicIOUtil;
+import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.parsers.CompilationException;
 
 import javax.servlet.ServletException;
@@ -53,7 +54,7 @@ import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.LOGGER;
  */
 public class TimebaseServlet extends HttpServlet {
 
-    final static boolean DEBUG = true;
+    final static boolean DEBUG = Boolean.getBoolean("TimeBase.http.debug");
 
     private final Map<String, DXTickDB> userNameToDb = new HashMap<>();
 
@@ -92,10 +93,11 @@ public class TimebaseServlet extends HttpServlet {
                     try {
                         final String xml = BasicIOUtil.readFromStream(req.getInputStream());
 
-                        if (xml == null || xml.trim().length() == 0)
+                        if (StringUtils.isEmpty(xml)) {
                             throw new UnmarshalException("request xml is empty");
-                        else
+                        } else {
                             LOGGER.fine("request: " + xml);
+                        }
 
                         body = um.unmarshal(new StringReader(xml));
                     } catch (InterruptedException e) {
@@ -112,8 +114,6 @@ public class TimebaseServlet extends HttpServlet {
                     validateQQL((ValidateQQLRequest)body, resp);
                 } else if (body instanceof CreateStreamRequest) {
                     StreamHandler.createStream(db, (CreateStreamRequest) body, resp);
-                } else if (body instanceof CreateFileStreamRequest) {
-                    StreamHandler.createStream(db, (CreateFileStreamRequest) body, resp);
                 } else if (body instanceof ListStreamsRequest) {
                     //UAC will be checked downstream
                     StreamHandler.processListStreams(db, resp);
@@ -194,6 +194,16 @@ public class TimebaseServlet extends HttpServlet {
                     } else if (body instanceof GetBGProcessRequest) {
 
                         StreamHandler.processGetBG(db, (GetBGProcessRequest) body, resp);
+                    } else if (body instanceof ListSpacesRequest) {
+                        StreamHandler.processListSpaces(db, (ListSpacesRequest) body, resp);
+                    } else if (body instanceof RenameSpaceRequest) {
+                        StreamHandler.processRenameSpace(db, (RenameSpaceRequest) body, resp);
+                    } else if (body instanceof DeleteSpacesRequest) {
+                        StreamHandler.processDeleteSpaces(db, (DeleteSpacesRequest) body, resp);
+                    } else if (body instanceof GetSpaceTimeRangeRequest) {
+                        StreamHandler.processGetSpaceRange(db, (GetSpaceTimeRangeRequest) body, resp);
+                    } else if (body instanceof DescribeStreamRequest) {
+                        StreamHandler.processDescribeStreamRequest(db, (DescribeStreamRequest) body, resp);
                     }
                 }
                 else if (body instanceof CursorRequest) {

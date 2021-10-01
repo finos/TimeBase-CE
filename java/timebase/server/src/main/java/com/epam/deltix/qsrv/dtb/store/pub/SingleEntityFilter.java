@@ -22,6 +22,9 @@ package com.epam.deltix.qsrv.dtb.store.pub;
 public class SingleEntityFilter implements AbstractSingleEntityFilter {
     public int              entity;
 
+    public SingleEntityFilter() {
+    }
+
     public SingleEntityFilter (int entity) {
         this.entity = entity;
     }

@@ -37,7 +37,7 @@ public class ClassDescriptorArray {
     ClassDescriptorArray () {
     }
 
-    public ClassDescriptorArray(RecordClassDescriptor concrete, RecordClassSet sentRCS) {
+    public ClassDescriptorArray(RecordClassDescriptor concrete, ClassSet<RecordClassDescriptor> sentRCS) {
         final ArrayList<ClassDescriptor> list = new ArrayList<>();
 
         final RecordClassSet rcs = new RecordClassSet();
@@ -51,12 +51,25 @@ public class ClassDescriptorArray {
                 list.add(cd);
             else {
                 // put depended classes only when they are absent in sentRCS
-                if (sentRCS.getClassDescriptor(cd.getName()) == null)
+                if (!contains(cd, sentRCS))
                     list.add(cd);
             }
         }
 
         descriptors = list.toArray(new ClassDescriptor[list.size()]);
+    }
+
+    public static boolean contains(ClassDescriptor cd, ClassSet<RecordClassDescriptor> set) {
+
+        ClassDescriptor[] classes = set.getClasses();
+
+        for (int i = 0;  classes != null && i < classes.length; i++) {
+            ClassDescriptor clazz = classes[i];
+            if (clazz.getGuid().equals(cd.getGuid()))
+                return true;
+        }
+
+        return false;
     }
 
     public ClassDescriptor[] getDescriptors() {

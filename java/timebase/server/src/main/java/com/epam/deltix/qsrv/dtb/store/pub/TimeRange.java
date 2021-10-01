@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.dtb.store.pub;
 
 import com.epam.deltix.qsrv.hf.pub.TimeInterval;
+import com.epam.deltix.util.time.GMT;
 
 /**
  *  An inclusive range of timestamps. All times are in nanoseconds.
@@ -102,5 +103,13 @@ public class TimeRange implements TimeInterval {
     @Override
     public long getToTime() {
         return to;
+    }
+
+    @Override
+    public String toString() {
+        return "TimeRange{" +
+                "from=" + GMT.formatNanos(from) +
+                ", to=" + GMT.formatNanos(to) +
+                '}';
     }
 }

@@ -882,15 +882,15 @@ public class TickDBImpl
                     actualFiles.put(stream.getVersionsFile(), stream.getVersionsFile());
                 }
             }
-            else if (tickStream instanceof FileStreamImpl) {
-                if (sf.isRemote()) {
-                    throw new IllegalStateException("Remote storage is not supported for FileStreamImpl");
-                }
-                FileStreamImpl fileStream = (FileStreamImpl)tickStream;
-                fileStream.init (this, sf.getFile());
-                fileStream.open (readOnly);
-                streams.put (tickStream.getKey (), (FileStreamImpl) tickStream);
-            }
+//            else if (tickStream instanceof FileStreamImpl) {
+//                if (sf.isRemote()) {
+//                    throw new IllegalStateException("Remote storage is not supported for FileStreamImpl");
+//                }
+//                FileStreamImpl fileStream = (FileStreamImpl)tickStream;
+//                fileStream.init (this, sf.getFile());
+//                fileStream.open (readOnly);
+//                streams.put (tickStream.getKey (), (FileStreamImpl) tickStream);
+//            }
         }
 
         // clear unused files only if we have db here 
@@ -1563,44 +1563,6 @@ public class TickDBImpl
         return distributedFS;
     }
 
-    public DXTickStream                     createFileStream (
-        String                                  key,
-        String                                  dataFile)
-    {
-        if (!isOpen ())
-            throw new IllegalStateException ("Database is not open");
-
-        if (isReadOnly ())
-            throw new IllegalStateException ("Database is open in read-only mode");
-
-        FileStreamImpl       stream;
-
-        streamsLock.writeLock().lock();
-        try {
-            if (streams.containsKey (key))
-                throw new IllegalArgumentException ("Duplicate stream key: " + key);
-
-            stream = new FileStreamImpl (dataFile, key);
-            streams.put (key, stream);
-            stream.addStateListener(this);
-
-            String name = SimpleStringCodec.DEFAULT_INSTANCE.encode(key);
-            File folder = new File(getNewDir(), name);
-            folder.mkdirs();
-
-            stream.init(this, new File(folder, name + STREAM_EXTENSION));
-            stream.open(false);
-            stream.saveChanges();
-
-            fireCreated(stream);
-
-        } finally {
-            streamsLock.writeLock().unlock();
-        }
-
-        return (stream);
-    }
-
     public TickStreamImpl                   createAnonymousStream (
         StreamOptions                           options
     )
@@ -1779,9 +1741,18 @@ public class TickDBImpl
     public File[]                           getDbDirs () {
         return dbDirs;
     }
-    
+
+    @Override
     public MetaData                         getMetaData () {
         return (metaData);
+    }
+
+
+    @Override
+    public ClassSet      describeQuery(String qql, SelectionOptions options, Parameter ...params) {
+        PreparedQuery pq = pqCache.prepareQuery(CompilerUtil.parse(qql), ParamSignature.signatureOf(params));
+
+        return pq.getSchema();
     }
 
     public InstrumentMessageSource          executeQuery (
@@ -1829,7 +1800,7 @@ public class TickDBImpl
         LOGGER.fine("Query: " + qql);
         return (executeQuery (CompilerUtil.parse (qql), options, streams, ids, time, params));
     }
-    
+
     public InstrumentMessageSource          executeQuery (
         Element                                 qql,
         SelectionOptions                        options,
@@ -1842,6 +1813,35 @@ public class TickDBImpl
     {
         return (executePreparedQuery(pqCache.prepareQuery(qql, ParamSignature.signatureOf (params)),
                 options, streams, ids, time == TimeConstants.TIMESTAMP_UNKNOWN, time, params));
+    }
+
+    @Override
+    public InstrumentMessageSource executeQuery(
+            String              qql,
+            SelectionOptions    options,
+            TickStream[]        streams,
+            CharSequence[]      ids,
+            long                startTimestamp,
+            long                endTimestamp,
+            Parameter... params)
+        throws CompilationException
+    {
+        LOGGER.fine("Query: " + qql);
+        return (executeQuery (CompilerUtil.parse (qql), options, streams, ids, startTimestamp, endTimestamp, params));
+    }
+
+    public InstrumentMessageSource executeQuery(
+            Element             qql,
+            SelectionOptions    options,
+            TickStream[]        streams,
+            CharSequence[]      ids,
+            long                startTimestamp,
+            long                endTimestamp,
+            Parameter... params)
+        throws CompilationException
+    {
+        return (executePreparedQuery(pqCache.prepareQuery(qql, ParamSignature.signatureOf (params), endTimestamp),
+                options, streams, ids, startTimestamp == TimeConstants.TIMESTAMP_UNKNOWN, startTimestamp, params));
     }
 
     @Override

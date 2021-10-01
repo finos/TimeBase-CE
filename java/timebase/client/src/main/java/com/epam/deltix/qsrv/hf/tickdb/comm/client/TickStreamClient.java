@@ -605,7 +605,7 @@ class TickStreamClient implements DXTickStream {
 
     @Override
     public TickCursor select(long time, SelectionOptions options, String[] types, CharSequence[] symbols) {
-        return TickCursorClientFactory.create(conn, options, time, null, null, symbols, types, getAeronContext(), this);
+        return TickCursorClientFactory.create(conn, options, time, Long.MAX_VALUE, null, null, symbols, types, getAeronContext(), this);
     }
 
     @Override
@@ -1419,6 +1419,58 @@ class TickStreamClient implements DXTickStream {
 
             DataInputStream din = ds.getDataInputStream();
             return TDBProtocol.readNullableStringArray(din);
+        } catch (IOException iox) {
+            throw new com.epam.deltix.util.io.UncheckedIOException(iox);
+        } finally {
+            Util.close(ds);
+        }
+    }
+
+    @Override
+    public void         deleteSpaces(String... names) {
+        assertSupportsStreamSpaces();
+
+        if (names == null)
+            throw new IllegalArgumentException("spaces argument is null");
+
+        VSChannel ds = null;
+
+        try {
+            ds = connect();
+
+            final DataOutputStream out = ds.getDataOutputStream();
+
+            out.writeInt(TDBProtocol.REQ_DELETE_SPACES);
+            out.writeUTF(key);
+            TDBProtocol.writeNullableStringArray(out, names);
+            out.flush();
+
+            checkResponse(ds);
+        } catch (IOException iox) {
+            throw new com.epam.deltix.util.io.UncheckedIOException(iox);
+        } finally {
+            Util.close(ds);
+        }
+    }
+
+    @Override
+    public void renameSpace(String newName, String oldName) {
+        assertSupportsStreamSpaces();
+
+        VSChannel ds = null;
+
+        try {
+            ds = connect();
+
+            final DataOutputStream out = ds.getDataOutputStream();
+
+            out.writeInt(TDBProtocol.REQ_RENAME_SPACES);
+            out.writeUTF(key);
+            TDBProtocol.writeNullableString(newName, out);
+            TDBProtocol.writeNullableString(oldName, out);
+            out.flush();
+
+            checkResponse(ds);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {

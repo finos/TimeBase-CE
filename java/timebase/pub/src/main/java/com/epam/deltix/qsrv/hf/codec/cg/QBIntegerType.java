@@ -120,4 +120,3 @@ public class QBIntegerType extends QBNumericType<QIntegerType> {
         }
     }
 }
-

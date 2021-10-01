@@ -16,14 +16,18 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.qcache;
 
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CompilerUtil;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.ParamSignature;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.SelectExpression;
+import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
+import com.epam.deltix.qsrv.hf.tickdb.pub.query.PreparedQuery;
+import com.epam.deltix.util.collections.QuickList;
+import com.epam.deltix.util.parsers.CompilationException;
 import com.epam.deltix.util.parsers.Element;
 import com.epam.deltix.util.time.TimeKeeper;
-import com.epam.deltix.util.parsers.CompilationException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
-import com.epam.deltix.qsrv.hf.tickdb.pub.*;
-import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
-import com.epam.deltix.util.collections.QuickList;
-import java.util.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -47,6 +51,26 @@ public class PQCache {
     private boolean                     shouldCache (Element qql) {
         return (qql instanceof SelectExpression);
     }
+
+    public synchronized PreparedQuery prepareQuery(Element qql, ParamSignature[] paramSignature, long endTimestamp) {
+        if (!shouldCache(qql))
+            return (CompilerUtil.prepareQuery(db, qql, endTimestamp, paramSignature));
+        PQKey key = new PQKey(qql, paramSignature, endTimestamp);
+        PQEntry e = map.get(key);
+        if (e == null) {
+            PreparedQuery pq = CompilerUtil.prepareQuery(db, qql, endTimestamp, paramSignature);
+            e = new PQEntry(key, pq);
+            count++;
+            lifo.linkLast(e);
+            map.put(key, e);
+            syncCleanup();
+        } else {
+            e.unlink();
+            lifo.linkLast(e);
+            e.timestamp = TimeKeeper.currentTime;
+        }
+        return (e.query);
+    }
     
     public synchronized PreparedQuery   prepareQuery (
         Element                             qql, 
@@ -57,7 +81,7 @@ public class PQCache {
         if (!shouldCache (qql))
             return (CompilerUtil.prepareQuery (db, qql, paramSignature));
         
-        PQKey           key = new PQKey (qql, paramSignature);
+        PQKey           key = new PQKey (qql, paramSignature, Long.MIN_VALUE);
         PQEntry         e = map.get (key);
         
         if (e == null) {

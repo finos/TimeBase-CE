@@ -31,10 +31,10 @@ public final class AccessorBlockLink {
     private final int               entity;
     private final DataBlock         block;
     private int                     offset;
-    private long                    nextTimestamp;
+    private volatile long           nextTimestamp; // access atEnd() required volatile
     volatile boolean                queued = false;
 
-    private TimeSlice               ts;
+    private final TimeSlice         ts;
 
     public AccessorBlockLink (
             BlockAccessorBase       accessor,
@@ -240,7 +240,7 @@ public final class AccessorBlockLink {
 
         long current = nextTimestamp;
 
-        synchronized (this.block) {
+        synchronized (block) {
             long middle = block.getDataLength() / 2;
 
             offset = 0;
@@ -276,7 +276,7 @@ public final class AccessorBlockLink {
 
     public long                     find (long ts) {
 
-        synchronized (this.block) {
+        synchronized (block) {
             if (ts < block.getStartTime())
                 return 0;
 
@@ -395,7 +395,8 @@ public final class AccessorBlockLink {
 //    }
 
     boolean                         atEnd () {
-        return (nextTimestamp == NO_NEXT_TIMESTAMP);
+        // called under synchronized (block) only
+        return (nextTimestamp == NO_NEXT_TIMESTAMP && offset == block.getDataLength());
     }
     
     void                            asyncDataInserted (int insertionOffset, int msgLength, long timestamp) {
@@ -408,6 +409,8 @@ public final class AccessorBlockLink {
                 assert timestamp <= nextTimestamp;  // FIX for reverse
 
                 nextTimestamp = timestamp;
+            } else {
+                assert nextTimestamp != NO_NEXT_TIMESTAMP;
             }
         }
     }
@@ -568,7 +571,7 @@ public final class AccessorBlockLink {
         if (nextTimestamp != check) {
             if (nextTimestamp != NO_NEXT_TIMESTAMP)
                 throw new IllegalStateException (
-                        "Timestamp discrepancy (missed update?): expected=" +
+                        "[" + entity + "] Timestamp discrepancy (missed update?): expected=" +
                                 nextTimestamp + "; read " + check);
             else
             nextTimestamp = check;

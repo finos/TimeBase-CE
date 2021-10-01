@@ -84,4 +84,3 @@ public final class FixedBoundEncoderImpl implements FixedBoundEncoder {
         return -1;
     }
 }
-

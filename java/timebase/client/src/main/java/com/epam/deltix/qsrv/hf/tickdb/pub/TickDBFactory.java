@@ -47,9 +47,6 @@ public class TickDBFactory {
     
     private static final String HOME_MAGIC = "${home}";
 
-    private static final String DEFAULT_URL               = "http://gw.deltixlab.com/";
-    private static final String SECONDARY_URL             = "http://ls.deltixlab.com/";
-
     public static String            VERSION_PROPERTY          = "TimeBase.version";
 
     private static String           defaultApplicationID;

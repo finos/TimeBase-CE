@@ -22,11 +22,7 @@ import com.epam.deltix.util.memory.MemoryDataInput;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 
 /**
- * Created by IntelliJ IDEA.
- * User: BazylevD
- * Date: Apr 14, 2009
- * Time: 4:01:50 PM
- * To change this template use File | Settings | File Templates.
+ * Simple String codec
  */
 public class FwdStringCodec {
     private static final Log LOG = LogFactory.getLog(FwdStringCodec.class);

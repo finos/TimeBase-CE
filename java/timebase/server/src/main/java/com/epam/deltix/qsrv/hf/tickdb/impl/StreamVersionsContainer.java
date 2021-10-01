@@ -26,6 +26,7 @@ import com.epam.deltix.ramdisk.FD;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.timebase.messages.schema.SchemaChangeMessage;
 import com.epam.deltix.timebase.messages.service.*;
+import com.epam.deltix.util.collections.SmallArrays;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.memory.DataExchangeUtils;
 import com.epam.deltix.util.memory.MemoryDataOutput;
@@ -80,6 +81,11 @@ public class StreamVersionsContainer extends AbstractMessageWriter implements Cl
         }
 
         @Override
+        public void close() {
+            super.close();
+        }
+
+        @Override
         protected void          onCommitLength() throws IOException {
             DataExchangeUtils.writeLong (header, VERSION_OFFSET, version);
             DataExchangeUtils.writeLong (header, LENGTH_OFFSET, getLogicalLength());
@@ -128,16 +134,25 @@ public class StreamVersionsContainer extends AbstractMessageWriter implements Cl
     }
 
     public boolean add(InstrumentMessage msg) {
+        if (SmallArrays.indexOf(msg.getClass(), classes) == -1)
+            throw new UnsupportedOperationException("Message type " + msg + " is not supported.");
+
         if (msg instanceof StreamTruncatedMessage)
             return add((StreamTruncatedMessage)msg);
 
         if (msg instanceof MetaDataChangeMessage)
             return add((MetaDataChangeMessage)msg);
 
-        if (msg instanceof SchemaChangeMessage)
-            return add((SchemaChangeMessage) msg);
+//        if (msg instanceof SpaceCreatedMessage)
+//            return add((SpaceCreatedMessage)msg);
+//
+//        if (msg instanceof SpaceDeletedMessage)
+//            return add((SpaceDeletedMessage)msg);
+//
+//        if (msg instanceof SpaceRenamedMessage)
+//            return add((SpaceRenamedMessage)msg);
 
-        throw new UnsupportedOperationException("Message " + msg + " is not supported.");
+        return false;
     }
 
 //    public boolean     add(StreamPurgedMessage msg) {
@@ -163,37 +178,31 @@ public class StreamVersionsContainer extends AbstractMessageWriter implements Cl
         }
     }
 
-    public boolean     add(SchemaChangeMessage msg) {
-        synchronized (file) {
-            msg.setVersion(++version);
-            file.version = msg.getVersion();
-            return  addMessage(msg);
-        }
-    }
+//    public boolean     add(SpaceDeletedMessage msg) {
+//        synchronized (file) {
+//            msg.setVersion(++version);
+//            file.version = msg.getVersion();
+//            return addMessage(msg);
+//        }
+//    }
+//
+//    public boolean     add(SpaceRenamedMessage msg) {
+//        synchronized (file) {
+//            msg.setVersion(++version);
+//            file.version = msg.getVersion();
+//            return addMessage(msg);
+//        }
+//    }
+//
+//    public boolean     add(SpaceCreatedMessage msg) {
+//        synchronized (file) {
+//            msg.setVersion(++version);
+//            file.version = msg.getVersion();
+//            return  addMessage(msg);
+//        }
+//    }
     
     private boolean                 addMessage(SystemMessage msg) {
-
-        try {
-            encode(msg, buffer);
-
-            final int   size = buffer.getSize ();
-
-            writeMessage(buffer.getBuffer(), 0, size);
-
-            for (int i = 0; i < readers.size(); i++) {
-                StreamVersionsReader reader = readers.get(i);
-                if (reader.waiting)
-                    reader.submitNotifier();
-            }
-
-        } catch (IOException e) {
-            throw new com.epam.deltix.util.io.UncheckedIOException(e);
-        }
-
-        return true;
-    }
-
-    private boolean                 addMessage(SchemaChangeMessage msg) {
 
         try {
             encode(msg, buffer);

@@ -16,19 +16,52 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime;
 
+import com.epam.deltix.qsrv.hf.codec.cg.StringBuilderPool;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.InstancePool;
+import com.epam.deltix.util.memory.MemoryDataOutput;
 
 /**
  *
  */
 public abstract class FilterState {
-    boolean                 accepted = false;
-    
-    public boolean          isAccepted () {
+
+    boolean accepted = false;
+    boolean waitingByTime = false;
+    int messagesCount = 0;
+    boolean initializedOnInterval = false;
+    boolean initialized = false;
+    protected final StringBuilderPool varcharPool;
+    protected final InstancePool instancePool;
+
+    String warningMessage;
+
+    public FilterState(FilterIMSImpl filter) {
+        if (filter != null) {
+            this.varcharPool = filter.varcharPool;
+            this.instancePool = filter.instancePool;
+        } else {
+            this.varcharPool = null;
+            this.instancePool = null;
+        }
+    }
+
+    public boolean isAccepted() {
         return (accepted);
     }
-    
-    protected RawMessage    getLastMessage () {
-        throw new UnsupportedOperationException ();
+
+    public void setWarningMessage(String message) {
+        this.warningMessage = message;
+    }
+
+    protected RawMessage getLastMessage() {
+        throw new UnsupportedOperationException();
+    }
+
+    protected MemoryDataOutput getOut() {
+        throw new UnsupportedOperationException();
+    }
+
+    protected void resetFunctions() {
     }
 }

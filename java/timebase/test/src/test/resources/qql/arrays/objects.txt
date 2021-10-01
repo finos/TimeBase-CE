@@ -1,0 +1,353 @@
+Running QQL: select * from orders
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:01.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:01.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:02.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:02.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:03.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:03.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:04.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:04.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:05.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:05.000,order:OBJECT
+!END
+Running QQL: select order as res1 from orders
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10000}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10000}}
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10001}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10001}}
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10002}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10002}}
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10003}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10003}}
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10004}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10004}}
+!END
+Running QQL: select "deltix.orders.OrderEvent":order as res1 from orders
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10000}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10000}}
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10001}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10001}}
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10002}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10002}}
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10003}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10003}}
+MarketOrder{id=Id{source='MO_SOURCE', correlationId=10004}}
+LimitOrder{id=Id{source='LO_SOURCE', correlationId=10004}}
+!END
+Running QQL: select "deltix.orders.OrderEvent":order.id as res1 from orders
+Id{source='MO_SOURCE', correlationId=10000}
+Id{source='LO_SOURCE', correlationId=10000}
+Id{source='MO_SOURCE', correlationId=10001}
+Id{source='LO_SOURCE', correlationId=10001}
+Id{source='MO_SOURCE', correlationId=10002}
+Id{source='LO_SOURCE', correlationId=10002}
+Id{source='MO_SOURCE', correlationId=10003}
+Id{source='LO_SOURCE', correlationId=10003}
+Id{source='MO_SOURCE', correlationId=10004}
+Id{source='LO_SOURCE', correlationId=10004}
+!END
+Running QQL: select order.sequence as res1 from orders
+0.0
+0.0
+1.111
+2.222
+2.222
+4.444
+3.3329997
+6.6659994
+4.444
+8.888
+!END
+Running QQL: select order.info as res1 from orders
+MarketOrderInfo{userId='USER#100', size=10000.0, side=BUY}
+LimitOrderInfo{userId=100, size=1000.0, price=100.0, side=BUY}
+MarketOrderInfo{userId='USER#101', size=10001.0, side=SELL}
+LimitOrderInfo{userId=101, size=1001.0, price=101.0, side=SELL}
+MarketOrderInfo{userId='USER#102', size=10002.0, side=BUY}
+LimitOrderInfo{userId=102, size=1002.0, price=102.0, side=BUY}
+MarketOrderInfo{userId='USER#103', size=10003.0, side=SELL}
+LimitOrderInfo{userId=103, size=1003.0, price=103.0, side=SELL}
+MarketOrderInfo{userId='USER#104', size=10004.0, side=BUY}
+LimitOrderInfo{userId=104, size=1004.0, price=104.0, side=BUY}
+!END
+Running QQL: select order.info as res1 from orders where order.info is deltix.orders.MarketOrderInfo
+MarketOrderInfo{userId='USER#100', size=10000.0, side=BUY}
+MarketOrderInfo{userId='USER#101', size=10001.0, side=SELL}
+MarketOrderInfo{userId='USER#102', size=10002.0, side=BUY}
+MarketOrderInfo{userId='USER#103', size=10003.0, side=SELL}
+MarketOrderInfo{userId='USER#104', size=10004.0, side=BUY}
+!END
+Running QQL: select order.info as res1 from orders where order is deltix.orders.MarketOrder
+MarketOrderInfo{userId='USER#100', size=10000.0, side=BUY}
+MarketOrderInfo{userId='USER#101', size=10001.0, side=SELL}
+MarketOrderInfo{userId='USER#102', size=10002.0, side=BUY}
+MarketOrderInfo{userId='USER#103', size=10003.0, side=SELL}
+MarketOrderInfo{userId='USER#104', size=10004.0, side=BUY}
+!END
+Running QQL: select order.info as res1 from orders where order.info is deltix.orders.LimitOrderInfo
+LimitOrderInfo{userId=100, size=1000.0, price=100.0, side=BUY}
+LimitOrderInfo{userId=101, size=1001.0, price=101.0, side=SELL}
+LimitOrderInfo{userId=102, size=1002.0, price=102.0, side=BUY}
+LimitOrderInfo{userId=103, size=1003.0, price=103.0, side=SELL}
+LimitOrderInfo{userId=104, size=1004.0, price=104.0, side=BUY}
+!END
+Running QQL: select order.info as res1 from orders where order is deltix.orders.LimitOrder
+LimitOrderInfo{userId=100, size=1000.0, price=100.0, side=BUY}
+LimitOrderInfo{userId=101, size=1001.0, price=101.0, side=SELL}
+LimitOrderInfo{userId=102, size=1002.0, price=102.0, side=BUY}
+LimitOrderInfo{userId=103, size=1003.0, price=103.0, side=SELL}
+LimitOrderInfo{userId=104, size=1004.0, price=104.0, side=BUY}
+!END
+Running QQL: select order.info.executedInfo.avgPrice as res1 from orders
+11111.0
+12345.0
+11112.0
+23457.0
+11113.0
+12347.0
+11114.0
+23459.0
+11115.0
+12349.0
+!END
+Running QQL: select order.info.executedInfo as res1 from orders
+ExecutedMarketOrderInfo{infoId=6000, avgPrice=11111.0, totalQuantity=22222.0}
+ExecutedLimitOrderInfoA{infoIdA=100, customInfo=5000.0, avgPrice=12345.0, totalQuantity=12345.0}
+ExecutedMarketOrderInfo{infoId=6001, avgPrice=11112.0, totalQuantity=22223.0}
+ExecutedLimitOrderInfoB{infoIdB=5501, avgPrice=23457.0, totalQuantity=23457.0}
+ExecutedMarketOrderInfo{infoId=6002, avgPrice=11113.0, totalQuantity=22224.0}
+ExecutedLimitOrderInfoA{infoIdA=102, customInfo=5002.0, avgPrice=12347.0, totalQuantity=12347.0}
+ExecutedMarketOrderInfo{infoId=6003, avgPrice=11114.0, totalQuantity=22225.0}
+ExecutedLimitOrderInfoB{infoIdB=5503, avgPrice=23459.0, totalQuantity=23459.0}
+ExecutedMarketOrderInfo{infoId=6004, avgPrice=11115.0, totalQuantity=22226.0}
+ExecutedLimitOrderInfoA{infoIdA=104, customInfo=5004.0, avgPrice=12349.0, totalQuantity=12349.0}
+!END
+Running QQL: select order.info.executedInfo as res1 from orders where order.info.executedInfo is deltix.orders.ExecutedLimitOrderInfoA
+ExecutedLimitOrderInfoA{infoIdA=100, customInfo=5000.0, avgPrice=12345.0, totalQuantity=12345.0}
+ExecutedLimitOrderInfoA{infoIdA=102, customInfo=5002.0, avgPrice=12347.0, totalQuantity=12347.0}
+ExecutedLimitOrderInfoA{infoIdA=104, customInfo=5004.0, avgPrice=12349.0, totalQuantity=12349.0}
+!END
+Running QQL: select order.info.executedInfo as res1 from orders where order.info.executedInfo is deltix.orders.ExecutedLimitOrderInfoB
+ExecutedLimitOrderInfoB{infoIdB=5501, avgPrice=23457.0, totalQuantity=23457.0}
+ExecutedLimitOrderInfoB{infoIdB=5503, avgPrice=23459.0, totalQuantity=23459.0}
+!END
+Running QQL: select order.info.executedInfo as res1 from orders where order.info.executedInfo is deltix.orders.ExecutedMarketOrderInfo
+ExecutedMarketOrderInfo{infoId=6000, avgPrice=11111.0, totalQuantity=22222.0}
+ExecutedMarketOrderInfo{infoId=6001, avgPrice=11112.0, totalQuantity=22223.0}
+ExecutedMarketOrderInfo{infoId=6002, avgPrice=11113.0, totalQuantity=22224.0}
+ExecutedMarketOrderInfo{infoId=6003, avgPrice=11114.0, totalQuantity=22225.0}
+ExecutedMarketOrderInfo{infoId=6004, avgPrice=11115.0, totalQuantity=22226.0}
+!END
+Running QQL: select ((order.info as deltix.orders.LimitOrderInfo).executedInfo as deltix.orders.ExecutedLimitOrderInfoA).infoIdA as res1 from orders
+-2147483648
+100
+-2147483648
+-2147483648
+-2147483648
+102
+-2147483648
+-2147483648
+-2147483648
+104
+!END
+Running QQL: select ((order.info as deltix.orders.LimitOrderInfo).executedInfo as deltix.orders.ExecutedLimitOrderInfoB).infoIdB as res1 from orders
+-2147483648
+-2147483648
+-2147483648
+5501
+-2147483648
+-2147483648
+-2147483648
+5503
+-2147483648
+-2147483648
+!END
+Running QQL: select ((order.info as deltix.orders.MarketOrderInfo).executedInfo as deltix.orders.ExecutedMarketOrderInfo).infoId as res1 from orders
+6000
+-2147483648
+6001
+-2147483648
+6002
+-2147483648
+6003
+-2147483648
+6004
+-2147483648
+!END
+Running QQL: select * from orders where order is deltix.orders.LimitOrder
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:01.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:02.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:03.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:04.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:05.000,order:OBJECT
+!END
+Running QQL: select * from orders where order is deltix.orders.MarketOrder
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:01.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:02.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:03.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:04.000,order:OBJECT
+deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:05.000,order:OBJECT
+!END
+Running QQL: select order.execution as res1 from orders
+Execution{id=Id{source='EX_SOURCE', correlationId=10000}}
+NULL
+Execution{id=Id{source='EX_SOURCE', correlationId=10001}}
+NULL
+Execution{id=Id{source='EX_SOURCE', correlationId=10002}}
+NULL
+Execution{id=Id{source='EX_SOURCE', correlationId=10003}}
+NULL
+Execution{id=Id{source='EX_SOURCE', correlationId=10004}}
+NULL
+!END
+Running QQL: select order.execution.info.price as res1 from orders
+100.0
+NaN
+101.0
+NaN
+102.0
+NaN
+103.0
+NaN
+104.0
+NaN
+!END
+Running QQL: select order.execution.id.external.id as res1 from orders
+ID#0
+null
+ID#1
+null
+ID#2
+null
+ID#3
+null
+ID#4
+null
+!END
+Running QQL: select (order as deltix.orders.MarketOrder).execution.id.external.id as res1 from orders
+ID#0
+null
+ID#1
+null
+ID#2
+null
+ID#3
+null
+ID#4
+null
+!END
+Running QQL: select order.id.source as res1, order.id.correlationId as res2 from orders
+MO_SOURCE, 10000
+LO_SOURCE, 10000
+MO_SOURCE, 10001
+LO_SOURCE, 10001
+MO_SOURCE, 10002
+LO_SOURCE, 10002
+MO_SOURCE, 10003
+LO_SOURCE, 10003
+MO_SOURCE, 10004
+LO_SOURCE, 10004
+!END
+Running QQL: select order.info.size as res1 from orders
+10000.0
+1000.0
+10001.0
+1001.0
+10002.0
+1002.0
+10003.0
+1003.0
+10004.0
+1004.0
+!END
+Running QQL: select order.info.price as res1 from orders
+NaN
+100.0
+NaN
+101.0
+NaN
+102.0
+NaN
+103.0
+NaN
+104.0
+!END
+Running QQL: select (order.info as deltix.orders.LimitOrderInfo).price as res1 from orders
+NaN
+100.0
+NaN
+101.0
+NaN
+102.0
+NaN
+103.0
+NaN
+104.0
+!END
+Running QQL: select (order.info as deltix.orders.MarketOrderInfo).size as res1 from orders
+10000.0
+NaN
+10001.0
+NaN
+10002.0
+NaN
+10003.0
+NaN
+10004.0
+NaN
+!END
+Running QQL: select (order.info.price + 3) as res1, (order.info.size - 10) as res2 from orders
+NaN, 9990.0
+103.0, 990.0
+NaN, 9991.0
+104.0, 991.0
+NaN, 9992.0
+105.0, 992.0
+NaN, 9993.0
+106.0, 993.0
+NaN, 9994.0
+107.0, 994.0
+!END
+Running QQL: select order.info.price as res1 from orders where order.info.price > 101
+102.0
+103.0
+104.0
+!END
+Running QQL: select ((order.info as deltix.orders.LimitOrderInfo).price + (order.info as deltix.orders.LimitOrderInfo).size) as res1 from orders where (order.info as deltix.orders.LimitOrderInfo) is not null
+1100.0
+1102.0
+1104.0
+1106.0
+1108.0
+!END
+Running QQL: select (order as deltix.orders.MarketOrder).info as res1, (order as deltix.orders.LimitOrder).info as res2 from orders
+MarketOrderInfo{userId='USER#100', size=10000.0, side=BUY} | NULL
+NULL | LimitOrderInfo{userId=100, size=1000.0, price=100.0, side=BUY}
+MarketOrderInfo{userId='USER#101', size=10001.0, side=SELL} | NULL
+NULL | LimitOrderInfo{userId=101, size=1001.0, price=101.0, side=SELL}
+MarketOrderInfo{userId='USER#102', size=10002.0, side=BUY} | NULL
+NULL | LimitOrderInfo{userId=102, size=1002.0, price=102.0, side=BUY}
+MarketOrderInfo{userId='USER#103', size=10003.0, side=SELL} | NULL
+NULL | LimitOrderInfo{userId=103, size=1003.0, price=103.0, side=SELL}
+MarketOrderInfo{userId='USER#104', size=10004.0, side=BUY} | NULL
+NULL | LimitOrderInfo{userId=104, size=1004.0, price=104.0, side=BUY}
+!END
+Running QQL: select ((order.info as deltix.orders.MarketOrderInfo).executedInfo as deltix.orders.ExecutedMarketOrderInfo).customInfo as res1 from orders
+res1 : 15 [900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914]
+res1 : NULL
+res1 : 15 [903, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915, 916, 917]
+res1 : NULL
+res1 : 15 [906, 907, 908, 909, 910, 911, 912, 913, 914, 915, 916, 917, 918, 919, 920]
+res1 : NULL
+res1 : 15 [909, 910, 911, 912, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923]
+res1 : NULL
+res1 : 15 [912, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923, 924, 925, 926]
+res1 : NULL
+!END
+Running QQL: select ((order.info as deltix.orders.LimitOrderInfo).price + (order.info as deltix.orders.LimitOrderInfo).size) as res1 from orders where order.info is deltix.orders.LimitOrderInfo
+null,CUSTOM,DLTX,2021-01-01 09:00:01.000,RES1:1100.0
+null,CUSTOM,DLTX,2021-01-01 09:00:02.000,RES1:1102.0
+null,CUSTOM,DLTX,2021-01-01 09:00:03.000,RES1:1104.0
+null,CUSTOM,DLTX,2021-01-01 09:00:04.000,RES1:1106.0
+null,CUSTOM,DLTX,2021-01-01 09:00:05.000,RES1:1108.0
+!END

@@ -70,5 +70,3 @@ interface Cache {
     /** Registers recently writtien cache entry as available for reading */
     void update(String pathString, CacheEntry cacheEntry);
 }
-
-

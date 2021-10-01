@@ -16,7 +16,10 @@
  */
 package com.epam.deltix.qsrv.util.json.parser;
 
-import com.epam.deltix.util.collections.generated.*;
+import com.epam.deltix.util.collections.generated.ByteArrayList;
+import com.epam.deltix.util.collections.generated.LongArrayList;
+import com.epam.deltix.util.collections.generated.ObjectArrayList;
+import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import org.apache.commons.io.output.StringBuilderWriter;
 
 import java.util.LinkedList;
@@ -26,9 +29,8 @@ final class JsonPool {
     private final LinkedList<ObjectToObjectHashMap<String, Object>> mapsPool = new LinkedList<>();
     private final LinkedList<LongArrayList> longListsPool = new LinkedList<>();
     private final LinkedList<ObjectArrayList<Object>> objectListsPool = new LinkedList<>();
-    private final LinkedList<BooleanArrayList> booleanListsPool = new LinkedList<>();
     private final LinkedList<StringBuilderWriter> stringBuilderWritersPool = new LinkedList<>();
-    private final LinkedList<DoubleArrayList> doubleListsPool = new LinkedList<>();
+    private final LinkedList<ByteArrayList> byteListsPool = new LinkedList<>();
 
     public ObjectToObjectHashMap<String, Object> getMap() {
         if (mapsPool.isEmpty()) {
@@ -56,30 +58,17 @@ final class JsonPool {
         longListsPool.add(list);
     }
 
-    public DoubleArrayList getDoubleList() {
-        if (doubleListsPool.isEmpty()) {
-            return new DoubleArrayList();
+    public ByteArrayList getByteList() {
+        if (byteListsPool.isEmpty()) {
+            return new ByteArrayList();
         } else {
-            return doubleListsPool.pop();
+            return byteListsPool.pop();
         }
     }
 
-    public void returnToPool(DoubleArrayList list) {
+    public void returnToPool(ByteArrayList list) {
         list.clear();
-        doubleListsPool.add(list);
-    }
-
-    public BooleanArrayList getBooleanList() {
-        if (booleanListsPool.isEmpty()) {
-            return new BooleanArrayList();
-        } else {
-            return booleanListsPool.pop();
-        }
-    }
-
-    public void returnToPool(BooleanArrayList list) {
-        booleanListsPool.clear();
-        booleanListsPool.add(list);
+        byteListsPool.add(list);
     }
 
     public ObjectArrayList<Object> getObjectList() {
@@ -112,9 +101,8 @@ final class JsonPool {
         longListsPool.clear();
         objectListsPool.clear();
         mapsPool.clear();
-        booleanListsPool.clear();
         stringBuilderWritersPool.clear();
-        doubleListsPool.clear();
+        byteListsPool.clear();
     }
 
 }

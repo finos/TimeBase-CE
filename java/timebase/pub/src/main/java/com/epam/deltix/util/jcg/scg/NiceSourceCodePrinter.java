@@ -17,6 +17,7 @@
 package com.epam.deltix.util.jcg.scg;
 
 import java.io.*;
+import java.util.Arrays;
 
 /**
  *
@@ -72,4 +73,12 @@ public abstract class NiceSourceCodePrinter extends SourceCodePrinter {
                 getImportTracker ().getPrintClassName (cn)
         );        
     }        
+
+    public void                     printRefClassName (String className, String[] typeArgs) throws IOException {
+        super.printRefClassName(
+                getImportTracker() == null ? className : getImportTracker().getPrintClassName(className),
+                Arrays.stream(typeArgs).map(arg -> getImportTracker() == null ? arg: getImportTracker().getPrintClassName(arg))
+                        .toArray(String[]::new)
+        );
+    }
 }

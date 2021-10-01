@@ -97,6 +97,10 @@ set channel <key> ...       Set current channels key(s). DB must be open.
 set src <file>              Set source .qsmsg file for subsequent import 
                             and filtering.
 
+set writemode               Set WriteMode for messages import from .qsmsg file.
+                            Available values: [APPEND, REPLACE, REWRITE, TRUNCATE, INSERT]
+                            Default value: REWRITE
+
 truncate <time>            Truncates active streams by given time.
     Example: ==> truncate 2009-01-01 09:30:00.00
 

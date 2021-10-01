@@ -16,7 +16,6 @@
  */
 package com.epam.deltix.qsrv.dtb.store.impl;
 
-import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.dtb.fs.pub.*;
 import com.epam.deltix.qsrv.dtb.store.codecs.*;
 import com.epam.deltix.qsrv.dtb.store.dataacc.*;
@@ -35,7 +34,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
 
 import static com.epam.deltix.qsrv.dtb.store.impl.TreeOps.*;
 import static com.epam.deltix.qsrv.dtb.store.impl.TreeOps.getNextFile;
@@ -45,7 +43,7 @@ import static com.epam.deltix.qsrv.dtb.store.impl.TreeOps.getNextFile;
  */
 final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
-    // LOCK Order: this -> structure lock
+    // LOCK Order: structure lock -> this
 
     private final static int COMPRESSION_RATIO = 3;
 
@@ -159,7 +157,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             try {
                 unuse(this);
             } catch (Exception ex) {
-                LOGGER.warn("Error while formating: %s").with(ex);
+                LOGGER.warn("Error while formatting: %s").with(ex);
                 // ignore
             }
             releaseWriteLock();
@@ -178,12 +176,13 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
     @Override
     public void close() {
-        synchronized (this) {
 
-            assert writing.get() == 0;
+        synchronized (this) {
 
             if (!isOpen)
                 return;
+
+            assert writing.get() == 0;
 
             if (!isActive()) {
                 storeRegistry();
@@ -649,10 +648,9 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             DAPrivate accessor,
             TimeSlice slice
     ) {
-        acquireSharedLock();
-
         TSFile tsf = (TSFile) slice;
 
+        acquireSharedLock();
         try {
             if (tsf.checkedInBy(accessor)) {
                 unuse(tsf);
@@ -764,6 +762,23 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             return (next);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
+        } finally {
+            releaseSharedLock();
+        }
+    }
+
+    boolean     hasNextSlice(TimeSlice current, EntityFilter filter, boolean forward) {
+        TSFile prevTSF = (TSFile) current;
+
+        acquireSharedLock();
+
+        try {
+            TSFile next =
+                    forward ? getNextFile(prevTSF, filter) : getPreviousFile(prevTSF, filter);
+
+            return (next != null);
+        } catch (IOException iox) {
+            return false;
         } finally {
             releaseSharedLock();
         }

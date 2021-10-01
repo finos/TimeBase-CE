@@ -17,6 +17,8 @@
 package com.epam.deltix.qsrv.hf.tickdb.pub.query;
 
 import com.epam.deltix.qsrv.hf.pub.ReadableValue;
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.SelectionOptions;
 import com.epam.deltix.util.lang.Disposable;
 
@@ -30,4 +32,9 @@ public interface PreparedQuery extends Disposable {
         SelectionOptions                    options,
         ReadableValue []                    params
     );
+
+    /*
+     *   Returns schema of the messages returning by this messages source.
+     */
+    ClassSet<RecordClassDescriptor> getSchema();
 }

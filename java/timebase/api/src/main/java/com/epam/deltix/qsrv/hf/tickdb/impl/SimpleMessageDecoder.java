@@ -22,7 +22,6 @@ import com.epam.deltix.qsrv.hf.pub.codec.BoundExternalDecoder;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.util.memory.MemoryDataInput;
-import com.epam.deltix.util.memory.MemoryDataOutput;
 
 public class SimpleMessageDecoder {
 

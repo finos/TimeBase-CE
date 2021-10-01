@@ -1,0 +1,34 @@
+set max 2
+#
+#   symbol as fieldname (fieldname is capitalized)
+#
+test select symbol as fieldname from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,FIELDNAME
+0,2011-01-01 00:00:00,S0,CUSTOM,S0
+1,2011-01-01 00:00:00.001,S1,CUSTOM,S1
+!end
+#
+#   sequence as "field-Name"
+#
+test select sequence as "field-Name" from alltypes
+>_,TIMESTAMP,SYMBOL,TYPE,field-Name
+0,2011-01-01 00:00:00,S0,CUSTOM,0
+1,2011-01-01 00:00:00.001,S1,CUSTOM,0
+!end
+#
+#   Just timestamp
+#
+test select timestamp from alltypes
+!shellmatch
+>_,TIMESTAMP,SYMBOL,TYPE,$TIMESTAMP
+0,2011-01-01 00:00:00,S0,CUSTOM,2011-01-01
+1,2011-01-01 00:00:00.001,S1,CUSTOM,2011-01-01 00:00:00.001
+!end
+#
+# arithmetic expression
+#
+test select 361. / 5 as "divisionResult"
+>_,TIMESTAMP,SYMBOL,TYPE,divisionResult
+>>,,,,72.2
+0,_,,CUSTOM
+!end

@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl;
 
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.schema.migration.SchemaChangeMessageBuilder;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.gflog.api.Log;
@@ -44,14 +45,6 @@ import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.TimeInterval;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
-import com.epam.deltix.qsrv.hf.tickdb.pub.BackgroundProcessInfo;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
-import com.epam.deltix.qsrv.hf.tickdb.pub.LoadingOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.SelectionOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.TickCursor;
-import com.epam.deltix.qsrv.hf.tickdb.pub.TickLoader;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.SchemaChangeTask;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.SchemaUpdateTask;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.StreamChangeTask;
@@ -73,24 +66,20 @@ import com.epam.deltix.util.progress.ExecutionStatus;
 import com.epam.deltix.util.text.SimpleStringCodec;
 import com.epam.deltix.util.time.GMT;
 import com.epam.deltix.util.time.Periodicity;
+import com.epam.deltix.util.time.TimeKeeper;
 import net.jcip.annotations.GuardedBy;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @XmlRootElement(name = "pdstream")
 public class PDStream extends TickStreamImpl {
@@ -116,14 +105,16 @@ public class PDStream extends TickStreamImpl {
     private final ObjectHashSet<DataWriter>     writers = new ObjectHashSet<>();
     private final ObjectHashSet<DataReader>     readers = new ObjectHashSet<>();
 
+    @GuardedBy("this")
+    @Deprecated
     @XmlElement(name = "locations")
-    private final ArrayList<String>             locations = new ArrayList<>();
+    private ArrayList<String>             locations;
 
     protected final ArrayList<TSRoot>           roots = new ArrayList<>();
 
-    private final PDStreamSpaceIndexManager     spaceIndexManager = new PDStreamSpaceIndexManager();
-
-    private final SchemaChangeMessageBuilder    schemaChangeMessageBuilder = new SchemaChangeMessageBuilder();
+    @GuardedBy("roots")
+    @XmlElement(name = "spaces")
+    private ArrayList<SpaceEntry>         spaces;
 
     public PDStream() {
     }
@@ -160,7 +151,6 @@ public class PDStream extends TickStreamImpl {
             throw new IllegalArgumentException("Stream key cannot be null.");
 
         assertWritable();
-
         assertFinal();
 
         if (!Util.xequals (key, getKey())) {
@@ -228,6 +218,7 @@ public class PDStream extends TickStreamImpl {
                 getDBImpl().notifyRemoteStreamRenamed(before, key);
             }
         }
+
         onRename(file.getParentFile(), before);
 
         getDBImpl ().fireRenamed(this, before);
@@ -258,10 +249,8 @@ public class PDStream extends TickStreamImpl {
      * @param nstime time in nanoseconds
      * @param id Instrument Identity to truncate
      */
-    void                     truncateInternal(long nstime, IdentityKey id) {
-        TSRoot[] active = getActiveRoots();
-        for (TSRoot tsr : active)
-            deleteInternal(tsr, nstime, Long.MAX_VALUE, id);
+    void                     truncateInternal(TSRoot root, long nstime, IdentityKey id) {
+        deleteInternal(root, nstime, Long.MAX_VALUE, id);
 
         onStreamTruncated(nstime, id);
     }
@@ -297,15 +286,15 @@ public class PDStream extends TickStreamImpl {
         }
     }
 
-    TSRoot[] getRoots(PDStreamSource.SourceSubscription sub, boolean live, @Nullable String space) {
+    TSRoot[]        getRoots(PDStreamSource.SourceSubscription sub, long nstime, boolean live, @Nullable String space) {
         if (space == null) {
-            return getRoots(sub, live);
+            return getRoots(sub, nstime, live);
         } else {
             return getRootsForSpace(space);
         }
     }
 
-    private TSRoot[] getRootsForSpace(@Nonnull String space) {
+    private TSRoot[]            getRootsForSpace(@Nonnull String space) {
         assertOpen();
 
         TSRoot tsr = getRootBySpaceName(space);
@@ -316,13 +305,12 @@ public class PDStream extends TickStreamImpl {
     @Nonnull
     private TSRoot getRootBySpaceName(@Nonnull String space) {
         TSRoot tsr = getOrCreateRoot(space, false);
-        if (tsr == null) {
-            throw new IllegalArgumentException("Space does not exist");
-        }
+        if (tsr == null)
+            throw new UnknownSpaceException("Space '" + space + "' does not exist in stream [" + getKey() + "]");
         return tsr;
     }
 
-    private TSRoot[] getRoots(PDStreamSource.SourceSubscription sub, boolean live) {
+    private TSRoot[] getRoots(PDStreamSource.SourceSubscription sub, long nstime, boolean live) {
 
         assertOpen();
 
@@ -332,10 +320,22 @@ public class PDStream extends TickStreamImpl {
 
         if (sub.subscribed == null || live) {
             result.addAll(Arrays.asList(active));
+//            if (live) {
+//
+//            } else {
+//                TimeRange out = new TimeRange();
+//                for (int i = 0, activeLength = active.length; i < activeLength; i++) {
+//                    TSRoot tsr = active[i];
+//                    tsr.getTimeRange(out);
+//                    if (nstime <= out.to)
+//                        result.add(tsr);
+//                }
+//            }
         } else if (!sub.isEmpty()) {
             for (IdentityKey id : sub.subscribed) {
 
-                for (TSRoot tsr : active) {
+                for (int i = 0, activeLength = active.length; i < activeLength; i++) {
+                    TSRoot tsr = active[i];
                     if (tsr.getSymbolRegistry().symbolToId(id.getSymbol()) != SymbolRegistry.NO_SUCH_SYMBOL)
                         result.add(tsr);
                 }
@@ -354,15 +354,18 @@ public class PDStream extends TickStreamImpl {
             return this.root;
         }
 
-        if (spot.equals(DEFAULT_SPACE_FOLDER)) {
-            throw new IllegalArgumentException("Space name \"" + DEFAULT_SPACE_FOLDER + "\" is reserved and not permitted");
-        }
+        String key = getKey();
+
+        if (spot.equals(DEFAULT_SPACE_FOLDER))
+            throw new IllegalArgumentException("Stream [" + key + "] space name '" + DEFAULT_SPACE_FOLDER + "' is reserved and not permitted");
 
         try {
             TSRoot selected = null;
+            boolean changed = false;
             // = roots.stream().filter(x -> x.getPath().equals(path)).findFirst().get();
 
             synchronized (roots) {
+
                 for (TSRoot tsr : roots) {
                     String tsrSpace = tsr.getSpace();
                     assert tsrSpace != null;
@@ -374,19 +377,55 @@ public class PDStream extends TickStreamImpl {
 
                 if (selected == null) {
                     if (create) {
-                        AbstractPath parent = root.getPath().getParentPath();
-                        AbstractPath path = root.getFileSystem().createPath(parent, SimpleStringCodec.DEFAULT_INSTANCE.encode(spot));
-                        selected = createRoot(path, spot);
-                        roots.add(selected);
-                        locations.add("\\" + path.getName());
-                        spaceIndexManager.addNew(selected);
+                        String name = SimpleStringCodec.DEFAULT_INSTANCE.encode(spot);
 
-                        setDirty();
+                        AbstractPath parent = root.getPath().getParentPath();
+                        AbstractPath path = root.getFileSystem().createPath(parent, name);
+
+                        // we already had space with this name
+                        if (path.exists()) {
+                            // add day ms
+                            long ns = GMT.getTomorrow().getTime() - TimeKeeper.currentTime;
+
+                            name = SimpleStringCodec.DEFAULT_INSTANCE.encode(ns + "@" + spot);
+                            path = root.getFileSystem().createPath(parent, name);
+
+                            LOGGER.info("Stream [" + key + "] already has path associated with space = (" + spot + "). Assign new name: (" + ns + "@" + spot + ")");
+                        }
+
+                        if (path.exists())
+                            throw new IllegalStateException("Stream [" + key + "] already has path associated with space = (" + spot + "): " + path);
+
+                        selected = createRoot(path, spot);
+
+                        roots.add(selected);
+                        spaces.add(new SpaceEntry(spot, "\\" + path.getName()));
+                        changed = true;
                     } else {
                         return null;
                     }
                 }
             }
+
+//            // lock order: this->roots
+//            if (changed) {
+//                SpaceCreatedMessage msg = new SpaceCreatedMessage();
+//                msg.setSymbol(""); // @SYSTEM
+//                msg.setTimeStampMs(TimeKeeper.currentTime);
+//                msg.setInstrumentType(InstrumentType.SYSTEM);
+//                msg.setName(spot);
+//
+//                addSystemMessage(msg);
+//
+//                setDirty(true);
+//
+//                TickCursor[] cursors = getSnapshotOfOpenCursors();
+//                for (int i = 0; i < cursors.length; i++) {
+//                    TickCursor cursor = cursors[i];
+//                    if (cursor instanceof TickCursorImpl)
+//                        ((TickCursorImpl) cursor).notifySpaceCreated(this, spot);
+//                }
+//            }
 
             return selected;
         } catch (IOException e) {
@@ -424,6 +463,8 @@ public class PDStream extends TickStreamImpl {
             firePropertyChanged(TickStreamProperties.ENTITIES);
         } else {
             IntegerArrayList list = new IntegerArrayList(ids.length);
+            ArrayList<CharSequence> names = new ArrayList<>();
+
             SymbolRegistry sr = root.getSymbolRegistry();
             for (IdentityKey entity : ids) {
                 int id = sr.symbolToId(entity.getSymbol());
@@ -432,6 +473,7 @@ public class PDStream extends TickStreamImpl {
                     continue;
 
                 list.add(id);
+                names.add(entity.getSymbol());
             }
 
             final long[] range = new long[] {from, to};
@@ -440,6 +482,10 @@ public class PDStream extends TickStreamImpl {
             // actual entities is not found in this root
             if (entities.length == 0)
                 return;
+
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Deleting data from [" + getKey() + ", space=" + root.getSpace() +
+                        " using time range [" + GMT.formatNanos(from) + "," + GMT.formatNanos(to) + "; instruments = (" + Arrays.toString(names.toArray()) + ")" );
 
             try (final DataWriter writer = getDBImpl().store.createWriter ()) {
                 writer.associate(root);
@@ -542,13 +588,13 @@ public class PDStream extends TickStreamImpl {
         writer.associate(tsr);
 
         MessageProducer<? extends InstrumentMessage> producer = options.raw ?
-            new RawProducer(getTypes()) :
-            new Producer(getTypes(), options.getTypeLoader(), getCodecFactory(options.channelQOS == ChannelQualityOfService.MIN_INIT_TIME));
+                new RawProducer(getTypes()) :
+                new Producer(getTypes(), options.getTypeLoader(), getCodecFactory(options.channelQOS == ChannelQualityOfService.MIN_INIT_TIME));
 
         return new PDStreamChannel(this, tsr, writer, producer, options);
     }
 
-    public SymbolRegistry                   getSymbols() {
+    public SymbolRegistry                  getSymbols() {
         return root.getSymbolRegistry();
     }
 
@@ -594,7 +640,7 @@ public class PDStream extends TickStreamImpl {
             for (int j = i + 1; j < to.length; ++j) {
                 if (to[i].equals(to[j]))
                     throw new IllegalArgumentException("We can't rename 2 different instruments into one the same " +
-                        "(" + to[i] + ")!");
+                            "(" + to[i] + ")!");
             }
         }
 
@@ -695,6 +741,7 @@ public class PDStream extends TickStreamImpl {
                 else if (range[i] != null)
                     intervals[i] = union(range[i], intervals[i]);
             }
+
         }
 
         return intervals;
@@ -767,8 +814,10 @@ public class PDStream extends TickStreamImpl {
         ArrayList<String> result = new ArrayList<String>();
         result.add(getDataLocation());
 
-        for (String path : locations)
-            result.add(getAbsolutePath(path));
+        if (spaces != null) {
+            for (SpaceEntry e : spaces)
+                result.add(getAbsolutePath(e.path));
+        }
 
         return result.toArray(new String[result.size()]);
     }
@@ -789,22 +838,31 @@ public class PDStream extends TickStreamImpl {
 
             synchronized (roots) {
                 if (root == null)
-                    root = createRoot(getDataLocation(), true);
+                    root = createRoot(getDataLocation(), null);
 
-                Set<String> spaces = !locations.isEmpty() ? new HashSet<>() : null;
-                for (String path : locations) {
-                    TSRoot root = createRoot(getAbsolutePath(path), false);
+                // new version
+                if (spaces == null && locations != null) {
+                    spaces = new ArrayList<>();
+                    for (String path : locations)
+                        spaces.add(new SpaceEntry(getSpaceName(path), path));
+
+                    locations = null;
+                } else if (spaces == null) {
+                    spaces = new ArrayList<>();
+                }
+
+                Set<String> list = !spaces.isEmpty() ? new HashSet<>() : null;
+                for (SpaceEntry se : spaces) {
+                    TSRoot root = createRoot(getAbsolutePath(se.path), se.name);
                     roots.add(root);
 
                     // Ensure there is no conflicting spaces
                     String space = root.getSpace();
-                    if (spaces.contains(space)) {
+                    if (list.contains(space))
                         LOGGER.error("Duplicate locations for space \"%s\" of stream \"%s\"").with(space).with(getKey());
-                    }
-                    spaces.add(space);
-                }
 
-                spaceIndexManager.resetAll(root, roots);
+                    list.add(space);
+                }
             }
 
         } catch (IOException e) {
@@ -812,11 +870,9 @@ public class PDStream extends TickStreamImpl {
         }
     }
 
-    private TSRoot createRoot(String dataLocation, boolean isMainRoot) throws IOException {
+    private TSRoot createRoot(String dataLocation, String space) throws IOException {
         AbstractFileSystem fs = FSFactory.create(dataLocation);
         AbstractPath path = fs.createPath(dataLocation);
-
-        String space = isMainRoot ? null : getSpaceNameFormPath(path);
 
         return createRoot(path, space);
     }
@@ -843,6 +899,24 @@ public class PDStream extends TickStreamImpl {
     @Override
     protected void                  onOpen (boolean verify) throws IOException {
         init();
+
+//        // verify spaces
+//        {
+//            AbstractPath parentPath = root.getPath().getParentPath();
+//            String[] items = parentPath.listFolder();
+//
+//            HashSet<String> cache = new HashSet<String>();
+//
+//            for (SpaceEntry e : spaces)
+//                cache.add(e.path.substring(1));
+//
+//            for (String item : items) {
+//                if (!cache.contains(item)) {
+//                    if (parentPath.append(item).isFolder() && "data".equals(item))
+//                        TickDBImpl.LOG.warn("Space with path: [" + item + "] is not present in stream");
+//                }
+//            }
+//        }
 
         TSRoot[] active = getActiveRoots();
 
@@ -901,7 +975,7 @@ public class PDStream extends TickStreamImpl {
 //                new Consumer(cache, getTypes(), options.getTypeLoader(), getCodecFactory(options.channelQOS == ChannelQualityOfService.MIN_INIT_TIME), options.isRealTimeNotification()));
 //    }
 
-    public PDStreamReader               createReader(TSRoot tsr, long time, SelectionOptions options, final EntityFilter filter) {
+    public PDStreamReader createReader(TSRoot tsr, long time, SelectionOptions options, final EntityFilter filter) {
         assertOpen();
 
         final RegistryCache cache = new RegistryCache(tsr.getSymbolRegistry());
@@ -911,9 +985,10 @@ public class PDStream extends TickStreamImpl {
         readerCreated(reader);
         reader.open (time, !options.reversed, filter);
 
-        return new PDStreamReader(this, tsr, reader, options.raw ?
+        return new PDStreamReader(this, time, tsr, reader, options.raw ?
                 new RawConsumer(cache, getTypes(), options.isRealTimeNotification()) :
-                new Consumer(cache, getTypes(), options.getTypeLoader(), getCodecFactory(options.channelQOS == ChannelQualityOfService.MIN_INIT_TIME), options.isRealTimeNotification()));
+                new Consumer(cache, getTypes(), options.getTypeLoader(),
+                        getCodecFactory(options.channelQOS == ChannelQualityOfService.MIN_INIT_TIME), options.isRealTimeNotification()));
     }
 
 //    @Override
@@ -998,9 +1073,6 @@ public class PDStream extends TickStreamImpl {
 
             transform(copyTask);
         }
-//        else if (task instanceof MapReduceTask) {
-//            transform(task);
-//        }
     }
 
     private void executeSchemaChangeTask(SchemaChangeTask changeTask) {
@@ -1086,9 +1158,6 @@ public class PDStream extends TickStreamImpl {
         } else if (task instanceof StreamCopyTask) {
             transformImpl((StreamCopyTask) task, monitor);
         }
-//        else if (task instanceof MapReduceTask) {
-//            transformImpl((MapReduceTask) task, monitor);
-//        }
     }
 
     private void                        transformImpl(StreamChangeTask task, ExecutionMonitorImpl monitor) {
@@ -1108,8 +1177,6 @@ public class PDStream extends TickStreamImpl {
         if (monitor != null)
             monitor.start();
 
-        SchemaChangeMessage migrationMessage = schemaChangeMessageBuilder.build(change);
-
         if (change.getChangeImpact() == SchemaChange.Impact.None || getTimeRange() == null) {
 
             // just change metadata - we have no changes
@@ -1120,8 +1187,6 @@ public class PDStream extends TickStreamImpl {
 
             firePropertyChanged(TickStreamProperties.SCHEMA);
             onSchemaChanged(false, Long.MIN_VALUE);
-            onSchemaChanged(migrationMessage);
-
         } else {
             HashMap<TSRoot, TSRoot> changes = new HashMap<TSRoot, TSRoot>();
 
@@ -1139,15 +1204,25 @@ public class PDStream extends TickStreamImpl {
                 for (Map.Entry<TSRoot, TSRoot> entry : changes.entrySet()) {
                     TSRoot key = entry.getKey();
                     TSRoot value = entry.getValue();
+
                     if (roots.remove(key)) {
-                        boolean success = locations.remove(getRelativePath(basePathString, key.getPath()));
-                        if (!success) {
+                        Optional<SpaceEntry> se = spaces.stream().filter(x -> x.name.equals(key.getSpace())).findFirst();
+                        if (se.isPresent()) {
+                            spaces.remove(se.get());
+                        }
+                        else {
                             LOGGER.warn("Missing location \"%s\" for PDStream \"%s\" during transformation")
                                     .with(key.getPath().getPathString()).with(getKey());
                         }
 
+//                        //boolean success = locations.remove(getRelativePath(basePathString, key.getPath()));
+//                        if (!success) {
+//
+//                        }
+
                         roots.add(value);
-                        locations.add(getRelativePath(basePathString, value.getPath()));
+                        spaces.add(new SpaceEntry(value.getSpace(), getRelativePath(basePathString, value.getPath())));
+                        //locations.add(getRelativePath(basePathString, value.getPath()));
                     } else if (root.equals(key)) {
                         root = value;
                         setLocation(getRelativePath(basePathString, value.getPath()));
@@ -1156,7 +1231,6 @@ public class PDStream extends TickStreamImpl {
                                 .with(key.getPath().getPathString()).with(getKey());
                     }
                 }
-                spaceIndexManager.resetAll(root, roots);
             }
 
             if (monitor != null && monitor.getStatus() == ExecutionStatus.Aborted)
@@ -1179,7 +1253,6 @@ public class PDStream extends TickStreamImpl {
             }
 
             onSchemaChanged(true, Long.MIN_VALUE);
-            onSchemaChanged(migrationMessage);
 
             // cleanup
             for (TSRoot r : changes.keySet()) {
@@ -1199,7 +1272,7 @@ public class PDStream extends TickStreamImpl {
     }
 
     private TSRoot                        transformImpl(TSRoot root, SchemaChangeTask task,
-                                                      ExecutionMonitorImpl monitor) {
+                                                        ExecutionMonitorImpl monitor) {
 
         long[] range = getTimeRange();
 
@@ -1281,87 +1354,7 @@ public class PDStream extends TickStreamImpl {
         }
     }
 
-//    private void                        transformImpl(MapReduceTask task, ExecutionMonitorImpl monitor) {
-//        monitor.start();
-//
-//        AbstractFileSystem fs = root.getFileSystem();
-//        if (!(Util.unwrap(fs) instanceof DistributedFS))
-//            throw new IllegalStateException("File system " + fs + " is not supported for map/reduce.");
-//
-//        AbstractPath jarPath = null;
-//        try {
-//            task.config.set(MapReduceTask.MAP_CLASS_NAME, task.mapper);
-//            if (task.reducer != null)
-//                task.config.set(MapReduceTask.REDUCE_CLASS_NAME, task.reducer);
-//            if (task.combiner != null)
-//                task.config.set(MapReduceTask.COMBINE_CLASS_NAME, task.combiner);
-//            task.config.set(MapReduceTask.OUTPUT_KEY_CLASS, task.outputKeyClass);
-//            task.config.set(MapReduceTask.OUTPUT_VALUE_CLASS, task.outputValueClass);
-//
-//            if (location != null)
-//                task.config.set(PDSInputFormat.STREAM_ROOT, location);
-//            task.config.set(PDSInputFormat.STREAM_SCHEMA, TDBProtocol.toString(md));
-//
-//            if (task.tickdbUrl != null)
-//                task.config.set(StreamOutputFormat.TICKDB_URL, task.tickdbUrl);
-//            if (task.outputStreamKey != null)
-//                task.config.set(StreamOutputFormat.STREAM_KEY, task.outputStreamKey);
-//
-//            Job job = Job.getInstance(task.config, task.name);
-//            job.setNumReduceTasks(task.reducer == null ? 0 : task.numReduceTasks);
-//            job.setInputFormatClass(PDSInputFormat.class);
-//            job.setOutputFormatClass(StreamOutputFormat.class);
-//
-//            jarPath = fs.createPath("/tmp/deltix/job_" + task.hashCode());
-//            for (String jarName : task.getJarNames()) {
-//                AbstractPath jar = fs.createPath(jarPath, jarName);
-//                try (OutputStream out = jar.openOutput(0)) {
-//                    task.writeJar(jarName, out);
-//                }
-//                if (jarName.equalsIgnoreCase(MapReduceTask.JOB_JAR_NAME))
-//                    job.setJar(jar.getPathString());
-//                job.addFileToClassPath(new org.apache.hadoop.fs.Path(jar.getPathString()));
-//            }
-//
-//            if (task.isBackground()) {
-//                job.submit();
-//                int waitInterval = Job.getCompletionPollInterval(task.config);
-//                while (!job.isComplete()) {
-//                    if (monitor.getStatus() == ExecutionStatus.Aborted)
-//                        return;
-//
-//                    try {
-//                        Thread.sleep((long) waitInterval);
-//                    } catch (InterruptedException e) {
-//                    }
-//                    monitor.setProgress(job.mapProgress()/2.0 + job.reduceProgress()/2.0);
-//                }
-//            } else {
-//                job.waitForCompletion(true);
-//            }
-//
-//            if (!job.isSuccessful())
-//                TickDBImpl.LOG.warn("MapReduce task finished with errors.");
-//
-//            monitor.setComplete();
-//        } catch (Exception e) {
-//            monitor.abort(e);
-//            throw new RuntimeException(e);
-//        } finally {
-//            if (jarPath != null) {
-//                try {
-//                    jarPath.deleteIfExists();
-//                } catch (IOException e) {
-//                    TickDBImpl.LOG.warn("Failed to delete file %s. Error: ").with(jarPath.getPathString()).with(e);
-//                }
-//            }
-//
-//            if (monitor.getStatus() == ExecutionStatus.Running || monitor.getStatus() == ExecutionStatus.None)
-//                monitor.setComplete();
-//        }
-//    }
-
-    private long[] recalculateTimeRange (DXTickStream[] sources){
+       private long[] recalculateTimeRange (DXTickStream[] sources){
         long[] range = null;
 
         for (int i = 0; i < sources.length; i++) {
@@ -1592,6 +1585,8 @@ public class PDStream extends TickStreamImpl {
 
         abortBackgroundProcess();
 
+        LOGGER.info("Delete stream [" + getKey() + "]");
+
         if (deleteFiles) {
             // Delete data files
             TSRoot[] active = getActiveRoots();
@@ -1681,7 +1676,7 @@ public class PDStream extends TickStreamImpl {
         try {
             if (changeSet.contains(TickStreamPropertiesEnum.LOCATION)) {
                 setLocation(loadedStream.getDataLocation());
-                updateLocationsFromRemote(loadedStream.getDataLocation(), loadedStream.locations);
+                updateLocationsFromRemote(loadedStream.getDataLocation(), loadedStream.spaces);
                 // TODO: Notify clients?
             }
 
@@ -1709,7 +1704,7 @@ public class PDStream extends TickStreamImpl {
     }
 
     // TODO: Check if implemented correctly
-    private void updateLocationsFromRemote(String dataLocation, List<String> newLocations) {
+    private void updateLocationsFromRemote(String dataLocation, List<SpaceEntry> newLocations) {
         AbstractFileSystem fs;
         try {
             fs = FSFactory.create(dataLocation);
@@ -1723,19 +1718,19 @@ public class PDStream extends TickStreamImpl {
         setLocation(dataLocation);
 
         roots.clear();
-        locations.clear();
-        for (String location : newLocations) {
+        spaces.clear();
+
+        for (SpaceEntry se : newLocations) {
             AbstractPath newPath = fs.createPath(dataLocation);
-            TSRoot root = getDBImpl().store.createRoot(getSpaceNameFormPath(newPath), newPath);
+            TSRoot root = getDBImpl().store.createRoot(getSpaceName(newPath), newPath);
             root.open(isReadOnly);
             roots.add(root);
-            locations.add(location);
+            spaces.add(new SpaceEntry(se.name, se.path));
         }
-        spaceIndexManager.resetAll(root, roots);
     }
 
     @Override
-    public String[] listSpaces() {
+    public String[]             listSpaces() {
         TSRoot[] roots = getActiveRoots();
 
         String[] results = new String[roots.length];
@@ -1754,8 +1749,91 @@ public class PDStream extends TickStreamImpl {
         return results;
     }
 
-    private String getSpaceNameFormPath(AbstractPath abstractPath) {
-        String folderName = abstractPath.getName();
+    @Override
+    public void             deleteSpaces(String ... names) {
+        HashSet<String> set = new HashSet<String>(Arrays.asList(names));
+        ArrayList<TSRoot> deleted = new ArrayList<>();
+
+        synchronized (roots) {
+            for (int i = roots.size() - 1; i >= 0; i--) {
+                TSRoot tsr = roots.get(i);
+
+                if (set.contains(tsr.getSpace())) {
+                    deleted.add(tsr);
+
+                    // remove from collections
+                    roots.remove(i);
+                    Optional<SpaceEntry> se = spaces.stream().filter(x -> x.name.equals(tsr.getSpace())).findFirst();
+                    assert se.isPresent();
+                    se.ifPresent(e -> spaces.remove(e));
+                }
+            }
+        }
+        long time = TimeKeeper.currentTime;
+
+        // delete roots outside of lock
+        for (TSRoot r : deleted) {
+            String space = r.getSpace();
+            r.delete();
+
+            LOGGER.info("Stream [" + getKey() + "]: space [" + space + "] deleted.");
+
+//            if (versioning) {
+//                SpaceDeletedMessage msg = new SpaceDeletedMessage();
+//                msg.setSymbol(""); // @SYSTEM
+//                msg.setTimeStampMs(time);
+//                msg.setInstrumentType(InstrumentType.SYSTEM);
+//                msg.setName(space);
+//                addSystemMessage(msg);
+//            }
+        }
+
+        setDirty(true);
+    }
+
+    @Override
+    public void             renameSpace(String newName, String oldName) {
+        String key = getKey();
+
+        synchronized (roots) {
+            TSRoot old = getOrCreateRoot(oldName, false);
+
+            if (old == null)
+                throw new UnknownSpaceException("Space '" + oldName + "' does not exist in the stream [" + key + "]");
+
+            TSRoot newSpace = getOrCreateRoot(newName, false);
+
+            if (newSpace != null)
+                throw new IllegalStateException("Space '" + newName + "' already exist in the stream [" + key + "]");
+
+            old.setSpace(newName);
+
+            Optional<SpaceEntry> se = spaces.stream().filter(x -> x.name.equals(oldName)).findFirst();
+            se.ifPresent(spaceEntry -> spaceEntry.name = newName);
+        }
+
+//        if (versioning) {
+//            SpaceRenamedMessage msg = new SpaceRenamedMessage();
+//            msg.setSymbol(""); // @SYSTEM
+//            msg.setTimeStampMs(TimeKeeper.currentTime);
+//            msg.setInstrumentType(InstrumentType.SYSTEM);
+//            msg.setName(oldName);
+//            msg.setNewName(newName);
+//            addSystemMessage(msg);
+//        }
+
+        setDirty(true);
+
+        LOGGER.info("Stream [" + key + "]: Renamed space [" + oldName + "] to [" + newName + "]");
+    }
+
+    private String getSpaceName(String location) throws IOException  {
+        AbstractFileSystem fs = FSFactory.create(location);
+        return getSpaceName(fs.createPath(location));
+    }
+
+    private String getSpaceName(AbstractPath path) {
+        String folderName = path.getName();
 
         try {
             return SimpleStringCodec.DEFAULT_INSTANCE.decode(folderName);
@@ -1785,12 +1863,21 @@ public class PDStream extends TickStreamImpl {
     }
 
     @Override
-    public long[] getTimeRange(String space) {
+    public long[]           getTimeRange(String space) {
         TSRoot tsr = getRootBySpaceName(space);
 
         TimeRange out = new TimeRange();
         tsr.getTimeRange(out);
 
         return out.isUndefined() ? null : new long[]{TimeStamp.getMilliseconds(out.from), TimeStamp.getMilliseconds(out.to)};
+    }
+
+    protected void saveToOutputStream(OutputStream out) throws IOException, JAXBException {
+        OutputStream bout = createBufferedOutput(out);
+
+        // lock order: this->roots (spaces)
+        synchronized (roots) {
+            IOUtil.marshall(TickDBJAXBContext.createMarshaller(), bout, this);
+        }
     }
 }

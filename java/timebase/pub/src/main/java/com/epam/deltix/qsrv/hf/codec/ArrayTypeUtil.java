@@ -44,6 +44,7 @@ public abstract class ArrayTypeUtil {
             LongList.class,
             FloatArrayList.class,
             DoubleArrayList.class,
+            ObjectArrayList.class,
             ObjectArrayList.class
     };
 
@@ -62,6 +63,7 @@ public abstract class ArrayTypeUtil {
             long.class,
             float.class,
             double.class,
+            CharSequence.class,
             Object.class
     };
 
@@ -80,6 +82,7 @@ public abstract class ArrayTypeUtil {
             "Long",
             "Float",
             "Double",
+            "CharSequence",
             "Object"
     };
 

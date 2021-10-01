@@ -39,6 +39,11 @@ final class MemberVariableImpl
         this.containerClass = containerClass;
     }
 
+    MemberVariableImpl (ClassImpl containerClass, int modifiers, String type, String[] typeArgs, String name) {
+        super (containerClass.context, modifiers, type, typeArgs, name);
+        this.containerClass = containerClass;
+    }
+
     @Override
     public JClass           containerClass () {
         return (containerClass);

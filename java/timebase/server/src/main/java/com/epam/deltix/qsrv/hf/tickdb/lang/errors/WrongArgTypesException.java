@@ -48,4 +48,12 @@ public class WrongArgTypesException extends CompilationException {
     public WrongArgTypesException (CallExpression e, DataType [] types) {
         super (diag (e.name, types), e);
     }
+
+    public WrongArgTypesException (CallExpressionWithDict e, DataType [] types) {
+        super (diag (e.getName(), types), e);
+    }
+
+    public WrongArgTypesException (CallExpressionWithInit e, DataType [] types) {
+        super (diag (e.getName(), types), e);
+    }
 }

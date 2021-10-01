@@ -47,47 +47,45 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement (name = "queue")
 public final class TransientStreamImpl
     extends TickStreamImpl
-    implements SingleChannelStream
-{
-    @XmlElement (name = "bufferOptions")
-    private final BufferOptions         bufferOptions;
-    private TransientMessageQueue       queue;
-    private final QuickExecutor         executor;
+    implements SingleChannelStream {
+    @XmlElement(name = "bufferOptions")
+    private final BufferOptions bufferOptions;
+    private TransientMessageQueue queue;
+    private final QuickExecutor executor;
 
     private final SchemaChangeMessageBuilder schemaChangeMessageBuilder = new SchemaChangeMessageBuilder();
 
     @SuppressWarnings("unused")
-    private TransientStreamImpl () {
+    private TransientStreamImpl() {
         // Used by JAXB
         bufferOptions = null;
         executor = null;
     }
 
     @Override
-    public QuickExecutor    getQuickExecutor() {
+    public QuickExecutor getQuickExecutor() {
         return executor != null ? executor : getDBImpl().getQuickExecutor();
     }
 
-    public TransientStreamImpl (StreamOptions options, QuickExecutor executor) {
-        super (null, null, options);
+    public TransientStreamImpl(StreamOptions options, QuickExecutor executor) {
+        super(null, null, options);
 
         this.executor = executor;
         bufferOptions = options.bufferOptions == null ?
-                        new BufferOptions () :
-                        options.bufferOptions;
+                new BufferOptions() :
+                options.bufferOptions;
     }
 
-    public TransientStreamImpl (
-        DXTickDB            db,
-        String              key,
-        StreamOptions       options
-    )
-    {
-        super (db, key, options);
+    public TransientStreamImpl(
+            DXTickDB db,
+            String key,
+            StreamOptions options
+    ) {
+        super(db, key, options);
 
         this.executor = getDBImpl().getQuickExecutor();
         bufferOptions = options.bufferOptions == null ?
-                new BufferOptions () :
+                new BufferOptions() :
                 options.bufferOptions;
     }
 
@@ -100,12 +98,12 @@ public final class TransientStreamImpl
     //  TickStreamImpl implementation
     //
     @Override
-    protected void                  onOpen (boolean verify) {
-        queue = MessageQueue.forStream (this);
+    protected void onOpen(boolean verify) {
+        queue = MessageQueue.forStream(this);
     }
 
     @Override
-    public synchronized void            execute(TransformationTask task) {
+    public synchronized void execute(TransformationTask task) {
         if (task instanceof StreamChangeTask) {
             StreamChangeTask changeTask = (StreamChangeTask) task;
             setName(changeTask.name);
@@ -128,7 +126,7 @@ public final class TransientStreamImpl
 
             onSchemaChanged(false, Long.MIN_VALUE);
             onSchemaChanged(migrationMessage);
-            
+
             // re-create queue with new schema
             queue.close();
             onOpen(false);
@@ -137,19 +135,18 @@ public final class TransientStreamImpl
         }
     }
 
-    public int                      getDistributionFactor () {
+    public int getDistributionFactor() {
         return (1);
     }
 
-    public TickReader               createSource (
-        long                            time,
-        SelectionOptions                options,
-        QuickMessageFilter              filter
-    )
-    {
-        QueueMessageReader rawReader = options.live ? queue.getMessageReader(filter, isPolymorphic (), options.realTimeNotification) : new EmptyReader<>(this);
+    public TickReader createSource(
+            long time,
+            SelectionOptions options,
+            QuickMessageFilter filter
+    ) {
+        QueueMessageReader rawReader = options.live ? queue.getMessageReader(filter, isPolymorphic(), options.realTimeNotification) : new EmptyReader<>(this);
 
-        return (new TickReader (null, MessageCodec.createDecoder(getTypes(), options), rawReader, time, options));
+        return (new TickReader(null, MessageCodec.createDecoder(getTypes(), options), rawReader, time, options));
     }
 
     @Override
@@ -168,19 +165,19 @@ public final class TransientStreamImpl
     }
 
     @Override
-    protected void                  onDelete() {
+    protected void onDelete() {
         queue.close();
     }
 
     @Override
-    protected void                  onMetaDataUpdated() {
+    protected void onMetaDataUpdated() {
         super.onMetaDataUpdated();
-        
+
         onOpen(false);
     }
 
     @Override
-    public StreamOptions            getStreamOptions() {
+    public StreamOptions getStreamOptions() {
         StreamOptions options = super.getStreamOptions();
 
         if (bufferOptions != null) {
@@ -194,10 +191,10 @@ public final class TransientStreamImpl
         return options;
     }
 
-    public final synchronized MessageEncoder <InstrumentMessage>   createEncoder(RecordClassDescriptor rcd) {
-        
+    public final synchronized MessageEncoder<InstrumentMessage> createEncoder(RecordClassDescriptor rcd) {
+
         if (isPolymorphic()) {
-            RecordClassDescriptor[] rcds = getPolymorphicDescriptors ();
+            RecordClassDescriptor[] rcds = getPolymorphicDescriptors();
             assert rcds != null;
             boolean found = false;
 
@@ -209,7 +206,7 @@ public final class TransientStreamImpl
             }
 
             return found ?
-                    new SimpleBoundEncoder(getCodecFactory (true),  TypeLoaderImpl.DEFAULT_INSTANCE, rcds) :
+                    new SimpleBoundEncoder(getCodecFactory(true), TypeLoaderImpl.DEFAULT_INSTANCE, rcds) :
                     null;
         }
 
@@ -224,31 +221,45 @@ public final class TransientStreamImpl
     //
     //   Additional implementation
     //
-    public BufferOptions            getBufferOptions () {
+    public BufferOptions getBufferOptions() {
         return bufferOptions;
     }
 
     @Override
-    @SuppressWarnings ("unchecked")
-    MessageChannel <InstrumentMessage>          createChannel (
-        InstrumentMessage                           msg,
-        LoadingOptions                              options
-    )
-    {
+    @SuppressWarnings("unchecked")
+    MessageChannel<InstrumentMessage> createChannel(
+            InstrumentMessage msg,
+            LoadingOptions options
+    ) {
         MessageEncoder<InstrumentMessage> encoder;
         if (options.raw)
-             encoder = new SimpleRawEncoder(getTypes());
+            encoder = new SimpleRawEncoder(getTypes());
         else
             encoder = new SimpleBoundEncoder(
-                getCodecFactory (options.channelQOS == ChannelQualityOfService.MIN_INIT_TIME),
-                options.getTypeLoader(),
-                getTypes());
+                    getCodecFactory(options.channelQOS == ChannelQualityOfService.MIN_INIT_TIME),
+                    options.getTypeLoader(),
+                    getTypes());
 
-        return (queue.getWriter (encoder));
+        return (queue.getWriter(encoder));
     }
 
     @Override
     public void truncate(long time, IdentityKey... ids) {
+        notSupported();
+    }
+
+
+    @Override
+    public void deleteSpaces(String... names) {
+        notSupported();
+    }
+
+    @Override
+    public void renameSpace(String newName, String oldName) {
+        notSupported();
+    }
+
+    private void notSupported() {
         throw new UnsupportedOperationException("Not supported for TRANSIENT streams");
     }
 

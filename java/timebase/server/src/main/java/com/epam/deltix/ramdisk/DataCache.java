@@ -27,6 +27,7 @@ import java.util.PriorityQueue;
 import java.util.logging.Level;
 
 import static com.epam.deltix.ramdisk.RAMDisk.Properties;
+import static com.epam.deltix.ramdisk.RAMDisk.LOGGER;
 
 /**
  *
@@ -78,6 +79,8 @@ final class DataCache {
             page.mappedToFree();
             free.linkLast(page);
         }
+
+        LOGGER.log(Level.INFO, String.format("Initializing Data Cache [PageSize = %,d bytes; Pages = %s; MaxFileLength = %,d MB]", PAGE_SIZE, numPages, MAX_FILE_LENGTH / MB));
     }
 
     void                        setHandler(NotificationHandler handler) {

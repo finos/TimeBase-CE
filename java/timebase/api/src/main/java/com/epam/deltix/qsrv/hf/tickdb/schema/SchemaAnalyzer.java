@@ -287,11 +287,12 @@ public class SchemaAnalyzer {
                 Arrays.asList(source.getDescriptors()) :
                 new ArrayList<>();
         List<RecordClassDescriptor> outList = Arrays.asList(target.getDescriptors());
+        RecordClassSet outSet = new RecordClassSet(target.getDescriptors());
 
         for (int i = 0; i < inList.size(); i++) {
             RecordClassDescriptor rcd = inList.get(i);
 
-            RecordClassDescriptor found = (RecordClassDescriptor) mapping.findClassDescriptor(rcd, meta.target, true);
+            RecordClassDescriptor found = (RecordClassDescriptor) mapping.findClassDescriptor(rcd, outSet, false);
 
             if (found != null) {
                 ClassDescriptorChange change = getChanges(meta, rcd, found);
@@ -311,7 +312,9 @@ public class SchemaAnalyzer {
                     }
                 }
             } else {
-                meta.changes.add(new ClassDescriptorChange(rcd, null));
+                ClassDescriptorChange change = new ClassDescriptorChange(rcd, null);
+                change.setImpact(SchemaChange.Impact.DataLoss);
+                meta.changes.add(change);
             }
         }
     }

@@ -259,6 +259,15 @@ public class CSharpSrcGenContext extends JContextImpl {
     }
 
     @Override
+    protected void printType(String type, String[] typeArgs, SourceCodePrinter out) throws IOException {
+        if (typeArgs == null) {
+            printType(type, out);
+            return;
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     int                     refineModifiersForLocalVarDecl (int mods) {
         return (MODIFIER_LOCAL_VAR);
     }
@@ -268,4 +277,3 @@ public class CSharpSrcGenContext extends JContextImpl {
         return (MODIFIER_LOCAL_VAR);
     }
 }
-

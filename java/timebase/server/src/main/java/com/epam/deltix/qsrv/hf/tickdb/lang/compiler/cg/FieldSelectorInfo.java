@@ -17,11 +17,13 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
 import com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.FieldAccessor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.FieldSelector;
 
 class FieldSelectorInfo {
     final NonStaticDataField        field;
     FieldSelector                   fieldSelector = null;
+    FieldAccessor                   fieldAccessor = null;
     boolean                         usedAsBase = false;
     FieldSelectorInfo               relativeTo = null;
     QType                           qtype = null;

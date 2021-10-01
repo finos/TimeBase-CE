@@ -19,7 +19,7 @@ package com.epam.deltix.qsrv.hf.tickdb.pub;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 
 /**
- * A superclass for all exceptions, which might occur as a result of message loading ({@link deltix.data.stream.MessageChannel#send MessageChannel.send})
+ * A superclass for all exceptions, which might occur as a result of message loading ({@link com.epam.deltix.data.stream.MessageChannel#send MessageChannel.send})
  */
 public class LoadingMessageException extends LoadingError {
     protected final String symbol;

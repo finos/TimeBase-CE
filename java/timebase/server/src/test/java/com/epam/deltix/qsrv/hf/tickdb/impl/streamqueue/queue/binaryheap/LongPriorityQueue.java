@@ -291,4 +291,3 @@ public final class LongPriorityQueue {
         return (min);
     }
 }
-

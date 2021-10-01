@@ -16,11 +16,24 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem;
 
-import com.epam.deltix.qsrv.hf.pub.md.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
-import java.util.*;
+import com.epam.deltix.qsrv.hf.pub.md.ArrayDataType;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDataType;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.DataField;
+import com.epam.deltix.qsrv.hf.pub.md.EnumClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.FieldIdentifier;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.NamedObjectType;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TypeIdentifier;
 
-import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.lookUpField;
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.lookUpType;
 
 /**
  *
@@ -88,6 +101,10 @@ public final class ClassMap {
         return ((ClassInfo) lookUpType (typeEnv, typeId));
     }
 
+    public ClassInfo                            lookUpClass (String typeName) {
+        return ((ClassInfo) lookUpType (typeEnv, typeName));
+    }
+
     public void                                 register (ClassDescriptor cd) {
         if (cd instanceof RecordClassDescriptor)
             registerClass ((RecordClassDescriptor) cd);
@@ -112,23 +129,48 @@ public final class ClassMap {
     }
     
     public RecordClassInfo                      registerClass (RecordClassDescriptor rcd) {
-        RecordClassInfo         ci = (RecordClassInfo) infoMap.get (rcd);
+        RecordClassInfo ci = (RecordClassInfo) infoMap.get(rcd);
 
         if (ci != null)
             return (ci);
 
-        RecordClassDescriptor   parentRCD = rcd.getParent ();
-        RecordClassInfo         pci = parentRCD == null ? null : registerClass (parentRCD);
+        RecordClassDescriptor parentRCD = rcd.getParent();
+        RecordClassInfo pci = parentRCD == null ? null : registerClass(parentRCD);
 
-        ci = new RecordClassInfo (pci, rcd);
+        ci = new RecordClassInfo(pci, rcd);
 
         if (pci != null)
-            pci.directSubclasses.add (ci);
+            pci.directSubclasses.add(ci);
 
-        typeEnv.bind (NamedObjectType.TYPE, rcd.getName (), ci);
-        infoMap.put (rcd, ci);
+        typeEnv.bind(NamedObjectType.TYPE, rcd.getName(), ci);
+        String shortName = shortName(rcd.getName());
+        if (shortName != null) {
+            typeEnv.bind(NamedObjectType.TYPE, shortName, ci);
+        }
+        infoMap.put(rcd, ci);
+
+        for (DataField field : rcd.getFields()) {
+            if (field.getType() instanceof ClassDataType) {
+                for (RecordClassDescriptor descriptor : ((ClassDataType) field.getType()).getDescriptors()) {
+                    registerClass(descriptor);
+                }
+            } else if (field.getType() instanceof ArrayDataType
+                    && ((ArrayDataType) field.getType()).getElementDataType() instanceof ClassDataType) {
+                for (RecordClassDescriptor descriptor : ((ClassDataType) ((ArrayDataType) field.getType())
+                        .getElementDataType()).getDescriptors()) {
+                    registerClass(descriptor);
+                }
+            }
+        }
 
         return (ci);
+    }
+
+    private static String shortName(String name) {
+        if (name == null)
+            return null;
+        int i = name.lastIndexOf(".");
+        return i == -1 || i == name.length() ? null: name.substring(i + 1);
     }
     
     public Set <RecordClassInfo>                getDirectSubclasses (RecordClassDescriptor rcd) {

@@ -29,7 +29,6 @@ import com.epam.deltix.util.lang.Util;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.logging.Level;
 
 public class TBServerCmd extends DefaultApplication {
 
@@ -40,7 +39,7 @@ public class TBServerCmd extends DefaultApplication {
     //protected static final Logger LOGGER = Logger.getLogger("deltix.util.tomcat");
 
     // SEVERE level serves as trigger and failure identifier in many notification frameworks, so set STARTUP level below it
-    public static final Level LEVEL_STARTUP = new Level("STARTUP", Level.SEVERE.intValue() - 10) { };
+    //public static final Level LEVEL_STARTUP = new Level("STARTUP", Level.SEVERE.intValue() - 10) { };
 
     public final TomcatRunner runner;
 
@@ -130,16 +129,10 @@ public class TBServerCmd extends DefaultApplication {
 
             if (config.tb != null)
                 targetConfig = config.tb;
-            else if (config.agg != null)
-                targetConfig = config.agg;
-            else if (config.es != null)
-                targetConfig = config.es;
         }
 
         if (config.tb == targetConfig)
             return config.tb.getLong("memorySize.3", defaultMaxMemory);
-        if (config.agg == targetConfig || config.es == targetConfig)
-            return targetConfig.getLong("memorySize.2", defaultMaxMemory);
 
         return targetConfig.getLong("maxMemory", defaultMaxMemory);
     }

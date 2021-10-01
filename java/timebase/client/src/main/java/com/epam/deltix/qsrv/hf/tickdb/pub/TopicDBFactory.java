@@ -32,7 +32,7 @@ public class TopicDBFactory {
 
 
     /**
-     * Wraps provided DB instance to support {@link deltix.qsrv.hf.tickdb.pub.topic.TopicDB}.
+     * Wraps provided DB instance to support {@link com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDB}.
      * @param delegate backing instance for all functionality except topics
      * @return wrapped instance that supports topics
      */

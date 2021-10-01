@@ -30,14 +30,21 @@ public class CompileExceptionResolver extends DefaultExceptionResolver {
     }
 
     @Override
-    public Throwable create(Class<?> clazz, String message, Throwable cause) {
+    public Throwable create(String className, String message, Throwable cause) {
+
+        Class<?> clazz;
+        try {
+            clazz = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException(e);
+        }
 
         if (CompilationException.class.isAssignableFrom(clazz)) {
             Constructor<?> c = null;
             try {
                 c = clazz.getConstructor(String.class, long.class);
             } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
+                throw new IllegalArgumentException(e);
             }
 
             Throwable x;
@@ -45,12 +52,12 @@ public class CompileExceptionResolver extends DefaultExceptionResolver {
                x = (Throwable) c.newInstance(message, errorLocation);
 
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                throw new RuntimeException(e);
+                throw new IllegalArgumentException(e);
             }
 
             return x;
         }
 
-        return super.create(clazz, message, cause);
+        return super.create(className, message, cause);
     }
 }

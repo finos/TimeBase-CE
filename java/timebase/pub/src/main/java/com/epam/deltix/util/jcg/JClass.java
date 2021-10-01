@@ -85,6 +85,15 @@ public interface JClass extends JMember, JType, JVariableContainer, JAnnotationC
         boolean                 nullable
     );
 
+    public JInitMemberVariable  addVar(
+            int                     modifiers,
+            JType                   type,
+            JType[]                 typeArgs,
+            String                  name,
+            JExpr                   initValue,
+            boolean                 nullable
+    );
+
     public JInitMemberVariable  addVar (
         int                     modifiers,
         Class <?>               type,

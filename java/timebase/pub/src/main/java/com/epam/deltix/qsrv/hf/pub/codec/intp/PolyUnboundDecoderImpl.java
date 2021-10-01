@@ -112,6 +112,16 @@ public class PolyUnboundDecoderImpl implements UnboundDecoder {
         return currentDecoder.getChar();
     }
 
+    @Override
+    public byte getByte() throws NullValueException {
+        return currentDecoder.getByte();
+    }
+
+    @Override
+    public short getShort() throws NullValueException {
+        return currentDecoder.getShort();
+    }
+
     public boolean              getBoolean () {
         return currentDecoder.getBoolean ();
     }

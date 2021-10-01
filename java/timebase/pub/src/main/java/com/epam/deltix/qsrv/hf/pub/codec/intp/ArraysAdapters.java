@@ -65,7 +65,7 @@ class ArraysAdapters {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> ArrayAdapter<T> createDecodeAdapter(Class<?> cls, FieldDecoder fieldDecoder, boolean isEnum) {
+    public static <T> ArrayAdapter<T> createDecodeAdapter(Class<?> cls, FieldDecoder fieldDecoder, boolean isEnum, boolean isUTF8) {
         if (isEnum) {
             if (ByteArrayList.class == cls)
                 return (ArrayAdapter<T>) new ByteEnumArrayAdapter(fieldDecoder);
@@ -97,14 +97,14 @@ class ArraysAdapters {
             else if (DoubleArrayList.class == cls)
                 return (ArrayAdapter<T>) new DoubleArrayAdapter(fieldDecoder);
             else if (ObjectArrayList.class == cls)
-                return (ArrayAdapter<T>) new ObjectArrayAdapter(fieldDecoder);
+                return (ArrayAdapter<T>) (isUTF8 ? new CharSequenceArrayAdapter(fieldDecoder): new ObjectArrayAdapter(fieldDecoder));
             else
                 throw new IllegalArgumentException("unexpected class: " + cls.getName());
         }
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> ArrayAdapter<T> createEncodeAdapter(Class<?> cls, FieldEncoder fieldEncoder, boolean isEnum) {
+    public static <T> ArrayAdapter<T> createEncodeAdapter(Class<?> cls, FieldEncoder fieldEncoder, boolean isEnum, boolean isUTF8) {
         if (isEnum) {
             if (ByteArrayList.class == cls)
                 return (ArrayAdapter<T>) new ByteEnumArrayAdapter(fieldEncoder);
@@ -136,7 +136,7 @@ class ArraysAdapters {
             else if (DoubleArrayList.class == cls)
                 return (ArrayAdapter<T>) new DoubleArrayAdapter(fieldEncoder);
             else if (ObjectArrayList.class == cls)
-                return (ArrayAdapter<T>) new ObjectArrayAdapter(fieldEncoder);
+                return (ArrayAdapter<T>) (isUTF8 ? new CharSequenceArrayAdapter(fieldEncoder): new ObjectArrayAdapter(fieldEncoder));
             else
                 throw new IllegalArgumentException("unexpected class: " + cls.getName());
         }
@@ -662,6 +662,49 @@ class ArraysAdapters {
             a = (LongArrayList) ctx.manager.use(LongArrayList.class, size);
             a.setSize(size);
             return a;
+        }
+    }
+
+    private static class CharSequenceArrayAdapter extends ArrayAdapter<CharSequence> {
+
+        private ObjectArrayList<CharSequence> a;
+
+        public CharSequenceArrayAdapter(FieldDecoder fieldDecoder) {
+            super(fieldDecoder);
+        }
+
+        public CharSequenceArrayAdapter(FieldEncoder fieldEncoder) {
+            super(fieldEncoder);
+        }
+
+        @Override
+        void decode(int idx, DecodingContext ctxt) {
+            assert fieldDecoder != null;
+            final CharSequence v = ((StringFieldDecoder) fieldDecoder).getStringBuilder(ctxt);
+            assert fieldDecoder.isNullable || v != null : getNotNullableMsg();
+            a.set(idx, v);
+        }
+
+        @Override
+        void encode(AbstractList<CharSequence> array, int idx, EncodingContext ctxt) {
+            assert array != null;
+            if (a != array)
+                a = (ObjectArrayList<CharSequence>) array;
+
+            assert fieldEncoder != null;
+            fieldEncoder.setString(a.get(idx), ctxt);
+        }
+
+        @Override
+        AbstractList<CharSequence> initArray(int size, DecodingContext ctxt) {
+            a = ctxt.manager.useCharSequenceList();
+            a.setSize(size);
+            return a;
+        }
+
+        @Override
+        void setNullElement(int idx) {
+            a.set(idx, null);
         }
     }
 

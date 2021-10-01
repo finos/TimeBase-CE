@@ -4,6 +4,7 @@ import java_cup.runtime.*;
 import com.epam.deltix.util.parsers.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
+import com.epam.deltix.qsrv.hf.pub.md.CharDataType;
 
 /**
  * QQL 5.0 Lexer.
@@ -49,6 +50,29 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
         
         return new Symbol (symtype, start, n + yylength (), string.toString ());
     }
+
+    private static char parseChar(String s) {
+        switch (s) {
+            case "\\\\":
+                return '\\';
+            case "\\\"":
+                return '"';
+            case "\\'":
+                return '\'';
+            case "\\t":
+                return '\t';
+            case "\\b":
+                return '\b';
+            case "\\r":
+                return '\r';
+            case "\\f":
+                return '\f';
+            case "\\n":
+                return '\n';
+            default:
+                return CharDataType.staticParse(s);
+        }
+    }
 %}
 
 LineTerminator =                    \r|\n|\r\n
@@ -66,8 +90,15 @@ UnescapedIdentifier =               [:jletter:] [:jletterdigit:]*
 
 UnsignedInteger =                   0 | [1-9][0-9]*
 
+UnsignedLong =                      {UnsignedInteger}L
+
 FloatingPointLiteral =              {UnsignedInteger} "." [0-9]* ( e [+-]? {UnsignedInteger} )?
 
+DoubleLiteral =                     {FloatingPointLiteral} f
+
+TimeInterval =                      ([0-9]+d([0-9]+h)?([0-9]+m)?([0-9]+s)?([0-9]+ms)?([0-9]+ns)?) | ([0-9]+h([0-9]+m)?([0-9]+s)?([0-9]+ms)?([0-9]+ns)?) | ([0-9]+m([0-9]+s)?([0-9]+ms)?([0-9]+ns)?) | ([0-9]+s([0-9]+ms)?([0-9]+ns)?) | ([0-9]+ms([0-9]+ns)?) | [0-9]+ns
+
+CharLiteral =                       \'(([^\n\r\'\\]) | (\\\') | (\\\") | (\\\\) | (\\t) | (\\b) | (\\r) | (\\f) | (\\n))\'c
 
 %state STRING
 %state ESCID
@@ -97,7 +128,6 @@ FloatingPointLiteral =              {UnsignedInteger} "." [0-9]* ( e [+-]? {Unsi
     "by"                            { return symbol (Symbols.BY); }
     "between"                       { return symbol (Symbols.BETWEEN); }
     "running"                       { return symbol (Symbols.RUNNING); }
-    "as"                            { return symbol (Symbols.AS); }
     "create"                        { return symbol (Symbols.CREATE); }
     "stream"                        { return symbol (Symbols.STREAM); }
     "options"                       { return symbol (Symbols.OPTIONS); }
@@ -119,6 +149,17 @@ FloatingPointLiteral =              {UnsignedInteger} "." [0-9]* ( e [+-]? {Unsi
     "modify"                        { return symbol (Symbols.MODIFY); }
     "default"                       { return symbol (Symbols.DEFAULT); }
     "confirm"                       { return symbol (Symbols.CONFIRM); }
+    "join"                          { return symbol (Symbols.JOIN); }
+    "left"                          { return symbol (Symbols.LEFT); }
+    "tags"                          { return symbol (Symbols.TAGS); }
+    "trigger"                       { return symbol (Symbols.TRIGGER); }
+    "reset"                         { return symbol (Symbols.RESET); }
+    "over"                          { return symbol (Symbols.OVER); }
+    "every"                         { return symbol (Symbols.EVERY); }
+    "type"                          { return symbol (Symbols.TYPE); }
+    "with"                          { return symbol (Symbols.WITH); }
+    "limit"                         { return symbol (Symbols.LIMIT); }
+    "offset"                        { return symbol (Symbols.OFFSET); }
     
     /* identifiers */
     {UnescapedIdentifier}           { return symbol (Symbols.IDENTIFIER, yytext ().toUpperCase ()); }
@@ -126,10 +167,12 @@ FloatingPointLiteral =              {UnsignedInteger} "." [0-9]* ( e [+-]? {Unsi
  
     /* literals */
     {UnsignedInteger}               { return symbol (Symbols.UINT, yytext ()); }
+    {UnsignedLong}                  { return symbol (Symbols.ULONG, yytext()); }
     {FloatingPointLiteral}          { return symbol (Symbols.FP, yytext ()); }
+    {DoubleLiteral}                 { return symbol (Symbols.DOUBLE, yytext()); }
+    {TimeInterval}                  { return symbol (Symbols.TIME_INTERVAL_LITERAL, yytext()); }
 
-    \'\'\'\'c                       { return symbol (Symbols.CHAR_LITERAL, '\''); }
-    \'[^\n\r\']\'c                  { return symbol (Symbols.CHAR_LITERAL, yytext ().charAt (1)); }
+    {CharLiteral}                   { return symbol (Symbols.CHAR_LITERAL, parseChar(yytext().substring(1, yylength() - 2))); }
     \'                              { startBuffering (); yybegin (STRING); }
 
     /* operators */
@@ -137,8 +180,11 @@ FloatingPointLiteral =              {UnsignedInteger} "." [0-9]* ( e [+-]? {Unsi
     "."                             { return symbol (Symbols.DOT); }
     ";"                             { return symbol (Symbols.SEMICOLON); }
     ":"                             { return symbol (Symbols.COLON); }
-    "="                             { return symbol (Symbols.EQ); }
+    "="                             { return symbol (Symbols.ASSIGN); }
+    "=="                            { return symbol (Symbols.EQ); }
     "!="                            { return symbol (Symbols.NEQ); }
+    "==="                           { return symbol (Symbols.STRICT_EQ); }
+    "!=="                           { return symbol (Symbols.STRICT_NEQ); }
     "+"                             { return symbol (Symbols.PLUS); }
     "-"                             { return symbol (Symbols.MINUS); }
     "*"                             { return symbol (Symbols.STAR); }
@@ -149,6 +195,12 @@ FloatingPointLiteral =              {UnsignedInteger} "." [0-9]* ( e [+-]? {Unsi
     "<="                            { return symbol (Symbols.LE); }
     "("                             { return symbol (Symbols.LPAREN); }
     ")"                             { return symbol (Symbols.RPAREN); }
+    "%"                             { return symbol (Symbols.PERCENT); }
+    "["                             { return symbol (Symbols.LBRACKET); }
+    "]"                             { return symbol (Symbols.RBRACKET); }
+    "{"                             { return symbol (Symbols.LBRACE); }
+    "}"                             { return symbol (Symbols.RBRACE); }
+    "?"                             { return symbol (Symbols.QUESTION); }
 
     /* comments */
     {Comment}                       { /* ignore */ }
@@ -165,9 +217,16 @@ FloatingPointLiteral =              {UnsignedInteger} "." [0-9]* ( e [+-]? {Unsi
     \'X                             { return buffered (Symbols.BIN_LITERAL); }
     \'                              { return buffered (Symbols.STRING); }
 
-    [^\n\r\']+                      { string.append (yytext ()); }
+    [^\n\r\'\\]+                    { string.append (yytext ()); }
 
-    \'\'                            { string.append ('\''); }
+    \\\'                            { string.append ("\'"); }
+    \\\"                            { string.append ("\""); }
+    \\\\                            { string.append ("\\"); }
+    \\t                             { string.append ("\t"); }
+    \\b                             { string.append ("\b"); }
+    \\r                             { string.append ("\r"); }
+    \\f                             { string.append ("\f"); }
+    \\n                             { string.append ("\n"); }
 }
 
 <ESCID> {

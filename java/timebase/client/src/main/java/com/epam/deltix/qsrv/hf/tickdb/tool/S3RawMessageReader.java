@@ -55,7 +55,7 @@ public class S3RawMessageReader extends S3Reader<RawMessage> {
     protected void startBatch(InputStream batchData) throws IOException {
         GZIPInputStream zin = new GZIPInputStream(batchData);
         BufferedReader reader = new BufferedReader(new InputStreamReader(zin));
-        messageSource = new JsonMessageSource(descriptors, reader);
+        messageSource = new JsonMessageSource(descriptors, reader, "$type");
     }
 
     @Override

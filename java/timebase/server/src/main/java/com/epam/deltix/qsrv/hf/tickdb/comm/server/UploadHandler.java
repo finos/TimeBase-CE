@@ -52,7 +52,6 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
     private final DataInputStream           in;
     private final MessageDecoder <InstrumentMessage> decoder;
     private final TickLoader                loader;
-    private final Flushable                 flushable;
 
     private final Principal                 user;
     private final boolean                   binary; // use binary serialization
@@ -104,8 +103,6 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
         this.listener = new UploadHandlerSubChangeListener(ds, this.binary, this::closeAll);
         loader.addEventListener (listener);
         loader.addSubscriptionListener(listener);
-
-        flushable = (loader instanceof Flushable) ? (Flushable)loader : null;
 
         setLoaderMonitorInfo(loader);
     }
@@ -174,8 +171,7 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
                         break loop;
 
                     case TDBProtocol.LOAD_FLUSH:
-                        if (flushable != null)
-                            flushable.flush();
+                        loader.flush();
 
                         synchronized (out) {
                             out.writeInt(TDBProtocol.LOADRESP_FLUSH_OK);

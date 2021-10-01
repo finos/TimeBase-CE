@@ -19,6 +19,7 @@ package com.epam.deltix.test.qsrv.hf.tickdb.testframework;
 ;
 import com.epam.deltix.qsrv.hf.pub.ChannelQualityOfService;
 
+import com.epam.deltix.qsrv.test.messages.TestEnum;
 import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.qsrv.hf.pub.codec.AlphanumericCodec;
 import com.epam.deltix.qsrv.hf.pub.md.*;
@@ -183,7 +184,7 @@ public class TestAllTypesStreamCreator {
         msg.date_c = BASETIME + 24L * 3600000L * seqNo;   // Days of 2011
         msg.date_n = skip ? DateTimeDataType.NULL : msg.date_c;
         
-        msg.enum_c = TestEnum.values () [seqNo % TestEnum.values ().length];        
+        msg.enum_c = TestEnum.values () [seqNo % TestEnum.values ().length];
         msg.enum_n = skip ? null : msg.enum_c;
         
         msg.bool_n = 

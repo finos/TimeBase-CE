@@ -638,6 +638,15 @@ public abstract class TickStreamImpl extends ServerStreamImpl
             markStreamForSave(null);
         }
     }
+
+    final synchronized void         setDirty (boolean force) {
+        if (db != null && scope != StreamScope.RUNTIME && !isReadOnly) {
+            markStreamForSave(null);
+            if (saver != null && force)
+                saver.execute();
+        }
+    }
+
     final synchronized void         setDirty (TickStreamPropertiesEnum changedProperty) {
         if (db != null && scope != StreamScope.RUNTIME && !isReadOnly) {
             markStreamForSave(changedProperty);
@@ -758,7 +767,7 @@ public abstract class TickStreamImpl extends ServerStreamImpl
         IOUtil.marshall(TickDBJAXBContext.createMarshaller(), bout, this);
     }
 
-    private OutputStream createBufferedOutput(OutputStream out) {
+    protected OutputStream createBufferedOutput(OutputStream out) {
         assert Thread.holdsLock(this);
         return new BufferedOutputStream(out);
     }

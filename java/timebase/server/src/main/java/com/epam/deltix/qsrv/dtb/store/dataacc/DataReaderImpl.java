@@ -30,16 +30,15 @@ import javax.annotation.Nullable;
 /**
  *  
  */
-public final class DataReaderImpl 
-    extends BlockAccessorBase 
-    implements DataReader, BlockProcessor, SliceListener, IntermittentlyAvailableResource
+public final class DataReaderImpl
+        extends BlockAccessorBase
+        implements DataReader, BlockProcessor, SliceListener, IntermittentlyAvailableResource
 {
-    private static final Log LOG = LogFactory.getLog(DataReaderImpl.class);
-
+    static final Log LOG = LogFactory.getLog(DataReaderImpl.class);
 
     private EntityFilter                        currentFilter;
     private boolean                             forward;
-    private boolean                             pqIsLoaded = false;    
+    private boolean                             pqIsLoaded = false;
     private ABLPQ                               pq;
     private long                                currentTimestamp = Long.MAX_VALUE;
     private long                                limit = Long.MAX_VALUE; // limit timestamp
@@ -48,10 +47,6 @@ public final class DataReaderImpl
 
     // GuardedBy("this")
     private DataReaderPrefetcher                prefetcher = null;
-
-    // incoming updated blocks
-    private final IntegerToObjectHashMap<DataBlock> waiting = new IntegerToObjectHashMap<>();
-    private final IntegerEnumeration                e = waiting.keys();
 
     private volatile Runnable                   listener;
 
@@ -79,36 +74,44 @@ public final class DataReaderImpl
     //
     @Override
     public synchronized void    close () {
-        store.removeSliceListener(this);
+        closeInternal();
 
-        pq = null;
         currentFilter = null;
-        currentTimestamp = Long.MAX_VALUE;
+    }
 
-        synchronized (waiting) {
-            waiting.clear();
-        }
+    @Override
+    public void                 park() {
+        closeInternal();
+    }
+
+    protected void              closeInternal () {
+
+        // already closed
+        if (pq == null)
+            return;
+
+        currentTimestamp = Long.MAX_VALUE;
+        pq = null;
 
         clearPrefetched();
-        
         super.close ();
     }
 
     @Override
     public synchronized void    open (
-        long                        timestamp,
-        boolean                     forward,
-        EntityFilter                filter
+            long                        timestamp,
+            boolean                     forward,
+            EntityFilter                filter
     )
     {
-        if (currentTimeSlice != null) {
+        if (currentTimeSlice != null)
             throw new IllegalStateException("Attempt to repeatedly open DataReader");
-        }
+
         this.forward = forward;
-        currentFilter = filter;
+        this.currentFilter = filter;
         currentTimestamp = timestamp;
         pq = new ABLPQ (100, forward);
-        
+
         try {
             clearPrefetched();
             currentTimeSlice = store.checkOutTimeSliceForRead (this, timestamp, currentFilter);
@@ -120,10 +123,10 @@ public final class DataReaderImpl
 
     @Override
     public synchronized void    open (
-        TSRef                       tsref,
-        long                        timestamp,
-        boolean                     movePastTSFEnd,
-        EntityFilter                filter
+            TSRef                       tsref,
+            long                        timestamp,
+            boolean                     movePastTSFEnd,
+            EntityFilter                filter
     )
     {
         if (currentTimeSlice != null) {
@@ -132,7 +135,7 @@ public final class DataReaderImpl
         this.forward = true;
         this.pq = new ABLPQ (100, forward);
         this.movePastTSFEnd = movePastTSFEnd;
-        
+
         try {
             clearPrefetched();
             this.currentTimeSlice = store.checkOutTimeSlice (this, tsref);
@@ -140,7 +143,7 @@ public final class DataReaderImpl
         } catch (InterruptedException x) {
             throw new UncheckedInterruptedException (x);
         }
-        
+
         this.currentFilter = filter;
         this.currentTimestamp = timestamp;
     }
@@ -168,7 +171,7 @@ public final class DataReaderImpl
 
     public synchronized void                 reopen(long timestamp) {
         EntityFilter filter = currentFilter;
-        close();
+        closeInternal();
         open(timestamp, forward, filter);
     }
 
@@ -183,7 +186,7 @@ public final class DataReaderImpl
             clearLinks();
         } else {
 
-          // cleanup queue
+            // cleanup queue
         }
 
         if (prefetcher != null) {
@@ -235,7 +238,7 @@ public final class DataReaderImpl
     public long                 getEndTimestamp() {
         return currentTimeSlice != null ? currentTimeSlice.getLimitTimestamp() : currentTimestamp;
     }
-   
+
     @Override
     public void                 checkedOut(TimeSlice slice) {
         clearCurrent();
@@ -247,9 +250,14 @@ public final class DataReaderImpl
             if (currentTimeSlice == null)
                 return (false);
 
-            if (!pqIsLoaded) {
-                currentTimeSlice.processBlocks(currentFilter, this);
-                pqIsLoaded = true;
+            try {
+                if (!pqIsLoaded) {
+                    currentTimeSlice.processBlocks(currentFilter, this);
+                    pqIsLoaded = true;
+                }
+            } catch (Exception ex) {
+                // in case of race conditions currentTimeSlice can be deleted here
+                LOG.warn("Skipping error while reading slice: %s").with(ex);
             }
 
             AccessorBlockLink next = pq.poll();
@@ -264,7 +272,7 @@ public final class DataReaderImpl
 
                 if (NextState.hasMore(state)) {
                     //if (!pqIsLoaded && currentFilter.accept(next.getEntity()))
-                        pq.offer(next);
+                    pq.offer(next);
                 }
 
                 if (!NextState.hasCurrent(state))
@@ -273,7 +281,7 @@ public final class DataReaderImpl
                 return true;
             }
 
-            NextResult result = processSliceEnded(processor);
+            NextResult result = endOfCurrentSlice(processor);
             if (result != null) {
                 switch (result) {
                     case OK:
@@ -289,7 +297,7 @@ public final class DataReaderImpl
      * @return null
      */
     @Nullable
-    private NextResult processSliceEnded(TSMessageConsumer processor)  {
+    private NextResult          endOfCurrentSlice(TSMessageConsumer processor)  {
         clearLinks();
 
         if (!movePastTSFEnd)
@@ -322,7 +330,7 @@ public final class DataReaderImpl
     /**
      * @return true if the time slice matches set limit
      */
-    boolean sliceMatchesLimit(TimeSlice timeSlice) {
+    boolean             sliceMatchesLimit(TimeSlice timeSlice) {
         if (limit != Long.MAX_VALUE && limit != Long.MIN_VALUE) {
             if ((forward && timeSlice.getStartTimestamp() >= limit) || (!forward && timeSlice.getLimitTimestamp() > limit)) {
                 return false;
@@ -364,8 +372,11 @@ public final class DataReaderImpl
     }
 
     private void                release(TimeSlice slice) {
-        if (slice != null)
+        if (slice != null) {
+            clearCurrent();
             slice.getStore().checkInTimeSlice(this, slice);
+            clearBuffers();
+        }
     }
 
     public void                 setAvailabilityListener (Runnable lnr) {
@@ -381,13 +392,8 @@ public final class DataReaderImpl
     }
 
     private void              clearCurrent() {
-
         synchronized (this) {
             pqIsLoaded = false;
-        }
-
-        synchronized (waiting) {
-            waiting.clear();
         }
 
         clearLinks();

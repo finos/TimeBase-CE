@@ -244,6 +244,24 @@ public final class EnumClassDescriptor extends ClassDescriptor
     }
 
     @Override
+    protected void readFieldsWithoutGuid(DataInputStream in, TypeResolver resolver, int serial) throws IOException {
+        super.readFieldsWithoutGuid(in, resolver, serial);
+
+        bitmask = in.readBoolean ();
+
+        int             n = in.readUnsignedShort ();
+
+        values = new EnumValue [n];
+
+        for (int ii = 0; ii < n; ii++) {
+            String      symbol = in.readUTF ();
+            long        nval = in.readLong ();
+
+            values [ii] = new EnumValue (symbol, nval);
+        }
+    }
+
+    @Override
     public boolean              isEquals(ClassDescriptor target) {
         if (target instanceof EnumClassDescriptor && super.isEquals(target)) {
             EnumClassDescriptor e = (EnumClassDescriptor)target;

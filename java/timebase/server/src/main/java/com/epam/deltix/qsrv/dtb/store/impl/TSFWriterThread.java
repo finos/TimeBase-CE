@@ -67,8 +67,13 @@ class TSFWriterThread extends Thread {
 
                 try {
                     // should be under try/catch to not crash WriterThread
-                    root.acquireSharedLock ();
-                    lockAcquired = true;
+                    try {
+                        lockAcquired = root.acquireWriteLock();
+                    } catch (IllegalStateException ex) {
+                        // root is invalid
+                        LOGGER.warn().append("Cannot get lock on ").append(root).commit();
+                        continue;
+                    }
 
                     if (tsf.getState() == TSFState.DIRTY_CHECKED_OUT) {
                         pds.fileWasStored(tsf);
@@ -98,8 +103,6 @@ class TSFWriterThread extends Thread {
                             LOGGER.debug().append("Storing ").append(tsf).append(" ...").commit();
 
                         if (tsf.store(compressor)) {
-                            TreeOps.finalizeIndex(tsf.getParent());
-
                             if (logThisOne)
                                 LOGGER.debug().append(tsf).append(" was stored [").append(tsf.getState()).append("]").commit();
                         } else {
@@ -107,13 +110,16 @@ class TSFWriterThread extends Thread {
                                 LOGGER.debug().append(tsf).append(" wasn't stored [").append(tsf.getState()).append("]").commit();
                         }
 
+                        // finalize index in any case
+                        TreeOps.finalizeIndex(tsf.getParent());
+
                         pds.fileWasStored(tsf);
                     }
                 } catch (Throwable x) {
                     pds.fileHasFailed (tsf, x);
                 } finally {
                     if (lockAcquired)
-                        root.releaseSharedLock ();
+                        root.releaseWriteLock ();
                 }
             }
         } catch (InterruptedException x) {

@@ -26,10 +26,7 @@ import com.epam.deltix.util.memory.MemoryDataInput;
 
 import java.io.OutputStream;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.function.Predicate;
 
 /**
  *  Interpreting fixed unbound record decoder.
@@ -156,6 +153,27 @@ public class FixedUnboundDecoderImpl implements UnboundDecoder {
         return v;
     }
 
+    @Override
+    public byte getByte() throws NullValueException {
+        resetPosition();
+        if (isOutOfData())
+            handleNullable(true);
+        final byte v = currentField.getByte(ctxt);
+        handleNullable(currentField.isNull(v));
+        return v;
+    }
+
+    @Override
+    public short getShort() throws NullValueException {
+        resetPosition();
+        if (isOutOfData())
+            handleNullable(true);
+        final short v = currentField.getShort(ctxt);
+        handleNullable(currentField.isNull(v));
+        return v;
+    }
+
+    @Override
     public int                  getInt () {
         resetPosition();
         if (isOutOfData())
@@ -165,6 +183,7 @@ public class FixedUnboundDecoderImpl implements UnboundDecoder {
         return v;
     }
 
+    @Override
     public long                 getLong () {
         resetPosition();
         if (isOutOfData())
@@ -174,6 +193,7 @@ public class FixedUnboundDecoderImpl implements UnboundDecoder {
         return v;
     }
 
+    @Override
     public float                getFloat () {
         resetPosition();
         if (isOutOfData())
@@ -183,6 +203,7 @@ public class FixedUnboundDecoderImpl implements UnboundDecoder {
         return v;
     }
 
+    @Override
     public double               getDouble () {
         resetPosition();
         if (isOutOfData())
@@ -192,6 +213,7 @@ public class FixedUnboundDecoderImpl implements UnboundDecoder {
         return v;
     }
 
+    @Override
     public String               getString () {
         resetPosition();
         if (isOutOfData())
@@ -227,8 +249,7 @@ public class FixedUnboundDecoderImpl implements UnboundDecoder {
     protected void              setUpForCompare (
         MemoryDataInput             in1,
         MemoryDataInput             in2
-    )
-    {
+    ) {
         if (ctxt2 == null)
             ctxt2 = new DecodingContext (layout);
 
@@ -236,11 +257,11 @@ public class FixedUnboundDecoderImpl implements UnboundDecoder {
         ctxt2.in = in2;
     }
 
+    @Override
     public int                  compareAll (
         MemoryDataInput             in1, 
         MemoryDataInput             in2
-    )
-    {
+    ) {
         setUpForCompare (in1, in2);
 
         for (FieldDecoder df : fields) {
@@ -262,11 +283,11 @@ public class FixedUnboundDecoderImpl implements UnboundDecoder {
         return (0); 
     }
 
+    @Override
     public int                  comparePrimaryKeys (
             MemoryDataInput             in1,
             MemoryDataInput             in2
-    )
-    {
+    ) {
         if (!hasPrimaryKey)
             return -2;
 
@@ -293,8 +314,7 @@ public class FixedUnboundDecoderImpl implements UnboundDecoder {
                 int result = fd.compare (ctxt, ctxt2);
                 if (result != 0)
                     return MathUtil.sign(result);
-            }
-            else {
+            } else {
                 if (!isOutOfData1)
                     fd.skip(ctxt);
                 if (!isOutOfData2)

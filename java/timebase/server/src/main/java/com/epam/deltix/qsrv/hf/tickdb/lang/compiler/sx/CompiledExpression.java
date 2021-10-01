@@ -34,20 +34,20 @@ public abstract class CompiledExpression <T extends DataType> {
     public boolean              impliesAggregation () {
         return (impliesAggregation);
     }
-    
-    protected abstract void     print (StringBuilder out);
+
+    public abstract void     print (StringBuilder out);
 
     @Override
     public String               toString () {
         StringBuilder               sb = new StringBuilder ();
-        
+
         print (sb);
-        
+
         if (name != null) {
             sb.append (" as ");
             sb.append (name);
         }
-        
+
         return (sb.toString ());
     }
 
@@ -59,5 +59,9 @@ public abstract class CompiledExpression <T extends DataType> {
     @Override
     public int      hashCode () {
         return getClass ().hashCode ();
+    }
+
+    protected int dontCacheHashcode() {
+        return super.hashCode();
     }
 }

@@ -16,10 +16,14 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
+import com.epam.deltix.qsrv.hf.codec.MessageSizeCodec;
 import com.epam.deltix.qsrv.hf.pub.codec.NestedObjectCodec;
-import com.epam.deltix.qsrv.hf.pub.md.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.Instance;
-import com.epam.deltix.util.jcg.*;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDataType;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.Instance;
+import com.epam.deltix.util.jcg.JCompoundStatement;
+import com.epam.deltix.util.jcg.JExpr;
+import com.epam.deltix.util.jcg.JStatement;
+import com.epam.deltix.util.jcg.JVariable;
 
 import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
 
@@ -39,7 +43,7 @@ public class QObjectType extends QType <ClassDataType> {
         boolean                     setNull
     )
     {
-        JExpr           init = CTXT.newExpr (Instance.class);        
+        JExpr           init = CTXT.newExpr (Instance.class);
         JVariable       v = container.addVar (comment, true, Instance.class, init);
         
         return (new QObjectValue (this, container.access (v)));
@@ -82,19 +86,18 @@ public class QObjectType extends QType <ClassDataType> {
 
     @Override
     protected void          encodeNullImpl (JExpr output, JCompoundStatement addTo) {
-        throw new UnsupportedOperationException ();
-        //addTo.add (CTXT.staticCall (BinaryCodec.class, "writeNull", output));
+        addTo.add(CTXT.staticCall(MessageSizeCodec.class,"write", CTXT.intLiteral(0), output));
     }
 
     @Override
     public JStatement       decode (JExpr input, QValue value) {
-        throw new UnsupportedOperationException ();
-        //return (value.read ().call ("decode", input).asStmt ());
+        //throw new UnsupportedOperationException ();
+        return (value.read ().call ("decode", input).asStmt ());
     }
 
     @Override
     public void             encode (QValue value, JExpr output, JCompoundStatement addTo) {
-        throw new UnsupportedOperationException ();
-        //addTo.add (value.read ().call ("encode", output));
-    }        
+        //throw new UnsupportedOperationException ();
+        addTo.add(value.read().call("encode", output));
+    }
 }

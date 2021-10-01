@@ -169,6 +169,10 @@ public final class VarcharDataType extends DataType {
         return (to instanceof VarcharDataType ? ConversionType.Lossless : ConversionType.NotConvertible);
     }
 
+    public boolean isAlphanumeric() {
+        return encodingType == ALPHANUMERIC;
+    }
+
     @Override
     public void             writeTo (DataOutputStream out) throws IOException {
         out.writeByte (T_STRING_TYPE);

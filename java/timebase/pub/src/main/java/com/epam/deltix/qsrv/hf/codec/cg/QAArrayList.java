@@ -39,7 +39,11 @@ public class QAArrayList implements QAccessor {
 
     @Override
     public JExpr read() {
-        return reference.call("get" + boxedType, argIdx);
+        if (boxedType.equalsIgnoreCase(CharSequence.class.getSimpleName())) {
+            return reference.call("get", argIdx);
+        } else {
+            return reference.call("get" + boxedType, argIdx);
+        }
     }
 
     @Override

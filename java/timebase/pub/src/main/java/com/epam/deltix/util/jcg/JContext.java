@@ -22,109 +22,131 @@ import com.epam.deltix.util.jcg.scg.JTypeImpl;
  *
  */
 public interface JContext {
-    public JCompoundStatement   compStmt ();
+    JCompoundStatement   compStmt ();
 
-    public JClass       newClass (
+    JClass       newClass (
         int                 modifiers,
         String              packageName,
         String              simpleName,
         JClass              parent
     );
 
-    public JClass       newClass (
+    JClass       newClass (
         int                 modifiers,
         String              packageName,
         String              simpleName,
         Class <?>           parent
     );
 
-    public JType        asType (Class <?> cls);
+    JType        asType (Class <?> cls);
 
-    public JExpr        instanceOf (JExpr expr, Class <?> toClass);
+    JExpr        instanceOf (JExpr expr, Class <?> toClass);
 
-    public JExpr        instanceOf (JExpr expr, JType toType);
+    JExpr        instanceOf (JExpr expr, JType toType);
 
-    public JType        arrayTypeOf (Class <?> cls);
+    JType        arrayTypeOf (Class <?> cls);
 
-    public JType        arrayTypeOf (JType type);
+    JType        arrayTypeOf (JType type);
 
-    public JExpr        arrayLength (JExpr array);
+    JExpr        arrayLength (JExpr array);
 
-    public JExpr        condExpr (JExpr cond, JExpr pos, JExpr neg);
+    JExpr        condExpr (JExpr cond, JExpr pos, JExpr neg);
 
-    public JExpr        staticVarRef (Class <?> cls, String fieldName);
+    JExpr        staticVarRef (Class <?> cls, String fieldName);
 
-    public JExpr        staticVarRef (JClass cls, String fieldName);
+    JExpr        staticVarRef (JClass cls, String fieldName);
 
-    public JExpr        staticVarRef (String cls, String fieldName);
+    JExpr        staticVarRef (String cls, String fieldName);
 
-    public JStatement   ifStmt (JExpr cond, JStatement then, JStatement els);
+    JExpr        localVarRef(final String fieldName);
 
-    public JStatement   ifStmt (JExpr cond, JStatement then);
-
-    public JStatement   returnStmt ();
-
-    public JStatement   breakStmt ();
-
-    public JStatement   breakStmt (String label);
-
-    public JExpr        binExpr (JExpr left, String op, JExpr right);
-
-    public JExpr        sum (JExpr ... es);
-
-    public JExpr        call (String method, JExpr ... args);
-
-    public JExpr        staticCall (Class <?> cls, String method, JExpr ... args);
-
-    public JExpr        staticCall (Class <?> cls, String method, Class <?> typeArgument, JExpr ... args);
+    JStatement   ifStmt (JExpr cond, JStatement then, JStatement els);
     
-    public JExpr        newExpr (Class <?> cls, JExpr ... args);
+    JStatement   ifStmt (JExpr cond1, JStatement then1, JExpr cond2, JExpr then2, JStatement els);
 
-    JExpr               newArrayExpr (Class<?> cls, JExpr... elements);
+    JStatement   ifStmt (JExpr left, JExpr right, JStatement bothTrue, JStatement leftTrue, JStatement rightTrue, JStatement bothFalse);
 
-    public JExpr        newExpr (JType type, JExpr ... args);
+    default JStatement ifStmt (JExpr left, JExpr right, JExpr bothTrue, JExpr leftTrue, JExpr rightTrue, JExpr bothFalse) {
+        return ifStmt(left, right, bothTrue.asStmt(), leftTrue.asStmt(), rightTrue.asStmt(), bothFalse.asStmt());
+    }
 
-    public JExpr        nullLiteral ();
+    JStatement   ifStmt (JExpr cond, JStatement then);
 
-    public JExpr        booleanLiteral (boolean value);
+    JStatement   returnStmt ();
 
-    public JExpr        trueLiteral ();
+    JStatement   breakStmt ();
 
-    public JExpr        falseLiteral ();
+    JStatement   breakStmt (String label);
 
-    public JExpr        charLiteral (char value);
+    JStatement   continueStmt();
 
-    public JExpr        floatLiteral (float value);
+    JExpr        binExpr (JExpr left, String op, JExpr right);
 
-    public JExpr        doubleLiteral (double value);
+    JExpr        conjunction(JExpr ... args);
 
-    public JExpr        intLiteral (int value);
+    JExpr        disjunction(JExpr ... args);
 
-    public JExpr        longLiteral (long value);
+    JExpr        sum (JExpr ... es);
 
-    public JExpr        stringLiteral (String value);
+    JExpr        call (String method, JExpr ... args);
 
-    public JExpr        classLiteral (Class<?> value);
+    JExpr        staticCall (Class <?> cls, String method, JExpr ... args);
 
-    public JExpr        classLiteral (JClass value);
+    JExpr        staticCall (Class <?> cls, String method, Class <?> typeArgument, JExpr ... args);
+    
+    JExpr        newExpr (Class <?> cls, JExpr ... args);
 
-    public JExpr        enumLiteral (Enum<?> value);
+    JExpr        newGenericExpr(Class<?> cls, JExpr ... args);
 
-    public JExpr        enumLiteral (Object value);
+    JExpr        supplierWithNew(Class<?> cls, JExpr ... args);
 
-    public JTryStatement tryStmt ();
+    JExpr        newArrayExpr (Class<?> cls, JExpr... elements);
 
-    public JStatement           assertStmt (JExpr passCond, JExpr message);
+    JExpr        newExpr (JType type, JExpr ... args);
 
-    public JArrayInitializer    arrayInitializer (Class<?> type);
+    JExpr        nullLiteral ();
 
-    public JArrayInitializer    arrayInitializer (JType type);
+    JExpr        thisLiteral ();
 
-    public JExpr                typeof (Class<?> type);
+    JExpr        booleanLiteral (boolean value);
 
-    public JExpr                typeof (JClass type);
+    JExpr        trueLiteral ();
 
-    public JStatement           forStmt (JExpr init, JExpr condition, JExpr update, JStatement body);
+    JExpr        falseLiteral ();
+
+    JExpr        charLiteral (char value);
+
+    JExpr        floatLiteral (float value);
+
+    JExpr        doubleLiteral (double value);
+
+    JExpr        intLiteral (int value);
+
+    JExpr        longLiteral (long value);
+
+    JExpr        stringLiteral (String value);
+
+    JExpr        classLiteral (Class<?> value);
+
+    JExpr        classLiteral (JClass value);
+
+    JExpr        enumLiteral (Enum<?> value);
+
+    JExpr        enumLiteral (Object value);
+
+    JTryStatement tryStmt ();
+
+    JStatement           assertStmt (JExpr passCond, JExpr message);
+
+    JArrayInitializer    arrayInitializer (Class<?> type);
+
+    JArrayInitializer    arrayInitializer (JType type);
+
+    JExpr                typeof (Class<?> type);
+
+    JExpr                typeof (JClass type);
+
+    JStatement           forStmt (JExpr init, JExpr condition, JExpr update, JStatement body);
 
     /**
      *
@@ -157,7 +179,7 @@ public interface JContext {
      *</pre>
      * will be created as <CODE>JContext.annotation ("TE$$T")</CODE>
      */
-    public JAnnotation          annotation (Class<?> clazz, Object... args);
+    JAnnotation          annotation (Class<?> clazz, Object... args);
 
-    public JAnnotation          annotation (JTypeImpl clazz, Object... args);
+    JAnnotation          annotation (JTypeImpl clazz, Object... args);
 }

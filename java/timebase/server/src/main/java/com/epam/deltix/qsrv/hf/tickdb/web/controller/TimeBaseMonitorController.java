@@ -140,63 +140,6 @@ public class TimeBaseMonitorController {
         return "redirect:" + referer;
     }
 
-//    @RequestMapping(value = "/license/revalidate", method = RequestMethod.GET)
-//    public String revalidate(ModelMap modelMap) {
-//        if (revalidateLicense(modelMap))
-//            setModel(modelMap, modelFactory.getLicenseModel(checkLicense(modelMap)));
-//        else
-//            setModel(modelMap, modelFactory.getLicenseModel(null));
-//
-//        return "license";
-//    }
-
-//    private XLicense checkLicense(final ModelMap modelMap) {
-//        Throwable error = null;
-//        XLicense license = null;
-//        try {
-//            license = LicenseController.qs().readLicense();
-//        } catch (JAXBException e) {
-//            if (e.getLinkedException() == null)
-//                error = e;
-//            else
-//                error = e.getLinkedException();
-//        } catch (IOException e) {
-//            error = e;
-//        } catch (Throwable t) {
-//            error = t;
-//        }
-//
-//        if (error != null)
-//            addAlertAttribute(modelMap, ALERT_TYPE_DANGER, "Error while read saved license: " + error);
-//
-//        return license;
-//    }
-//
-//    private boolean revalidateLicense(final ModelMap modelMap) {
-//        LicenseValidator validator = new LicenseValidator(
-//            Installation.getSerial(),
-//            LicenseController.QS_PRODUCT_NAME,
-//            Version.VERSION_STRING,
-//            Installation.getInstallationDate()
-//        );
-//
-//        Throwable error = null;
-//        try {
-//            validator.checkLicense();
-//        } catch (LicenseException e) {
-//            error = e;
-//        } catch (Throwable t) {
-//            error = t;
-//        }
-//
-//        if (error != null) {
-//            addAlertAttribute(modelMap, ALERT_TYPE_DANGER, "Error while read saved license: " + error);
-//            return false;
-//        }
-//
-//        return true;
-//    }
-
     private void addAlertAttribute(final ModelMap modelMap, final String type, final String message) {
         modelMap.addAttribute(ALERT_TYPE_ARG, type);
         modelMap.addAttribute(ALERT_MSG_ARG, message);

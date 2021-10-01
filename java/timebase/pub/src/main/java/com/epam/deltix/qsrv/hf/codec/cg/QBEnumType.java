@@ -326,8 +326,7 @@ public class QBEnumType extends QBoundType<QEnumType> {
         } else if (MdUtil.isIntegerType(javaBaseType)) {
             addTo.add(accessor.write(initValue));
             return;
-        } if (!javaBaseType.isEnum()) {
-            if (qType.dt.descriptor.isBitmask())
+        } else if (qType.dt.descriptor.isBitmask()) {
                 throw new UnsupportedOperationException("Not supported operation with enum bitmask.");
         }
 

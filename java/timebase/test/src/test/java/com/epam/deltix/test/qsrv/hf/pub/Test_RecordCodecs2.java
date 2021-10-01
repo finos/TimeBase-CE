@@ -25,7 +25,7 @@ import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
 import com.epam.deltix.qsrv.test.messages.AggressorSide;
 import com.epam.deltix.qsrv.test.messages.BarMessage;
 import com.epam.deltix.qsrv.test.messages.MarketMessage;
-import com.epam.deltix.test.qsrv.hf.tickdb.testframework.TestEnum;
+import com.epam.deltix.qsrv.test.messages.TestEnum;
 import com.epam.deltix.timebase.messages.SchemaElement;
 import com.epam.deltix.timebase.messages.*;
 import com.epam.deltix.util.JUnitCategories;

@@ -30,11 +30,15 @@ public class CreateFieldChange extends AbstractFieldChange {
 
     public CreateFieldChange(StaticDataField field) {
         this(field, false);
+        setInitialValue(field.getStaticValue());
     }
 
     public CreateFieldChange(DataField field, boolean hasImpact) {
         super(null, field);
         this.hasImpact = hasImpact;
+        if (field instanceof StaticDataField) {
+            setInitialValue(((StaticDataField) field).getStaticValue());
+        }
     }
 
     public Impact getChangeImpact() {

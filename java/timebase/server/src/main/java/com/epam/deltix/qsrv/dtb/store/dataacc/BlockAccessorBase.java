@@ -24,7 +24,8 @@ import com.epam.deltix.util.memory.MemoryDataInput;
  */
 abstract class BlockAccessorBase extends DataAccessorBase { 
     final MemoryDataInput       mdi = new MemoryDataInput ();
-    
+    final byte[]                EMPTY = new byte[0];
+
     /**
      *  Guarded by self. Concurrent threads may use this hashmap to update links.
      */
@@ -170,6 +171,12 @@ abstract class BlockAccessorBase extends DataAccessorBase {
             currentTimeSlice = null;
         }
 
+        clearBuffers();
+
         super.close();
     }        
+
+    void        clearBuffers() {
+        mdi.setBytes(EMPTY);
+    }
 }

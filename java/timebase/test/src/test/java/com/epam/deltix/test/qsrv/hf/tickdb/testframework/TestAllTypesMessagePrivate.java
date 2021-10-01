@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb.testframework;
 
+import com.epam.deltix.qsrv.test.messages.TestEnum;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 
 import com.epam.deltix.timebase.messages.TimeStamp;
@@ -109,7 +110,7 @@ public class TestAllTypesMessagePrivate extends InstrumentMessage {
     //
     //  ENUM
     //
-    protected TestEnum             enum_c;
+    protected TestEnum enum_c;
     protected TestEnum             enum_n;
 
 //    @Enumerated(deltix.qsrv.hf.tickdb.testframework.TestBitmask.class)

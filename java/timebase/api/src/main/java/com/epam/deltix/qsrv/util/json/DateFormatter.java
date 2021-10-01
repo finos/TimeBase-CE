@@ -16,33 +16,79 @@
  */
 package com.epam.deltix.qsrv.util.json;
 
+import com.epam.deltix.timebase.messages.TimeStamp;
 import org.apache.commons.lang3.time.FastDateFormat;
 
+import java.text.DecimalFormat;
+import java.text.FieldPosition;
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.text.ParsePosition;
 import java.util.TimeZone;
 
+import static com.epam.deltix.timebase.messages.TimeStamp.NANOS_PER_MS;
+
 /**
- * Formats date in GMT, not thread-safe.
+ * Formats date in UTC, not thread-safe.
  */
 public class DateFormatter {
-    public static final String DATETIME_MILLIS_FORMAT_STR = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
-    private final Calendar mCalendar;
-    private final FastDateFormat DTFX = FastDateFormat.getInstance(DATETIME_MILLIS_FORMAT_STR, TimeZone.getTimeZone("UTC"));
+    private final FastDateFormat ticks = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss.", TimeZone.getTimeZone("UTC"));
+    private final FastDateFormat ms = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", TimeZone.getTimeZone("UTC"));
+    private final DecimalFormat df = new DecimalFormat("000000000");
+    private final StringBuffer buffer = new StringBuffer();
 
-    public DateFormatter() {
-        mCalendar = new GregorianCalendar();
-        mCalendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+    private void format(StringBuilder builder, long milliseconds, int nanosComponent) {
+        if (nanosComponent == 0 || milliseconds == Long.MIN_VALUE) {
+            ms.format(milliseconds, builder);
+        } else {
+            ticks.format(milliseconds, builder);
+            long ms = milliseconds % 1000;
+            buffer.setLength(0);
+            df.format(ms * NANOS_PER_MS + nanosComponent, buffer, new FieldPosition(0));
+            builder.append(buffer).append('Z');
+        }
     }
 
-    public void toDateString(long timestamp, StringBuilder sb) {
-        mCalendar.setTimeInMillis(timestamp);
-        DTFX.format(mCalendar, sb);
+    public void toDateString(long milliseconds, StringBuilder sb) {
+        format(sb, milliseconds, 0);
+    }
+
+    public String toDateString(long milliseconds) {
+        StringBuilder sb = new StringBuilder();
+        format(sb, milliseconds, 0);
+        return sb.toString();
+    }
+
+    public void toDateString(long milliseconds, int nanosComponent, StringBuilder sb) {
+        format(sb, milliseconds, nanosComponent);
+    }
+
+    public String toDateString(long milliseconds, int nanosComponent) {
+        StringBuilder sb = new StringBuilder();
+        format(sb, milliseconds, nanosComponent);
+        return sb.toString();
+    }
+
+    public void toNanosDateString(long nanoTime, StringBuilder sb) {
+        toDateString(TimeStamp.getMilliseconds(nanoTime), TimeStamp.getNanosComponent(nanoTime), sb);
+    }
+
+    public String toNanosDateString(long nanoTime) {
+        StringBuilder sb = new StringBuilder();
+        toNanosDateString(nanoTime, sb);
+        return sb.toString();
     }
 
     public long fromDateString(String value) throws ParseException {
-        return DTFX.parse(value).getTime();
+        return ms.parse(value).getTime();
     }
+
+    public long fromNanosDateString(String value) throws ParseException {
+        long secondsMs = ticks.parse(value).getTime();
+        long nanos = df.parse(value, new ParsePosition(20)).longValue();
+        long millis = nanos / NANOS_PER_MS;
+        int nanosComponent = (int) (nanos % NANOS_PER_MS);
+        return TimeStamp.getNanoTime(secondsMs + millis, nanosComponent);
+    }
+
 }

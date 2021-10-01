@@ -18,18 +18,23 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
 
 import com.epam.deltix.util.parsers.Element;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 /**
  *
  */
 public abstract class AttributeDef extends Element {
     public final String         id;
     public final String         title;
+    public final Hashtable<String, String> tags;
     public final String         comment;
     
-    protected AttributeDef (String id, String title, String comment, long location) {
+    protected AttributeDef (String id, String title, Hashtable<String, String> tags, String comment, long location) {
         super (location);
         this.id = id;
         this.title = title;
+        this.tags = tags;
         this.comment = comment;
     }
     
@@ -41,7 +46,26 @@ public abstract class AttributeDef extends Element {
             GrammarUtil.escapeStringLiteral (title, s);
         }
     }
-    
+
+    protected final void        printTags(StringBuilder s) {
+        if (tags != null) {
+            s.append(" TAGS (");
+            boolean first = true;
+            for (Map.Entry<String, String> tag : tags.entrySet()) {
+                if (first) {
+                    first = false;
+                } else {
+                    s.append(",");
+                }
+
+                GrammarUtil.escapeVarId(tag.getKey(), s);
+                s.append(":");
+                GrammarUtil.escapeVarId(tag.getValue(), s);
+            }
+            s.append(")");
+        }
+    }
+
     protected final void        printComment (StringBuilder s) {
         if (comment != null) {
             s.append (" COMMENT ");

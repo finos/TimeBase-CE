@@ -16,7 +16,6 @@
  */
 package com.epam.deltix.util.os;
 
-//import com.epam.deltix.anvil.util.Reusable;
 import com.epam.deltix.util.io.Home;
 import org.apache.commons.text.StringSubstitutor;
 

@@ -98,8 +98,12 @@ public class Selector {
     private boolean                         decodeRaw = true;
     private boolean                         useqqlts = false;
     private DBQueryRunner testRunner = null;
-    private InstrumentSet                   entities = null;
+
+    private InstrumentSet                   include = null;
+    private InstrumentSet                   exclude = null;
+
     private CharSequenceSet                 types = null;
+    private boolean                         printJson = false;
 
     public Selector (TickDBShell shell) {
         this.shell = shell;
@@ -174,6 +178,7 @@ public class Selector {
         System.out.println ("decode:        " + (decodeRaw ? "on" : "off"));
         System.out.println ("qqltr:         " + (useqqlts ? "on" : "off"));
         System.out.println ("history:       " + (versionTracking ? "on" : "off"));
+        System.out.println ("printjson      " + printJson);
     }
     
     boolean                     doSet (String option, String value) throws Exception {
@@ -261,31 +266,48 @@ public class Selector {
             return (true);
         }
 
+        if (option.equalsIgnoreCase("printjson")) {
+            printJson = Boolean.parseBoolean(value);
+            shell.confirm("Print JSON: " + printJson);
+            return true;
+        }
+
         return (false);
     }
     
     private void                doSymbols (String args, String fileId, LineNumberReader reader) {
         if (args == null || args.equalsIgnoreCase ("show")) {
-            if (entities == null)
+            if (include == null) {
                 System.out.println ("<all>");
-            else if (entities.size() == 0)
-                System.out.println ("<none>");
-            else {
-                for (IdentityKey id : entities)
+            }
+
+            if (include != null) {
+                System.out.print("<include>: ");
+                if (include.size() == 0)
+                    System.out.println("none");
+
+                for (IdentityKey id : include)
                     System.out.println (id.getSymbol ());
             }
             
+            if (exclude != null) {
+                System.out.print("<exclude>: ");
+                if (exclude.size() == 0)
+                    System.out.println("none");
+
+                for (IdentityKey id : exclude)
+                    System.out.println (id.getSymbol ());
+            }
+
+
             return;
         }
         
         if (args.equalsIgnoreCase ("all")) {
-            entities = null;
+            exclude = include = null;
             return;
         }
 
-        if (entities == null)
-            entities = new InstrumentSet ();
-        
         if (args.startsWith("filter")) {
             try {
                 InstrumentMessageSource ims =
@@ -293,9 +315,7 @@ public class Selector {
 
                 while (ims.next()) {
                     InstrumentMessage msg = ims.getMessage();
-                    if (entities.add (msg))
-                        shell.confirm (msg.getSymbol() + " " + " added");
-
+                    changeSubscription(msg.getSymbol(), true);
                 }
             } catch (CompilationException x) {
                 printException (x, false);
@@ -304,19 +324,19 @@ public class Selector {
             return;
         }
 
-        if (args.equalsIgnoreCase ("clear"))
-            entities.clear ();
-        else {
-            String []       s = args.split ("\\s", 2);
+        if (args.equalsIgnoreCase ("clear")) {
+            if (include != null)
+                include.clear();
+
+            exclude = null;
+
+        } else {
+            String []       s = args.split ("\\s", 3);
             boolean         add = s[0].equalsIgnoreCase ("add");
-            String          symbol = s[1].trim ();
-            boolean         ok;
+
+            String          symbol = s[2].trim ();
             
-            if (add)
-                ok = entities.add (symbol);
-            else
-                ok = entities.remove (symbol);
-            
+            boolean         ok = changeSubscription(symbol, add);
             shell.confirm (
                 symbol + " " +
                 (add ? 
@@ -326,6 +346,32 @@ public class Selector {
         }
     }
     
+    private boolean        changeSubscription(CharSequence symbol, boolean add) {
+        boolean ok;
+
+        if (add) {
+           if (include == null) {
+               exclude = null;
+               include = new InstrumentSet();
+           }
+           ok = include.add(symbol);
+        }
+        else {
+            if (include == null) {
+                if (exclude == null)
+                    exclude = new InstrumentSet();
+                ok = exclude.add(symbol);
+            } else {
+                ok = include.remove(symbol);
+            }
+        }
+
+        if (exclude != null && exclude.isEmpty())
+            exclude = null;
+
+        return ok;
+    }
+
     private void                doTypes (String args, String fileId, LineNumberReader reader) {
         if (args == null || args.equalsIgnoreCase ("show")) {
             if (types == null)
@@ -748,8 +794,10 @@ public class Selector {
                 shell.dbmgr.getDB (), 
                 getSelectionOptions (), 
                 query, 
-                getQQLStartTime (), 
-                num
+                getQQLStartTime (),
+                getQQLEndTime(),
+                num,
+                printJson
             );
             checker.resultDone ();
             shell.confirm ("\tOK");
@@ -762,8 +810,12 @@ public class Selector {
         return (useqqlts ? time : TimeConstants.TIMESTAMP_UNKNOWN);
     }
 
-    public IdentityKey[]     getSelectedEntities() {
-        return entities != null ? entities.toArray(new IdentityKey[entities.size()]) : null;
+    private long                    getQQLEndTime () {
+        return (useqqlts ? endtime : Long.MAX_VALUE);
+        }
+
+    public IdentityKey[]            getSelectedEntities() {
+        return include != null ? include.toArray(new IdentityKey[include.size()]) : null;
     }
 
     public CharSequence[]   getSelectedSymbols() {
@@ -834,7 +886,10 @@ public class Selector {
 //    }
 
     public boolean                  accept (IdentityKey id) {
-        return (entities == null || entities.contains(id));
+        if (exclude != null && exclude.contains(id))
+            return false;
+
+        return (include == null || include.contains(id));
     }
     
     public boolean                  enough (InstrumentMessage msg) {
@@ -889,7 +944,8 @@ public class Selector {
             getSelectionOptions (), 
             text, 
             getQQLStartTime (), 
-            num
+            getQQLEndTime(),
+            num, printJson
         );  
 
         if (shell.isTiming ()) {

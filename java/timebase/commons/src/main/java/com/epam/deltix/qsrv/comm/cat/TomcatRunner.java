@@ -16,7 +16,6 @@
  */
 package com.epam.deltix.qsrv.comm.cat;
 
-import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.config.QuantServerExecutor;
 import com.epam.deltix.qsrv.config.QuantServiceConfig;
 import com.epam.deltix.qsrv.config.QuantServiceConfig.Type;
@@ -43,27 +42,14 @@ public final class TomcatRunner {
 
     public static final String  DEFAULT_WEB_APP_DIR = "default"; //QuantServer/web/default
     public static final String  DEFAULT_WEB_APP_NAME = ""; // must be empty string
-
     public static final String  TIME_BASE_WEB_APP_NAME    = "tb";
-    public static final String  AGGREGATOR_WEB_APP_NAME   = "agg";
 
     // UHF and derived web apps use the same webapp name (which allows RPC/HTTP clients to use single dispatch servlet path)
     public static final String  UHF_WEB_APP_NAME          = "uhf";
-    public static final String  ES_WEB_APP_NAME           = UHF_WEB_APP_NAME;
-    public static final String STS_WEB_APP_NAME           = UHF_WEB_APP_NAME;
-
-    public static final String  STS_WEB_APP_DIR           = "sts";
-    private static final String  ES_WEB_APP_DIR           = "es";
-    private static final String  UHF_WEB_APP_DIR          = "uhf";
-
-    // TODO: MODULARIZATION
-    public static final String UHF_TRADE_CTX = "config/trade.xml";
 
     private DXTomcat                    mCat;
     private final StartConfiguration    config;
     private final ObjectArrayList<ServiceExecutor> executors = new ObjectArrayList<ServiceExecutor>();
-    
-    //private BaseSpringContext           commonContext;
 
     public TomcatRunner(StartConfiguration config) {
         this.config = config;
@@ -121,17 +107,6 @@ public final class TomcatRunner {
         mCat = new DXTomcat(DEFAULT_WEB_APP_DIR, getWebappFile(config.quantServer, null), DEFAULT_WEB_APP_NAME);
         mCat.setPort(config.port);
 
-        if (config.tb == null) {
-            // UHF and derived web-applications are deployed as 'uhf' web app name.
-            // Unless we set a different work folder, they will use the same work dir to cache some compiled classes for JSPs
-            if (config.uhf != null)
-                mCat.setWorkDir(QSHome.getFile("work/tomcat/" + UHF_WEB_APP_DIR));
-            else  if (config.sts != null)
-                mCat.setWorkDir(QSHome.getFile("work/tomcat/" + STS_WEB_APP_DIR));
-            else if (config.es != null)
-                mCat.setWorkDir(QSHome.getFile("work/tomcat/" + ES_WEB_APP_DIR));
-        }
-
         QuantServerExecutor executor = (QuantServerExecutor) config.getExecutor(Type.QuantServer);
         executor.run(config.quantServer);
         executors.add(0, executor);
@@ -142,21 +117,6 @@ public final class TomcatRunner {
             ServiceExecutor tb = config.getExecutor(Type.TimeBase);
             tb.run(config.tb);
             executors.add(0, tb);
-        }
-
-        if (config.agg != null) {
-            ServiceExecutor agg = config.getExecutor(Type.Aggregator);
-            agg.run(config.agg);
-            executors.add(0, agg);
-
-//            Aggregator.doRun(getCommonContext(), config.agg);
-        }
-
-        if (config.es != null) {
-            ServiceExecutor es = config.getExecutor(Type.ExecutionServer);
-            es.run(config.es, config.agg);
-            executors.add(0, es);
-            //ExecutionServerStarter.doRun(getCommonContext(), config.es, config.agg);
         }
 
         if (config.quantServer.getFlag("SNMP")) {
@@ -171,16 +131,6 @@ public final class TomcatRunner {
                     connectionHandshakeHandler);
         }
 
-        //set SSL config
-        if (config.tb != null)
-            setSSLConfig(config.tb);
-
-        if (config.uhf != null)
-            setSSLConfig(config.uhf);
-
-        if (config.es != null)
-            setSSLConfig(config.es);
-
         mCat.setTomcatConfigs(TomcatConfig.getTomcatConfig(config));
         mCat.init ();
 
@@ -190,21 +140,6 @@ public final class TomcatRunner {
         }
         boolean useSSL = isSSLEnabled();
 
-        if (config.agg != null)
-            mCat.addModule(AGGREGATOR_WEB_APP_NAME, getWebappFile(config.agg, Home.getFile("web/" + AGGREGATOR_WEB_APP_NAME))); //, Home.getFile("web/" + AGGREGATOR_WEB_APP_NAME));
-
-        Context uhfCtx = null;
-        if (config.uhf != null)
-            uhfCtx = mCat.addModule(UHF_WEB_APP_NAME, Home.getFile("web/" + UHF_WEB_APP_DIR));
-
-        Context esCtx = null;
-        if (config.es != null) {
-            esCtx = mCat.addModule(ES_WEB_APP_NAME, Home.getFile("web/" + ES_WEB_APP_DIR));
-            config.getExecutor(Type.ExecutionServer).configure(esCtx);
-        }
-
-        if (config.sts != null)
-            mCat.addModule(STS_WEB_APP_NAME, Home.getFile("web/" + STS_WEB_APP_DIR));
 
         boolean tbUAC = QuantServerExecutor.SC != null;
 
@@ -217,18 +152,6 @@ public final class TomcatRunner {
                 tbCtx.addConstraint(AuthenticationRealm.createSecurityConstraint(useSSL, true));
             }
 
-            if (uhfCtx != null) {
-                uhfCtx.setRealm(realm);
-                uhfCtx.setLoginConfig(realm.getLoginConfig());
-                uhfCtx.addConstraint(AuthenticationRealm.createSecurityConstraint(useSSL, true));
-            }
-
-            if (esCtx != null) {
-                esCtx.setRealm(realm);
-                esCtx.setLoginConfig(realm.getLoginConfig());
-                esCtx.addConstraint(AuthenticationRealm.createSecurityConstraint(useSSL, true));
-            }
-
             mCat.getDefaultContext().setRealm(realm);
             mCat.getDefaultContext().setLoginConfig(realm.getLoginConfig());
             mCat.getDefaultContext().addConstraint(AuthenticationRealm.createSecurityConstraint(false, true));
@@ -236,13 +159,6 @@ public final class TomcatRunner {
 
         if (useSSL && tbCtx != null)
             tbCtx.addConstraint(AuthenticationRealm.createSecurityConstraint(true, tbUAC, "*.jsp"));
-
-        // UHF and ES use SecurityConstraintConfigurator and security.xml
-        if (useSSL && esCtx != null)
-            esCtx.addConstraint(AuthenticationRealm.createSecurityConstraint(true, false)); // ES use filter for authentication
-
-        if (useSSL && uhfCtx != null)
-            uhfCtx.addConstraint(AuthenticationRealm.createSecurityConstraint(true, false)); // UHF use filter for authentication
 
         if (useSSL) // Default web app
             mCat.getDefaultContext().addConstraint(AuthenticationRealm.createSecurityConstraint(true, tbUAC, "*.jsp", "/shutdown...", "/getlogs"));
@@ -333,14 +249,6 @@ public final class TomcatRunner {
 
         if (config.tb != null)
             return config.tb;
-        if (config.agg != null)
-            return config.agg;
-        if (config.uhf != null)
-            return config.uhf;
-        if (config.es != null)
-            return config.es;
-        if (config.sts != null)
-            return config.sts;
 
         return null;
     }

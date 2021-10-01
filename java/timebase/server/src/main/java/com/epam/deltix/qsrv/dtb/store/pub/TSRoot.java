@@ -95,6 +95,10 @@ public interface TSRoot {
     int MAX_FOLDER_SIZE_HIGH       =  0xFFFF;
 
     int COMPRESSION_LEVEL_LOCAL_FS =  0;
+
+    /**
+     * One of "LZ4", "ZLIB", "SNAPPY". For LZ4 and ZLIB you can specify compression level e.g. "LZ4(5)".
+     */
     String COMPRESSION_DEF         =  System.getProperty("TimeBase.fileSystem.compression", "LZ4(5)");
 
     /**

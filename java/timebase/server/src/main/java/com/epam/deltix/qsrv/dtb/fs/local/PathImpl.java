@@ -119,6 +119,7 @@ class PathImpl extends File implements AbstractPath {
             return (new FileOutputStream (this));
         else {
             RandomAccessFile    raf = new RandomAccessFile (this, "rw");
+
             raf.setLength (size);
             
             return new RAFAdapter(raf, this);

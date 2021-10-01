@@ -20,18 +20,32 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
  *  Less or greater, possibly equals.
  */
 public enum OrderRelation {
-    LT,
-    LE,
-    GT,
-    GE;
-    
-    public OrderRelation    flip () {
-        switch (this) {
-            case LT:    return (GT);
-            case LE:    return (GE);
-            case GT:    return (LT);
-            case GE:    return (LE);
-            default:    throw new RuntimeException ();
-        }
+    EQ("==", "isEqual", "seq"),
+    NEQ("!=", "isNotEqual", "sneq"),
+    LT("<", "isLess", "slt"),
+    LE("<=", "isLessOrEqual", "sle"),
+    GT(">", "isGreater", "sgt"),
+    GE(">=", "isGreaterOrEqual", "sge");
+
+    private final String operator;
+    private final String decimalMethod;
+    private final String charSequenceMethod;
+
+    OrderRelation(final String operator, final String decimalMethod, final String charSequenceMethod) {
+        this.operator = operator;
+        this.decimalMethod = decimalMethod;
+        this.charSequenceMethod = charSequenceMethod;
     }
-};
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public String getDecimalMethod() {
+        return decimalMethod;
+    }
+
+    public String getCharSequenceMethod() {
+        return charSequenceMethod;
+    }
+}

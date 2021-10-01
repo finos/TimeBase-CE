@@ -20,6 +20,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.UnboundWriter;
 import com.epam.deltix.qsrv.hf.pub.WritableValue;
@@ -31,11 +32,12 @@ import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.util.collections.generated.ByteArrayList;
 import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import com.epam.deltix.util.memory.MemoryDataOutput;
+import com.epam.deltix.util.time.TimeFormatter;
 
 import java.text.ParseException;
 
 /**
- * Created by Alex Karpovich on 10/3/2018.
+ * Json parser into InstrumentMessage message.
  */
 public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
 
@@ -74,10 +76,13 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
         else if (type instanceof IntegerDataType)
             w.writeLong(value.getAsLong());
         else if (type instanceof FloatDataType) {
-            if (type.getEncoding().equals(FloatDataType.ENCODING_FIXED_FLOAT))
+            if (((FloatDataType) type).isDecimal64()) {
+                w.writeLong(Decimal64Utils.parse(value.getAsString()));
+            } else if (((FloatDataType) type).isFloat()) {
                 w.writeFloat(value.getAsFloat());
-            else
+            } else {
                 w.writeDouble(value.getAsDouble());
+            }
         }
         else if (type instanceof VarcharDataType || type instanceof CharDataType) {
             w.writeString(value.getAsString());
@@ -102,7 +107,7 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
             w.writeLong(time);
         }
         else if (type instanceof TimeOfDayDataType) {
-            int time = value.getAsInt();
+            int time = parseTime(value.getAsString());
             w.writeInt(time);
         } else if (type instanceof ArrayDataType) {
             writeArray(value, (ArrayDataType) type, w);
@@ -126,6 +131,18 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected long parseNanoDateTime(String value) {
+        try {
+            return dateFormatter.fromNanosDateString(value);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected int parseTime(String value) {
+        return TimeFormatter.parseTimeOfDayMillis(value);
     }
 
     @Override
@@ -182,6 +199,10 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
             raw.setTimeStampMs(parseDateTime(object.get("timestamp").getAsString()));
         else
             raw.setTimeStampMs(Long.MIN_VALUE);
+
+        if (object.has("nanoTime")) {
+            raw.setNanoTime(parseNanoDateTime(object.get("nanoTime").getAsString()));
+        }
 
         return raw;
     }

@@ -422,7 +422,7 @@ public class TopicProtocol {
 
     @Nonnull
     private static List<RecordClassDescriptor> readTypes(DataInputStream in) throws IOException {
-        RecordClassSet recordClassSet = TDBProtocol.readClassSet(in);
+        RecordClassSet recordClassSet = (RecordClassSet) TDBProtocol.readClassSet(in);
         RecordClassDescriptor[] contentClasses = recordClassSet.getContentClasses();
         return Arrays.asList(contentClasses);
     }

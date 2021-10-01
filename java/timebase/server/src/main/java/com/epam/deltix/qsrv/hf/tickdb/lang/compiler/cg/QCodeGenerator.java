@@ -16,11 +16,18 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledFilter;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledQuery;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledUnion;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.SingleMessageSource;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.StreamSelector;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.BasicStreamSelector;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.CompositePreparedQuery;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.msgsrcs.SingleMessagePreparedQuery;
+import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.PreparedQuery;
-import com.epam.deltix.util.jcg.*;
+import com.epam.deltix.qsrv.hf.tickdb.schema.SimpleClassSet;
+import com.epam.deltix.util.jcg.JCompoundStatement;
 import com.epam.deltix.util.lang.JavaCompilerHelper;
 
 /**
@@ -36,15 +43,27 @@ public abstract class QCodeGenerator {
         to.type.move (from, to, addTo);
     }
 
-    public static PreparedQuery        createQuery (CompiledQuery cq) {
+    public static PreparedQuery        createQuery (CompiledQuery cq, DXTickDB db) {
         if (cq instanceof StreamSelector)
             return (createStreamSelector ((StreamSelector) cq));
 
         if (cq instanceof CompiledFilter) {
             CompiledFilter  cf = (CompiledFilter) cq;
-            PreparedQuery   source = createQuery (cf.source);
+            PreparedQuery   source = createQuery (cf.source, db);
             JavaCompilerHelper helper = new JavaCompilerHelper (CompiledFilter.class.getClassLoader ());
-            return (new FilterGenerator ((CompiledFilter) cq).finish (helper, source));
+            return (new FilterGenerator ((CompiledFilter) cq).finish (helper, source, db));
+        }
+
+        if (cq instanceof CompiledUnion) {
+            CompiledUnion union = (CompiledUnion) cq;
+            PreparedQuery[] subQueries = new PreparedQuery[union.queries.length];
+            for (int i = 0; i < union.queries.length; ++i) {
+                subQueries[i] = createQuery(union.queries[i], db);
+            }
+
+            return new CompositePreparedQuery(
+                subQueries, union.isForward(), new SimpleClassSet(union.getConcreteOutputTypes()), union.limit
+            );
         }
 
         if (cq instanceof SingleMessageSource)

@@ -52,12 +52,16 @@ public class S3Utils {
         return serializeMetadata(S3SpaceMetadata.fromStream(stream, space, firstTimestamp));
     }
 
-    public static String getDataKey(DXTickStream stream, String spaceId) {
-        String dataKey = stream.getKey();
+    public static String getDataKey(String streamKey, String spaceId) {
+        String dataKey = streamKey;
         if (spaceId != null) {
             dataKey += KEY_DELIMITER + "space=" + spaceId;
         }
         return dataKey;
+    }
+
+    public static String getDataKey(DXTickStream stream, String spaceId) {
+        return getDataKey(stream.getKey(), spaceId);
     }
 
     public static String[] getSpaces(S3DataStore dataStore, String streamKey) {

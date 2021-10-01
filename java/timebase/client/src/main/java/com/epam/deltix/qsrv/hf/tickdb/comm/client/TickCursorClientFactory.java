@@ -47,15 +47,30 @@ import static com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol.*;
 public class TickCursorClientFactory {
 
     public static TickCursor create(
-                                     DXRemoteDB                 db,
-                                     SelectionOptions           inOptions,
-                                     long                       time,
-                                     String                     query,
-                                     Parameter[]                parameters,
-                                     IdentityKey[]       ids,
-                                     String[]                   types,
-                                     DXClientAeronContext       aeronContext,
-                                     TickStream...              streams
+            DXRemoteDB                 db,
+            SelectionOptions           inOptions,
+            long                       time,
+            String                     query,
+            Parameter[]                parameters,
+            IdentityKey[]              ids,
+            String[]                   types,
+            DXClientAeronContext       aeronContext,
+            TickStream...              streams
+    ) {
+        return create(db, inOptions, time, Long.MAX_VALUE, query, parameters, ids, types, aeronContext, streams);
+    }
+
+    public static TickCursor create(
+            DXRemoteDB                 db,
+            SelectionOptions           inOptions,
+            long                       startTimestamp,
+            long                       endTimestamp,
+            String                     query,
+            Parameter[]                parameters,
+            IdentityKey[]              ids,
+            String[]                   types,
+            DXClientAeronContext       aeronContext,
+            TickStream...              streams
     ) {
         SelectionOptions options = inOptions == null ? new SelectionOptions () : inOptions;
         assert !options.restrictStreamType || query == null : "restrictStreamType and query are not compatible";
@@ -79,7 +94,7 @@ public class TickCursorClientFactory {
 
             out.writeBoolean(true); // binary serialization
             SelectionOptionsCodec.write (out, options, db.getServerProtocolVersion());
-            out.writeLong (time);
+            out.writeLong (startTimestamp);
 
             writeInstrumentIdentities (ids, out);
 
@@ -112,6 +127,9 @@ public class TickCursorClientFactory {
             out.writeBoolean (query != null);
             if (query != null) {
                 out.writeUTF (query);
+                if (db.getServerProtocolVersion() >= 131) { // added in protocol version 114
+                    out.writeLong(endTimestamp);
+                }
                 writeParameters (parameters, out);
             }
 
@@ -139,13 +157,13 @@ public class TickCursorClientFactory {
 
                 TickCursor result;
                 if (transportType == TRANSPORT_TYPE_SOCKET) {
-                    result = new TickCursorClient(db, tmpds, options, time, allEntitiesSubscribed, allTypesSubscribed, subscribedEntities, subscribedTypes, subscribedStreams);
+                    result = new TickCursorClient(db, tmpds, options, startTimestamp, allEntitiesSubscribed, allTypesSubscribed, subscribedEntities, subscribedTypes, subscribedStreams);
                 } else if (transportType == TRANSPORT_TYPE_AERON) {
                     String aeronDir = in.readUTF();
                     Aeron aeron = aeronContext.getServerSharedAeronInstance(aeronDir);
                     int aeronDataStreamId = in.readInt();
                     int aeronCommandStreamId = in.readInt();
-                    result = new TickCursorClientAeron(db, tmpds, options, time, allEntitiesSubscribed, allTypesSubscribed, subscribedEntities, subscribedTypes, subscribedStreams, aeron, aeronDataStreamId, aeronCommandStreamId, aeronContext.getSubscriptionChecker());
+                    result = new TickCursorClientAeron(db, tmpds, options, startTimestamp, allEntitiesSubscribed, allTypesSubscribed, subscribedEntities, subscribedTypes, subscribedStreams, aeron, aeronDataStreamId, aeronCommandStreamId, aeronContext.getSubscriptionChecker());
                 } else {
                     throw new IllegalStateException("Unknown transport type code: " + transportType);
                 }
@@ -203,7 +221,8 @@ public class TickCursorClientFactory {
     public static TickCursor create(
             DXRemoteDB                 db,
             SelectionOptions           inOptions,
-            long                       time,
+            long                       startTime,
+            long                       endTime,
             String                     query,
             Parameter[]                parameters,
             CharSequence[]             symbols,
@@ -233,7 +252,7 @@ public class TickCursorClientFactory {
 
             out.writeBoolean(true); // binary serialization
             SelectionOptionsCodec.write (out, options, db.getServerProtocolVersion());
-            out.writeLong (time);
+            out.writeLong (startTime);
 
             IdentityKey[] ids = writeSymbols(symbols, out);
 
@@ -266,6 +285,9 @@ public class TickCursorClientFactory {
             out.writeBoolean (query != null);
             if (query != null) {
                 out.writeUTF (query);
+                if (db.getServerProtocolVersion() >= 131) { // added in protocol version 114
+                    out.writeLong(endTime);
+                }
                 writeParameters (parameters, out);
             }
 
@@ -293,13 +315,13 @@ public class TickCursorClientFactory {
 
                 TickCursor result;
                 if (transportType == TRANSPORT_TYPE_SOCKET) {
-                    result = new TickCursorClient(db, tmpds, options, time, allEntitiesSubscribed, allTypesSubscribed, subscribedEntities, subscribedTypes, subscribedStreams);
+                    result = new TickCursorClient(db, tmpds, options, startTime, allEntitiesSubscribed, allTypesSubscribed, subscribedEntities, subscribedTypes, subscribedStreams);
                 } else if (transportType == TRANSPORT_TYPE_AERON) {
                     String aeronDir = in.readUTF();
                     Aeron aeron = aeronContext.getServerSharedAeronInstance(aeronDir);
                     int aeronDataStreamId = in.readInt();
                     int aeronCommandStreamId = in.readInt();
-                    result = new TickCursorClientAeron(db, tmpds, options, time, allEntitiesSubscribed, allTypesSubscribed, subscribedEntities, subscribedTypes, subscribedStreams, aeron, aeronDataStreamId, aeronCommandStreamId, aeronContext.getSubscriptionChecker());
+                    result = new TickCursorClientAeron(db, tmpds, options, startTime, allEntitiesSubscribed, allTypesSubscribed, subscribedEntities, subscribedTypes, subscribedStreams, aeron, aeronDataStreamId, aeronCommandStreamId, aeronContext.getSubscriptionChecker());
                 } else {
                     throw new IllegalStateException("Unknown transport type code: " + transportType);
                 }

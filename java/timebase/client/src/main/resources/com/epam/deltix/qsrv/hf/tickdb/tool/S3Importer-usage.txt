@@ -2,7 +2,9 @@
 +             S3 to TimeBase import Command-Line Options            +
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
--stream <stream_key>            Target stream. Required.
+-stream <stream_key>            Imported to S3 stream. Required.
+
+-targetStream <stream_key>      Target stream in TimeBase. By default equal to -stream value.
 
 -timebase <timebase_url>        Timebase URL. By default: dxtick://localhost:8011
 

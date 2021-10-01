@@ -524,10 +524,13 @@ public final class RecordLayout implements RecordClassInfo {
                 return CharacterArrayList.class;
             else if (u instanceof VarcharDataType) {
                 final VarcharDataType vdt = (VarcharDataType) u;
-                if (vdt.getEncodingType() == VarcharDataType.ALPHANUMERIC && vdt.getLength() <= 10)
+                if (vdt.getEncodingType() == VarcharDataType.ALPHANUMERIC && vdt.getLength() <= 10) {
                     return LongArrayList.class;
-                else
+                } else if (vdt.getEncodingType() == VarcharDataType.INLINE_VARSIZE) {
+                    return ObjectArrayList.class;
+                } else {
                     throw new UnsupportedOperationException(u.getClass().getSimpleName());
+                }
             } else
                 return Object.class;
         } else

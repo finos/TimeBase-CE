@@ -22,6 +22,5 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 public interface ExceptionResolver {
-    public Throwable create(Class<?> clazz, String message, Throwable cause);
+    public Throwable create(String className, String message, Throwable cause);
 }
-

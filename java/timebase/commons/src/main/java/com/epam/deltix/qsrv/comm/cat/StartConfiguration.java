@@ -29,22 +29,15 @@ public class StartConfiguration {
     private static ObjectToObjectHashMap<Type, String> DEFAULTS = new ObjectToObjectHashMap<>();
     static {
         DEFAULTS.put(Type.TimeBase, "com.epam.deltix.qsrv.config.TimebaseServiceExecutor");
-        DEFAULTS.put(Type.StrategyServer, "");
-        DEFAULTS.put(Type.UHF, "");
         DEFAULTS.put(Type.QuantServer, QuantServerExecutor.class.getName());
     }
 
     public QuantServiceConfig   tb;
-    public QuantServiceConfig   agg;
-    public QuantServiceConfig   uhf;
-    public QuantServiceConfig   sts;
-    public QuantServiceConfig   es;
     public QuantServiceConfig   quantServer;
 
     public int                  port;
 
     private ObjectToObjectHashMap<Type, ServiceExecutor> executors = new ObjectToObjectHashMap<>();
-
 
     public static StartConfiguration create(boolean timebase, boolean aggregator, boolean uhf) throws IOException {
         return create(timebase, aggregator, uhf, false, false, -1);
@@ -59,13 +52,6 @@ public class StartConfiguration {
         config.port = port;
 
         config.tb = (timebase) ? QuantServiceConfig.forService(Type.TimeBase) : null;
-        config.agg = (aggregator) ? QuantServiceConfig.forService(Type.Aggregator) : null;
-        config.uhf = (uhf) ? QuantServiceConfig.forService(Type.UHF) : null;
-
-        config.es = (es) ? QuantServiceConfig.forService(Type.ExecutionServer) : null;
-
-        config.sts = (sts) ? QuantServiceConfig.forService(Type.StrategyServer) : null;
-
         config.quantServer = QuantServiceConfig.forService(Type.QuantServer);
 
         return config;

@@ -91,4 +91,12 @@ public interface TimeSlice {
     public void             cut(long[] range, int[] entities, DataAccessorBase accessor);
 
     public void             cut(long startTime, long endTime, DataAccessorBase accessor);
+
+    /**
+     * Checks that time slice is checkout by this accessor only.
+     * @param accessor The accessor to which the TimeSlice is checked out.
+     * @return true, if accessor is only one that holds checkout
+     */
+    public boolean          isCheckoutOnly(DAPrivate accessor);
+
 }

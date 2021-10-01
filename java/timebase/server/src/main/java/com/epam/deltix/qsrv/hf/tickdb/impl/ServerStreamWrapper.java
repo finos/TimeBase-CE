@@ -309,6 +309,26 @@ public class ServerStreamWrapper extends ServerStreamImpl implements Wrapper<DXT
     }
 
     @Override
+    public void                     deleteSpaces(String... names) {
+        delegate.deleteSpaces(names);
+    }
+
+    @Override
+    public void                     renameSpace(String newName, String oldName) {
+        delegate.renameSpace(newName, oldName);
+    }
+
+    @Override
+    public String[]                 listSpaces() {
+        return delegate.listSpaces();
+    }
+
+    @Override
+    public IdentityKey[]            listEntities(String space) {
+        return delegate.listEntities(space);
+    }
+
+    @Override
     public void                     setHighAvailability(boolean value) {
         context.checkWritable(this);
 

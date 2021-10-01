@@ -17,14 +17,21 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
-import com.epam.deltix.util.jcg.*;
-import com.epam.deltix.util.io.*;
-import com.epam.deltix.util.jcg.scg.*;
-import java.io.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.*;
-import com.epam.deltix.util.lang.*;
-import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledExpression;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.MessagePredicate;
+import com.epam.deltix.util.io.IOUtil;
+import com.epam.deltix.util.jcg.JClass;
+import com.epam.deltix.util.jcg.JCompoundStatement;
+import com.epam.deltix.util.jcg.JExpr;
+import com.epam.deltix.util.jcg.JMethod;
+import com.epam.deltix.util.jcg.scg.SourceCodePrinter;
+import com.epam.deltix.util.lang.JavaCompilerHelper;
+import com.epam.deltix.util.memory.MemoryDataInput;
+
+import java.io.IOException;
+
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.DEBUG_DUMP_CODE;
 import static java.lang.reflect.Modifier.*;
 
 /**
@@ -67,22 +74,26 @@ public class PredicateGenerator {
                 classRegistry,
                 new QVariableContainer (FINAL, body, null, "$"),
                 new QVariableContainer (PRIVATE, pjclass, null /*?*/, "v"),
-                body
+                new QVariableContainer (PRIVATE, pjclass, null /*?*/, "tv"),
+                body, pjclass, null, null, null, null, null, null
             );
         
         SourceClassMap                  scm = new SourceClassMap (inputTypes);
 
         scm.discoverFieldSelectors (e);
-        
+
+        //  MemoryDataInput in = new MemoryDataInput ();
+        JExpr in = pjclass.addVar(PRIVATE, MemoryDataInput.class, "in", CTXT.newExpr (MemoryDataInput.class)).access();
+
         SelectorGenerator   sg = 
-            new SelectorGenerator (pjclass, eg) {
+            new SelectorGenerator (pjclass, eg, scm, in) {
                 @Override
                 protected JExpr     getTypeIdxExpr () {
                     return (pjclass.inheritedVar (TYPE_IDX).access ());
                 }
             };
-        
-        sg.genSelectors (scm);
+
+        sg.genSelectors();
         
         QValue              ret = eg.genEval (e);
         

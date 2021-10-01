@@ -29,7 +29,7 @@ public abstract class MessagePredicate {
     protected abstract boolean          eval ();
     
     public final boolean                accept (
-        InstrumentMessage msgHeader,
+        InstrumentMessage                   msgHeader,
         int                                 typeIdx,
         byte []                             data,
         int                                 offset,

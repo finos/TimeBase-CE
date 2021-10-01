@@ -16,12 +16,29 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem;
 
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
-import com.epam.deltix.qsrv.hf.pub.md.*;
-import com.epam.deltix.qsrv.hf.tickdb.pub.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
+import com.epam.deltix.qsrv.hf.pub.md.ArrayDataType;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.DataField;
+import com.epam.deltix.qsrv.hf.pub.md.DataType;
+import com.epam.deltix.qsrv.hf.pub.md.EnumClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.EnumValue;
+import com.epam.deltix.qsrv.hf.pub.md.FloatDataType;
+import com.epam.deltix.qsrv.hf.pub.md.IntegerDataType;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledExpression;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.FieldIdentifier;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Identifier;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.NamedObjectType;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.QuantQueryCompiler;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Statement;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TypeIdentifier;
+import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.PreparedQuery;
 import com.epam.deltix.util.lang.Util;
+import com.epam.deltix.util.parsers.Element;
+
+import java.util.Objects;
 
 /**
  *
@@ -30,13 +47,15 @@ public class QQLCompiler implements QuantQueryCompiler {
     public static final String      KEYWORD_ENTITY = "ENTITY";
     public static final String      KEYWORD_TIMESTAMP = "TIMESTAMP";
     public static final String      KEYWORD_SYMBOL = "SYMBOL";
-    public static final String      KEYWORD_TYPE = "TYPE";
+    //public static final String      KEYWORD_TYPE = "TYPE";
     public static final String      KEYWORD_THIS = "THIS";
     public static final String      KEYWORD_LAST = "LAST";
     public static final String      KEYWORD_FIRST = "FIRST";
     public static final String      KEYWORD_REVERSE = "REVERSE";
     public static final String      KEYWORD_LIVE = "LIVE";
     public static final String      KEYWORD_HYBRID = "HYBRID";
+    public static final String      KEYWORD_POSITION = "POSITION";
+    public static final String      KEYWORD_NOW = "NOW";
 
     private final DXTickDB          db;
     private Environment             env;
@@ -102,7 +121,20 @@ public class QQLCompiler implements QuantQueryCompiler {
     
     public static boolean           isCompatibleWithoutConversion (DataType from, DataType to) {
         //TODO: handle conversion to base classes at the very least
+        if (from instanceof FloatDataType && to instanceof FloatDataType) {
+            FloatDataType fromType = (FloatDataType) from;
+            FloatDataType toType = (FloatDataType) to;
+            return isDecimal64(fromType) && isDecimal64(toType) || !isDecimal64(fromType) && !isDecimal64(toType);
+        } if (from instanceof ArrayDataType && to instanceof ArrayDataType) {
+            DataType e1 = ((ArrayDataType) from).getElementDataType();
+            DataType e2 = ((ArrayDataType) to).getElementDataType();
+            return e1.getClass() == e2.getClass() && Objects.equals(e1.getEncoding(), e2.getEncoding());
+        }
         return (to.getClass () == from.getClass ());
+    }
+
+    private static boolean          isDecimal64(FloatDataType floatDataType) {
+        return floatDataType.getScale() == FloatDataType.SCALE_DECIMAL64;
     }
 
     public static int               paramTypeCompatibilityHashCode (DataType t) {
@@ -163,5 +195,9 @@ public class QQLCompiler implements QuantQueryCompiler {
     
     public static Object            lookUpType (Environment e, TypeIdentifier id) {
         return (e.lookUp (NamedObjectType.TYPE, id.typeName, id.location));
+    }
+
+    public static Object            lookUpType (Environment e, String name) {
+        return (e.lookUp (NamedObjectType.TYPE, name, Element.NO_LOCATION));
     }
 }

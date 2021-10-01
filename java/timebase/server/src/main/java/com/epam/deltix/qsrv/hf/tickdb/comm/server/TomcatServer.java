@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 /**
- * Created by Alex Karpovich on 4/4/2018.
+ * Tomcat Test Server
  */
 public class TomcatServer implements EmbeddedServer {
     private TomcatRunner        runner;
@@ -86,4 +86,3 @@ public class TomcatServer implements EmbeddedServer {
         return config.port;
     }
 }
-

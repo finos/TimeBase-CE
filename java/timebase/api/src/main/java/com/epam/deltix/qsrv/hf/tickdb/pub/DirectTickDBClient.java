@@ -17,6 +17,8 @@
 package com.epam.deltix.qsrv.hf.tickdb.pub;
 
 import com.epam.deltix.data.stream.DXChannel;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.timebase.messages.IdentityKey;
@@ -231,28 +233,48 @@ public class DirectTickDBClient implements DXTickDB {
     }
 
     @Override
-    public InstrumentMessageSource  executeQuery (
-        Element                         qql,
-        SelectionOptions                options,
-        TickStream []                   streams,
-        CharSequence []                 ids,
-        long                            time, 
-        Parameter ...                   params
-    )
-        throws CompilationException 
+    public ClassSet<ClassDescriptor> describeQuery(String qql, SelectionOptions options, Parameter... params) throws CompilationException {
+        assertOpen();
+        return server.describeQuery(qql,options, params);
+    }
+
+//    @Override
+//    public InstrumentMessageSource executeQuery(
+//            String qql,
+//            SelectionOptions options,
+//            TickStream[] streams,
+//            String[] ids,
+//            long startTimestamp,
+//            long endTimestamp,
+//            Parameter... params) throws CompilationException
+//    {
+//        assertOpen();
+//        return server.executeQuery(qql, options, streams, ids, startTimestamp, endTimestamp, params);
+//    }
+
+    @Override
+    public InstrumentMessageSource executeQuery(
+            String                          qql,
+            SelectionOptions                options,
+            TickStream []                   streams,
+            CharSequence []                 ids,
+            long                            startTimestamp,
+            long                            endTimestamp,
+            Parameter ...                   params)
+       throws CompilationException
     {
-        assertOpen ();
-        return server.executeQuery (qql, options, streams, ids, time, params);
+        assertOpen();
+        return server.executeQuery(qql, options, streams, ids, startTimestamp, endTimestamp, params);
     }
 
     @Override
     public InstrumentMessageSource  executeQuery (
-        String qql,
-        SelectionOptions options,
-        TickStream[] streams,
-        CharSequence[] ids,
-        long time, 
-        Parameter... params
+        String                  qql,
+        SelectionOptions        options,
+        TickStream[]            streams,
+        CharSequence[]          ids,
+        long                    time,
+        Parameter...            params
     ) 
         throws CompilationException 
     {
@@ -312,12 +334,6 @@ public class DirectTickDBClient implements DXTickDB {
     public DXTickStream             createStream (String key, StreamOptions options) {
         assertWritable ();
         return server.createStream (key, options);
-    }
-
-    @Override
-    public DXTickStream             createFileStream (String key, String dataFile) {
-        assertWritable ();
-        return server.createFileStream (key, dataFile);
     }
 
     @Override

@@ -17,9 +17,8 @@
 package com.epam.deltix.test.qsrv.hf.pub;
 
 import com.epam.deltix.qsrv.hf.pub.md.*;
-import com.epam.deltix.test.qsrv.hf.tickdb.testframework.TestEnum;
+import com.epam.deltix.qsrv.test.messages.TestEnum;
 import com.epam.deltix.timebase.messages.*;
-import junit.framework.Test;
 
 import java.util.List;
 
@@ -127,7 +126,7 @@ public class MsgClassAllPublic {
         s1 = "Hi Kolia";
         mString = "IBM";
         mCharSequence = "MSFT";
-        mEnum = TestEnum.RED;
+        mEnum = TestEnum.ONE;
         mByte = 1;
         mShort = 2;
         mInt = 3;
@@ -159,7 +158,7 @@ public class MsgClassAllPublic {
         values.add(1235746625319L); //mDateTime
         values.add(76456577.76);  //mDouble
         values.add(null); //mDouble2  // FloatDataType.IEEE64_NULL assert validation code doesn't support it
-        values.add(TestEnum.RED.toString());  //mEnum
+        values.add(TestEnum.ONE.toString());  //mEnum
         values.add(63545.34f);  //mFloat
         values.add(3);  //mInt
         values.add(4L);  //mInt48

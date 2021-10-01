@@ -37,9 +37,11 @@ public abstract class ObjectPool<T> {
     public abstract T       newItem();
 
     public final T          borrow() {
-        if (availIdx < pool.size())
-            return pool.get(availIdx++);
-        else {
+        if (availIdx < pool.size()) {
+            T item = pool.get(availIdx++);
+            resetItem(item);
+            return item;
+        } else {
             availIdx = Integer.MAX_VALUE; // give up on reusage until reset
             final T item = newItem();
             pool.add(item);
@@ -49,5 +51,8 @@ public abstract class ObjectPool<T> {
 
     public final void       reset() {
         availIdx = 0;
+    }
+
+    protected void resetItem(T item) {
     }
 }

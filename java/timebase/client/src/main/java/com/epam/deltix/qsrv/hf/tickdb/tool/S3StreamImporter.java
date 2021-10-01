@@ -24,6 +24,7 @@ import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
 import com.epam.deltix.qsrv.hf.tickdb.pub.LoadingOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickLoader;
+import com.epam.deltix.util.collections.generated.ObjectHashSet;
 import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import com.epam.deltix.util.s3.S3DataStore;
 
@@ -39,15 +40,17 @@ public class S3StreamImporter implements Runnable {
     private static final Log LOG = LogFactory.getLog(S3StreamImporter.class);
     private static final long LOG_RATE = 50000;
 
-    private final DXTickStream stream;
+    private final String stream;
+    private final DXTickStream targetStream;
     private final S3DataStore dataStore;
     private final String[] spaces;
     private final long startTime;
     private final long endTime;
     private final ImportMode importMode;
 
-    public S3StreamImporter(DXTickStream stream, String[] spaces, S3DataStore dataStore, long startTime, long endTime, ImportMode importMode) {
+    public S3StreamImporter(String stream, DXTickStream targetStream, String[] spaces, S3DataStore dataStore, long startTime, long endTime, ImportMode importMode) {
         this.stream = stream;
+        this.targetStream = targetStream;
         this.spaces = spaces;
         this.dataStore = dataStore;
         this.startTime = startTime;
@@ -66,7 +69,7 @@ public class S3StreamImporter implements Runnable {
             for (String space : spaces) {
                 try {
                     S3RawMessageReader reader = new S3RawMessageReader(dataStore, S3Utils.getDataKey(stream, space),
-                            startTime, endTime, stream.getTypes());
+                            startTime, endTime, targetStream.getTypes());
                     readers.put(space, reader);
                     if (reader.isOldFormat()) {
                         oldFormat = true;
@@ -88,7 +91,7 @@ public class S3StreamImporter implements Runnable {
                         Arrays.stream(spaces)
                                 .map(space -> S3Utils.getDataKey(stream, space))
                                 .toArray(String[]::new),
-                        startTime, endTime, stream.getTypes());
+                        startTime, endTime, targetStream.getTypes());
             }
             prepareStream(firstTimestamp, lastTimestamp);
             ExecutorService executor = Executors.newFixedThreadPool(readers.size());
@@ -110,7 +113,7 @@ public class S3StreamImporter implements Runnable {
 
     private void logStart() {
         LOG.info().append("Running import in stream ")
-                .append(stream.getKey())
+                .append(stream)
                 .append(" with import mode ")
                 .append(importMode.name())
                 .append('.')
@@ -149,11 +152,11 @@ public class S3StreamImporter implements Runnable {
         TimeStamp start = TimeStamp.fromMilliseconds(isStartTimeDefined() ? startTime: firstTimestamp);
         TimeStamp end = TimeStamp.fromMilliseconds(isEndTimeDefined() ? endTime: lastTimestamp);
         LOG.info().append("Deleting data from stream ")
-                .append(stream.getKey())
+                .append(stream)
                 .append(", startTime: ").appendTimestamp(start.getTimeStampMs())
                 .append(", endTime: ").appendTimestamp(end.getTimeStampMs())
                 .commit();
-        stream.delete(start, end);
+        targetStream.delete(start, end);
     }
 
     private void prepareWithInsertMode(long firstTimestamp, long lastTimestamp) {
@@ -180,6 +183,7 @@ public class S3StreamImporter implements Runnable {
 
         private final S3RawMessageReader reader;
         private final String spaceId;
+        private final ObjectHashSet<String> mapping = new ObjectHashSet<>();
 
         private SpaceImporter(S3RawMessageReader reader, String spaceId) {
             this.reader = reader;
@@ -203,7 +207,7 @@ public class S3StreamImporter implements Runnable {
         }
 
         private TickLoader createLoader() {
-            return stream.createLoader(getOptions());
+            return targetStream.createLoader(getOptions());
         }
 
         private void logFinish(long count, long importStartTime) {

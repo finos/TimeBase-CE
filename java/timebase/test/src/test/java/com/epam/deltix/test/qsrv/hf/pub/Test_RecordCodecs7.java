@@ -25,7 +25,7 @@ import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.InstrumentMessageSource;
 import com.epam.deltix.qsrv.hf.tickdb.util.ZIPUtil;
-import com.epam.deltix.test.qsrv.hf.tickdb.testframework.TestEnum;
+import com.epam.deltix.qsrv.test.messages.TestEnum;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.timebase.messages.*;
 import com.epam.deltix.util.JUnitCategories;
@@ -525,7 +525,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         @Override
         public void setValues() {
             s1 = "Hi Kolia";
-            mEnum = TestEnum.RED;
+            mEnum = TestEnum.ONE;
         }
 
         @Override
@@ -910,7 +910,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         oPub1.add(1235746625319L); //mDateTime
         oPub1.add(76456577.76);  //mDouble
         oPub1.add(null); //mDouble2 // FloatDataType.IEEE64_NULL assert validation code doesn't support it
-        oPub1.add(TestEnum.RED.toString()); //mEnum
+        oPub1.add(TestEnum.ONE.toString()); //mEnum
         oPub1.add(63545.34f); //mFloat
         oPub1.add(3);       //mInt
         oPub1.add(4L);      //mInt48
@@ -998,7 +998,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
 
         List<Object> oInter1 = new ArrayList<>(5);
         oInter1.add(findRCD(rcd, "oInter1", ClassAAA.class));
-        oInter1.add(TestEnum.RED.toString());
+        oInter1.add(TestEnum.ONE.toString());
         oInter1.add("Hi Kolia");
         oInter1.add(1);
         oInter1.add(2);
@@ -1008,7 +1008,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
 
         List<Object> oClass1 = new ArrayList<>(5);
         oClass1.add(findRCD(rcd, "oClass1", ClassAAB.class));
-        oClass1.add(TestEnum.RED.toString());
+        oClass1.add(TestEnum.ONE.toString());
         oClass1.add("Hi Kolia");
         oClass1.add(3);
         oClass1.add(4L);
@@ -1055,7 +1055,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
 
         oInter1 = new ArrayList<>(5);
         oInter1.add(findRCD(rcd, "oInter1", ClassAAAA.class));
-        oInter1.add(TestEnum.RED.toString());
+        oInter1.add(TestEnum.ONE.toString());
         oInter1.add("Hi Kolia");
         oInter1.add(1);
         oInter1.add(2);
@@ -1066,7 +1066,7 @@ public class Test_RecordCodecs7 extends Test_RecordCodecsBase {
         values.add(null);
         oClass1 = new ArrayList<>(5);
         oClass1.add(findRCD(rcd, "oClass1", ClassAAB.class));
-        oClass1.add(TestEnum.RED.toString());
+        oClass1.add(TestEnum.ONE.toString());
         oClass1.add("Hi Kolia");
         oClass1.add(3);
         oClass1.add(4L);

@@ -16,14 +16,18 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
-import com.epam.deltix.util.jcg.*;
-import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.*;
+import com.epam.deltix.util.jcg.JCompoundStatement;
+import com.epam.deltix.util.jcg.JExpr;
+import com.epam.deltix.util.jcg.JStatement;
+
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
 
 /**
  *  Represents a value stored as a constant, variable or object field.
  */
 public abstract class QValue {
     public final QType          type;
+
     
     protected QValue (QType type) {
         this.type = type;
@@ -54,6 +58,10 @@ public abstract class QValue {
     
     public final void           encode (JExpr out, JCompoundStatement addTo) {
         type.encode (this, out, addTo);
+    }
+
+    public final void           encodeNull (JExpr out, JCompoundStatement addTo) {
+        type.encodeNull(out, addTo);
     }
     
     public final JStatement     decode (JExpr in) {

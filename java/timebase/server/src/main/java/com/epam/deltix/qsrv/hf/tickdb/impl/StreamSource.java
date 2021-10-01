@@ -62,6 +62,8 @@ interface StreamSource extends Disposable {
 
     public boolean                      entityCreated(IdentityKey id);
 
+    public boolean                      spaceCreated(String space);
+
     public boolean                      handle(MessageSource<?> feed, RuntimeException ex);
 
     /**

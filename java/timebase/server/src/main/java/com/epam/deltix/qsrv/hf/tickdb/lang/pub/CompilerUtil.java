@@ -16,23 +16,31 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
 
+import com.epam.deltix.qsrv.hf.pub.md.DataType;
+import com.epam.deltix.qsrv.hf.pub.md.StandardTypes;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCodeGenerator;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.DDLCompiler;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.Environment;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.InputParameterEnvironment;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.StdEnvironment;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.TimeBaseEnvironment;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledQuery;
+import com.epam.deltix.qsrv.hf.tickdb.lang.errors.ExpressionRequiredException;
+import com.epam.deltix.qsrv.hf.tickdb.lang.errors.SelectRequiredException;
+import com.epam.deltix.qsrv.hf.tickdb.lang.parser.QQLParser;
+import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
+import com.epam.deltix.qsrv.hf.tickdb.pub.query.PreparedQuery;
 import com.epam.deltix.util.parsers.CompilationException;
 import com.epam.deltix.util.parsers.Element;
-import com.epam.deltix.qsrv.hf.pub.md.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCodeGenerator;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledQuery;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.*;
-import com.epam.deltix.qsrv.hf.tickdb.pub.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.parser.QQLParser;
-import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
-import java.io.*;
+
+import java.io.Reader;
 
 /**
  *
  */
 public abstract class CompilerUtil {
-    private static final StdEnvironment     STDENV = new StdEnvironment (null);
+    public static final StdEnvironment     STDENV = new StdEnvironment (null);
     
     /**
      *  Creates a {@link TextMap} object, which can be optionally passed into 
@@ -185,19 +193,33 @@ public abstract class CompilerUtil {
     {
         QuantQueryCompiler      compiler = createCompiler (db, params);
         
-        if (qql instanceof SelectExpression) {
-            CompiledQuery           cq = 
-                (CompiledQuery) compiler.compile ((SelectExpression) qql, StandardTypes.CLEAN_QUERY);
-
-            return (QCodeGenerator.createQuery (cq));
+        if (qql instanceof SelectExpression || qql instanceof UnionExpression) {
+            CompiledQuery cq = (CompiledQuery) compiler.compile((Expression) qql, StandardTypes.CLEAN_QUERY);
+            return QCodeGenerator.createQuery(cq, db);
         }
         if (qql instanceof Statement) {
             return (compiler.compileStatement ((Statement) qql));
         }
-        else
-            throw new UnsupportedOperationException (qql.toString ());
-    }    
-    
+        throw new UnsupportedOperationException (qql.toString ());
+    }
+
+    public static PreparedQuery prepareQuery(DXTickDB db, Element qql, long endTimestamp, ParamSignature... params)
+            throws CompilationException {
+        QuantQueryCompiler compiler = createCompiler(db, params);
+
+        if (qql instanceof SelectExpression) {
+            SelectExpression selectExpression = (SelectExpression) qql;
+            selectExpression.setEndTime(endTimestamp);
+            CompiledQuery cq = (CompiledQuery) compiler.compile(selectExpression, StandardTypes.CLEAN_QUERY);
+
+            return (QCodeGenerator.createQuery(cq, db));
+        }
+        if (qql instanceof Statement) {
+            return (compiler.compileStatement((Statement) qql));
+        } else
+            throw new UnsupportedOperationException(qql.toString());
+    }
+
     public static DataType              parseDataType (String text) {
         DataTypeSpec    spec = (DataTypeSpec) parse ('\01' + text);
         

@@ -17,8 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.schema;
 
 /**
- * Created by IntelliJ IDEA.
- * User: KarpovichA   
+ * Container class for Stream Schema Changes
  */
 public interface SchemaChange {
 
@@ -26,9 +25,13 @@ public interface SchemaChange {
 
     public enum Impact {
         None,
+
+        /**
+         * Indicates that change will cause converting stream data.
+         */
         DataConvert,
         /**
-         * Indicates, that we cannot apply this change to schema.
+         * Indicates that change cannot be applied to stream schema.
          */
         DataLoss,
     }

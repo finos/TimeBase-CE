@@ -276,6 +276,8 @@ public class RecordClassSet implements MetaData<RecordClassDescriptor>, Serializ
             
             cd.visitDependencies (adder);
         }
+
+        buildNameIndex ();
     }
 
     private void                                addClassToNameIndex (ClassDescriptor cd) {        

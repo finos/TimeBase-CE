@@ -35,6 +35,9 @@ public class SSLClientContextProvider {
     private static SSLContext   sslContext = null;
     private static Exception    error = null;
 
+    // use this flag only when you need dynamically change key store, for example in UI (QSArchitect)
+    private static boolean useDynamicKeystore;
+
     static {
 
         try {
@@ -53,10 +56,30 @@ public class SSLClientContextProvider {
     }
 
     public static SSLContext getSSLContext() {
+        if (useDynamicKeystore) {
+            return getDynamicSSLContext();
+        }
+
         if (sslContext == null && error != null)
             throw new RuntimeException(error);
 
         return sslContext;
+    }
+
+    public static void useDynamicKeystore(boolean useDynamicKeystore) {
+        SSLClientContextProvider.useDynamicKeystore = useDynamicKeystore;
+}
+
+    private static SSLContext getDynamicSSLContext() {
+        String keystoreFile = System.getProperty(CLIENT_KEYSTORE_PROPNAME);
+        String keystorePass = System.getProperty(CLIENT_KEYSTORE_PASS_PROPNAME);
+        boolean trustAll = (System.getProperty(CLIENT_SSL_TRUST_ALL) != null);
+
+        try {
+            return SSLContextProvider.createSSLContext(keystoreFile, keystorePass, trustAll);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
     }
 
 }

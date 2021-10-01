@@ -21,16 +21,18 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
  */
 public final class EqualsExpression extends ComplexExpression {
     public final boolean        isEqual;
+    private final boolean strict;
 
-    public EqualsExpression (long location, Expression left, Expression right, boolean isEqual) {
+    public EqualsExpression (long location, Expression left, Expression right, boolean isEqual, boolean strict) {
         super (location, left, right);
 
         this.isEqual = isEqual;
+        this.strict = strict;
     }
 
-    public EqualsExpression (Expression left, Expression right, boolean isEqual) {
-        this (NO_LOCATION, left, right, isEqual);
-    }
+//    public EqualsExpression (Expression left, Expression right, boolean isEqual) {
+//        this (NO_LOCATION, left, right, isEqual);
+//    }
 
     @Override
     protected void              print (int outerPriority, StringBuilder s) {
@@ -54,5 +56,13 @@ public final class EqualsExpression extends ComplexExpression {
     @Override
     public int                      hashCode () {
         return (super.hashCode () * (isEqual ? 23 : 41));
+    }
+
+    public boolean isEqual() {
+        return isEqual;
+    }
+
+    public boolean isStrict() {
+        return strict;
     }
 }

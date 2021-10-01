@@ -73,6 +73,26 @@ public final class IntegerValueBean extends ValueBean {
     }
 
     @Override
+    public short getShort() throws NullValueException {
+        long lv = getLong();
+
+        if (lv < Short.MIN_VALUE || lv > Short.MAX_VALUE)
+            throw new IllegalStateException(lv + " cannot be converted to short");
+
+        return ((short) lv);
+    }
+
+    @Override
+    public byte getByte() throws NullValueException {
+        long lv = getLong();
+
+        if (lv < Byte.MIN_VALUE || lv > Byte.MAX_VALUE)
+            throw new IllegalStateException(lv + " cannot be converted to byte");
+
+        return ((byte) lv);
+    }
+
+    @Override
     public void         writeLong (long value) {
         if (value == nullValue) {
             if (!isNullable)

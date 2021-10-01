@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx;
 
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OrderRelation;
 import com.epam.deltix.util.collections.generated.IntegerArrayList;
 
 /**
@@ -48,91 +49,71 @@ public class TimestampLimits {
         
         maxParameters.add (idx);
     }
-        
-    public void                 update (
-        CompiledExpression          e,
-        SimpleFunctionCode          code,
-        boolean                     timestampOnRight
-    )
-    {
+
+    public void update(CompiledExpression<?> e, OrderRelation code, boolean timestampOnRight) {
         if (timestampOnRight) {
             switch (code) {
-                case TIMESTAMP_GT:
-                    code = SimpleFunctionCode.TIMESTAMP_LT;
+                case GT:
+                    code = OrderRelation.LT;
                     break;
-                    
-                case TIMESTAMP_GE:
-                    code = SimpleFunctionCode.TIMESTAMP_LE;
+                case GE:
+                    code = OrderRelation.LE;
                     break;
-                
-                case TIMESTAMP_LT:
-                    code = SimpleFunctionCode.TIMESTAMP_GT;
+                case LT:
+                    code = OrderRelation.GT;
                     break;
-                    
-                case TIMESTAMP_LE:
-                    code = SimpleFunctionCode.TIMESTAMP_GE;
-                    break;                    
+                case LE:
+                    code = OrderRelation.GE;
+                    break;
             }
         }
-        
+
         if (e instanceof CompiledConstant) {
-            CompiledConstant        cc = (CompiledConstant) e;            
-            long                    t = (Long) cc.value;
-            
+            CompiledConstant cc = (CompiledConstant) e;
+            long t = (Long) cc.value;
             switch (code) {
-                case TIMESTAMP_GT:
-                    inclusiveMinimum = Math.max (inclusiveMinimum, t + 1);
+                case GT:
+                    inclusiveMinimum = Math.max(inclusiveMinimum, t + 1);
                     break;
-                    
-                case TIMESTAMP_GE:
-                    inclusiveMinimum = Math.max (inclusiveMinimum, t);
+                case GE:
+                    inclusiveMinimum = Math.max(inclusiveMinimum, t);
                     break;
-                    
-                case TIMESTAMP_LT:
-                    inclusiveMaximum = Math.min (inclusiveMaximum, t - 1);
+                case LT:
+                    inclusiveMaximum = Math.min(inclusiveMaximum, t - 1);
                     break;
-                    
-                case TIMESTAMP_LE:
-                    inclusiveMaximum = Math.min (inclusiveMaximum, t);
+                case LE:
+                    inclusiveMaximum = Math.min(inclusiveMaximum, t);
                     break;
-                    
-                case TIMESTAMP_EQ:
-                    inclusiveMinimum = Math.max (inclusiveMinimum, t);
-                    inclusiveMaximum = Math.min (inclusiveMaximum, t);
+                case EQ:
+                    inclusiveMinimum = Math.max(inclusiveMinimum, t);
+                    inclusiveMaximum = Math.min(inclusiveMaximum, t);
                     break;
-                    
                 default:
-                    throw new UnsupportedOperationException (code.name ());
+                    throw new UnsupportedOperationException(code.name());
             }
-        }
-        else if (e instanceof ParamAccess) {
-            ParamAccess             pa = (ParamAccess) e;
-            int                     idx = pa.ref.index;
-            
+        } else if (e instanceof ParamAccess) {
+            ParamAccess pa = (ParamAccess) e;
+            int idx = pa.ref.index;
+
             switch (code) {
-                case TIMESTAMP_GT:
-                    addMinParam (idx, true);
+                case GT:
+                    addMinParam(idx, true);
                     break;
-                    
-                case TIMESTAMP_GE:
-                    addMinParam (idx, false);
+                case GE:
+                    addMinParam(idx, false);
                     break;
-                    
-                case TIMESTAMP_LT:
-                    addMaxParam (idx, true);
+                case LT:
+                    addMaxParam(idx, true);
                     break;
-                    
-                case TIMESTAMP_LE:
-                    addMaxParam (idx, false);
+                case LE:
+                    addMaxParam(idx, false);
                     break;
-                    
-                case TIMESTAMP_EQ:
-                    addMaxParam (idx, false);
-                    addMinParam (idx, false);
+                case EQ:
+                    addMaxParam(idx, false);
+                    addMinParam(idx, false);
                     break;
-                    
                 default:
-                    throw new UnsupportedOperationException (code.name ());
+                    throw new UnsupportedOperationException(code.name());
             }
         }
     }

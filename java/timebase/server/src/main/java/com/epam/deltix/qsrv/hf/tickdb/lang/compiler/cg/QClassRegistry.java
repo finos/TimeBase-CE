@@ -32,18 +32,22 @@ public class QClassRegistry {
         this.typesVar = typesVar;
     }
 
-    public JExpr                    getTypeRef (RecordClassDescriptor type) {
-        int     ret = registry.indexOf (type);
-
-        if (ret < 0) {
-            ret = registry.size ();
-            registry.add (type);
-        }
-
-        return (typesVar.index (ret));
+    public JExpr getTypeRef(RecordClassDescriptor type) {
+        return (typesVar.index(typeIndex(type)));
     }
 
-    public RecordClassDescriptor [] getTypes () {
-        return (registry.toArray (new RecordClassDescriptor [registry.size ()]));
+    public RecordClassDescriptor[] getTypes() {
+        return (registry.toArray(new RecordClassDescriptor[registry.size()]));
+    }
+
+    public int typeIndex(RecordClassDescriptor type) {
+        int ret = registry.indexOf(type);
+
+        if (ret < 0) {
+            ret = registry.size();
+            registry.add(type);
+        }
+
+        return ret;
     }
 }

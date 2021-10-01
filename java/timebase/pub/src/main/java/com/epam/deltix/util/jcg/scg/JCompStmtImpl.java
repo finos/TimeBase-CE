@@ -54,6 +54,11 @@ public class JCompStmtImpl
     }
 
     @Override
+    public boolean isEmpty() {
+        return statements.isEmpty();
+    }
+
+    @Override
     public void printElement(SourceCodePrinter out) throws IOException {
         print(out);
     }
@@ -100,6 +105,11 @@ public class JCompStmtImpl
     }
 
     @Override
+    public JInitVariable addVar(int modifiers, Class<?> type, Class<?>[] typeArgs, String name, JExpr initValue) {
+        return addVar(modifiers, context.classToType(type), context.classesToType(typeArgs), name, initValue);
+    }
+
+    @Override
     public JLocalVariable  addVar (int modifiers, JType type, String name) {
         return (addVar (modifiers, type, name, null));
     }
@@ -113,6 +123,25 @@ public class JCompStmtImpl
                 cn (type), 
                 name
             );
+
+        if (initValue != null)
+            vdecl.setInitValue (initValue);
+
+        statements.add (vdecl);
+
+        return (vdecl);
+    }
+
+    @Override
+    public JLocalVariable  addVar (int modifiers, JType type, JType[] typeArgs, String name, JExpr initValue) {
+        VarDeclImpl vdecl =
+                new VarDeclImpl(
+                        context,
+                        context.refineModifiersForLocalVarDecl(modifiers),
+                        cn(type),
+                        cn(typeArgs),
+                        name
+                );
 
         if (initValue != null)
             vdecl.setInitValue (initValue);

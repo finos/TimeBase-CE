@@ -27,6 +27,7 @@ class VariableImpl
 {
     private final String                    name;
     private final String                    type;
+    private final String[]                  typeArgs;
     private final int                       modifiers;
     protected String                        comment;
     private final Collection <JAnnotation>  annotations = new ArrayList <> ();
@@ -36,10 +37,15 @@ class VariableImpl
     }
 
     VariableImpl (JContextImpl context, int modifiers, String type, String name, String comment) {
+        this(context, modifiers, type, null, name, comment);
+    }
+
+    VariableImpl (JContextImpl context, int modifiers, String type, String[] typeArgs, String name, String comment) {
         super (context);
         
         this.name = name;
         this.type = type;
+        this.typeArgs = typeArgs;
         this.modifiers = modifiers;
         this.comment = comment;
     }
@@ -82,7 +88,7 @@ class VariableImpl
         }
 
         context.printModifiers (modifiers, out);
-        context.printType (type, out);
+        context.printType (type, typeArgs, out);
 
         out.print(" ", name);
     }

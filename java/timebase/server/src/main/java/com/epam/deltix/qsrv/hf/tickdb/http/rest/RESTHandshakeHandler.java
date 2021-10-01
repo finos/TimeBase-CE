@@ -25,6 +25,7 @@ import com.epam.deltix.util.lang.Disposable;
 import com.epam.deltix.util.security.SecurityController;
 import com.epam.deltix.util.tomcat.ConnectionHandshakeHandler;
 import com.epam.deltix.util.ContextContainer;
+import com.epam.deltix.util.vsocket.TLSContext;
 
 import java.io.*;
 import java.net.Socket;
@@ -50,12 +51,18 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
     private DXTickDB                tickdb;
     private final Map<String, DXTickDB> userNameToDb = new HashMap<>();
     private final ContextContainer contextContainer;
+    private final TLSContext        tlsContext;
 
-    public RESTHandshakeHandler(DXTickDB tickdb, SecurityController securityController, ContextContainer contextContainer) {
+    public RESTHandshakeHandler(DXTickDB tickdb,
+                                SecurityController securityController,
+                                ContextContainer contextContainer,
+                                TLSContext tlsContext)
+    {
         this.tickdb = tickdb;
         this.contextContainer = contextContainer;
         this.contextContainer.getQuickExecutor().reuseInstance();
         this.securityController = securityController;
+        this.tlsContext = tlsContext;
     }
 
     public boolean handleHandshake(Socket socket, BufferedInputStream bis, OutputStream os) throws IOException {

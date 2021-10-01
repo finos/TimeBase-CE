@@ -32,13 +32,6 @@ public class ModelFactoryImpl implements ModelFactory {
             menuModels[menuSection.ordinal()] = new MenuModelImpl(menuSection);
     }
 
-//    @Override
-//    public LicenseModel getLicenseModel(XLicense license) {
-//        LicenseModel licenseModel = new LicenseModelImpl(license);
-//        licenseModel.setMenuModel(getMenuModel(MenuSection.License));
-//        return licenseModel;
-//    }
-
     @Override
     public LoadersModel getLoadersModel() {
         LoadersModel loadersModel = new LoadersModelImpl();

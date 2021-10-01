@@ -17,6 +17,8 @@
 package com.epam.deltix.qsrv.hf.tickdb.impl;
 
 import com.epam.deltix.data.stream.DXChannel;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.MetaData;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TickDBServer;
@@ -269,17 +271,6 @@ public class TickDBWrapper
     }
 
     @Override
-    public DXTickStream         createFileStream(String key, String dataFile) {
-        checkState();
-        checkCanCreateStreams();
-
-        DXTickStream newStream = delegate.createFileStream(key, dataFile);
-        newStream.setOwner(user != null ? user.getName() : null);
-
-        return wrapAndCache(newStream);
-    }
-
-    @Override
     public DXTickStream         createStream(String key, String name, String description, int distributionFactor) {
         checkState();
         checkCanCreateStreams();
@@ -350,17 +341,14 @@ public class TickDBWrapper
     }
 
     @Override
-    public InstrumentMessageSource executeQuery(Element parsedQQL,
-                                                SelectionOptions options,
-                                                TickStream[] streams,
-                                                CharSequence[] ids,
-                                                long time,
-                                                Parameter... params) throws CompilationException
-    {
-        if (delegate instanceof PQExecutor)
-            return executeQuery((PQExecutor) delegate, parsedQQL, options, streams, ids, time == TimeConstants.TIMESTAMP_UNKNOWN, time, params);
+    public ClassSet<ClassDescriptor> describeQuery(String qql, SelectionOptions options, Parameter... params) throws CompilationException {
+        return delegate.describeQuery(qql, options, params);
+    }
 
-        return delegate.executeQuery(parsedQQL, options, streams, ids, time, params);
+
+    @Override
+    public InstrumentMessageSource executeQuery(String qql, SelectionOptions options, TickStream[] streams, CharSequence[] ids, long startTimestamp, long endTimestamp, Parameter... params) throws CompilationException {
+        return null;
     }
 
     private InstrumentMessageSource executeQuery(PQExecutor executor,

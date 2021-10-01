@@ -48,7 +48,15 @@ public class QEnumType extends QType <EnumDataType> {
 
     @Override
     public JExpr        getNullLiteral() {
-        return NULL;
+        final int size = getEncodedFixedSize ();
+
+        switch (size) {
+            case 1: return NULL.cast(byte.class);
+            case 2: return NULL.cast(short.class);
+            case 4: return NULL;
+            case 8: return NULL.cast(long.class);
+            default: return NULL;
+        }
     }
 
     @Override

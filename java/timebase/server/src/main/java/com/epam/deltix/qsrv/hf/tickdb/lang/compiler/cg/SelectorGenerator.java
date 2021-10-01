@@ -16,94 +16,89 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
-import java.util.*;
-import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.util.jcg.*;
-import com.epam.deltix.util.memory.*;
-import static java.lang.reflect.Modifier.*;
-import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.*;
- 
+
+import java.util.*;
+
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
+
 /**
  *
  */
 abstract class SelectorGenerator {
-    public final JClass                 globalClass;
-    public final EvalGenerator          evalGenerator;
+    public final JClass globalClass;
+    public final EvalGenerator evalGenerator;
+    protected final JExpr inVar;
+    protected final SourceClassMap sourceClassMap;
 
-    public SelectorGenerator (
-        JClass                  globalClass, 
-        EvalGenerator           evalGenerator
-    )
-    {
+    public SelectorGenerator(JClass globalClass, EvalGenerator evalGenerator, SourceClassMap sourceClassMap, JExpr inVar) {
         this.globalClass = globalClass;
         this.evalGenerator = evalGenerator;
+        this.sourceClassMap = sourceClassMap;
+        this.inVar = inVar;
     }
-        
-    protected abstract JExpr            getTypeIdxExpr ();
-    
-    void                        genSelectors (
-        SourceClassMap              scm
-    )
-    {
-        //  MemoryDataInput in = new MemoryDataInput ();
-        JExpr             in =
-            globalClass.addVar (
-                PRIVATE, MemoryDataInput.class, "in",
-                CTXT.newExpr (MemoryDataInput.class)
-            ).access ();
 
-        // in.setBytes (inMsg.data, inMsg.offset, inMsg.length);
-        evalGenerator.addTo.add (
-            in.call (
+    protected abstract JExpr getTypeIdxExpr();
+
+    protected void generateInit(JCompoundStatement addTo) {
+        addTo.add(
+            inVar.call(
                 "setBytes",
-                evalGenerator.inMsg.field ("data"),
-                evalGenerator.inMsg.field ("offset"),
-                evalGenerator.inMsg.field ("length")
+                evalGenerator.inMsg.field("data"),
+                evalGenerator.inMsg.field("offset"),
+                evalGenerator.inMsg.field("length")
             )
         );
+    }
+
+    protected void addDefaultSwitch(JSwitchStatement switchStatement) {
+    }
+
+    void genSelectors() {
         //
         //  Declare cache variables and bind to the evaluation environment
         //
-        for (TypeCheckInfo tci : scm.allTypeChecks ()) {
-            QBooleanType    qtype = (QBooleanType) QType.forDataType (tci.typeCheck.type);
+        for (TypeCheckInfo tci : sourceClassMap.allTypeChecks()) {
+            QBooleanType qtype = (QBooleanType) QType.forDataType(tci.typeCheck.type);
 
-            tci.cache = 
-                qtype.declareValue (
+            tci.cache =
+                qtype.declareValue(
                     "Result of " + tci.typeCheck,
-                    evalGenerator.stateVarContainer, 
-                    evalGenerator.classRegistry, 
+                    evalGenerator.interimStateVarContainer,
+                    evalGenerator.classRegistry,
                     false
                 );
-            
-            evalGenerator.bind (tci.typeCheck, tci.cache);
+
+            evalGenerator.bind(tci.typeCheck, tci.cache);
         }
 
-        for (ClassSelectorInfo csi : scm.allClassInfo ()) {
-            int                     numFields = csi.highestUsedIdx + 1;
+        for (ClassSelectorInfo csi : sourceClassMap.allClassInfo()) {
+            int numFields = csi.highestUsedIdx + 1;
 
             for (int ii = 0; ii < numFields; ii++) {
-                FieldSelectorInfo       fsi = csi.fields [ii];
-                
+                FieldSelectorInfo fsi = csi.fields[ii];
+
                 if (fsi.cache != null)
                     continue;
-                
+
                 if (fsi.fieldSelector == null && !fsi.usedAsBase)
                     continue;
 
-                QValue                  cache;
-                QType                   fstype = fsi.qtype;
-                
-                String                  comment =
-                    "Decoded " + fsi.fieldSelector;
-                
+                QValue cache;
+                QType fstype = fsi.qtype;
+
+                String comment = "Decoded " + fsi.fieldSelector;
+
                 if (fsi.fieldSelector == null)  // base field, but not used anywhere else
-                    if (fstype.instanceAllocatesMemory ())
-                        cache = fstype.declareValue (comment, evalGenerator.stateVarContainer, evalGenerator.classRegistry, false);
+                    if (fstype.instanceAllocatesMemory())
+                        cache = fstype.declareValue(comment, evalGenerator.interimStateVarContainer, evalGenerator.classRegistry, false);
                     else
-                        cache = fstype.declareValue (comment, evalGenerator.localVarContainer, evalGenerator.classRegistry, false);
+                        cache = fstype.declareValue(comment, evalGenerator.localVarContainer, evalGenerator.classRegistry, false);
                 else {
-                    cache = fstype.declareValue (comment, evalGenerator.stateVarContainer, evalGenerator.classRegistry, true);
-                    evalGenerator.bind (fsi.fieldSelector, cache);
+                    cache = fstype.declareValue(comment, evalGenerator.interimStateVarContainer, evalGenerator.classRegistry, true);
+                    evalGenerator.bind(fsi.fieldSelector, cache);
                 }
 
                 fsi.cache = cache;
@@ -112,103 +107,109 @@ abstract class SelectorGenerator {
         //
         //  Generate decoders
         //
-        RecordClassDescriptor []    concreteTypes = scm.concreteTypes;
-        int                         numInputTypes = concreteTypes.length;
-        Collection <TypeCheckInfo>  typeChecks = scm.allTypeChecks ();
+        RecordClassDescriptor[] concreteTypes = sourceClassMap.concreteTypes;
+        int numInputTypes = concreteTypes.length;
+        Collection<TypeCheckInfo> typeChecks = sourceClassMap.allTypeChecks();
+
+        JCompoundStatement addTo = CTXT.compStmt();
+
+        generateInit(addTo);
 
         if (numInputTypes > 1) {
-            JExpr                   typeIdx = getTypeIdxExpr ();
-            JSwitchStatement        sw = typeIdx.switchStmt ("typeSwitch");
-            boolean                 typeDependentCodeFound = false;
-            
-            for (int ii = 0; ii < numInputTypes; ii++) {
-                RecordClassDescriptor   rcd = concreteTypes [ii];
-                ClassSelectorInfo       csi = scm.getSelectorInfo (rcd);
+            JExpr typeIdx = getTypeIdxExpr();
+            JSwitchStatement sw = typeIdx.switchStmt("typeSwitch");
+            boolean typeDependentCodeFound = false;
 
-                if (csi.hasUsedFields () || !typeChecks.isEmpty ()) {
-                    sw.addCaseLabel (CTXT.intLiteral (ii), csi.type.getName ());
-                    genDecoderForOneType (scm.allTypeChecks (), csi, sw, in);
-                    sw.addBreak ();
+            for (int ii = 0; ii < numInputTypes; ii++) {
+                RecordClassDescriptor rcd = concreteTypes[ii];
+                ClassSelectorInfo csi = sourceClassMap.getSelectorInfo(rcd);
+
+                if (csi.hasUsedFields() || !typeChecks.isEmpty()) {
+                    sw.addCaseLabel(CTXT.intLiteral(ii), csi.type.getName());
+                    genDecoderForOneType(typeChecks, csi, sw, inVar);
+                    sw.addBreak();
                     typeDependentCodeFound = true;
                 }
             }
 
+            addDefaultSwitch(sw);
+
             if (typeDependentCodeFound)
-                evalGenerator.addTo.add (sw);
-        }
-        else
-            genDecoderForOneType (
-                scm.allTypeChecks (), 
-                scm.getSelectorInfo (concreteTypes [0]),
-                evalGenerator.addTo,
-                in
+                addTo.add(sw);
+        } else
+            genDecoderForOneType(
+                typeChecks,
+                sourceClassMap.getSelectorInfo(concreteTypes[0]),
+                addTo,
+                inVar
             );
+
+        evalGenerator.addTo.add(addTo);
     }
 
-    private void                genDecoderForOneType (
-        Collection <TypeCheckInfo>  typeChecks,
-        ClassSelectorInfo           csi,
-        JCompoundStatement          addTo,
-        JExpr                       in
-    )
-    {
+    private void genDecoderForOneType(
+        Collection<TypeCheckInfo> typeChecks,
+        ClassSelectorInfo csi,
+        JCompoundStatement addTo,
+        JExpr in
+    ) {
         for (TypeCheckInfo tci : typeChecks) {
-            ClassDescriptor   testClass = tci.typeCheck.checkType;
+            ClassDescriptor testClass = tci.typeCheck.checkType;
 
-            boolean     test = 
+            boolean test =
                 testClass instanceof RecordClassDescriptor &&
-                ((RecordClassDescriptor) testClass).isAssignableFrom (csi.type);
+                    ((RecordClassDescriptor) testClass).isAssignableFrom(csi.type);
 
-            addTo.add (tci.cache.write (QBooleanType.getLiteral (test)));
+            addTo.add(tci.cache.write(QBooleanType.getLiteral(test)));
         }
 
-        QByteSkipContext            skipper = new QByteSkipContext (in, addTo);
-        
-        int                         numFields = csi.highestUsedIdx + 1;
-        
-        for (int ii = 0; ii < numFields; ii++) {
-            FieldSelectorInfo       fsi = csi.fields [ii];
-            QType                   type = fsi.qtype;
+        QByteSkipContext skipper = new QByteSkipContext(in, addTo);
 
-            addTo.addComment ("Decode field " + fsi.field.getName ());
+        int numFields = csi.highestUsedIdx + 1;
+
+        for (int ii = 0; ii < numFields; ii++) {
+            FieldSelectorInfo fsi = csi.fields[ii];
+            QType type = fsi.qtype;
+
+            addTo.addComment("Decode field " + fsi.field.getName());
 
             if (fsi.fieldSelector == null && !fsi.usedAsBase) {
-                int         n = type.getEncodedFixedSize ();
+                int n = type.getEncodedFixedSize();
 
                 if (n != QType.SIZE_VARIABLE)
-                    skipper.skipBytes (n);
+                    skipper.skipBytes(n);
                 else {
-                    skipper.flush ();
-                    
-                    JStatement      ifMore =
-                        CTXT.ifStmt (
-                            in.call ("hasAvail"), 
-                            type.skip (in)
+                    skipper.flush();
+
+                    JStatement ifMore =
+                        CTXT.ifStmt(
+                            in.call("hasAvail"),
+                            type.skip(in)
                         );
 
-                    addTo.add (ifMore);                    
+                    addTo.add(ifMore);
                 }
-            }
-            else {
-                QValue          target = fsi.cache;
-                
-                skipper.flush ();
-                
-                JStatement      action;
-                
-                if (fsi.relativeTo != null)
-                    action = fsi.cache.decodeRelative (in, fsi.relativeTo.cache);  
-                else
-                    action = target.decode (in);
-                
-                JStatement      ifMore =
-                    CTXT.ifStmt (
-                        in.call ("hasAvail"), 
+            } else {
+                QValue target = fsi.cache;
+
+                skipper.flush();
+
+                JCompoundStatement action = CTXT.compStmt();
+
+                if (fsi.relativeTo != null) {
+                    action.add(fsi.cache.decodeRelative(in, fsi.relativeTo.cache));
+                } else {
+                    action.add(target.decode(in));
+                }
+
+                JStatement ifMore =
+                    CTXT.ifStmt(
+                        in.call("hasAvail"),
                         action,
-                        target.writeNull ()
+                        target.writeNull()
                     );
-                
-                addTo.add (ifMore);
+
+                addTo.add(ifMore);
             }
         }
     }

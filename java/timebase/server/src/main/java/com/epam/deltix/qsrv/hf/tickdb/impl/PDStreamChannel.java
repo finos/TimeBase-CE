@@ -41,6 +41,8 @@ import java.io.IOException;
  */
 class PDStreamChannel implements MessageChannel<InstrumentMessage>, Flushable {
 
+    private final TSRoot                                root;
+
     private DataWriter                                  writer;
     private PDStream                                    stream;
 
@@ -55,13 +57,8 @@ class PDStreamChannel implements MessageChannel<InstrumentMessage>, Flushable {
     PDStreamChannel(PDStream stream, TSRoot root, DataWriter writer,
                     MessageProducer<? extends InstrumentMessage> producer,
                     LoadingOptions options) {
-        this(stream, writer, producer, options, new RegistryCache(root.getSymbolRegistry()));
-    }
 
-    PDStreamChannel(PDStream stream, DataWriter writer,
-                    MessageProducer<? extends InstrumentMessage> producer,
-                    LoadingOptions options, RegistryCache cache)
-    {
+        this.root = root;
         this.writer = writer;
         this.stream = stream;
         this.mode = options.writeMode;
@@ -69,7 +66,7 @@ class PDStreamChannel implements MessageChannel<InstrumentMessage>, Flushable {
         this.truncate = mode != LoadingOptions.WriteMode.APPEND &&
                 mode != LoadingOptions.WriteMode.INSERT;
 
-        this.cache = cache;
+        this.cache = new RegistryCache(root.getSymbolRegistry());
 
         if (!StringUtils.isEmpty(options.filterExpression)) {
             PredicateCompiler pc =
@@ -111,7 +108,7 @@ class PDStreamChannel implements MessageChannel<InstrumentMessage>, Flushable {
             // truncation should be done for the first message
 
             if (!undefined && !exists.booleanValue()) {
-                stream.truncateInternal(nstime, msg);
+                stream.truncateInternal(root, nstime, msg);
                 writer.truncate(nstime, index);
             }
         }

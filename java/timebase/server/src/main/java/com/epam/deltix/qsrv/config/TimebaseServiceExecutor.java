@@ -153,11 +153,6 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
             }
         }.start();
 
-//        QSLicenseController controller = LicenseController.qs();
-//        controller.setHeader(LicenseClient.HDR_DLTX_QS_HOME, QSHome.get());
-//        controller.setHeader(LicenseClient.HDR_DLTX_QS_SIZE, String.valueOf(TDB.getSizeOnDisk()));
-//        controller.isLicensed();
-
         /// init connections handlers
 
         Interval interval = Interval.parse(VSProtocol.LINGER_INTERVAL);
@@ -189,10 +184,11 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
 
         long bandwidth = config.getLong("maxBandwidth", Long.MAX_VALUE);
 
+        TLSContext tlsContext = null;
         try {
             SSLProperties ssl = config.getSSLConfig();
             if (ssl != null && ssl.enableSSL) {
-                TLSContext tlsContext = new TLSContext(!ssl.sslForLoopback, ssl.sslPort);
+                tlsContext = new TLSContext(!ssl.sslForLoopback, ssl.sslPort);
                 tlsContext.context = SSLContextProvider.createSSLContext(ssl.keystoreFile, ssl.keystorePass, false);
                 framework.initSSLSocketFactory(tlsContext);
             }
@@ -200,19 +196,11 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
             throw new RuntimeException(e);
         }
 
-//        // init plugins only when UAC is ON
-//        try {
-//            if (QuantServerExecutor.SC != null)
-//                initPlugins();
-//        } catch (IOException | InterruptedException e) {
-//            LOGGER.log(Level.SEVERE, "Error while initializing plugins.", e);
-//        }
-
         framework.initTransport(getTransportProperties(config));
         framework.setConnectionListener(new VSConnectionHandler(TDB, new ServerParameters(bandwidth), QuantServerExecutor.SC, MAC, aeronContext, aeronThreadTracker, topicRegistry));
 
         QuantServerExecutor.HANDLER.addHandler((byte)0, framework);
-        QuantServerExecutor.HANDLER.addHandler((byte)24, new RESTHandshakeHandler(TDB, QuantServerExecutor.SC, contextContainer));
+        QuantServerExecutor.HANDLER.addHandler((byte)24, new RESTHandshakeHandler(TDB, QuantServerExecutor.SC, contextContainer, tlsContext));
 
 /*        ConnectionHandshakeHandler snmpConnectionHandler = null;
         QuantServerExecutor.HANDLER.addHandler(

@@ -91,7 +91,7 @@ public class StdEnvironment extends EnvironmentFrame {
         scanner.addIncludeFilter(new AnnotationTypeFilter(FunctionsRepo.class));
         scanner.addIncludeFilter(new AnnotationTypeFilter(Function.class));
 
-        for (BeanDefinition beanDefinition : scanner.findCandidateComponents("deltix")) {
+        for (BeanDefinition beanDefinition : scanner.findCandidateComponents("com.epam.deltix")) {
             try {
                 Class<?> clazz = Class.forName(beanDefinition.getBeanClassName());
                 if (clazz.isAnnotationPresent(FunctionsRepo.class)) {

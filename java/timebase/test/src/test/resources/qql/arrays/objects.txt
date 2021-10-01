@@ -1,14 +1,14 @@
 Running QQL: select * from orders
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:01.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:01.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:02.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:02.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:03.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:03.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:04.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:04.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:05.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:05.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:01.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:01.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:02.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:02.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:03.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:03.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:04.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:04.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:05.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:05.000,order:OBJECT
 !END
 Running QQL: select order as res1 from orders
 MarketOrder{id=Id{source='MO_SOURCE', correlationId=10000}}
@@ -175,18 +175,18 @@ Running QQL: select ((order.info as deltix.orders.MarketOrderInfo).executedInfo 
 -2147483648
 !END
 Running QQL: select * from orders where order is deltix.orders.LimitOrder
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:01.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:02.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:03.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:04.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:05.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:01.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:02.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:03.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:04.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:05.000,order:OBJECT
 !END
 Running QQL: select * from orders where order is deltix.orders.MarketOrder
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:01.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:02.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:03.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:04.000,order:OBJECT
-deltix.orders.OrderEvent,CUSTOM,DLTX,2021-01-01 09:00:05.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:01.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:02.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:03.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:04.000,order:OBJECT
+deltix.orders.OrderEvent,DLTX,2021-01-01 09:00:05.000,order:OBJECT
 !END
 Running QQL: select order.execution as res1 from orders
 Execution{id=Id{source='EX_SOURCE', correlationId=10000}}
@@ -345,9 +345,9 @@ res1 : 15 [912, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923, 924, 925,
 res1 : NULL
 !END
 Running QQL: select ((order.info as deltix.orders.LimitOrderInfo).price + (order.info as deltix.orders.LimitOrderInfo).size) as res1 from orders where order.info is deltix.orders.LimitOrderInfo
-null,CUSTOM,DLTX,2021-01-01 09:00:01.000,RES1:1100.0
-null,CUSTOM,DLTX,2021-01-01 09:00:02.000,RES1:1102.0
-null,CUSTOM,DLTX,2021-01-01 09:00:03.000,RES1:1104.0
-null,CUSTOM,DLTX,2021-01-01 09:00:04.000,RES1:1106.0
-null,CUSTOM,DLTX,2021-01-01 09:00:05.000,RES1:1108.0
+null,DLTX,2021-01-01 09:00:01.000,RES1:1100.0
+null,DLTX,2021-01-01 09:00:02.000,RES1:1102.0
+null,DLTX,2021-01-01 09:00:03.000,RES1:1104.0
+null,DLTX,2021-01-01 09:00:04.000,RES1:1106.0
+null,DLTX,2021-01-01 09:00:05.000,RES1:1108.0
 !END

@@ -409,7 +409,6 @@ class FilterGenerator {
             //
             CompiledExpression          tsInit = selector.getTimestampInitializer ();
             CompiledExpression          symbolInit = selector.getSymbolInitializer ();
-            CompiledExpression          typeInit = selector.getTypeInitializer ();
 
             if (tsInit == null) {
                 filterBody.add(outMsgInFilter.call("setTimeStampMs", inMsg.call("getTimeStampMs")));

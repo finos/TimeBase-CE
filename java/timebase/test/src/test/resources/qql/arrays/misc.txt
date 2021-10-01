@@ -55,377 +55,377 @@ NaN
 5064.0
 !END
 Running QQL: select ((order.info as deltix.orders.LimitOrderInfo) as info).* from orders
-null,CUSTOM,DLTX,2021-01-01 09:00:01.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
-null,CUSTOM,DLTX,2021-01-01 09:00:01.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:100.0,INFO.side:BUY,INFO.size:1000.0,INFO.userId:100
-null,CUSTOM,DLTX,2021-01-01 09:00:02.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
-null,CUSTOM,DLTX,2021-01-01 09:00:02.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:101.0,INFO.side:SELL,INFO.size:1001.0,INFO.userId:101
-null,CUSTOM,DLTX,2021-01-01 09:00:03.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
-null,CUSTOM,DLTX,2021-01-01 09:00:03.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:102.0,INFO.side:BUY,INFO.size:1002.0,INFO.userId:102
-null,CUSTOM,DLTX,2021-01-01 09:00:04.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
-null,CUSTOM,DLTX,2021-01-01 09:00:04.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:103.0,INFO.side:SELL,INFO.size:1003.0,INFO.userId:103
-null,CUSTOM,DLTX,2021-01-01 09:00:05.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
-null,CUSTOM,DLTX,2021-01-01 09:00:05.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:104.0,INFO.side:BUY,INFO.size:1004.0,INFO.userId:104
+null,DLTX,2021-01-01 09:00:01.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
+null,DLTX,2021-01-01 09:00:01.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:100.0,INFO.side:BUY,INFO.size:1000.0,INFO.userId:100
+null,DLTX,2021-01-01 09:00:02.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
+null,DLTX,2021-01-01 09:00:02.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:101.0,INFO.side:SELL,INFO.size:1001.0,INFO.userId:101
+null,DLTX,2021-01-01 09:00:03.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
+null,DLTX,2021-01-01 09:00:03.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:102.0,INFO.side:BUY,INFO.size:1002.0,INFO.userId:102
+null,DLTX,2021-01-01 09:00:04.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
+null,DLTX,2021-01-01 09:00:04.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:103.0,INFO.side:SELL,INFO.size:1003.0,INFO.userId:103
+null,DLTX,2021-01-01 09:00:05.000,INFO.executedInfo:<null>,INFO.executedInfoHistory:<null>,INFO.price:<null>,INFO.side:<null>,INFO.size:<null>,INFO.userId:<null>
+null,DLTX,2021-01-01 09:00:05.000,INFO.executedInfo:OBJECT,INFO.executedInfoHistory:ARRAY,INFO.price:104.0,INFO.side:BUY,INFO.size:1004.0,INFO.userId:104
 !END
 Running QQL: select order.execution.info.*, order.execution.info.commissionInfo.* from orders where order.execution is not null
-null,CUSTOM,DLTX,2021-01-01 09:00:01.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:100.0,order.execution.info.side:BUY,order.execution.info.size:10000.0,order.execution.info.commissionInfo.commission:0,order.execution.info.commissionInfo.currency:USD
-null,CUSTOM,DLTX,2021-01-01 09:00:02.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:101.0,order.execution.info.side:SELL,order.execution.info.size:10001.0,order.execution.info.commissionInfo.commission:333.3,order.execution.info.commissionInfo.currency:JPY
-null,CUSTOM,DLTX,2021-01-01 09:00:03.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:102.0,order.execution.info.side:BUY,order.execution.info.size:10002.0,order.execution.info.commissionInfo.commission:666.6,order.execution.info.commissionInfo.currency:USD
-null,CUSTOM,DLTX,2021-01-01 09:00:04.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:103.0,order.execution.info.side:SELL,order.execution.info.size:10003.0,order.execution.info.commissionInfo.commission:999.89996,order.execution.info.commissionInfo.currency:JPY
-null,CUSTOM,DLTX,2021-01-01 09:00:05.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:104.0,order.execution.info.side:BUY,order.execution.info.size:10004.0,order.execution.info.commissionInfo.commission:1333.2,order.execution.info.commissionInfo.currency:USD
+null,DLTX,2021-01-01 09:00:01.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:100.0,order.execution.info.side:BUY,order.execution.info.size:10000.0,order.execution.info.commissionInfo.commission:0,order.execution.info.commissionInfo.currency:USD
+null,DLTX,2021-01-01 09:00:02.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:101.0,order.execution.info.side:SELL,order.execution.info.size:10001.0,order.execution.info.commissionInfo.commission:333.3,order.execution.info.commissionInfo.currency:JPY
+null,DLTX,2021-01-01 09:00:03.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:102.0,order.execution.info.side:BUY,order.execution.info.size:10002.0,order.execution.info.commissionInfo.commission:666.6,order.execution.info.commissionInfo.currency:USD
+null,DLTX,2021-01-01 09:00:04.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:103.0,order.execution.info.side:SELL,order.execution.info.size:10003.0,order.execution.info.commissionInfo.commission:999.89996,order.execution.info.commissionInfo.currency:JPY
+null,DLTX,2021-01-01 09:00:05.000,order.execution.info.commissionInfo:OBJECT,order.execution.info.price:104.0,order.execution.info.side:BUY,order.execution.info.size:10004.0,order.execution.info.commissionInfo.commission:1333.2,order.execution.info.commissionInfo.currency:USD
 !END
 Running QQL: select entry.* from packages array join entries as entry
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:2010.0,ENTRY.side:BUY,ENTRY.side1:<null>,ENTRY.size:20010.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:1989.0,ENTRY.side:SELL,ENTRY.side1:<null>,ENTRY.size:19989.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:2010.0,ENTRY.side:<null>,ENTRY.side1:BUY,ENTRY.size:20010.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:1988.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:19988.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:5000.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:50000.0,ENTRY.level:1
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:4989.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:49989.0,ENTRY.level:2
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:2020.0,ENTRY.side:BUY,ENTRY.side1:<null>,ENTRY.size:20020.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:1979.0,ENTRY.side:SELL,ENTRY.side1:<null>,ENTRY.size:19979.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:2020.0,ENTRY.side:<null>,ENTRY.side1:BUY,ENTRY.size:20020.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:1977.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:19977.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:5000.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:50000.0,ENTRY.level:2
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:4979.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:49979.0,ENTRY.level:3
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:2030.0,ENTRY.side:BUY,ENTRY.side1:<null>,ENTRY.size:20030.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:1969.0,ENTRY.side:SELL,ENTRY.side1:<null>,ENTRY.size:19969.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:2032.0,ENTRY.side:BUY,ENTRY.side1:<null>,ENTRY.size:20032.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:2030.0,ENTRY.side:<null>,ENTRY.side1:BUY,ENTRY.size:20030.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:1966.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:19966.0,ENTRY.level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:5000.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:50000.0,ENTRY.level:3
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:4969.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:49969.0,ENTRY.level:4
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:5064.0,ENTRY.side:<null>,ENTRY.side1:BUY,ENTRY.size:50064.0,ENTRY.level:5
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:2010.0,ENTRY.side:BUY,ENTRY.side1:<null>,ENTRY.size:20010.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:1989.0,ENTRY.side:SELL,ENTRY.side1:<null>,ENTRY.size:19989.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:2010.0,ENTRY.side:<null>,ENTRY.side1:BUY,ENTRY.size:20010.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:1988.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:19988.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:5000.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:50000.0,ENTRY.level:1
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:4989.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:49989.0,ENTRY.level:2
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:2020.0,ENTRY.side:BUY,ENTRY.side1:<null>,ENTRY.size:20020.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:1979.0,ENTRY.side:SELL,ENTRY.side1:<null>,ENTRY.size:19979.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:2020.0,ENTRY.side:<null>,ENTRY.side1:BUY,ENTRY.size:20020.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:1977.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:19977.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:5000.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:50000.0,ENTRY.level:2
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:4979.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:49979.0,ENTRY.level:3
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:2030.0,ENTRY.side:BUY,ENTRY.side1:<null>,ENTRY.size:20030.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:1969.0,ENTRY.side:SELL,ENTRY.side1:<null>,ENTRY.size:19969.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:ARRAY,ENTRY.price:2032.0,ENTRY.side:BUY,ENTRY.side1:<null>,ENTRY.size:20032.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:2030.0,ENTRY.side:<null>,ENTRY.side1:BUY,ENTRY.size:20030.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,ENTRY.attributes:<null>,ENTRY.price:1966.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:19966.0,ENTRY.level:<null>
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:5000.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:50000.0,ENTRY.level:3
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:4969.0,ENTRY.side:<null>,ENTRY.side1:SELL,ENTRY.size:49969.0,ENTRY.level:4
+null,DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,ENTRY.attributes:<null>,ENTRY.price:5064.0,ENTRY.side:<null>,ENTRY.side1:BUY,ENTRY.size:50064.0,ENTRY.level:5
 !END
 Running QQL: select entries[0].* from packages
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2010.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20010.0,entries[0].level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2020.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20020.0,entries[0].level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2030.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20030.0,entries[0].level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:GDAX,entries[0].attributes:<null>,entries[0].price:5040.0,entries[0].side:<null>,entries[0].side1:BUY,entries[0].size:50040.0,entries[0].level:0
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2050.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20050.0,entries[0].level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2060.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20060.0,entries[0].level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:<null>,entries[0].price:2070.0,entries[0].side:<null>,entries[0].side1:BUY,entries[0].size:20070.0,entries[0].level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:GDAX,entries[0].attributes:<null>,entries[0].price:5080.0,entries[0].side:<null>,entries[0].side1:BUY,entries[0].size:50080.0,entries[0].level:0
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2090.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20090.0,entries[0].level:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2100.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20100.0,entries[0].level:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2010.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20010.0,entries[0].level:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2020.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20020.0,entries[0].level:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2030.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20030.0,entries[0].level:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:GDAX,entries[0].attributes:<null>,entries[0].price:5040.0,entries[0].side:<null>,entries[0].side1:BUY,entries[0].size:50040.0,entries[0].level:0
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2050.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20050.0,entries[0].level:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2060.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20060.0,entries[0].level:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:<null>,entries[0].price:2070.0,entries[0].side:<null>,entries[0].side1:BUY,entries[0].size:20070.0,entries[0].level:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:GDAX,entries[0].attributes:<null>,entries[0].price:5080.0,entries[0].side:<null>,entries[0].side1:BUY,entries[0].size:50080.0,entries[0].level:0
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2090.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20090.0,entries[0].level:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries[0].exchange:BINANCE,entries[0].attributes:ARRAY,entries[0].price:2100.0,entries[0].side:BUY,entries[0].side1:<null>,entries[0].size:20100.0,entries[0].level:<null>
 !END
 Running QQL: select entries.attributes[(this as deltix.FixAttribute).key > 5100][0].* from packages
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5102,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:Value #6102
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5200,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5300,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5600,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5900,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
-null,EQUITY,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5102,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:Value #6102
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5200,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5300,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5600,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:OBJECT,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:ARRAY,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:5900,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
+null,DLTX,2021-01-01 09:00:00.000,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].attributeId:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extended:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].extendedAttributes:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].key1:<null>,entries.attributes[(this CAST OBJECT(deltix.FixAttribute)).key > 5100][0].value:<null>
 !END
 Running QQL: select (byteList as array(INT8))[0], (byteList as array(INT16))[0], (byteList as array(INT32))[0], (byteList as array(INT64))[0], (byteList as array(DECIMAL))[0], (byteList as array(FLOAT32))[0], (byteList as array(FLOAT64))[0], (byteList as array(CHAR))[0], (byteList as array(boolean))[0] from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
 !END
 Running QQL: select (shortList as array(INT8))[0], (shortList as array(INT16))[0], (shortList as array(INT32))[0], (shortList as array(INT64))[0], (shortList as array(DECIMAL))[0], (shortList as array(FLOAT32))[0], (shortList as array(FLOAT64))[0], (shortList as array(CHAR))[0], (shortList as array(boolean))[0] from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
 !END
 Running QQL: select (intList as array(INT8))[0], (intList as array(INT16))[0], (intList as array(INT32))[0], (intList as array(INT64))[0], (intList as array(DECIMAL))[0], (intList as array(FLOAT32))[0], (intList as array(FLOAT64))[0], (intList as array(CHAR))[0], (intList as array(boolean))[0] from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
 !END
 Running QQL: select (longList as array(INT8))[0], (longList as array(INT16))[0], (longList as array(INT32))[0], (longList as array(INT64))[0], (byteList as array(DECIMAL))[0], (longList as array(FLOAT32))[0], (longList as array(FLOAT64))[0], (longList as array(CHAR))[0], (longList as array(boolean))[0] from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:125,$6:2312721661952,$7:2312721721721,$8:,$9:true
 !END
 Running QQL: select (floatList as array(INT8))[0], (floatList as array(INT16))[0], (floatList as array(INT32))[0], (floatList as array(INT64))[0], (floatList as array(DECIMAL))[0], (floatList as array(FLOAT32))[0], (floatList as array(FLOAT64))[0], (floatList as array(CHAR))[0], (floatList as array(boolean))[0] from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
 !END
 Running QQL: select (doubleList as array(INT8))[0], (doubleList as array(INT16))[0], (doubleList as array(INT32))[0], (doubleList as array(INT64))[0], (doubleList as array(DECIMAL))[0], (doubleList as array(FLOAT32))[0], (doubleList as array(FLOAT64))[0], (doubleList as array(CHAR))[0], (doubleList as array(boolean))[0] from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
 !END
 Running QQL: select (decimalList as array(INT8))[0], (decimalList as array(INT16))[0], (decimalList as array(INT32))[0], (decimalList as array(INT64))[0], (decimalList as array(DECIMAL))[0], (decimalList as array(FLOAT32))[0], (decimalList as array(FLOAT64))[0], (decimalList as array(CHAR))[0], (decimalList as array(boolean))[0] from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
 !END
 Running QQL: select byteField as INT8, byteField as INT16, byteField as INT32, byteField as INT64, byteField as DECIMAL, byteField as FLOAT32, byteField as FLOAT64, byteField as char, byteField as boolean from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
+null,,1970-01-01 00:00:00.000,$1:125,$2:125,$3:125,$4:125,$5:125,$6:125.0,$7:125.0,$8:},$9:true
 !END
 Running QQL: select shortField as INT8, shortField as INT16, shortField as INT32, shortField as INT64, shortField as DECIMAL, shortField as FLOAT32, shortField as FLOAT64, shortField as char, shortField as boolean from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
+null,,1970-01-01 00:00:00.000,$1:-11,$2:14325,$3:14325,$4:14325,$5:14325,$6:14325.0,$7:14325.0,$8:㟵,$9:true
 !END
 Running QQL: select intField as INT8, intField as INT16, intField as INT32, intField as INT64, intField as DECIMAL, intField as FLOAT32, intField as FLOAT64, intField as char, intField as boolean from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
+null,,1970-01-01 00:00:00.000,$1:-38,$2:25818,$3:-236326,$4:-236326,$5:-236326,$6:-236326.0,$7:-236326.0,$8:據,$9:true
 !END
 Running QQL: select longField as INT8, longField as INT16, longField as INT32, longField as INT64, longField as DECIMAL, longField as FLOAT32, longField as FLOAT64, longField as char, longField as boolean from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
+null,,1970-01-01 00:00:00.000,$1:121,$2:-5767,$3:2029316473,$4:2312721721721,$5:2312721721721,$6:2312721661952,$7:2312721721721,$8:,$9:true
 !END
 Running QQL: select floatField as INT8, floatField as INT16, floatField as INT32, floatField as INT64, floatField as DECIMAL, floatField as FLOAT32, floatField as FLOAT64, floatField as char, floatField as boolean from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
+null,,1970-01-01 00:00:00.000,$1:68,$2:32324,$3:32324,$4:32324,$5:32324.43359375,$6:32324.434,$7:32324.43359375,$8:繄,$9:true
 !END
 Running QQL: select doubleField as INT8, doubleField as INT16, doubleField as INT32, doubleField as INT64, doubleField as DECIMAL, doubleField as FLOAT32, doubleField as FLOAT64, doubleField as char, doubleField as boolean from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.34734734835,$8:垆,$9:true
 !END
 Running QQL: select decimalField as INT8, decimalField as INT16, decimalField as INT32, decimalField as INT64, decimalField as DECIMAL, decimalField as FLOAT32, decimalField as FLOAT64, decimalField as char, decimalField as boolean from alltypes
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
-null,CUSTOM,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
+null,,1970-01-01 00:00:00.000,$1:-122,$2:22406,$3:-436346,$4:-436346,$5:-436346.3473473483,$6:-436346.34,$7:-436346.3473473483,$8:垆,$9:true
 !END
 Running QQL: select * type "deltix.MyBarMessage" from bar1minExtended union select * type "deltix.MyBarMessage" from bar1min
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.660,sequenceNumber:<null>,exchangeId:<null>,close:0,open:0,high:0,low:0,volume:0,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.660,sequenceNumber:<null>,exchangeId:<null>,close:0,open:0,high:0,low:0,volume:0,customValue:0
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.720,sequenceNumber:<null>,exchangeId:<null>,close:2.2219998836517334,open:1.1109999418258667,high:3.3329999446868896,low:3.3329999446868896,volume:4.444,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.720,sequenceNumber:<null>,exchangeId:<null>,close:2.2219998836517334,open:1.1109999418258667,high:3.3329999446868896,low:3.3329999446868896,volume:4.444,customValue:11.1111
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.780,sequenceNumber:<null>,exchangeId:<null>,close:4.443999767303467,open:2.2219998836517334,high:6.665999889373779,low:6.665999889373779,volume:8.888,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.780,sequenceNumber:<null>,exchangeId:<null>,close:4.443999767303467,open:2.2219998836517334,high:6.665999889373779,low:6.665999889373779,volume:8.888,customValue:22.2222
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.840,sequenceNumber:<null>,exchangeId:<null>,close:6.665999412536621,open:3.3329997062683105,high:9.99899959564209,low:9.99899959564209,volume:13.332,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.840,sequenceNumber:<null>,exchangeId:<null>,close:6.665999412536621,open:3.3329997062683105,high:9.99899959564209,low:9.99899959564209,volume:13.332,customValue:33.3333
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.900,sequenceNumber:<null>,exchangeId:<null>,close:8.887999534606934,open:4.443999767303467,high:13.331999778747559,low:13.331999778747559,volume:17.776,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.900,sequenceNumber:<null>,exchangeId:<null>,close:8.887999534606934,open:4.443999767303467,high:13.331999778747559,low:13.331999778747559,volume:17.776,customValue:44.4444
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.960,sequenceNumber:<null>,exchangeId:<null>,close:11.109999656677246,open:5.554999828338623,high:16.66499900817871,low:16.66499900817871,volume:22.22,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.960,sequenceNumber:<null>,exchangeId:<null>,close:11.109999656677246,open:5.554999828338623,high:16.66499900817871,low:16.66499900817871,volume:22.22,customValue:55.5555
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.020,sequenceNumber:<null>,exchangeId:<null>,close:13.331998825073242,open:6.665999412536621,high:19.99799919128418,low:19.99799919128418,volume:26.664,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.020,sequenceNumber:<null>,exchangeId:<null>,close:13.331998825073242,open:6.665999412536621,high:19.99799919128418,low:19.99799919128418,volume:26.664,customValue:66.6666
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.080,sequenceNumber:<null>,exchangeId:<null>,close:15.553998947143555,open:7.776999473571777,high:23.33099937438965,low:23.33099937438965,volume:31.108,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.080,sequenceNumber:<null>,exchangeId:<null>,close:15.553998947143555,open:7.776999473571777,high:23.33099937438965,low:23.33099937438965,volume:31.108,customValue:77.7777
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.140,sequenceNumber:<null>,exchangeId:<null>,close:17.775999069213867,open:8.887999534606934,high:26.663999557495117,low:26.663999557495117,volume:35.552,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.140,sequenceNumber:<null>,exchangeId:<null>,close:17.775999069213867,open:8.887999534606934,high:26.663999557495117,low:26.663999557495117,volume:35.552,customValue:88.8888
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.200,sequenceNumber:<null>,exchangeId:<null>,close:19.99799919128418,open:9.99899959564209,high:29.996999740600586,low:29.996999740600586,volume:39.996,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.200,sequenceNumber:<null>,exchangeId:<null>,close:19.99799919128418,open:9.99899959564209,high:29.996999740600586,low:29.996999740600586,volume:39.996,customValue:99.9999
+deltix.MyBarMessage,,1970-01-19 15:04:51.660,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:0,exchangeId:<null>,high:0,low:0,open:0,volume:0,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.660,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:0,exchangeId:<null>,high:0,low:0,open:0,volume:0,customValue:0
+deltix.MyBarMessage,,1970-01-19 15:04:51.720,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:2.22199988,exchangeId:<null>,high:3.33299994,low:3.33299994,open:1.11099994,volume:4.444,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.720,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:2.22199988,exchangeId:<null>,high:3.33299994,low:3.33299994,open:1.11099994,volume:4.444,customValue:11.1111
+deltix.MyBarMessage,,1970-01-19 15:04:51.780,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:4.44399977,exchangeId:<null>,high:6.66599989,low:6.66599989,open:2.22199989,volume:8.888,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.780,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:4.44399977,exchangeId:<null>,high:6.66599989,low:6.66599989,open:2.22199989,volume:8.888,customValue:22.2222
+deltix.MyBarMessage,,1970-01-19 15:04:51.840,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:6.66599941,exchangeId:<null>,high:9.99899959,low:9.99899959,open:3.3329997,volume:13.332,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.840,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:6.66599941,exchangeId:<null>,high:9.99899959,low:9.99899959,open:3.3329997,volume:13.332,customValue:33.3333
+deltix.MyBarMessage,,1970-01-19 15:04:51.900,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:8.88799953,exchangeId:<null>,high:13.33199977,low:13.33199977,open:4.44399976,volume:17.776,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.900,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:8.88799953,exchangeId:<null>,high:13.33199977,low:13.33199977,open:4.44399976,volume:17.776,customValue:44.4444
+deltix.MyBarMessage,,1970-01-19 15:04:51.960,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:11.10999966,exchangeId:<null>,high:16.66499901,low:16.66499901,open:5.55499983,volume:22.22,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.960,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:11.10999966,exchangeId:<null>,high:16.66499901,low:16.66499901,open:5.55499983,volume:22.22,customValue:55.5555
+deltix.MyBarMessage,,1970-01-19 15:04:52.020,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:13.33199883,exchangeId:<null>,high:19.9979992,low:19.9979992,open:6.66599942,volume:26.664,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.020,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:13.33199883,exchangeId:<null>,high:19.9979992,low:19.9979992,open:6.66599942,volume:26.664,customValue:66.6666
+deltix.MyBarMessage,,1970-01-19 15:04:52.080,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:15.55399895,exchangeId:<null>,high:23.33099938,low:23.33099938,open:7.77699948,volume:31.108,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.080,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:15.55399895,exchangeId:<null>,high:23.33099938,low:23.33099938,open:7.77699948,volume:31.108,customValue:77.7777
+deltix.MyBarMessage,,1970-01-19 15:04:52.140,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:17.77599907,exchangeId:<null>,high:26.66399956,low:26.66399956,open:8.88799954,volume:35.552,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.140,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:17.77599907,exchangeId:<null>,high:26.66399956,low:26.66399956,open:8.88799954,volume:35.552,customValue:88.8888
+deltix.MyBarMessage,,1970-01-19 15:04:52.200,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:19.99799919,exchangeId:<null>,high:29.99699974,low:29.99699974,open:9.99899959,volume:39.996,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.200,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:19.99799919,exchangeId:<null>,high:29.99699974,low:29.99699974,open:9.99899959,volume:39.996,customValue:99.9999
 !END
 Running QQL: select trade.price as "price", trade.size as "size" type "deltix.timebase.api.messages.TradeMessage" from packages array join entries[this is TradeEntry] as trade UNION select bbo[side == "deltix.entries.QuoteSide":BUY].price as "offerPrice", bbo[side == "deltix.entries.QuoteSide":BUY].size as "offerSize", bbo[side == "deltix.entries.QuoteSide":SELL].price as "bidPrice", bbo[side == "deltix.entries.QuoteSide":SELL].size as "bidSize" type "deltix.timebase.api.messages.BestBidOfferMessage" from packages array join (entries as array(L1Entry))[this is not null] as bbo
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:2010.0,offerSize:20010.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2010.0,size:20010.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1988.0,bidSize:19988.0
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:1989.0,size:19989.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:2020.0,offerSize:20020.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2020.0,size:20020.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1977.0,bidSize:19977.0
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:1979.0,size:19979.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:2030.0,offerSize:20030.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2030.0,size:20030.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1966.0,bidSize:19966.0
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:1969.0,size:19969.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:2050.0,offerSize:20050.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2032.0,size:20032.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1944.0,bidSize:19944.0
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2050.0,size:20050.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:2060.0,offerSize:20060.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:1949.0,size:19949.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1933.0,bidSize:19933.0
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2060.0,size:20060.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:2010.0,offerSize:20010.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:2010.0,size:20010.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1988.0,bidSize:19988.0
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:1989.0,size:19989.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:2020.0,offerSize:20020.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:2020.0,size:20020.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1977.0,bidSize:19977.0
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:1979.0,size:19979.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:2030.0,offerSize:20030.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:2030.0,size:20030.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1966.0,bidSize:19966.0
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:1969.0,size:19969.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:2050.0,offerSize:20050.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:2032.0,size:20032.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1944.0,bidSize:19944.0
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:2050.0,size:20050.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:2060.0,offerSize:20060.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:1949.0,size:19949.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1933.0,bidSize:19933.0
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:2060.0,size:20060.0
 !END
 Running QQL: select trade.price as "price", trade.size as "size" type "deltix.timebase.api.messages.BestBidOfferTradeMessage" from packages array join entries[this is TradeEntry] as trade UNION select bbo[side == "deltix.entries.QuoteSide":BUY].price as "offerPrice", bbo[side == "deltix.entries.QuoteSide":BUY].size as "offerSize", bbo[side == "deltix.entries.QuoteSide":SELL].price as "bidPrice", bbo[side == "deltix.entries.QuoteSide":SELL].size as "bidSize" type "deltix.timebase.api.messages.BestBidOfferTradeMessage" from packages array join (entries as array(L1Entry))[this is not null] as bbo
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2010.0,offerSize:20010.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2010.0,size:20010.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1988.0,bidSize:19988.0
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:1989.0,size:19989.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2020.0,offerSize:20020.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2020.0,size:20020.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1977.0,bidSize:19977.0
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:1979.0,size:19979.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2030.0,offerSize:20030.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2030.0,size:20030.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1966.0,bidSize:19966.0
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:1969.0,size:19969.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2050.0,offerSize:20050.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2032.0,size:20032.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1944.0,bidSize:19944.0
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2050.0,size:20050.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2060.0,offerSize:20060.0,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:1949.0,size:19949.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1933.0,bidSize:19933.0
-deltix.timebase.api.messages.BestBidOfferTradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2060.0,size:20060.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2010.0,offerSize:20010.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:2010.0,size:20010.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1988.0,bidSize:19988.0
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:1989.0,size:19989.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2020.0,offerSize:20020.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:2020.0,size:20020.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1977.0,bidSize:19977.0
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:1979.0,size:19979.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2030.0,offerSize:20030.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:2030.0,size:20030.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1966.0,bidSize:19966.0
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:1969.0,size:19969.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2050.0,offerSize:20050.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:2032.0,size:20032.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1944.0,bidSize:19944.0
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:2050.0,size:20050.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:2060.0,offerSize:20060.0,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:1949.0,size:19949.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:<null>,size:<null>,offerPrice:<null>,offerSize:<null>,bidPrice:1933.0,bidSize:19933.0
+deltix.timebase.api.messages.BestBidOfferTradeMessage,DLTX,2021-01-01 09:00:00.000,price:2060.0,size:20060.0,offerPrice:<null>,offerSize:<null>,bidPrice:<null>,bidSize:<null>
 !END
 Running QQL: select * from packages limit 20
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
 !END
 Running QQL: select * from packages limit 4
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
 !END
 Running QQL: select * from packages limit 3, 5
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
 !END
 Running QQL: select * from packages limit 4 offset 2
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
 !END
 Running QQL: select * from packages limit 1
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
 !END
 Running QQL: select * from packages limit 10, 1
 !END
 Running QQL: select * from packages limit 9, 1
-deltix.entries.Package,EQUITY,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
 !END
 Running QQL: select * from packages limit 9, 0
 !END
 Running QQL: (select trade.price as "price", trade.size as "size" type "deltix.timebase.api.messages.TradeMessage" from packages array join entries[this is TradeEntry] as trade UNION select bbo[side == "deltix.entries.QuoteSide":BUY].price as "offerPrice", bbo[side == "deltix.entries.QuoteSide":BUY].size as "offerSize", bbo[side == "deltix.entries.QuoteSide":SELL].price as "bidPrice", bbo[side == "deltix.entries.QuoteSide":SELL].size as "bidSize" type "deltix.timebase.api.messages.BestBidOfferMessage" from packages array join (entries as array(L1Entry))[this is not null] as bbo) limit 3 offset 5
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:2020.0,size:20020.0
-deltix.timebase.api.messages.BestBidOfferMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1977.0,bidSize:19977.0
-deltix.timebase.api.messages.TradeMessage,EQUITY,DLTX,2021-01-01 09:00:00.000,price:1979.0,size:19979.0
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:2020.0,size:20020.0
+deltix.timebase.api.messages.BestBidOfferMessage,DLTX,2021-01-01 09:00:00.000,offerPrice:<null>,offerSize:<null>,bidPrice:1977.0,bidSize:19977.0
+deltix.timebase.api.messages.TradeMessage,DLTX,2021-01-01 09:00:00.000,price:1979.0,size:19979.0
 !END
 Running QQL: select * type "deltix.MyBarMessage" from bar1minExtended limit 3, 4 union select * type "deltix.MyBarMessage" from bar1min
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.660,sequenceNumber:<null>,exchangeId:<null>,close:0,open:0,high:0,low:0,volume:0,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.720,sequenceNumber:<null>,exchangeId:<null>,close:2.2219998836517334,open:1.1109999418258667,high:3.3329999446868896,low:3.3329999446868896,volume:4.444,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.780,sequenceNumber:<null>,exchangeId:<null>,close:4.443999767303467,open:2.2219998836517334,high:6.665999889373779,low:6.665999889373779,volume:8.888,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.840,sequenceNumber:<null>,exchangeId:<null>,close:6.665999412536621,open:3.3329997062683105,high:9.99899959564209,low:9.99899959564209,volume:13.332,customValue:33.3333
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.840,sequenceNumber:<null>,exchangeId:<null>,close:6.665999412536621,open:3.3329997062683105,high:9.99899959564209,low:9.99899959564209,volume:13.332,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.900,sequenceNumber:<null>,exchangeId:<null>,close:8.887999534606934,open:4.443999767303467,high:13.331999778747559,low:13.331999778747559,volume:17.776,customValue:44.4444
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.900,sequenceNumber:<null>,exchangeId:<null>,close:8.887999534606934,open:4.443999767303467,high:13.331999778747559,low:13.331999778747559,volume:17.776,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.960,sequenceNumber:<null>,exchangeId:<null>,close:11.109999656677246,open:5.554999828338623,high:16.66499900817871,low:16.66499900817871,volume:22.22,customValue:55.5555
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.960,sequenceNumber:<null>,exchangeId:<null>,close:11.109999656677246,open:5.554999828338623,high:16.66499900817871,low:16.66499900817871,volume:22.22,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.020,sequenceNumber:<null>,exchangeId:<null>,close:13.331998825073242,open:6.665999412536621,high:19.99799919128418,low:19.99799919128418,volume:26.664,customValue:66.6666
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.020,sequenceNumber:<null>,exchangeId:<null>,close:13.331998825073242,open:6.665999412536621,high:19.99799919128418,low:19.99799919128418,volume:26.664,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.080,sequenceNumber:<null>,exchangeId:<null>,close:15.553998947143555,open:7.776999473571777,high:23.33099937438965,low:23.33099937438965,volume:31.108,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.140,sequenceNumber:<null>,exchangeId:<null>,close:17.775999069213867,open:8.887999534606934,high:26.663999557495117,low:26.663999557495117,volume:35.552,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.200,sequenceNumber:<null>,exchangeId:<null>,close:19.99799919128418,open:9.99899959564209,high:29.996999740600586,low:29.996999740600586,volume:39.996,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.260,sequenceNumber:<null>,exchangeId:<null>,close:22.219999313354492,open:11.109999656677246,high:33.32999801635742,low:33.32999801635742,volume:44.44,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.320,sequenceNumber:<null>,exchangeId:<null>,close:24.441999435424805,open:12.220999717712402,high:36.66299819946289,low:36.66299819946289,volume:48.884,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.380,sequenceNumber:<null>,exchangeId:<null>,close:26.663997650146484,open:13.331998825073242,high:39.99599838256836,low:39.99599838256836,volume:53.328,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.440,sequenceNumber:<null>,exchangeId:<null>,close:28.885997772216797,open:14.442998886108398,high:43.32899856567383,low:43.32899856567383,volume:57.772,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.500,sequenceNumber:<null>,exchangeId:<null>,close:31.10799789428711,open:15.553998947143555,high:46.6619987487793,low:46.6619987487793,volume:62.216,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.560,sequenceNumber:<null>,exchangeId:<null>,close:33.32999801635742,open:16.66499900817871,high:49.994998931884766,low:49.994998931884766,volume:66.66,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.660,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:0,exchangeId:<null>,high:0,low:0,open:0,volume:0,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.720,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:2.22199988,exchangeId:<null>,high:3.33299994,low:3.33299994,open:1.11099994,volume:4.444,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.780,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:4.44399977,exchangeId:<null>,high:6.66599989,low:6.66599989,open:2.22199989,volume:8.888,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.840,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:6.66599941,exchangeId:<null>,high:9.99899959,low:9.99899959,open:3.3329997,volume:13.332,customValue:33.3333
+deltix.MyBarMessage,,1970-01-19 15:04:51.840,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:6.66599941,exchangeId:<null>,high:9.99899959,low:9.99899959,open:3.3329997,volume:13.332,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.900,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:8.88799953,exchangeId:<null>,high:13.33199977,low:13.33199977,open:4.44399976,volume:17.776,customValue:44.4444
+deltix.MyBarMessage,,1970-01-19 15:04:51.900,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:8.88799953,exchangeId:<null>,high:13.33199977,low:13.33199977,open:4.44399976,volume:17.776,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.960,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:11.10999966,exchangeId:<null>,high:16.66499901,low:16.66499901,open:5.55499983,volume:22.22,customValue:55.5555
+deltix.MyBarMessage,,1970-01-19 15:04:51.960,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:11.10999966,exchangeId:<null>,high:16.66499901,low:16.66499901,open:5.55499983,volume:22.22,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.020,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:13.33199883,exchangeId:<null>,high:19.9979992,low:19.9979992,open:6.66599942,volume:26.664,customValue:66.6666
+deltix.MyBarMessage,,1970-01-19 15:04:52.020,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:13.33199883,exchangeId:<null>,high:19.9979992,low:19.9979992,open:6.66599942,volume:26.664,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.080,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:15.55399895,exchangeId:<null>,high:23.33099938,low:23.33099938,open:7.77699948,volume:31.108,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.140,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:17.77599907,exchangeId:<null>,high:26.66399956,low:26.66399956,open:8.88799954,volume:35.552,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.200,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:19.99799919,exchangeId:<null>,high:29.99699974,low:29.99699974,open:9.99899959,volume:39.996,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.260,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:22.21999931,exchangeId:<null>,high:33.32999801,low:33.32999801,open:11.10999965,volume:44.44,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.320,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:24.44199944,exchangeId:<null>,high:36.6629982,low:36.6629982,open:12.22099972,volume:48.884,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.380,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:26.66399765,exchangeId:<null>,high:39.99599838,low:39.99599838,open:13.33199882,volume:53.328,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.440,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:28.88599777,exchangeId:<null>,high:43.32899856,low:43.32899856,open:14.44299888,volume:57.772,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.500,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:31.10799789,exchangeId:<null>,high:46.66199874,low:46.66199874,open:15.55399894,volume:62.216,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:52.560,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:33.32999802,exchangeId:<null>,high:49.99499894,low:49.99499894,open:16.66499901,volume:66.66,customValue:<null>
 !END
 Running QQL: (select * type "deltix.MyBarMessage" from bar1minExtended union select * type "deltix.MyBarMessage" from bar1min) limit 3, 4
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.720,sequenceNumber:<null>,exchangeId:<null>,close:2.2219998836517334,open:1.1109999418258667,high:3.3329999446868896,low:3.3329999446868896,volume:4.444,customValue:11.1111
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.780,sequenceNumber:<null>,exchangeId:<null>,close:4.443999767303467,open:2.2219998836517334,high:6.665999889373779,low:6.665999889373779,volume:8.888,customValue:<null>
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.780,sequenceNumber:<null>,exchangeId:<null>,close:4.443999767303467,open:2.2219998836517334,high:6.665999889373779,low:6.665999889373779,volume:8.888,customValue:22.2222
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.840,sequenceNumber:<null>,exchangeId:<null>,close:6.665999412536621,open:3.3329997062683105,high:9.99899959564209,low:9.99899959564209,volume:13.332,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.720,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:2.22199988,exchangeId:<null>,high:3.33299994,low:3.33299994,open:1.11099994,volume:4.444,customValue:11.1111
+deltix.MyBarMessage,,1970-01-19 15:04:51.780,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:4.44399977,exchangeId:<null>,high:6.66599989,low:6.66599989,open:2.22199989,volume:8.888,customValue:<null>
+deltix.MyBarMessage,,1970-01-19 15:04:51.780,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:4.44399977,exchangeId:<null>,high:6.66599989,low:6.66599989,open:2.22199989,volume:8.888,customValue:22.2222
+deltix.MyBarMessage,,1970-01-19 15:04:51.840,currencyCode:999,originalTimestamp:<null>,sequenceNumber:<null>,sourceId:<null>,close:6.66599941,exchangeId:<null>,high:9.99899959,low:9.99899959,open:3.3329997,volume:13.332,customValue:<null>
 !END
 Running QQL: select entries as res0, entries.level as res1, entries.price as res2, entries.?price as res3, entries.?level as res4, entries[entries.level > 0] as res5, entries[entries.?level > 0] as res6 from packages
 res0 : 6 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, TradeEntry{price=1989.0, size=19989.0, side=SELL}, L1Entry{side=BUY, price=2010.0, size=20010.0}, L1Entry{side=SELL, price=1988.0, size=19988.0}, L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}] | res1 : 2 [1, 2] | res2 : 6 [2010.0, 1989.0, 2010.0, 1988.0, 5000.0, 4989.0] | res3 : 6 [2010.0, 1989.0, 2010.0, 1988.0, 5000.0, 4989.0] | res4 : 6 [-2147483648, -2147483648, -2147483648, -2147483648, 1, 2] | res5 : 2 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, TradeEntry{price=1989.0, size=19989.0, side=SELL}] | res6 : 2 [L2Entry{level=1, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=2, side=SELL, price=4989.0, size=49989.0}]
@@ -440,24 +440,24 @@ res0 : 8 [TradeEntry{price=2090.0, size=20090.0, side=BUY}, TradeEntry{price=190
 res0 : 6 [TradeEntry{price=2100.0, size=20100.0, side=BUY}, TradeEntry{price=1899.0, size=19899.0, side=SELL}, L1Entry{side=BUY, price=2100.0, size=20100.0}, L1Entry{side=SELL, price=1889.0, size=19889.0}, L2Entry{level=0, side=SELL, price=5000.0, size=50000.0}, L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}] | res1 : 2 [0, 1] | res2 : 6 [2100.0, 1899.0, 2100.0, 1889.0, 5000.0, 4899.0] | res3 : 6 [2100.0, 1899.0, 2100.0, 1889.0, 5000.0, 4899.0] | res4 : 6 [-2147483648, -2147483648, -2147483648, -2147483648, 0, 1] | res5 : 1 [TradeEntry{price=1899.0, size=19899.0, side=SELL}] | res6 : 1 [L2Entry{level=1, side=SELL, price=4899.0, size=49899.0}]
 !END
 Running QQL: select running this.*, count{}() type "deltix.MyBarMessage" from bar1minExtended
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.660,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:0,this.open:0,this.high:0,this.low:0,this.volume:0,this.customValue:0,COUNT{}():1
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.720,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:2.2219998836517334,this.open:1.1109999418258667,this.high:3.3329999446868896,this.low:3.3329999446868896,this.volume:4.444,this.customValue:11.1111,COUNT{}():2
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.780,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:4.443999767303467,this.open:2.2219998836517334,this.high:6.665999889373779,this.low:6.665999889373779,this.volume:8.888,this.customValue:22.2222,COUNT{}():3
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.840,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:6.665999412536621,this.open:3.3329997062683105,this.high:9.99899959564209,this.low:9.99899959564209,this.volume:13.332,this.customValue:33.3333,COUNT{}():4
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.900,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:8.887999534606934,this.open:4.443999767303467,this.high:13.331999778747559,this.low:13.331999778747559,this.volume:17.776,this.customValue:44.4444,COUNT{}():5
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:51.960,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:11.109999656677246,this.open:5.554999828338623,this.high:16.66499900817871,this.low:16.66499900817871,this.volume:22.22,this.customValue:55.5555,COUNT{}():6
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.020,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:13.331998825073242,this.open:6.665999412536621,this.high:19.99799919128418,this.low:19.99799919128418,this.volume:26.664,this.customValue:66.6666,COUNT{}():7
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.080,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:15.553998947143555,this.open:7.776999473571777,this.high:23.33099937438965,this.low:23.33099937438965,this.volume:31.108,this.customValue:77.7777,COUNT{}():8
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.140,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:17.775999069213867,this.open:8.887999534606934,this.high:26.663999557495117,this.low:26.663999557495117,this.volume:35.552,this.customValue:88.8888,COUNT{}():9
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.200,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:19.99799919128418,this.open:9.99899959564209,this.high:29.996999740600586,this.low:29.996999740600586,this.volume:39.996,this.customValue:99.9999,COUNT{}():10
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.260,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:22.219999313354492,this.open:11.109999656677246,this.high:33.32999801635742,this.low:33.32999801635742,this.volume:44.44,this.customValue:111.111,COUNT{}():11
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.320,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:24.441999435424805,this.open:12.220999717712402,this.high:36.66299819946289,this.low:36.66299819946289,this.volume:48.884,this.customValue:122.2221,COUNT{}():12
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.380,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:26.663997650146484,this.open:13.331998825073242,this.high:39.99599838256836,this.low:39.99599838256836,this.volume:53.328,this.customValue:133.3332,COUNT{}():13
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.440,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:28.885997772216797,this.open:14.442998886108398,this.high:43.32899856567383,this.low:43.32899856567383,this.volume:57.772,this.customValue:144.4443,COUNT{}():14
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.500,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:31.10799789428711,this.open:15.553998947143555,this.high:46.6619987487793,this.low:46.6619987487793,this.volume:62.216,this.customValue:155.5554,COUNT{}():15
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.560,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:33.32999801635742,this.open:16.66499900817871,this.high:49.994998931884766,this.low:49.994998931884766,this.volume:66.66,this.customValue:166.6665,COUNT{}():16
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.620,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:35.551998138427734,this.open:17.775999069213867,this.high:53.327999114990234,this.low:53.327999114990234,this.volume:71.104,this.customValue:177.7776,COUNT{}():17
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.680,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:37.77399826049805,this.open:18.886999130249023,this.high:56.6609992980957,this.low:56.6609992980957,this.volume:75.548,this.customValue:188.8887,COUNT{}():18
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.740,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:39.99599838256836,this.open:19.99799919128418,this.high:59.99399948120117,this.low:59.99399948120117,this.volume:79.992,this.customValue:199.9998,COUNT{}():19
-deltix.MyBarMessage,CUSTOM,,1970-01-19 15:04:52.800,this.sequenceNumber:<null>,this.exchangeId:<null>,this.close:42.21799850463867,this.open:21.108999252319336,this.high:63.32699966430664,this.low:63.32699966430664,this.volume:84.43599999999999,this.customValue:211.1109,COUNT{}():20
+deltix.MyBarMessage,,1970-01-19 15:04:51.660,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:0,this.exchangeId:<null>,this.high:0,this.low:0,this.open:0,this.volume:0,this.customValue:0,COUNT{}():1
+deltix.MyBarMessage,,1970-01-19 15:04:51.720,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:2.22199988,this.exchangeId:<null>,this.high:3.33299994,this.low:3.33299994,this.open:1.11099994,this.volume:4.444,this.customValue:11.1111,COUNT{}():2
+deltix.MyBarMessage,,1970-01-19 15:04:51.780,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:4.44399977,this.exchangeId:<null>,this.high:6.66599989,this.low:6.66599989,this.open:2.22199989,this.volume:8.888,this.customValue:22.2222,COUNT{}():3
+deltix.MyBarMessage,,1970-01-19 15:04:51.840,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:6.66599941,this.exchangeId:<null>,this.high:9.99899959,this.low:9.99899959,this.open:3.3329997,this.volume:13.332,this.customValue:33.3333,COUNT{}():4
+deltix.MyBarMessage,,1970-01-19 15:04:51.900,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:8.88799953,this.exchangeId:<null>,this.high:13.33199977,this.low:13.33199977,this.open:4.44399976,this.volume:17.776,this.customValue:44.4444,COUNT{}():5
+deltix.MyBarMessage,,1970-01-19 15:04:51.960,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:11.10999966,this.exchangeId:<null>,this.high:16.66499901,this.low:16.66499901,this.open:5.55499983,this.volume:22.22,this.customValue:55.5555,COUNT{}():6
+deltix.MyBarMessage,,1970-01-19 15:04:52.020,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:13.33199883,this.exchangeId:<null>,this.high:19.9979992,this.low:19.9979992,this.open:6.66599942,this.volume:26.664,this.customValue:66.6666,COUNT{}():7
+deltix.MyBarMessage,,1970-01-19 15:04:52.080,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:15.55399895,this.exchangeId:<null>,this.high:23.33099938,this.low:23.33099938,this.open:7.77699948,this.volume:31.108,this.customValue:77.7777,COUNT{}():8
+deltix.MyBarMessage,,1970-01-19 15:04:52.140,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:17.77599907,this.exchangeId:<null>,this.high:26.66399956,this.low:26.66399956,this.open:8.88799954,this.volume:35.552,this.customValue:88.8888,COUNT{}():9
+deltix.MyBarMessage,,1970-01-19 15:04:52.200,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:19.99799919,this.exchangeId:<null>,this.high:29.99699974,this.low:29.99699974,this.open:9.99899959,this.volume:39.996,this.customValue:99.9999,COUNT{}():10
+deltix.MyBarMessage,,1970-01-19 15:04:52.260,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:22.21999931,this.exchangeId:<null>,this.high:33.32999801,this.low:33.32999801,this.open:11.10999965,this.volume:44.44,this.customValue:111.111,COUNT{}():11
+deltix.MyBarMessage,,1970-01-19 15:04:52.320,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:24.44199944,this.exchangeId:<null>,this.high:36.6629982,this.low:36.6629982,this.open:12.22099972,this.volume:48.884,this.customValue:122.2221,COUNT{}():12
+deltix.MyBarMessage,,1970-01-19 15:04:52.380,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:26.66399765,this.exchangeId:<null>,this.high:39.99599838,this.low:39.99599838,this.open:13.33199882,this.volume:53.328,this.customValue:133.3332,COUNT{}():13
+deltix.MyBarMessage,,1970-01-19 15:04:52.440,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:28.88599777,this.exchangeId:<null>,this.high:43.32899856,this.low:43.32899856,this.open:14.44299888,this.volume:57.772,this.customValue:144.4443,COUNT{}():14
+deltix.MyBarMessage,,1970-01-19 15:04:52.500,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:31.10799789,this.exchangeId:<null>,this.high:46.66199874,this.low:46.66199874,this.open:15.55399894,this.volume:62.216,this.customValue:155.5554,COUNT{}():15
+deltix.MyBarMessage,,1970-01-19 15:04:52.560,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:33.32999802,this.exchangeId:<null>,this.high:49.99499894,this.low:49.99499894,this.open:16.66499901,this.volume:66.66,this.customValue:166.6665,COUNT{}():16
+deltix.MyBarMessage,,1970-01-19 15:04:52.620,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:35.55199814,this.exchangeId:<null>,this.high:53.32799912,this.low:53.32799912,this.open:17.77599907,this.volume:71.104,this.customValue:177.7776,COUNT{}():17
+deltix.MyBarMessage,,1970-01-19 15:04:52.680,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:37.77399826,this.exchangeId:<null>,this.high:56.6609993,this.low:56.6609993,this.open:18.88699913,this.volume:75.548,this.customValue:188.8887,COUNT{}():18
+deltix.MyBarMessage,,1970-01-19 15:04:52.740,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:39.99599838,this.exchangeId:<null>,this.high:59.99399948,this.low:59.99399948,this.open:19.99799919,this.volume:79.992,this.customValue:199.9998,COUNT{}():19
+deltix.MyBarMessage,,1970-01-19 15:04:52.800,this.currencyCode:999,this.originalTimestamp:<null>,this.sequenceNumber:<null>,this.sourceId:<null>,this.close:42.2179985,this.exchangeId:<null>,this.high:63.32699966,this.low:63.32699966,this.open:21.10899925,this.volume:84.436,this.customValue:211.1109,COUNT{}():20
 !END

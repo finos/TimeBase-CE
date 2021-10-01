@@ -80,15 +80,11 @@ public class TupleConstructor extends CompiledComplexExpression {
         return (args[1]);
     }
 
-    public CompiledExpression getTypeInitializer() {
-        return (args[2]);
-    }
-
     public CompiledExpression[] getNonStaticInitializers() {
-        int n = args.length - 3;
+        int n = args.length - 2;
         CompiledExpression[] ret = new CompiledExpression[n];
 
-        System.arraycopy(args, 3, ret, 0, n);
+        System.arraycopy(args, 2, ret, 0, n);
 
         return (ret);
     }
@@ -111,7 +107,7 @@ public class TupleConstructor extends CompiledComplexExpression {
         out.append("new ");
         printDescriptorNames(out);
         out.append("(");
-        printArgs(out, 3);
+        printArgs(out, 2);
         out.append(")");
     }
 

@@ -17,7 +17,9 @@ dependencies {
     api project(':java:timebase:commons')
     api project(':java:timebase:api')
     api project(':java:timebase:aerondirect')
-    api project(':java:timebase:computations-api')
+
+    implementation project(':java:timebase:computations-api')
+    runtimeOnly project(':java:timebase:computations-std')
 
     implementation project(':java:timebase:snmpagent')
 

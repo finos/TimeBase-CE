@@ -17,7 +17,12 @@
 package com.epam.deltix.qsrv.hf.tickdb.ui.tbshell;
 
 import com.epam.deltix.data.stream.DXChannel;
-import com.epam.deltix.timebase.messages.InstrumentMessage;
+import com.epam.deltix.qsrv.hf.pub.MappingTypeLoader;
+import com.epam.deltix.qsrv.hf.pub.md.DataField;
+import com.epam.deltix.qsrv.hf.pub.md.FloatDataType;
+import com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.timebase.messages.*;
 import com.epam.deltix.qsrv.hf.tickdb.comm.client.TickDBClient;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLock;
@@ -28,6 +33,7 @@ import com.epam.deltix.qsrv.hf.tickdb.tool.TDBDowngrade;
 import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import com.epam.deltix.util.lang.*;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -460,9 +466,43 @@ public class DBMgr {
 
                 return (true);
             }
+
+            case "generate": {
+                String []   argx = (args != null ? args.split (" ") : new String[0]);
+                String name = argx.length == 1 ? argx[0] : "bars";
+                createSampleStream(getDB(), name);
+                return (true);
+            }
         }
         
         return (false);
+    }
+
+    public static DXTickStream createSampleStream(DXTickDB tdb, String name) throws IOException {
+
+        StreamOptions options = new StreamOptions();
+        options.name = name;
+
+        String priceEncoding = FloatDataType.ENCODING_SCALE_AUTO;
+
+        DataField[] fields = new DataField[]{
+                new NonStaticDataField("close", "Close", new FloatDataType(priceEncoding, true)),
+                new NonStaticDataField("open", "Open", new FloatDataType(priceEncoding, true), "close"),
+                new NonStaticDataField("high", "High", new FloatDataType(priceEncoding, true), "close"),
+                new NonStaticDataField("low", "Low", new FloatDataType(priceEncoding, true), "close"),
+                new NonStaticDataField("volume", "Volume", new FloatDataType(priceEncoding, true))
+        };
+        options.setFixedType(new RecordClassDescriptor(SimpleBarMessage.class.getName(), "Sample Bar Message", false, null, fields));
+
+        DXTickStream stream = tdb.createStream(name, options);
+
+        LoadingOptions lo = new LoadingOptions();
+
+        try (TickLoader loader = stream.createLoader(lo)) {
+            SimpleLoader.loadBarsFromZipResource("com/epam/deltix/qsrv/testsetup/TestBars.zip", loader);
+        }
+
+        return stream;
     }
     
     private DBLock            getStreamLock(boolean remove) {

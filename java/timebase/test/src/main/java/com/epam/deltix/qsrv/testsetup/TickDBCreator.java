@@ -112,6 +112,7 @@ public class TickDBCreator extends DefaultApplication {
 
         return (db);
     }
+
     //
     //  Minute bar stream
     //

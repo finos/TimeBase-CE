@@ -26,6 +26,7 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickDBFactory;
 import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.io.SSLClientContextProvider;
+import com.epam.deltix.util.net.SSLContextProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -57,12 +58,10 @@ public class Test_SSLTomcat {
         SSLProperties ssl = new SSLProperties(true, false);
         ssl.keystoreFile = certificate.getAbsolutePath();
 
-        System.setProperty(SSLClientContextProvider.CLIENT_KEYSTORE_PROPNAME, ssl.keystoreFile);
-        System.setProperty(SSLClientContextProvider.CLIENT_KEYSTORE_PASS_PROPNAME, ssl.keystorePass);
-
-
         config.tb.setSSLConfig(ssl);
         runner = new TDBRunner(true, true, tb.getAbsolutePath(), new TomcatServer(config));
+        runner.sslContext = SSLContextProvider.createSSLContext(ssl.keystoreFile, ssl.keystorePass, false);
+        runner.useSSL = true;
         runner.startup();
     }
 
@@ -74,15 +73,16 @@ public class Test_SSLTomcat {
 
     @Test
     public void testConnectionToSSLTomcat() throws Throwable {
-        DXTickDB client = TickDBFactory.connect("localhost", runner.getPort(), false);
-        client.open(false);
-        assertEquals(((TickDBClient) client).isSSLEnabled(), false);
-        client.close();
+        try (TickDBClient client = (TickDBClient) TickDBFactory.connect("localhost", runner.getPort(), false)) {
+            client.open(false);
+            assertEquals(client.isSSLEnabled(), false);
+        }
 
         //connect with ssl
-        DXTickDB sslClient = TickDBFactory.connect("localhost", runner.getPort(), true);
-        sslClient.open(false);
-        assertEquals(((TickDBClient) sslClient).isSSLEnabled(), true);
-        sslClient.close();
+        try (TickDBClient sslClient = (TickDBClient) TickDBFactory.connect("localhost", runner.getPort(), true)) {
+            sslClient.setSslContext(runner.sslContext);
+            sslClient.open(false);
+            assertEquals(sslClient.isSSLEnabled(), true);
+        }
     }
 }

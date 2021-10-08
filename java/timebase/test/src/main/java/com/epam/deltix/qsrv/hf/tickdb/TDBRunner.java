@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb;
 
+import com.epam.deltix.qsrv.hf.tickdb.comm.client.TickDBClient;
 import com.epam.deltix.qsrv.test.messages.BarMessage;
 import com.epam.deltix.qsrv.test.messages.BestBidOfferMessage;
 import com.epam.deltix.qsrv.test.messages.TradeMessage;
@@ -39,6 +40,7 @@ import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.vsocket.TransportProperties;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -72,6 +74,7 @@ public class TDBRunner {
     public String               pass = null;
     public TransportProperties  transportProperties;
     public boolean              useSSL;
+    public SSLContext           sslContext;
 
     private int port = 0;
 
@@ -143,7 +146,9 @@ public class TDBRunner {
 
             this.port = server.start();
 
-            client = createClient();
+            TickDBClient connection = createClient();
+            connection.setSslContext(sslContext);
+            client = connection;
 
 //            // TODO: Find out what kind of workers we want to start.
 //            // start workers
@@ -160,13 +165,14 @@ public class TDBRunner {
         open(false);
     }
 
-    public DXTickDB createClient() {
-        DXTickDB result;
+    public TickDBClient         createClient() {
+        TickDBClient result;
         if (user != null && pass != null) {
             result = new SecuredDbClient("localhost", this.port, useSSL, user, pass);
         } else {
-            result = TickDBFactory.connect("localhost", this.port, useSSL);
+            result = (TickDBClient) TickDBFactory.connect("localhost", this.port, useSSL);
         }
+
         TickDBFactory.setApplicationName(result, "TBRunner");
         return result;
     }

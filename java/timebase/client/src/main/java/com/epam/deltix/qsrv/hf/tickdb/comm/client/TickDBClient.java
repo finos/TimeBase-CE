@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.hf.tickdb.comm.client;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.comm.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.util.io.SSLClientContextProvider;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.streaming.MessageChannel;
@@ -77,7 +78,6 @@ import com.epam.deltix.util.ContextContainer;
 import com.epam.deltix.util.collections.generated.IntegerToObjectHashMap;
 import com.epam.deltix.util.concurrent.QuickExecutor;
 import com.epam.deltix.util.io.GUID;
-import com.epam.deltix.util.io.SSLClientContextProvider;
 import com.epam.deltix.util.io.idlestrat.IdleStrategy;
 import com.epam.deltix.util.lang.Disposable;
 import com.epam.deltix.util.lang.GrowthPolicy;
@@ -85,7 +85,6 @@ import com.epam.deltix.util.lang.JavaVerifier;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.net.NetUtils;
 import com.epam.deltix.util.parsers.CompilationException;
-import com.epam.deltix.util.parsers.Element;
 import com.epam.deltix.util.vsocket.VSChannel;
 import com.epam.deltix.util.vsocket.VSClient;
 import com.epam.deltix.util.vsocket.VSProtocol;
@@ -94,6 +93,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.net.ssl.SSLContext;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -139,6 +139,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     private final String                        host;
     private final int                           port;
     private int                                 timeout;
+    private SSLContext                          sslContext;
 
     private boolean                             isOpen = false;
     private boolean                             isReadOnly = false;
@@ -307,7 +308,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
                 connection.setNumTransportChannels(isRemoteConnection ? 1 : getConnectionsNumber(isRemoteConnection));
                 connection.setTimeout(timeout);
                 connection.setDisconnectedListener(listener);
-                connection.setSslContext(SSLClientContextProvider.getSSLContext());
+                connection.setSslContext(getOrCreateContext());
                 connection.connect();
             } else if (isRemoteConnection) {
                 // lazy initialization of additional sockets transports
@@ -402,8 +403,32 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         this.timeout = timeout;
     }
 
+    public SSLContext           getSslContext() {
+        return sslContext;
+    }
+
+    public void                 setSslContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
+    protected SSLContext        getOrCreateContext() {
+        if (enableSSL) {
+            if (sslContext == null)
+                sslContext = SSLClientContextProvider.getSSLContext();
+            return sslContext;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns server protocol version if client is already connected.
+     * @return server version
+     * @throws IllegalStateException if is not open
+     */
     @Override
     public int                  getServerProtocolVersion() {
+        assertOpen();
         return serverProtocolVersion;
     }
 

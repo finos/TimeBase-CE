@@ -17,7 +17,6 @@
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
 import com.epam.deltix.qsrv.QSHome;
-import com.epam.deltix.qsrv.SSLProperties;
 import com.epam.deltix.qsrv.comm.cat.StartConfiguration;
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
@@ -81,7 +80,6 @@ public class StressTest_TBServer {
         for (int i = 0; i < 1000; i++) {
             try (DXTickDB db = TickDBFactory.createFromUrl("dxtick://localhost:" + runner.getPort())) {
                 db.open(false);
-                db.close();
             }
         }
     }

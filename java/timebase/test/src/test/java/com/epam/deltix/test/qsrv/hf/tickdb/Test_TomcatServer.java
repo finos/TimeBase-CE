@@ -21,6 +21,7 @@ import com.epam.deltix.qsrv.comm.cat.StartConfiguration;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.qsrv.servlet.HomeServlet;
+import com.epam.deltix.util.net.SSLContextProvider;
 import org.junit.*;
 
 import java.io.File;
@@ -51,6 +52,7 @@ public class Test_TomcatServer {
         configuration.tb.setSSLConfig(new SSLProperties(true, false));
 
         TDBRunner runner = new TDBRunner(true, true, new TomcatServer(configuration));
+        //runner.sslContext = SSLContextProvider.createSSLContext(ssl.keystoreFile, ssl.keystorePass, false);
         runner.startup();
 
         testHome("localhost", runner.getPort(), new File(runner.getLocation()).getParent());

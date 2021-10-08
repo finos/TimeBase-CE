@@ -97,7 +97,7 @@ public abstract class TDBProtocol extends SerializationUtils {
      *  Server will refuse to talk to a client unless the client's version is   at least
      *  this number.
      */
-    public static final int     MIN_CLIENT_VERSION = VERSION;
+    public static final int     MIN_CLIENT_VERSION = 130;
     
     /**
      *  Client will refuse to talk to a server unless the server's version is at least 

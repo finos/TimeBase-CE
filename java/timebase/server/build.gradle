@@ -43,6 +43,7 @@ dependencies {
 
     implementation 'org.apache.taglibs:taglibs-standard-impl' // JSTL Support
     implementation 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
+    implementation 'org.glassfish:javax.el:3.0.0' // Tomcat Requires
 
     implementation 'javax.xml.bind:jaxb-api'
     implementation 'com.sun.xml.bind:jaxb-impl'
@@ -148,20 +149,20 @@ task prepareFilesForDocker {
     dependsOn copyTimebaseServerContainerDependensies
 }
 
-task copyWebapp(type: Copy) {
-    description 'Copy timebase webapp war file into timebase server resources'
-    dependsOn ':java:timebase:web:war'
+task copyMonitorWebapp(type: Copy) {
+    description 'Copy timebase monitor webapp war file into timebase server resources'
+    dependsOn ':java:timebase:webmonitor:war'
     mustRunAfter processResources
     mustRunAfter clean
 
-    from (project(':java:timebase:web').file('build/libs')) {
+    from (project(':java:timebase:webmonitor').file('build/libs')) {
         include '*.war'
-        rename 'timebase-web(.*).war', 'timebase-web.war'
+        rename 'timebase-webmonitor(.*).war', 'timebase-webmonitor.war'
     }
     into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
 }
 
-shadowJar.dependsOn copyWebapp
+jar.dependsOn copyMonitorWebapp
 
 
 def generatedMainDir = file('build/generated-src/main/src')

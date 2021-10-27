@@ -1,4 +1,4 @@
-FROM alpine:3.14.0
+FROM alpine:3.14.2
 
 ENV LANG=C.UTF-8
 ENV DELTIX_HOME /timebase-server

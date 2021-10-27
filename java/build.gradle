@@ -228,7 +228,7 @@ configure(leafProjects) {
             dependency 'commons-io:commons-io:2.7'
             dependency 'commons-codec:commons-codec:1.13'
 
-            dependency 'org.apache.commons:commons-compress:1.19'
+            dependency 'org.apache.commons:commons-compress:1.21'
             dependency 'org.apache.commons:commons-lang3:3.7'
             dependency 'org.apache.commons:commons-math3:3.6'
             dependency 'org.apache.commons:commons-text:1.8'

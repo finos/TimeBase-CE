@@ -1,9 +1,12 @@
-<img align="right" src="https://github.com/finos/branding/blob/master/project-logos/active-project-logos/Timebase/tb-logo.png?raw=true">
+<img align="right" src="https://github.com/finos/TimeBase-CE/blob/main/timebase-logo.svg">
 
 
 # Timebase CE
 
 [![FINOS - Incubating](https://cdn.jsdelivr.net/gh/finos/contrib-toolbox@master/images/badge-incubating.svg)](https://finosfoundation.atlassian.net/wiki/display/FINOS/Incubating)
+
+[![Maven Central](https://img.shields.io/maven-central/v/org.finos/finos.svg?maxAge=2592000)](https://search.maven.org/search?q=g:org.finos.timebase-ce)
+
 
 ## Business Problem
 

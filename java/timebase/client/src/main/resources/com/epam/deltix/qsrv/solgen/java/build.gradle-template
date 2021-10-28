@@ -1,19 +1,11 @@
 plugins {
-    id 'java'
-}
-
-allprojects {
-    apply from: "$rootDir/gradle/repository.gradle"
+    id 'java-library'
 }
 
 group '${PROJECT_GROUP}'
 
-def repositoryName = project.findProperty("deltix.repository.name")
-
 repositories {
     mavenCentral()
-    mavenLocal()
-    mavenDeltixProxy(repositoryName)
 }
 
 sourceCompatibility = 11
@@ -25,17 +17,22 @@ def gflogVersion = project.findProperty("deltix.gflog.version")
 def commonslangVersion = project.findProperty("commonslang.version")
 
 dependencies {
-    implementation "deltix.qsrv.timebase:deltix-timebase-client:$tbVersion",
-            "deltix.qsrv.timebase:deltix-timebase-api:$tbVersion",
-            "deltix.qsrv.timebase:deltix-timebase-pub:$tbVersion"
+    api "org.finos.timebase-ce:timebase-client:${tbVersion}"
+    api "org.finos.timebase-ce:timebase-api:${tbVersion}"
+    api "org.finos.timebase-ce:timebase-pub:${tbVersion}"
+    api "org.finos.timebase-ce:timebase-aerondirect:${tbVersion}"
 
-    implementation "deltix.qsrv:deltix-commons-messages:$commonsVersion",
-            "deltix.qsrv:deltix-commons-util:$commonsVersion"
+    api "com.epam.deltix:containers:3.1.2"
 
-    implementation "deltix:deltix-gflog-api:$gflogVersion",
-                "deltix:deltix-gflog-core:$gflogVersion",
-                "deltix:deltix-gflog-dcl:$gflogVersion",
-                "deltix:deltix-gflog-api:$gflogVersion"
+    implementation "com.epam.deltix:timebase-lang:${commonsVersion}"
+    implementation "com.epam.deltix:timebase-util:${commonsVersion}"
+    implementation "com.epam.deltix:timebase-messages:${commonsVersion}"
+    implementation "com.epam.deltix:timebase-collections:${commonsVersion}"
+
+    implementation 'com.epam.deltix:dfp:0.11.01'
+    implementation "com.epam.deltix:gflog-api:${gflogVersion}"
+
+    implementation 'com.epam.deltix:dfp:0.11.01'
 
     implementation "commons-lang:commons-lang:$commonslangVersion"
 

@@ -96,6 +96,15 @@ public class ${java.samples.speedtest.className} {
                     break;
                 }
             }
+
+            int total = 0;
+            for (Reader r : readers)
+                total += r.numMessagesRead;
+
+            System.out.printf(
+                    "Total Read: %,12d messages in %d seconds \r",
+                    total, (System.currentTimeMillis() - lastReportTime)/1000
+            );
         }
 
         if (args.length == 0 || args[args.length - 1].compareTo("-force") != 0)

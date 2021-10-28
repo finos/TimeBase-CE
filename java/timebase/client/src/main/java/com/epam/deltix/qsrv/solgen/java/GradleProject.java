@@ -60,7 +60,6 @@ public class GradleProject implements Project {
     ));
 
     private static final String GRADLE_ARCHIVE = "gradle-project-skeleton.zip";
-    private static final String REPOSITORY_GRADLE = "repository.gradle";
     private static final String BUILD_GRADLE_TEMPLATE = "build.gradle-template";
     private static final String SETTINGS_GRADLE_TEMPLATE = "settings.gradle-template";
     private static final String README_TEMPLATE = "README.md-template";
@@ -72,19 +71,15 @@ public class GradleProject implements Project {
     private static final String PROJECT_NAME = "PROJECT_NAME";
 
     // gradle.properties
-    private static final String REPOSITORY_PROP = "deltix.repository";
-    private static final String REPOSITORY_NAME_PROP = "deltix.repository.name";
     private static final String TB_VERSION_PROP = "deltix.timebase.version";
     private static final String DELTIX_COMMONS_VERSION_PROP = "deltix.commons.version";
     private static final String DELTIX_GFLOG_VERSION_PROP = "deltix.gflog.version";
     private static final String COMMONS_LANG_VERSION_PROP = "commonslang.version";
     private static final String VERSION_PROP = "version";
 
-    private static final String DEFAULT_REPO = "https://nexus.deltixhub.com/repository/";
-    private static final String DEFAULT_REPO_NAME = "DevMain";
-    private static final String DEFAULT_TB_VERSION = GradleProject.class.getPackage().getImplementationVersion();
-    private static final String DEFAULT_DELTIX_COMMONS_VERSION = "6.0.44";
-    private static final String DEFAULT_DELTIX_GFLOG_VERSION = "2.0.40";
+    private static final String DEFAULT_TB_VERSION = "6.0.21";
+    private static final String DEFAULT_DELTIX_COMMONS_VERSION = "6.0.61";
+    private static final String DEFAULT_DELTIX_GFLOG_VERSION = "3.0.1";
     private static final String DEFAULT_COMMONS_LANG_VERSION = "2.6";
     private static final String DEFAULT_VERSION = "1.0.0-SNAPSHOT";
 
@@ -116,9 +111,7 @@ public class GradleProject implements Project {
         scripts.add(root.resolve("gradlew.bat"));
         scripts.add(root.resolve("gradlew"));
 
-        properties.setProperty(REPOSITORY_PROP, DEFAULT_REPO);
-        properties.setProperty(REPOSITORY_NAME_PROP, DEFAULT_REPO_NAME);
-        properties.setProperty(TB_VERSION_PROP, DEFAULT_TB_VERSION == null ? "6.0.20": DEFAULT_TB_VERSION);
+        properties.setProperty(TB_VERSION_PROP, DEFAULT_TB_VERSION == null ? "6.0.21": DEFAULT_TB_VERSION);
         properties.setProperty(DELTIX_COMMONS_VERSION_PROP, DEFAULT_DELTIX_COMMONS_VERSION);
         properties.setProperty(DELTIX_GFLOG_VERSION_PROP, DEFAULT_DELTIX_GFLOG_VERSION);
         properties.setProperty(COMMONS_LANG_VERSION_PROP, DEFAULT_COMMONS_LANG_VERSION);
@@ -169,8 +162,6 @@ public class GradleProject implements Project {
     @Override
     public void createSkeleton() throws IOException {
         SolgenUtils.unzip(this.getClass().getPackage(), GRADLE_ARCHIVE, root);
-        addRoot("gradle", REPOSITORY_GRADLE,
-                SolgenUtils.readFromClassPath(GradleProject.class.getPackage(), REPOSITORY_GRADLE));
         createBuildGradle();
         createSettingsGradle();
         createReadme();
@@ -187,10 +178,6 @@ public class GradleProject implements Project {
 
     public void setTbVersion(String version) {
         setProjectProperty(TB_VERSION_PROP, version);
-    }
-
-    public void setRepository(String repository) {
-        setProjectProperty(REPOSITORY_PROP, repository);
     }
 
     public void createBuildGradle() throws FileNotFoundException {

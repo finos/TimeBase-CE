@@ -66,11 +66,6 @@ The following file lists known Timebase CE vulnerabilities:
 
 https://github.com/finos/TimeBase-CE/blob/main/CVE.md
 
-## Releases
-The following file lists known Timebase CE vulnerabilities:
-
-https://github.com/finos/TimeBase-CE/blob/main/CVE.md
-
 ## Contributing
 
 1. Fork it (<https://github.com/finos/TimeBase-CE/fork>)

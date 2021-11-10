@@ -20,14 +20,18 @@ import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.MemoryMonitorConfigurer;
 import com.epam.deltix.qsrv.QSHome;
+import com.epam.deltix.qsrv.config.QuantServerExecutor;
 import com.epam.deltix.qsrv.config.QuantServiceConfig;
 import com.epam.deltix.qsrv.hf.tickdb.server.Version;
+import com.epam.deltix.qsrv.jetty.JettyRunner;
 import com.epam.deltix.qsrv.util.log.ServerLoggingConfigurer;
 import com.epam.deltix.util.cmdline.DefaultApplication;
 import com.epam.deltix.util.lang.Util;
+import com.epam.deltix.util.vsocket.VSServerRunner;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.util.logging.Level;
 
@@ -42,7 +46,11 @@ public class TBServerCmd extends DefaultApplication {
     // SEVERE level serves as trigger and failure identifier in many notification frameworks, so set STARTUP level below it
     public static final Level LEVEL_STARTUP = new Level("STARTUP", Level.SEVERE.intValue() - 10) { };
 
-    public final TomcatRunner runner;
+    public final JettyRunner runner;
+
+    public final VSServerRunner vsServerRunner;
+
+    public final ServiceExecutorBootstrap serviceBootstrap;
 
     public TBServerCmd(String[] args) throws Exception {
         super(args);
@@ -62,7 +70,9 @@ public class TBServerCmd extends DefaultApplication {
         if (config.port == -1)
             exit("No port specified");
 
-        runner = new TomcatRunner(config);
+        serviceBootstrap = new ServiceExecutorBootstrap(config);
+        runner = new JettyRunner(config);
+        vsServerRunner = new VSServerRunner(7070, InetAddress.getLocalHost());
 
         LogKeeper.LOG.info().append(Util.NATIVE_LINE_BREAK).append(Util.NATIVE_LINE_BREAK).commit();
         LogKeeper.LOG.info("QuantServer Version:  %s").with(Version.getVersion());
@@ -74,7 +84,9 @@ public class TBServerCmd extends DefaultApplication {
         @Override
         public void run() {
             LogKeeper.LOG.info("Shutting QuantServer...");
+            serviceBootstrap.close();
             runner.close();
+            vsServerRunner.close();
             ServerLoggingConfigurer.unconfigure();
         }
     }
@@ -83,7 +95,10 @@ public class TBServerCmd extends DefaultApplication {
         Runtime.getRuntime().addShutdownHook(new QuantServerShutdownHook());
 
         try {
+            serviceBootstrap.start();
             runner.run();
+            vsServerRunner.init(QuantServerExecutor.HANDLER);
+            vsServerRunner.start();
             onStarted();
 
             runner.waitForStop(); // consume additional thread

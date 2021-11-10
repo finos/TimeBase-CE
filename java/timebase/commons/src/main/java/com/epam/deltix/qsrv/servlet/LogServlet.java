@@ -18,8 +18,8 @@ package com.epam.deltix.qsrv.servlet;
 
 import com.epam.deltix.qsrv.LogsDownloadHelper;
 import java.io.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 
 /**
  *  Returns logs in a zipped format

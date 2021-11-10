@@ -43,4 +43,6 @@ dependencies {
 
     //testImplementation 'org.f1x:f1x'
     testImplementation 'com.intellij:annotations'
+
+    implementation 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2' // Jetty requires
 }

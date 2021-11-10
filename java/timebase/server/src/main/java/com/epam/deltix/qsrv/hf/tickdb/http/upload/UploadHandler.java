@@ -16,7 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http.upload;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.io.DataInput;

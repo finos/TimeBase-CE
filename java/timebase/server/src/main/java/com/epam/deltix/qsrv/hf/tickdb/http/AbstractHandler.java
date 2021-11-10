@@ -21,7 +21,7 @@ import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.security.SecurityController;
 import org.owasp.encoder.Encode;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.AccessControlException;
 

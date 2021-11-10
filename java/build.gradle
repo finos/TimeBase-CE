@@ -204,6 +204,9 @@ configure(leafProjects) {
                 entry 'aeron-archive'
             }
 
+            dependency 'org.eclipse.jetty:jetty-server:11.0.7'
+            dependency 'org.eclipse.jetty:jetty-webapp:11.0.7'
+
             dependency 'com.lmax:disruptor:3.3.6'
 
             // JMH

@@ -31,7 +31,7 @@ import com.epam.deltix.qsrv.hf.tickdb.schema.*;
 import com.epam.deltix.util.lang.StringUtils;
 import org.owasp.encoder.Encode;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.StringReader;

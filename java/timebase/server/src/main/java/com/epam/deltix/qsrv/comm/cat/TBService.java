@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.comm.cat;
 
+import com.epam.deltix.qsrv.jetty.JettyRunner;
 import com.epam.deltix.util.runtime.Shutdown;
 import com.epam.deltix.util.service.BaseService;
 
@@ -43,7 +44,7 @@ public class TBService extends BaseService {
         }
     }
 
-    protected volatile TomcatRunner      runner;
+    protected volatile JettyRunner runner;
     private String[]                     args;
 
     public TBService(String[] args) {

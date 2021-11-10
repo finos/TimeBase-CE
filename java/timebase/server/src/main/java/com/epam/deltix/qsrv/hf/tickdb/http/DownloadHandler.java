@@ -16,7 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.security.AccessControlException;
 import java.util.logging.Level;

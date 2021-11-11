@@ -1,12 +1,14 @@
 package com.epam.deltix.qsrv.jetty;
 
+import com.epam.deltix.qsrv.SSLConfig;
+import com.epam.deltix.qsrv.SSLProperties;
 import com.epam.deltix.qsrv.comm.cat.StartConfiguration;
 import com.epam.deltix.qsrv.config.QuantServiceConfig;
 import com.epam.deltix.qsrv.util.servlet.AccessFilter;
 import com.epam.deltix.util.io.Home;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import java.io.File;
@@ -52,7 +54,32 @@ public class JettyRunner  {
         if (jettyServer != null)
             throw new IllegalStateException("Jetty already initialized");
 
-        jettyServer = new Server(config.port);
+        jettyServer = new Server();
+
+        List<ConnectionFactory> factoryList = new ArrayList<>();
+        // Create the HTTP/1.1 ConnectionFactory.
+        HttpConnectionFactory http = new HttpConnectionFactory();
+        SSLProperties sslConfig = getSslConfig();
+        if (sslConfig != null && sslConfig.enableSSL) {
+            // Create and configure the TLS context factory.
+            SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
+            sslContextFactory.setKeyStorePath(sslConfig.keystoreFile);
+            sslContextFactory.setKeyStorePassword(sslConfig.keystorePass);
+
+            // Create the TLS ConnectionFactory,
+            // setting HTTP/1.1 as the wrapped protocol.
+            SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, http.getProtocol());
+
+            // Create the detector ConnectionFactory to
+            // detect whether the initial bytes are TLS.
+            DetectorConnectionFactory tlsDetector = new DetectorConnectionFactory(tls);
+            factoryList.add(tlsDetector);
+        }
+        factoryList.add(http);
+
+        ServerConnector connector = new ServerConnector(jettyServer, factoryList.toArray(new ConnectionFactory[0]));
+        connector.setPort(config.port);
+        jettyServer.addConnector(connector);
 
         ContextHandlerCollection contexts = new ContextHandlerCollection();
         List<Handler> handlerList = new ArrayList<>();
@@ -70,6 +97,16 @@ public class JettyRunner  {
         Handler [] handlers = new Handler[handlerList.size()];
         contexts.setHandlers(handlerList.toArray(handlers));
         jettyServer.setHandler(contexts);
+    }
+
+    private SSLProperties getSslConfig() {
+        if (config.tb != null)
+            return config.tb.getSSLConfig();
+        else if (config.uhf != null)
+            return config.uhf.getSSLConfig();
+        else if (config.es != null)
+            return config.es.getSSLConfig();
+        return null;
     }
 
     // Destroy instance of tomcat

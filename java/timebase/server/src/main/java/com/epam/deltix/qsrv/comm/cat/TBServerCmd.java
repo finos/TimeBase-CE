@@ -37,8 +37,8 @@ import java.util.logging.Level;
 
 public class TBServerCmd extends DefaultApplication {
 
-    private static final String TB_WEBAPP_RESOURCE_FILE = "webapp/deltix-timebase-web.war";
-    private static final String QS_WEBAPP_RESOURCE_FILE = "webapp/deltix-quantserver-web.war";
+    private static final String QS_WEBAPP_RESOURCE_FILE = "webapp/timebase-web.war";
+    private static final String TB_WEBAPP_RESOURCE_FILE = "webapp/timebase-webmonitor.war";
 
     private final long startTime = System.currentTimeMillis();
     //protected static final Logger LOGGER = Logger.getLogger("deltix.util.tomcat");

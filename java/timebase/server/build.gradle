@@ -111,7 +111,7 @@ task copyTimebaseServerContainerDependensies(type: Copy) {
     description 'Copy all timebase server dependencies'
     //dependsOn ':java:cleanSubprojects' // This is necessary to force clean build.
     dependsOn 'build'
-    dependsOn ':java:timebase:server:copyWebapp'
+    dependsOn ':java:timebase:server:copyMonitorWebap'
     dependsOn ':java:timebase:commons:copyWebapp'
     dependsOn ':java:timebase:s3:build'
     dependsOn ':distribution:build'
@@ -149,17 +149,19 @@ task prepareFilesForDocker {
     dependsOn copyTimebaseServerContainerDependensies
 }
 
-task copyWebapp(type: Copy) {
-    description 'Copy timebase webapp war file into timebase server resources'
-    dependsOn ':java:timebase:web:war'
+task copyMonitorWebap(type: Copy) {
+    description 'Copy timebase monitor webapp war file into timebase server resources'
+    dependsOn ':java:timebase:webmonitor:war'
     mustRunAfter processResources
     mustRunAfter clean
 
-    from (project(':java:timebase:web').file('build/libs')) {
+    from (project(':java:timebase:webmonitor').file('build/libs')) {
         include '*.war'
-        rename 'timebase-web(.*).war', 'timebase-web.war'
+        rename 'timebase-webmonitor(.*).war', 'timebase-webmonitor.war'
     }
     into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
 }
 
-shadowJar.dependsOn copyWebapp
+jar.dependsOn copyMonitorWebap
+
+shadowJar.dependsOn copyMonitorWebap

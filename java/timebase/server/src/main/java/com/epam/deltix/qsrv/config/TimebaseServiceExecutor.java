@@ -52,7 +52,6 @@ import com.epam.deltix.util.vsocket.TransportType;
 import com.epam.deltix.util.vsocket.VSCompression;
 import com.epam.deltix.util.vsocket.VSProtocol;
 import com.epam.deltix.util.vsocket.VSServerFramework;
-import org.apache.catalina.Context;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -274,10 +273,6 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         return options;
     }
 
-    @Override
-    public void             configure(Context context) {
-
-    }
 
     public static final String TRANSPORT_TYPE              = "transportType";
     public static final String TRANSPORT_DIR               = "transportDir";

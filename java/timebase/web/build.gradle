@@ -6,11 +6,14 @@ dependencies {
 
 //    compileOnly 'java:tools'
     compileOnly 'com.sun.activation:javax.activation'
-    compileOnly 'org.apache.tomcat.embed:tomcat-embed-jasper' // Tomcat JSP support
-    compileOnly 'org.apache.tomcat.embed:tomcat-embed-logging-juli' // Tomcat Logging
+//    compileOnly 'org.apache.tomcat.embed:tomcat-embed-jasper' // Tomcat JSP support
+//    compileOnly 'org.apache.tomcat.embed:tomcat-embed-logging-juli' // Tomcat Logging
 
-    compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
-    compileOnly 'org.apache.taglibs:taglibs-standard-impl' // Tomcat JSTL Support
+//    compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
+//    compileOnly 'org.apache.taglibs:taglibs-standard-impl' // Tomcat JSTL Support
+    compileOnly 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2' // Jetty requires
+    compileOnly 'org.eclipse.jetty:apache-jsp:11.0.7'
+    compileOnly 'org.eclipse.jetty:apache-jstl:11.0.0'
     compileOnly 'com.epam.deltix:gflog-api'
 }
 
@@ -31,7 +34,7 @@ task compileJsps {
 
     doLast {
         ant.taskdef(classname: 'org.apache.jasper.JspC', name: 'jasper', classpath: configurations.compileOnly.asPath)
-        ant.jasper(validateXml: false, uriroot: webappDir, webXmlFragment: generatedXml, outputDir: generatedJsps)
+        ant.jasper(validateXml: false, uriroot: webappDir, webFragmentXml: generatedXml, outputDir: generatedJsps)
     }
 
     doLast {

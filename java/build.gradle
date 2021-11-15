@@ -163,10 +163,10 @@ configure(leafProjects) {
 
             dependency 'javax.mail:mail:1.4.7'
 
-            dependency 'javax.servlet.jsp.jstl:jstl-api:1.2' // JSTL Support
+//            dependency 'javax.servlet.jsp.jstl:jstl-api:1.2' // JSTL Support
             dependency 'org.owasp.encoder:encoder:1.1.1' // prevent XSS attacks in servlets
 
-            dependency 'org.apache.taglibs:taglibs-standard-impl:1.2.5' // Tomcat JSTL Support
+//            dependency 'org.apache.taglibs:taglibs-standard-impl:1.2.5' // Tomcat JSTL Support
 
             dependency 'org.codehaus.groovy:groovy:2.5.3'
 
@@ -192,11 +192,11 @@ configure(leafProjects) {
 //                entry 'hadoop-yarn-common'
 //            }
 
-            dependencySet(group: 'org.apache.tomcat.embed', version: '8.0.53') {
-                entry 'tomcat-embed-core' // Tomcat core
-                entry 'tomcat-embed-jasper' // Tomcat JSP support
-                entry 'tomcat-embed-logging-juli' // Tomcat Logging
-            }
+//            dependencySet(group: 'org.apache.tomcat.embed', version: '8.0.53') {
+//                entry 'tomcat-embed-core' // Tomcat core
+//                entry 'tomcat-embed-jasper' // Tomcat JSP support
+//                entry 'tomcat-embed-logging-juli' // Tomcat Logging
+//            }
 
             dependencySet(group: 'io.aeron', version: '1.17.0') {
                 entry 'aeron-client'

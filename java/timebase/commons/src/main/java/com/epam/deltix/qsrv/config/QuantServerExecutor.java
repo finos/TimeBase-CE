@@ -22,7 +22,6 @@ import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.security.SecurityController;
 import com.epam.deltix.util.time.Interval;
-import org.apache.catalina.Context;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -70,11 +69,6 @@ public class QuantServerExecutor implements ServiceExecutor {
         } catch (Throwable e) {
             throw Util.asRuntimeException(e);
         }
-    }
-
-    @Override
-    public void configure(Context context) {
-
     }
 
     @Override

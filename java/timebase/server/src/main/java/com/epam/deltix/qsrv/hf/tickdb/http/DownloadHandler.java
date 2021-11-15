@@ -34,7 +34,6 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.query.Parameter;
 import com.epam.deltix.util.collections.generated.LongToObjectHashMap;
 import com.epam.deltix.util.concurrent.UnavailableResourceException;
 import com.epam.deltix.util.io.FlushableOutputStream;
-import org.apache.catalina.connector.ClientAbortException;
 
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptorArray;
@@ -200,10 +199,6 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
                         sendError(response, t);
                         throw (RuntimeException) t;
                     }
-                } else if (t instanceof ClientAbortException) {
-                    wasClientAbort = true;
-                    LOGGER.warning(String.format("[%s] Client disconnected: %s",
-                            Thread.currentThread().getName(), t.getCause().getMessage()));
                 } else if (!wasClientAbort || !(t instanceof CursorIsClosedException)) {
                     LOGGER.log(Level.SEVERE, "TB-HTTP query processing failed", t);
                     writeError(HTTPProtocol.ERR_PROCESSING, Util.printStackTrace(t));

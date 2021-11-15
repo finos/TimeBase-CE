@@ -28,7 +28,6 @@ import com.epam.deltix.qsrv.test.messages.TradeMessage;
 import com.epam.deltix.util.JUnitCategories;
 import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.io.IOUtil;
-import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -103,7 +102,7 @@ public class Test_UserImpersonation  {
 
 
     private DXTickDB impersonate(String userId) {
-        return TickDBFactory.wrap(getAdminClient(), makePrincipal(userId));
+        return TickDBFactory.wrap(getAdminClient(), null);
     }
 
     private DXTickDB impersonate(Principal principal) {
@@ -288,8 +287,8 @@ public class Test_UserImpersonation  {
 //        }
 //    }
 
-    private static GenericPrincipal makePrincipal(String user) {
-        return new GenericPrincipal(user, null, null);  //TODO
-    }
+//    private static GenericPrincipal makePrincipal(String user) {
+//        return new GenericPrincipal(user, null, null);  //TODO
+//    }
 
 }

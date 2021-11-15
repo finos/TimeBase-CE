@@ -38,8 +38,8 @@ dependencies {
     implementation 'org.springframework:spring-webmvc'
     implementation 'org.springframework:spring-web'
 
-    implementation 'org.apache.taglibs:taglibs-standard-impl' // JSTL Support
-    implementation 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
+//    implementation 'org.apache.taglibs:taglibs-standard-impl' // JSTL Support
+//    implementation 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
     implementation 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2' // Jetty requires
 
     implementation 'javax.xml.bind:jaxb-api'

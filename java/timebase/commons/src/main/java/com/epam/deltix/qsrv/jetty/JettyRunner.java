@@ -6,10 +6,15 @@ import com.epam.deltix.qsrv.comm.cat.StartConfiguration;
 import com.epam.deltix.qsrv.config.QuantServiceConfig;
 import com.epam.deltix.qsrv.util.servlet.AccessFilter;
 import com.epam.deltix.util.io.Home;
+import org.eclipse.jetty.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.apache.jsp.JettyJasperInitializer;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.servlet.ServletContainerInitializerHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.webapp.WebXmlConfiguration;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -86,6 +91,11 @@ public class JettyRunner  {
         WebAppContext webapp = new WebAppContext();
         webapp.setContextPath("/" + DEFAULT_WEB_APP_NAME);
         webapp.setWar(getWebappFile(config.quantServer, Home.getFile ("web/" + DEFAULT_WEB_APP_DIR)).getAbsolutePath());
+//        webapp.addServletContainerInitializer(new ServletContainerInitializerHolder(JettyJasperInitializer.class));
+//        webapp.setConfigurations(new Configuration[] {
+//                new AnnotationConfiguration(),
+//                new WebXmlConfiguration()
+//        });
         handlerList.add(webapp);
         if (config.tb != null) {
             webapp = new WebAppContext();

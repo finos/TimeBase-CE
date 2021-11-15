@@ -5,6 +5,10 @@ description = "Timebase Commons Server API Library"
 
 configurations.implementation {
     exclude group: 'jakarta.annotation', module: 'jakarta.annotation-api' // GNU license
+    exclude group: 'jakarta.transaction', module: 'jakarta.transaction-api'
+    exclude group: 'com.sun.activation', module: 'jakarta.activation'
+    exclude group: 'jakarta.xml.bind', module: 'jakarta.xml.bind-api'
+    exclude group: 'org.eclipse.jdt', module: 'ecj'
 }
 
 dependencies {

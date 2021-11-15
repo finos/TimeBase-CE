@@ -56,7 +56,7 @@ licenseReport {
 //        }
 //    }
 
-    excludeGroups = ['javax.servlet.*']
+    excludeGroups = ['javax.servlet.*', 'jakarta.servlet.*']
     excludes = ['asm:asm', 'com.sun.codemodel:codemodel-project', 'net.jcip:jcip-annotations']
 
     configurations = ['runtimeClasspath']
@@ -204,8 +204,15 @@ configure(leafProjects) {
                 entry 'aeron-archive'
             }
 
-            dependency 'org.eclipse.jetty:jetty-server:11.0.7'
-            dependency 'org.eclipse.jetty:jetty-webapp:11.0.7'
+            // Jetty
+            dependencySet(group: 'org.eclipse.jetty', version: '11.0.7') {
+                entry 'jetty-server'
+                entry 'jetty-webapp'
+                entry 'apache-jsp'
+                entry 'jetty-annotations'
+            }
+            dependency 'org.eclipse.jetty:apache-jstl:11.0.0'
+            dependency 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2'
 
             dependency 'com.lmax:disruptor:3.3.6'
 

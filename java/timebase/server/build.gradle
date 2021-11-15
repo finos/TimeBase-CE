@@ -40,7 +40,7 @@ dependencies {
 
 //    implementation 'org.apache.taglibs:taglibs-standard-impl' // JSTL Support
 //    implementation 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
-    implementation 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2' // Jetty requires
+    implementation 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api' // Jetty requires
 
     implementation 'javax.xml.bind:jaxb-api'
     implementation 'com.sun.xml.bind:jaxb-impl'

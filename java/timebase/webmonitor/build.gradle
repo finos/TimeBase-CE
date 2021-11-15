@@ -6,8 +6,8 @@ dependencies {
 
 //    compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
 //    compileOnly 'org.apache.taglibs:taglibs-standard-impl' // Tomcat JSTL Support
-    compileOnly 'org.eclipse.jetty:apache-jsp:11.0.7'
-    compileOnly 'org.eclipse.jetty:apache-jstl:11.0.0'
+    compileOnly 'org.eclipse.jetty:apache-jsp'
+    compileOnly 'org.eclipse.jetty:apache-jstl'
 }
 
 def webappDir = file('src/main/webapp')

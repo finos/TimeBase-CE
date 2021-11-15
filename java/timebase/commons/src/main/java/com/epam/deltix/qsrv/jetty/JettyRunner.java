@@ -1,6 +1,5 @@
 package com.epam.deltix.qsrv.jetty;
 
-import com.epam.deltix.qsrv.SSLConfig;
 import com.epam.deltix.qsrv.SSLProperties;
 import com.epam.deltix.qsrv.comm.cat.StartConfiguration;
 import com.epam.deltix.qsrv.config.QuantServiceConfig;
@@ -91,11 +90,6 @@ public class JettyRunner  {
         WebAppContext webapp = new WebAppContext();
         webapp.setContextPath("/" + DEFAULT_WEB_APP_NAME);
         webapp.setWar(getWebappFile(config.quantServer, Home.getFile ("web/" + DEFAULT_WEB_APP_DIR)).getAbsolutePath());
-//        webapp.addServletContainerInitializer(new ServletContainerInitializerHolder(JettyJasperInitializer.class));
-//        webapp.setConfigurations(new Configuration[] {
-//                new AnnotationConfiguration(),
-//                new WebXmlConfiguration()
-//        });
         handlerList.add(webapp);
         if (config.tb != null) {
             webapp = new WebAppContext();

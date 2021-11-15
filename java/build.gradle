@@ -181,6 +181,8 @@ configure(leafProjects) {
                 entry 'spring-beans'
             }
 
+            dependency 'javax.annotation:javax.annotation-api:1.3.2'
+
 //            dependencySet(group: 'org.apache.hadoop', version: '2.10.1') {
 //                entry 'hadoop-annotations'
 //                entry 'hadoop-auth'

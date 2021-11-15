@@ -3,6 +3,10 @@ evaluationDependsOn(":")
 
 description = "Timebase Commons Server API Library"
 
+configurations.implementation {
+    exclude group: 'jakarta.annotation', module: 'jakarta.annotation-api' // GNU license
+}
+
 dependencies {
     api project(':java:timebase:pub')
     api project(':java:timebase:snmpagent')
@@ -28,6 +32,8 @@ dependencies {
     implementation 'org.eclipse.jetty:apache-jstl'
     implementation 'org.eclipse.jetty:jetty-annotations'
     implementation 'org.glassfish:javax.el:3.0.0' // Tomcat Requires
+
+    implementation 'javax.annotation:javax.annotation-api'
 
     implementation 'javax.mail:mail'
     implementation 'commons-collections:commons-collections'

@@ -12,6 +12,10 @@ shadowJar {
     mergeServiceFiles('META-INF/services/javax.servlet.ServletContainerInitializer') // for tomcat
 }
 
+configurations.implementation {
+    exclude group: 'jakarta.annotation', module: 'jakarta.annotation-api' // GNU license
+}
+
 dependencies {
 
     api project(':java:timebase:commons')
@@ -45,6 +49,8 @@ dependencies {
     implementation 'javax.xml.bind:jaxb-api'
     implementation 'com.sun.xml.bind:jaxb-impl'
     implementation 'com.sun.xml.bind:jaxb-core'
+
+    implementation 'javax.annotation:javax.annotation-api'
 
 //    implementation 'org.apache.hadoop:hadoop-hdfs:3.3.1'
 //    implementation 'org.apache.hadoop:hadoop-common:3.3.1'

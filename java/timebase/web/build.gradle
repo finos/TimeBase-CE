@@ -38,6 +38,7 @@ task compileJsps {
 
     doLast {
         // Merge the generated XML with the original
+        generatedXml.text = generatedXml.text.substring(generatedXml.text.indexOf("<servlet"), generatedXml.text.indexOf("</web-fragment>"))
         mergedXml.text = webappXml.text.replaceFirst('(?s)(<web-app.*?>)', '$1' + generatedXml.text)
     }
 }

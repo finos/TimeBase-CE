@@ -64,6 +64,8 @@
     {"moduleLicense": "Eclipse Public License 1.0"},
     {"moduleLicense": "Eclipse Public License v1.0"},
     {"moduleLicense": "Eclipse Public License - v 1.0"},
+    {"moduleLicense": "EDL 1.0"},
+    {"moduleLicense": "Eclipse Distribution License - v 1.0"},
 
     {"moduleLicense": "MIT License"},
     {"moduleLicense": "The MIT License"},

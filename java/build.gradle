@@ -56,7 +56,7 @@ licenseReport {
 //        }
 //    }
 
-    excludeGroups = ['javax.servlet.*', 'jakarta.servlet.*']
+    //excludeGroups = ['javax.servlet.*']
     excludes = ['asm:asm', 'com.sun.codemodel:codemodel-project', 'net.jcip:jcip-annotations']
 
     configurations = ['runtimeClasspath']
@@ -530,21 +530,21 @@ configure(leafProjects) {
     }
 }
 
-def webAbbrs = [':java:timebase:web': 'default', ':java:timebase:webmonitor': 'tb']
-webAbbrs.each { key, value ->
-    project(key) {
-        clean.doFirst {
-            file("$globalWebDir/$value").deleteDir()
-        }
-
-        classes.doLast {
-            copy {
-                from webAppDir
-                into file("$globalWebDir/$value")
-            }
-        }
-    }
-}
+//def webAbbrs = [':java:timebase:web': 'default', ':java:timebase:webmonitor': 'tb']
+//webAbbrs.each { key, value ->
+//    project(key) {
+//        clean.doFirst {
+//            file("$globalWebDir/$value").deleteDir()
+//        }
+//
+//        classes.doLast {
+//            copy {
+//                from webAppDir
+//                into file("$globalWebDir/$value")
+//            }
+//        }
+//    }
+//}
 
 def javaDocProjects = [':java:timebase:server', ':java:timebase:aerondirect',':java:timebase:api', ':java:timebase:pub', ':java:timebase:client']
 task aggregatedJavaDoc(type: Javadoc, description: 'Generate javadocs from selected projects', group: 'Documentation') {

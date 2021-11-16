@@ -33,7 +33,7 @@ dependencies {
 //    implementation 'javax.servlet:javax.servlet-api:3.1.0' // Tomcat Requires
     implementation 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api' // Jetty requires
     implementation 'org.eclipse.jetty:apache-jsp'
-    implementation 'org.eclipse.jetty:apache-jstl'
+    compileOnly 'org.eclipse.jetty:apache-jstl'
     implementation 'org.eclipse.jetty:jetty-annotations'
     implementation 'org.glassfish:javax.el:3.0.0' // Tomcat Requires
 

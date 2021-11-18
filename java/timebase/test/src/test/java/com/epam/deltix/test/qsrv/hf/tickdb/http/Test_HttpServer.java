@@ -432,7 +432,7 @@ public class Test_HttpServer extends BaseTest {
         return count;
     }
 
-    @Ignore("Why hang?")
+//    @Ignore("Why hang?")
     @Test
     public void testLive() throws JAXBException, IOException {
         String name = "trades";

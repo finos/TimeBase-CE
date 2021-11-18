@@ -42,4 +42,8 @@ public interface EmbeddedServer {
      * @return port number
      */
     int             getPort();
+
+    default int getHttpPort() {
+        return getPort();
+    }
 }

@@ -18,6 +18,7 @@ package com.epam.deltix.test.qsrv.hf.tickdb.http;
 
 import com.epam.deltix.qsrv.hf.pub.md.UHFJAXBContext;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
+import com.epam.deltix.qsrv.hf.tickdb.comm.server.JettyServer;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.qsrv.hf.tickdb.http.CreateStreamRequest;
 import com.epam.deltix.qsrv.hf.tickdb.http.StreamDef;
@@ -45,14 +46,14 @@ public class BaseTest {
 
     @BeforeClass
     public static void start() throws Throwable {
-        runner = new TDBRunner(true, true, new TomcatServer());
+        runner = new TDBRunner(true, true, new JettyServer());
         runner.startup();
 
         TickDBCreator.createBarsStream(runner.getServerDb(), TickDBCreator.BARS_STREAM_KEY);
 
         marshaller = TBJAXBContext.createMarshaller();
         global = UHFJAXBContext.createMarshaller();
-        URL = new URL("http://" + TB_HOST + ":" + runner.getPort() + "/tb/xml");
+        URL = new URL("http://" + TB_HOST + ":" + runner.getHttpPort() + "/tb/xml");
         //URL = new URL("http://localhost:8011/tb/xml");
     }
 

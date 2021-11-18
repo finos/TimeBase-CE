@@ -27,10 +27,11 @@ public class JettyRunner  {
 
     protected static final Logger LOGGER = Logger.getLogger (JettyRunner.class.getName());
 
-    public static final String  DEFAULT_WEB_APP_DIR = "default"; //QuantServer/web/default
+    public static final String  DEFAULT_WEB_APP_WAR = "java/timebase/commons/build/resources/main/webapp/timebase-web.war";
     public static final String  DEFAULT_WEB_APP_NAME = ""; // must be empty string
 
     public static final String  TIME_BASE_WEB_APP_NAME    = "tb";
+    public static final String  TIME_BASE_WEB_APP_WAR    = "java/timebase/server/build/resources/main/webapp/timebase-webmonitor.war";
     public static final String  AGGREGATOR_WEB_APP_NAME   = "agg";
 
     // UHF and derived web apps use the same webapp name (which allows RPC/HTTP clients to use single dispatch servlet path)
@@ -89,12 +90,12 @@ public class JettyRunner  {
         List<Handler> handlerList = new ArrayList<>();
         WebAppContext webapp = new WebAppContext();
         webapp.setContextPath("/" + DEFAULT_WEB_APP_NAME);
-        webapp.setWar(getWebappFile(config.quantServer, Home.getFile ("web/" + DEFAULT_WEB_APP_DIR)).getAbsolutePath());
+        webapp.setWar(getWebappFile(config.quantServer, Home.getFile (DEFAULT_WEB_APP_WAR)).getAbsolutePath());
         handlerList.add(webapp);
         if (config.tb != null) {
             webapp = new WebAppContext();
             webapp.setContextPath("/" + TIME_BASE_WEB_APP_NAME);
-            webapp.setWar(getWebappFile(config.tb, Home.getFile ("web/" + TIME_BASE_WEB_APP_NAME)).getAbsolutePath());
+            webapp.setWar(getWebappFile(config.tb, Home.getFile (TIME_BASE_WEB_APP_WAR)).getAbsolutePath());
             handlerList.add(webapp);
         }
 

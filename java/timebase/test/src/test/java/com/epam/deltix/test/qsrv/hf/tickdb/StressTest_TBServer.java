@@ -21,7 +21,7 @@ import com.epam.deltix.qsrv.comm.cat.StartConfiguration;
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.comm.client.TickDBClient;
-import com.epam.deltix.qsrv.hf.tickdb.comm.server.JettyServer;
+import com.epam.deltix.qsrv.hf.tickdb.comm.server.TestServer;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.testsetup.TickDBCreator;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
@@ -60,7 +60,7 @@ public class StressTest_TBServer {
 
         StartConfiguration config = StartConfiguration.create(true, false, false);
         //config.tb.setSSLConfig(new SSLProperties(true, true));
-        runner = new TDBRunner(true, true, tb.getAbsolutePath(), new JettyServer(config));
+        runner = new TDBRunner(true, true, tb.getAbsolutePath(), new TestServer(tb));
         runner.startup();
 
         TickDBCreator.createBarsStream(runner.getServerDb(), TickDBCreator.BARS_STREAM_KEY);

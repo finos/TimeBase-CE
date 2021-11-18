@@ -243,6 +243,10 @@ public class TDBRunner {
         this.cleanup = cleanup;
     }
 
+    public int getHttpPort() {
+        return server.getHttpPort();
+    }
+
     @SuppressFBWarnings(value = "PREDICTABLE_RANDOM", justification = "Random is used for fuzzy tests, not cryptography")
     public static class BBOGenerator extends BaseGenerator<InstrumentMessage>
     {

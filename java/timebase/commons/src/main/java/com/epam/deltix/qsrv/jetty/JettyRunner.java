@@ -82,7 +82,7 @@ public class JettyRunner  {
         factoryList.add(http);
 
         ServerConnector connector = new ServerConnector(jettyServer, factoryList.toArray(new ConnectionFactory[0]));
-        connector.setPort(config.port);
+        connector.setPort(config.httpPort);
         jettyServer.addConnector(connector);
 
         ContextHandlerCollection contexts = new ContextHandlerCollection();

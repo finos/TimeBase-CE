@@ -17,18 +17,17 @@
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
 import com.epam.deltix.qsrv.QSHome;
-import com.epam.deltix.qsrv.SSLProperties;
 import com.epam.deltix.qsrv.comm.cat.StartConfiguration;
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
+import com.epam.deltix.qsrv.hf.tickdb.comm.client.TickDBClient;
+import com.epam.deltix.qsrv.hf.tickdb.comm.server.JettyServer;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.testsetup.TickDBCreator;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
-
-import com.epam.deltix.qsrv.hf.tickdb.comm.client.TickDBClient;
-import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
-import com.epam.deltix.qsrv.hf.tickdb.pub.*;
-import com.epam.deltix.qsrv.testsetup.TickDBCreator;
+import com.epam.deltix.util.JUnitCategories.TickDBStress;
 import com.epam.deltix.util.concurrent.UncheckedInterruptedException;
 import com.epam.deltix.util.time.Interval;
 import com.epam.deltix.util.time.Periodicity;
@@ -36,6 +35,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,9 +44,6 @@ import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import org.junit.experimental.categories.Category;
-import com.epam.deltix.util.JUnitCategories.TickDBStress;
 
 @Category(TickDBStress.class)
 public class StressTest_TBServer {
@@ -63,7 +60,7 @@ public class StressTest_TBServer {
 
         StartConfiguration config = StartConfiguration.create(true, false, false);
         //config.tb.setSSLConfig(new SSLProperties(true, true));
-        runner = new TDBRunner(true, true, tb.getAbsolutePath(), new TomcatServer(config));
+        runner = new TDBRunner(true, true, tb.getAbsolutePath(), new JettyServer(config));
         runner.startup();
 
         TickDBCreator.createBarsStream(runner.getServerDb(), TickDBCreator.BARS_STREAM_KEY);
@@ -81,7 +78,6 @@ public class StressTest_TBServer {
         for (int i = 0; i < 1000; i++) {
             try (DXTickDB db = TickDBFactory.createFromUrl("dxtick://localhost:" + runner.getPort())) {
                 db.open(false);
-                db.close();
             }
         }
     }

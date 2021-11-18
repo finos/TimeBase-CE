@@ -72,7 +72,7 @@ public class TBServerCmd extends DefaultApplication {
 
         serviceBootstrap = new ServiceExecutorBootstrap(config);
         runner = new JettyRunner(config);
-        vsServerRunner = new VSServerRunner(7070, InetAddress.getLocalHost());
+        vsServerRunner = new VSServerRunner(config.port, InetAddress.getLocalHost());
 
         LogKeeper.LOG.info().append(Util.NATIVE_LINE_BREAK).append(Util.NATIVE_LINE_BREAK).commit();
         LogKeeper.LOG.info("QuantServer Version:  %s").with(Version.getVersion());

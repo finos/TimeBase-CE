@@ -41,7 +41,15 @@ public class StartConfiguration {
     public QuantServiceConfig   es;
     public QuantServiceConfig   quantServer;
 
+    /**
+     * TimeBase DB
+     */
     public int                  port;
+
+    /**
+     * Application server http(s)
+     */
+    public int httpPort;
 
     private ObjectToObjectHashMap<Type, ServiceExecutor> executors = new ObjectToObjectHashMap<>();
 

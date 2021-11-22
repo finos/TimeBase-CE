@@ -216,6 +216,9 @@ configure(leafProjects) {
             dependency 'org.eclipse.jetty:apache-jstl:11.0.0'
             dependency 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2'
 
+            // Jooby
+            dependency 'io.jooby:jooby:2.11.0'
+
             dependency 'com.lmax:disruptor:3.3.6'
 
             // JMH

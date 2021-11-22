@@ -35,6 +35,8 @@ import java.net.InetAddress;
 import java.nio.file.Files;
 import java.util.logging.Level;
 
+import static io.jooby.Jooby.runApp;
+
 public class TBServerCmd extends DefaultApplication {
 
     private static final String QS_WEBAPP_RESOURCE_FILE = "webapp/timebase-web.war";
@@ -46,7 +48,8 @@ public class TBServerCmd extends DefaultApplication {
     // SEVERE level serves as trigger and failure identifier in many notification frameworks, so set STARTUP level below it
     public static final Level LEVEL_STARTUP = new Level("STARTUP", Level.SEVERE.intValue() - 10) { };
 
-    public final JettyRunner runner;
+    public JettyRunner runner;
+    public WebApp webApp;
 
     public final VSServerRunner vsServerRunner;
 
@@ -71,7 +74,7 @@ public class TBServerCmd extends DefaultApplication {
             exit("No port specified");
 
         serviceBootstrap = new ServiceExecutorBootstrap(config);
-        runner = new JettyRunner(config);
+        webApp = new WebApp(config);
         vsServerRunner = new VSServerRunner(config.port, InetAddress.getLocalHost());
 
         LogKeeper.LOG.info().append(Util.NATIVE_LINE_BREAK).append(Util.NATIVE_LINE_BREAK).commit();
@@ -85,7 +88,7 @@ public class TBServerCmd extends DefaultApplication {
         public void run() {
             LogKeeper.LOG.info("Shutting QuantServer...");
             serviceBootstrap.close();
-            runner.close();
+            webApp.stop();
             vsServerRunner.close();
             ServerLoggingConfigurer.unconfigure();
         }
@@ -96,12 +99,11 @@ public class TBServerCmd extends DefaultApplication {
 
         try {
             serviceBootstrap.start();
-            runner.run();
             vsServerRunner.init(QuantServerExecutor.HANDLER);
             vsServerRunner.start();
+            webApp.start();
             onStarted();
-
-            runner.waitForStop(); // consume additional thread
+            webApp.waitForStop();
         } catch (Throwable e) {
             LogKeeper.LOG.fatal("Fatal error initializing web components: %s").with(e);
             System.exit(-1);

@@ -27,13 +27,14 @@ dependencies {
 
     implementation 'org.eclipse.jetty:jetty-server'
     implementation 'org.eclipse.jetty:jetty-webapp'
+    implementation 'io.jooby:jooby'
 
 //    compileOnly 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
 //    compileOnly 'org.apache.taglibs:taglibs-standard-impl' // Tomcat JSTL Support
 //    implementation 'javax.servlet:javax.servlet-api:3.1.0' // Tomcat Requires
     implementation 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api' // Jetty requires
     implementation 'org.eclipse.jetty:apache-jsp'
-    implementation 'org.eclipse.jetty:apache-jstl' // causes the task checkLicense failure
+//    implementation 'org.eclipse.jetty:apache-jstl' // causes the task checkLicense failure
     implementation 'org.eclipse.jetty:jetty-annotations'
     implementation 'org.glassfish:javax.el:3.0.0' // Tomcat Requires
 

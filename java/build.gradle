@@ -218,6 +218,7 @@ configure(leafProjects) {
 
             // Jooby
             dependency 'io.jooby:jooby:2.11.0'
+            dependency 'io.jooby:jooby-apt:2.11.0'
 
             dependency 'com.lmax:disruptor:3.3.6'
 

@@ -1,5 +1,7 @@
 package com.epam.deltix.qsrv.comm.cat;
 
+import com.epam.deltix.qsrv.hf.tickdb.web.MonitorController;
+import com.epam.deltix.qsrv.hf.tickdb.web.SystemController;
 import com.epam.deltix.qsrv.hf.tickdb.web.handler.GetCursorIdsHandler;
 import com.epam.deltix.qsrv.hf.tickdb.web.handler.PingHandler;
 import com.epam.deltix.util.concurrent.Signal;
@@ -46,6 +48,8 @@ public class WebApp extends Jooby {
     private void initRoutingTable() {
         get("/cursor", new GetCursorIdsHandler());
         get("/ping", new PingHandler());
+        mvc(new SystemController());
+        mvc(new MonitorController());
     }
 
     @NotNull

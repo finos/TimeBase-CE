@@ -46,6 +46,7 @@ dependencies {
 //    implementation 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
     implementation 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api' // Jetty requires
     implementation 'io.jooby:jooby'
+    annotationProcessor 'io.jooby:jooby-apt'
     implementation ('com.google.code.gson:gson')
 
     implementation 'javax.xml.bind:jaxb-api'

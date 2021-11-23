@@ -1,15 +1,16 @@
 package com.epam.deltix.qsrv.comm.cat;
 
-import com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler;
-import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBCursor;
-import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBMonitor;
+import com.epam.deltix.qsrv.hf.tickdb.web.handler.GetCursorIdsHandler;
+import com.epam.deltix.qsrv.hf.tickdb.web.handler.PingHandler;
 import com.epam.deltix.util.concurrent.Signal;
 import com.google.gson.Gson;
-import io.jooby.*;
+import io.jooby.ExecutionMode;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
+import io.jooby.ServerOptions;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,21 +40,12 @@ public class WebApp extends Jooby {
             return json.getBytes(StandardCharsets.UTF_8);
         });
 
-        get("/cursor", ctx -> {
-            TBCursor [] cursors = ((TBMonitor)AbstractHandler.TDB).getOpenCursors();
-            return Arrays.asList(cursors);
-        });
+        initRoutingTable();
+    }
 
-        get("/ping", ctx -> {
-            try {
-                if (AbstractHandler.TDB.isOpen()) {
-                    return "TimeBase is ready.";
-                }
-            } catch (Exception ignored) {
-            }
-            ctx.setResponseCode(StatusCode.SERVICE_UNAVAILABLE_CODE);
-            return "TimeBase is not ready.";
-        });
+    private void initRoutingTable() {
+        get("/cursor", new GetCursorIdsHandler());
+        get("/ping", new PingHandler());
     }
 
     @NotNull

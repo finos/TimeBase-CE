@@ -149,9 +149,6 @@ configure(leafProjects) {
             dependency 'com.sun.activation:javax.activation:1.2.0'
             dependency 'javax.activation:javax.activation-api:1.2.0'
 
-            dependency 'com.sun.codemodel:codemodel:2.6'
-            dependency 'com.sun.codemodel:codemodel-project:2.6'
-
             dependency 'com.google.guava:guava:30.1.1-jre'
             dependency 'com.google.code.gson:gson:2.2.4'
             dependency 'com.google.code.findbugs:jsr305:3.0.2'

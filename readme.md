@@ -59,7 +59,7 @@ Full clean and build of all modules
 
 ## Usage example
 
-https://kb.timebase.info/libs.html
+https://kb.timebase.info/community/development/libs
 
 ## Releases
 The following file lists known Timebase CE vulnerabilities:

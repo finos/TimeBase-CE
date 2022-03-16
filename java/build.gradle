@@ -60,7 +60,7 @@ licenseReport {
     excludes = ['asm:asm', 'com.sun.codemodel:codemodel-project', 'net.jcip:jcip-annotations']
 
     configurations = ['runtimeClasspath']
-    allowedLicensesFile = new File("$rootDir/allowed-licenses.json")
+    allowedLicensesFile = new File("$rootDir/allowed-lic.json")
 }
 
 checkLicense {

@@ -67,7 +67,7 @@ public class TestXmlQueries {
     private static void testGetRange(String user, String password, String stream, IdentityKey... instruments) throws IOException, JAXBException {
         GetRangeRequest req = new GetRangeRequest();
         req.stream = stream;
-        req.identities = instruments;
+        req.identities = BaseTest.getSymbols(instruments);
         GetRangeResponse resp = (GetRangeResponse) query(user, password, req);
 
         System.out.print("stream: " + stream + " instruments: " + Util.printArray(instruments));

@@ -229,9 +229,7 @@ public class TestHttpSelect {
         EntitiesRequest change = new EntitiesRequest();
         change.id = cur.getId();
         change.mode = ChangeAction.ADD;
-        change.entities = new IdentityKey[] {
-                new ConstantIdentityKey("A")
-        };
+        change.identities = new String[] { "A" };
 
         TestXmlQueries.query(null, null, change);
 

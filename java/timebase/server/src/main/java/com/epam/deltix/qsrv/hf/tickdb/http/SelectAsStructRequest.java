@@ -19,9 +19,6 @@ package com.epam.deltix.qsrv.hf.tickdb.http;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import com.epam.deltix.timebase.messages.IdentityKey;
 
 /**
  *
@@ -35,8 +32,7 @@ public class SelectAsStructRequest extends DownloadRequest {
     public String stream;
 
     @XmlElement()
-    @XmlJavaTypeAdapter(IdentityKeyListAdapter.class)
-    public IdentityKey[] instruments;
+    public String[] identities;
 
     @XmlElement()
     public int symbolLength = 10;

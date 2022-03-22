@@ -124,9 +124,9 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
     private boolean                  handshakeVersion(DataInputStream dis, DataOutputStream dos) throws IOException {
         dos.writeShort(HTTPProtocol.VERSION);
         final short version = dis.readShort();
-        if (version != HTTPProtocol.VERSION) {
+        if (version < HTTPProtocol.MIN_CLIENT_VERSION) {
             HTTPProtocol.LOGGER.severe(
-                String.format("Incompatible REST-TB protocol version %d. Expected version is %d.", version, HTTPProtocol.VERSION));
+                String.format("Incompatible REST-TB protocol version %d. Minimal expected version is %d.", version, HTTPProtocol.MIN_CLIENT_VERSION));
             return false;
         }
 

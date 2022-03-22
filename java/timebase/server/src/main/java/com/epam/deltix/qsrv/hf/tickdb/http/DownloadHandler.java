@@ -465,6 +465,8 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
         dout.write(HTTPProtocol.INSTRUMENT_BLOCK_ID);
         dout.writeShort(entityIndex);
 
+        writeIdentityKey(msg, dout);
+
         if (DEBUG_COMM)
             LOGGER.log(Level.INFO, "Write INSTRUMENT_BLOCK_ID: " + entityIndex);
     }

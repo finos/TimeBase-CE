@@ -563,7 +563,7 @@ public class Test_HttpServer extends BaseTest {
         EntitiesRequest change = new EntitiesRequest();
         change.id = cursor.getId();
         change.mode = ChangeAction.ADD;
-        change.entities = ids;
+        change.identities = getSymbols(ids);
 
         TestXmlQueries.query(URL, null, null, change);
     }

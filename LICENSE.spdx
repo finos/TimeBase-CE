@@ -3,5 +3,5 @@ DataLicense: CC0-1.0
 Creator: EPAM Systems, Inc
 PackageName: TimeBase
 PackageOriginator: EPAM Systems, Inc
-PackageHomePage: https://github.com/epam/TimeBase
+PackageHomePage: https://github.com/finos/TimeBase-CE
 PackageLicenseDeclared: Apache-2.0

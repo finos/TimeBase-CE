@@ -24,6 +24,7 @@ import com.epam.deltix.qsrv.hf.tickdb.http.StreamDef;
 import com.epam.deltix.qsrv.hf.tickdb.http.TBJAXBContext;
 import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
 import com.epam.deltix.qsrv.testsetup.TickDBCreator;
+import com.epam.deltix.timebase.messages.IdentityKey;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -76,5 +77,18 @@ public class BaseTest {
     public static void stop() throws Throwable {
         runner.shutdown();
         runner = null;
+    }
+
+    static String[] getSymbols(IdentityKey... ids) {
+        if (ids == null) {
+            return null;
+        }
+
+        String[] symbols = new String[ids.length];
+        for (int i = 0; i < ids.length; ++i) {
+            symbols[i] = ids[i].getSymbol().toString();
+        }
+
+        return symbols;
     }
 }

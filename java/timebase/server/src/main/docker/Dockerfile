@@ -36,7 +36,7 @@ RUN apk add --no-cache openjdk11=11.0.14_p9-r0 && \
         "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME" && \
-    apk add musl=1.2.2-r3 && \
+    apk add musl=1.2.2-r7 && \
     mkdir timebase-home
 
 COPY timebase /timebase-server

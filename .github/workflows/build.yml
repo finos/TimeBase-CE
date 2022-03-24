@@ -78,3 +78,7 @@ jobs:
           java-version: 11
       - name: Build docker
         run: ./gradlew :java:timebase:server:dockerBuildImageAll :java:timebase:client:dockerBuildImageAll
+        env:
+          DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
+          DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_HUB_USER }}
+          DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_HUB_TOKEN }}

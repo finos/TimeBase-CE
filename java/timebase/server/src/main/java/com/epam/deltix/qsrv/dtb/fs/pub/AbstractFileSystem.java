@@ -35,7 +35,7 @@ public interface AbstractFileSystem {
      * will close existing InputStream and open a new one at requested offset.
      *
      * This may be useful if the File System does not support effective {@link java.io.InputStream#skip(long)}
-     * implementation. For example, remote FS like MS Azure DataLake ({@link deltix.qsrv.dtb.fs.azure.AzureFS}).
+     * implementation. For example, remote FS like MS Azure DataLake.
      *
      * @return size (in bytes) of threshold
      */

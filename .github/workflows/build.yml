@@ -43,42 +43,15 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Build with gradle
         run: ./gradlew build checkLicense
+      - name: Build docker
+        run: ./gradlew :java:timebase:server:dockerBuildImageAll
+        env:
+          DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
+          DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_HUB_USER }}
+          DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Upload test results
         if: ${{ failure() }}
         uses: actions/upload-artifact@v2
         with:
           path: build/reports/junit
           name: Test Report
-          
-  build-docker:
-    name: Build Docker
-    if: ${{ !contains(github.event.head_commit.message, '[skip-ci]') }}
-    needs: build
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          lfs: true
-      - name: Cache gradle dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-caches-
-      - name: Cache gradle wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
-      - name: Setup java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-      - name: Build docker
-        run: ./gradlew :java:timebase:server:dockerBuildImageAll :java:timebase:client:dockerBuildImageAll
-        env:
-          DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
-          DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_HUB_USER }}
-          DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_HUB_TOKEN }}

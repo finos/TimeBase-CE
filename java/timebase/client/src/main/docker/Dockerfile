@@ -1,4 +1,4 @@
-FROM alpine:3.14.0
+FROM alpine:3.15.1
 
 ENV LANG=C.UTF-8
 ENV DELTIX_HOME /timebase-client
@@ -7,7 +7,7 @@ ENV DELTIX_HOME /timebase-client
 
 COPY timebase /timebase-client
 
-RUN apk add --no-cache openjdk11=11.0.11_p9-r0 && \
+RUN apk add --no-cache openjdk11=11.0.14_p9-r0 && \
     ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases/download" && \
     ALPINE_GLIBC_PACKAGE_VERSION="2.30-r0" && \
     ALPINE_GLIBC_BASE_PACKAGE_FILENAME="glibc-$ALPINE_GLIBC_PACKAGE_VERSION.apk" && \
@@ -36,6 +36,7 @@ RUN apk add --no-cache openjdk11=11.0.11_p9-r0 && \
         "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME" && \
-    apk add musl=1.2.2-r3
+    apk add musl=1.2.2-r7
+
 
 ENTRYPOINT ["/bin/sh", "-c", "/timebase-client/bin/tickdb.sh"]

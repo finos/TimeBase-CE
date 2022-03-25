@@ -168,14 +168,14 @@ public final class FSFactory {
         return scheme == null || scheme.isEmpty() || scheme.equalsIgnoreCase(LOCAL_PROTOCOL_ID);
     }
 
-    private static boolean          isDistributedFSScheme(String scheme) {
-        if (HDFS_PROTOCOL_ID.equalsIgnoreCase(scheme))
-            return true;
-        else if (S3_PROTOCOL_ID.equalsIgnoreCase(scheme))
-            return true;
-
-        return false;
-    }
+//    private static boolean          isDistributedFSScheme(String scheme) {
+//        if (HDFS_PROTOCOL_ID.equalsIgnoreCase(scheme))
+//            return true;
+//        else if (S3_PROTOCOL_ID.equalsIgnoreCase(scheme))
+//            return true;
+//
+//        return false;
+//    }
 
     private static boolean          isAzureFSScheme(String scheme) {
         return AZURE_PROTOCOL_ID.equalsIgnoreCase(scheme);

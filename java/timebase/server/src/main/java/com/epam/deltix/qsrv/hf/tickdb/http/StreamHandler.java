@@ -28,6 +28,8 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.StreamLockedException;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.SchemaChangeTask;
 import com.epam.deltix.qsrv.hf.tickdb.schema.*;
+import com.epam.deltix.timebase.messages.ConstantIdentityKey;
+import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.util.lang.StringUtils;
 import org.owasp.encoder.Encode;
 
@@ -70,7 +72,7 @@ public final class StreamHandler {
 
         if (stream != null) {
             final long[] range = req.identities != null ?
-                    stream.getTimeRange(req.identities) : stream.getTimeRange();
+                    stream.getTimeRange(identityKeys(req.identities)) : stream.getTimeRange();
 
             final GetRangeResponse r = new GetRangeResponse();
             if (range != null)
@@ -312,7 +314,7 @@ public final class StreamHandler {
             if (req.identities == null || req.identities.length == 0)
                 stream.clear();
             else
-                stream.clear(req.identities);
+                stream.clear(identityKeys(req.identities));
 
             response.setStatus(HttpServletResponse.SC_OK);
         }
@@ -332,7 +334,7 @@ public final class StreamHandler {
 
         if (stream != null) {
             if (req.identities != null && req.identities.length > 0)
-                stream.truncate(req.time, req.identities);
+                stream.truncate(req.time, identityKeys(req.identities));
             else
                 stream.truncate(req.time);
 
@@ -438,5 +440,18 @@ public final class StreamHandler {
             final DescribeStreamResponse r = new DescribeStreamResponse(stream.describe());
             marshall(r, response.getOutputStream());
         }
+    }
+
+    static IdentityKey[] identityKeys(String[] identities) {
+        if (identities == null) {
+            return null;
+        }
+
+        IdentityKey[] keys = new IdentityKey[identities.length];
+        for (int i = 0; i < identities.length; ++i) {
+            keys[i] = new ConstantIdentityKey(identities[i]);
+        }
+
+        return keys;
     }
 }

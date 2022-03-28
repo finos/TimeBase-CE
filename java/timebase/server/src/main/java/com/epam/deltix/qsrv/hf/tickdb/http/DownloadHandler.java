@@ -463,23 +463,46 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
         endMessageBlock();
 
         dout.write(HTTPProtocol.INSTRUMENT_BLOCK_ID);
-        dout.writeShort(entityIndex);
+        writeEntityIndex(entityIndex);
+
+        writeIdentityKey(msg, dout);
 
         if (DEBUG_COMM)
             LOGGER.log(Level.INFO, "Write INSTRUMENT_BLOCK_ID: " + entityIndex);
     }
 
+    private void writeEntityIndex(int entityIndex) throws IOException {
+        if (request.version < CLIENT_ENTITYID32_SUPPORT_VERSION) {
+            dout.writeShort(entityIndex);
+        } else {
+            if (entityIndex >= 0x8000) {
+                dout.writeShort((entityIndex >> 16) + 0x8000); // write the higher part
+            }
+            dout.writeShort(entityIndex);
+        }
+    }
+
     private void writeMessageRecord(RawMessage raw, int typeIndex, int entityIndex, int streamIndex) throws IOException {
-        int msg_size = raw.length;
+        int msgSize = raw.length + HTTPProtocol.CURSOR_MESSAGE_HEADER_SIZE;
+        if (entityIndex >= 0x8000 && request.version >= CLIENT_ENTITYID32_SUPPORT_VERSION) {
+            msgSize += 2;
+            if (msgSize >= HTTPProtocol.MAX_MESSAGE_SIZE)
+                throw new IllegalStateException("invalid message size " + msgSize);
 
-        msg_size += HTTPProtocol.CURSOR_MESSAGE_HEADER_SIZE;
+            dout.writeInt(msgSize);
+            dout.writeLong(raw.getNanoTime());
+            dout.writeShort((entityIndex >> 16) + 0x8000); // write the higher part
+            dout.writeShort(entityIndex);
+        } else {
+            // Probably better to duplicate this check for performance
+            if (msgSize >= HTTPProtocol.MAX_MESSAGE_SIZE)
+                throw new IllegalStateException("invalid message size " + msgSize);
 
-        if (msg_size >= HTTPProtocol.MAX_MESSAGE_SIZE)
-            throw new IllegalStateException("invalid message size " + msg_size);
+            dout.writeInt(msgSize);
+            dout.writeLong(raw.getNanoTime());
+            dout.writeShort(entityIndex);
+        }
 
-        dout.writeInt(msg_size);
-        dout.writeLong(raw.getNanoTime());
-        dout.writeShort(entityIndex);
         dout.writeByte(typeIndex);
         dout.writeByte(streamIndex);
         dout.write(raw.getData(), raw.offset, raw.length);

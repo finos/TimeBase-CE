@@ -82,8 +82,13 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
         final int init = dis.read();
         assert HTTPProtocol.PROTOCOL_INIT == init;
 
-        if (!handshakeVersion(dis, dos))
+        dos.writeShort(HTTPProtocol.VERSION);
+        final short clientVersion = dis.readShort();
+        if (clientVersion < HTTPProtocol.MIN_CLIENT_VERSION) {
+            HTTPProtocol.LOGGER.severe(
+                String.format("Incompatible REST-TB protocol version %d. Minimal expected version is %d.", clientVersion, HTTPProtocol.MIN_CLIENT_VERSION));
             return false;
+        }
 
         DXTickDB db = readCredentialsAndAuthenticate(dis, dos);
         dos.writeInt(HTTPProtocol.RESP_OK);
@@ -93,7 +98,7 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
 
         switch (request) {
             case HTTPProtocol.REQ_UPLOAD_DATA:
-                handler = new UploadHandler(db, socket, bis, os, contextContainer);
+                handler = new UploadHandler(db, socket, bis, os, clientVersion, contextContainer);
                 break;
 
             case HTTPProtocol.REQ_CREATE_SESSION:
@@ -119,18 +124,6 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
         } catch (IOException x) {
             HTTPProtocol.LOGGER.log(Level.WARNING, null, x);
         }
-    }
-
-    private boolean                  handshakeVersion(DataInputStream dis, DataOutputStream dos) throws IOException {
-        dos.writeShort(HTTPProtocol.VERSION);
-        final short version = dis.readShort();
-        if (version != HTTPProtocol.VERSION) {
-            HTTPProtocol.LOGGER.severe(
-                String.format("Incompatible REST-TB protocol version %d. Expected version is %d.", version, HTTPProtocol.VERSION));
-            return false;
-        }
-
-        return true;
     }
 
     private DXTickDB                readCredentialsAndAuthenticate(DataInputStream dis, DataOutputStream dos) throws IOException {

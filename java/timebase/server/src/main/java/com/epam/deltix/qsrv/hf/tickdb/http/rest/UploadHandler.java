@@ -57,11 +57,16 @@ public class UploadHandler extends RestHandler implements Runnable {
 
     private final ErrorListener         listener = new ErrorListener();
 
-    public UploadHandler(DXTickDB db, Socket socket, InputStream plainIs, OutputStream os, ContextContainer contextContainer) throws IOException {
+    private final short                 clientVersion;
+
+    public UploadHandler(DXTickDB db, Socket socket, InputStream plainIs, OutputStream os, short clientVersion,
+                         ContextContainer contextContainer) throws IOException
+    {
         super(contextContainer.getQuickExecutor());
         this.db = db;
         this.socket = socket;
         this.dout = new DataOutputStream(os);
+        this.clientVersion = clientVersion;
 
         boolean useCompression = (plainIs.read() == 1);
         InputStream is = useCompression ? new GZIPInputStream(plainIs) : plainIs;
@@ -158,13 +163,26 @@ public class UploadHandler extends RestHandler implements Runnable {
             return false;
         }
 
+        // NOTE: Header size is now variable and can be 2 bytes larger for protocol V31, this check can be improved
         size -= HTTPProtocol.LOADER_MESSAGE_HEADER_SIZE; // readLong + readShort + readByte
+        if (clientVersion >= HTTPProtocol.CLIENT_ENTITYID32_SUPPORT_VERSION) {
+            size -= 2; // new version of client use 4 byte entityId instead of 2
+        }
         if (size < 0)
             throw new IllegalStateException("size=" + size);
 
         // read: timestamp instrument_index type_index body
         raw.setNanoTime(din.readLong());
-        final ConstantIdentityKey id = entities.get(din.readShort());
+        int entityId = din.readShort();
+        if (entityId < 0) { // 32-bit Entity ID or just overflow (if older client)
+            if (clientVersion < HTTPProtocol.CLIENT_ENTITYID32_SUPPORT_VERSION) {
+                throw new IllegalStateException("Invalid entity ID: " + entityId);
+            }
+
+            entityId = (entityId << 16) + ((int)din.readShort() & 0xFFFF) + 0x80000000;
+        }
+        final ConstantIdentityKey id = entities.get(entityId);
+
         raw.setSymbol(id.symbol);
         byte typeIndex = din.readByte();
         raw.type = concreteTypes[typeIndex];

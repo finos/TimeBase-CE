@@ -17,3 +17,10 @@ PurgeRequest
 StreamRequest
 TruncateRequest
 UnlockStreamRequest
+GetSpaceTimeRangeRequest
+ListSpacesRequest
+ListSpacesResponse
+RenameSpaceRequest
+DeleteSpacesRequest
+DescribeStreamRequest
+DescribeStreamResponse

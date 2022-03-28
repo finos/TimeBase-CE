@@ -35,7 +35,9 @@ public abstract class HTTPProtocol {
 
     public static final Logger LOGGER = Logger.getLogger(HTTPProtocol.class.getPackage().getName());
 
-    public static final short VERSION = 30;
+    public static final short VERSION = 31;
+    public static final short MIN_CLIENT_VERSION = 31;
+    public static final short CLIENT_ENTITYID32_SUPPORT_VERSION = 31;
 
     public static final byte PROTOCOL_INIT          = 0x18;
 
@@ -71,9 +73,10 @@ public abstract class HTTPProtocol {
     public static final String CONTENT_ENCODING = "Content-Encoding";
     public static final String GZIP = "gzip";
 
-    public static void validateVersion(short version) {
-        if (version != VERSION)
-            throw new IllegalArgumentException(String.format("Incompatible HTTP-TB protocol version %d. Expected version is %d.", version, VERSION));
+    public static void validateVersion(short clientVersion) {
+        if (clientVersion < MIN_CLIENT_VERSION)
+            throw new IllegalArgumentException(
+                String.format("Incompatible HTTP-TB protocol version %d. Minimal expected version is %d.", clientVersion, MIN_CLIENT_VERSION));
     }
 
     public static void marshall(Object o, OutputStream os) {

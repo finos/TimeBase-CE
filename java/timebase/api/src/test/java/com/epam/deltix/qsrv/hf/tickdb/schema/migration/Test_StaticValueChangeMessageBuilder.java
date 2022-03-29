@@ -16,7 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.schema.migration;
 
-import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.schema.AbstractFieldChange;
 import com.epam.deltix.qsrv.hf.tickdb.schema.ClassDescriptorChange;
 import com.epam.deltix.qsrv.hf.tickdb.schema.StaticFieldChange;
@@ -46,13 +46,13 @@ public class Test_StaticValueChangeMessageBuilder {
     private StreamMetaDataChange getStreamMetaDataChange() {
         StreamMetaDataChange streamMetaDataChange = new StreamMetaDataChange();
 
-        com.epam.deltix.qsrv.hf.pub.md.StaticDataField newFieldState = new com.epam.deltix.qsrv.hf.pub.md.StaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false), "new_default_value");
+        StaticDataField newFieldState = new StaticDataField( "field", "title", new VarcharDataType("UTF8", false, false), "new_default_value");
 
-        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor targetDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState);
+        RecordClassDescriptor targetDescriptor = new RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState);
 
-        com.epam.deltix.qsrv.hf.pub.md.StaticDataField oldFieldState = new com.epam.deltix.qsrv.hf.pub.md.StaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.VarcharDataType("UTF8", false, false), "old_default_value");
+        StaticDataField oldFieldState = new StaticDataField( "field", "title", new VarcharDataType("UTF8", false, false), "old_default_value");
 
-        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState);
+        RecordClassDescriptor sourceDescriptor = new RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState);
 
         RecordClassSet targetClassSet = new RecordClassSet();
         targetClassSet.setClassDescriptors(targetDescriptor);
@@ -85,61 +85,61 @@ public class Test_StaticValueChangeMessageBuilder {
         schemaChangeMessage.setTimeStampMs(0);
         schemaChangeMessage.setSymbol("event");
 
-        ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
-        ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
+        TypeDescriptor sourceDescriptor = new TypeDescriptor();
+        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
 
-        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        VarcharFieldType varcharDataType = new VarcharFieldType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        com.epam.deltix.timebase.messages.schema.StaticDataField previousFieldState = new com.epam.deltix.timebase.messages.schema.StaticDataField();
+        StaticField previousFieldState = new StaticField();
         previousFieldState.setTitle("title");
         previousFieldState.setName("field");
-        previousFieldState.setDataType(varcharDataType);
+        previousFieldState.setType(varcharDataType);
         previousFieldState.setStaticValue("old_default_value");
 
         sourceDescriptorFields.add(previousFieldState);
 
         sourceDescriptor.setTitle("title");
         sourceDescriptor.setName("name");
-        sourceDescriptor.setDataFields(sourceDescriptorFields);
+        sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
 
         previousState.add(sourceDescriptor);
 
         schemaChangeMessage.setPreviousState(previousState);
 
-        ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
+        TypeDescriptor targetDescriptor = new TypeDescriptor();
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
 
-        ObjectArrayList<DataFieldInfo> targetDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 
-        com.epam.deltix.timebase.messages.schema.StaticDataField newFieldState = new com.epam.deltix.timebase.messages.schema.StaticDataField();
+        StaticField newFieldState = new StaticField();
         newFieldState.setTitle("title");
         newFieldState.setName("field");
-        newFieldState.setDataType(varcharDataType);
+        newFieldState.setType(varcharDataType);
         newFieldState.setStaticValue("new_default_value");
 
         targetDescriptorFields.add(newFieldState);
 
-        targetDescriptor.setDataFields(targetDescriptorFields);
+        targetDescriptor.setFields(targetDescriptorFields);
         newState.add(targetDescriptor);
         schemaChangeMessage.setNewState(newState);
 
-        ObjectArrayList<SchemaDescriptorChangeActionInfo> changes = new ObjectArrayList<>();
+        ObjectArrayList<SchemaDescriptorChangeAction> changes = new ObjectArrayList<>();
         SchemaDescriptorChangeAction alterAction = new SchemaDescriptorChangeAction();
         alterAction.setNewState(targetDescriptor);
         alterAction.setChangeTypes(SchemaDescriptorChangeType.FIELDS_CHANGE);
         alterAction.setPreviousState(sourceDescriptor);
 
-        ObjectArrayList<SchemaFieldChangeActionInfo> fieldChanges = new ObjectArrayList<>();
+        ObjectArrayList<SchemaFieldChangeAction> fieldChanges = new ObjectArrayList<>();
         SchemaFieldChangeAction fieldAction = new SchemaFieldChangeAction();
         fieldAction.setPreviousState(previousFieldState);
         fieldAction.setNewState(newFieldState);

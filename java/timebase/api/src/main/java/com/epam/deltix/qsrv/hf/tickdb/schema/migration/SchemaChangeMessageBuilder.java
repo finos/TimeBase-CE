@@ -1,30 +1,12 @@
-/*
- * Copyright 2021 EPAM Systems, Inc
- *
- * See the NOTICE file distributed with this work for additional information
- * regarding copyright ownership. Licensed under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
 package com.epam.deltix.qsrv.hf.tickdb.schema.migration;
 
+import com.epam.deltix.containers.ObjObjPair;
 import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
-import com.epam.deltix.qsrv.hf.pub.md.EnumClassDescriptor;
-import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.schema.*;
 import com.epam.deltix.timebase.messages.schema.*;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.collections.generated.ObjectList;
-import com.epam.deltix.containers.ObjObjPair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,25 +35,25 @@ public class SchemaChangeMessageBuilder {
         RecordClassSet sourceDescriptors = metaDataChange.getSource();
         Map<String, ? extends ClassDescriptor> sourceDescriptorsMap = toMap(sourceDescriptors);
 
-        ObjectArrayList<ClassDescriptorInfo> newState = convert(targetDescriptors);
-        ObjectArrayList<ClassDescriptorInfo> previousState = convert(sourceDescriptors);
+        ObjectArrayList<UniqueDescriptor> newState = DescriptorToMessageMapper.convert(targetDescriptors);
+        ObjectArrayList<UniqueDescriptor> previousState = DescriptorToMessageMapper.convert(sourceDescriptors);
 
         changeMessage.setNewState(newState);
         changeMessage.setPreviousState(previousState);
         changeMessage.setSymbol(symbol);
         changeMessage.setTimeStampMs(timestamp);
 
-        ObjectArrayList<SchemaDescriptorChangeActionInfo> actions = new ObjectArrayList<>();
+        ObjectArrayList<SchemaDescriptorChangeAction> actions = new ObjectArrayList<>();
 
-        Map<String, ? extends ClassDescriptorInfo> newStateMap = toMap(newState);
-        Map<String, ? extends ClassDescriptorInfo> previousStateMap = toMap(previousState);
+        Map<String, ? extends UniqueDescriptor> newStateMap = toMap(newState);
+        Map<String, ? extends UniqueDescriptor> previousStateMap = toMap(previousState);
 
-        List<? extends ClassDescriptorInfo> descriptorsToAdd = getDescriptorsToAdd(newStateMap, previousStateMap);
-        List<? extends ClassDescriptorInfo> descriptorsToRemove = getDescriptorsToRemove(newStateMap, previousStateMap);
-        List<ObjObjPair<? extends ClassDescriptorInfo, ? extends ClassDescriptorInfo>> descriptorsToAlter = getDescriptorsToAlter(newStateMap, previousStateMap);
-        List<ObjObjPair<RecordClassDescriptorInfo, RecordClassDescriptorInfo>> descriptorsWithDisabledContentClass = getDescriptorsWithDisabledContentClass(descriptorsToAlter);
+        List<? extends UniqueDescriptor> descriptorsToAdd = getDescriptorsToAdd(newStateMap, previousStateMap);
+        List<? extends UniqueDescriptor> descriptorsToRemove = getDescriptorsToRemove(newStateMap, previousStateMap);
+        List<ObjObjPair<? extends UniqueDescriptor, ? extends UniqueDescriptor>> descriptorsToAlter = getDescriptorsToAlter(newStateMap, previousStateMap);
+        List<ObjObjPair<TypeDescriptor, TypeDescriptor>> descriptorsWithDisabledContentClass = getDescriptorsWithDisabledContentClass(descriptorsToAlter);
         //mutable
-        List<ObjObjPair<? extends ClassDescriptorInfo, ? extends ClassDescriptorInfo>> descriptorsToRename = getDescriptorsToRename(descriptorsToAdd, descriptorsToRemove);
+        List<ObjObjPair<? extends UniqueDescriptor, ? extends UniqueDescriptor>> descriptorsToRename = getDescriptorsToRename(descriptorsToAdd, descriptorsToRemove);
 
         // add new descriptors
         actions.addAll(
@@ -99,8 +81,8 @@ public class SchemaChangeMessageBuilder {
         );
         // alter descriptors
         descriptorsToAlter.forEach(descriptorPair -> {
-            ClassDescriptorInfo newDescriptor = descriptorPair.getFirst();
-            ClassDescriptorInfo previousDescriptor = descriptorPair.getSecond();
+            UniqueDescriptor newDescriptor = descriptorPair.getFirst();
+            UniqueDescriptor previousDescriptor = descriptorPair.getSecond();
 
             ClassDescriptorChange descriptorChange = metaDataChange.getChange(
                     sourceDescriptorsMap.get(previousDescriptor.getName()),
@@ -122,30 +104,12 @@ public class SchemaChangeMessageBuilder {
         return changeMessage;
     }
 
-    private ObjectArrayList<ClassDescriptorInfo> convert(RecordClassSet recordClassSet) {
-        ObjectArrayList<ClassDescriptorInfo> descriptors = new ObjectArrayList<>();
-
-        if (recordClassSet != null && recordClassSet.getClassDescriptors() != null) {
-            com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor[] contentClasses = recordClassSet.getClassDescriptors();
-            for (int i = 0; i < contentClasses.length; i++) {
-                ClassDescriptor contentClass = contentClasses[i];
-                if (contentClass instanceof RecordClassDescriptor) {
-                    com.epam.deltix.timebase.messages.schema.RecordClassDescriptor recordClassDescriptor = map((RecordClassDescriptor) contentClass);
-
-                    if (recordClassSet.getContentClass(contentClass.getGuid()) != null) {
-                        recordClassDescriptor.setIsContentClass(true);
-                    }
-                    descriptors.add(recordClassDescriptor);
-                } else {
-                    descriptors.add(DescriptorToMessageMapper.map((EnumClassDescriptor) contentClass));
-                }
-            }
-        }
-
-        return descriptors;
+    @Deprecated
+    public static ObjectArrayList<UniqueDescriptor> convert(RecordClassSet recordClassSet) {
+        return DescriptorToMessageMapper.convert(recordClassSet);
     }
 
-    private Map<String, ? extends ClassDescriptorInfo> toMap(ObjectArrayList<? extends ClassDescriptorInfo> descriptors) {
+    private Map<String, ? extends UniqueDescriptor> toMap(ObjectArrayList<? extends UniqueDescriptor> descriptors) {
         return descriptors.stream()
                 .collect(Collectors.toMap(entity -> entity.getName().toString(), Function.identity()));
     }
@@ -164,8 +128,8 @@ public class SchemaChangeMessageBuilder {
         return map;
     }
 
-    private List<? extends ClassDescriptorInfo> getDescriptorsToAdd(Map<String, ? extends ClassDescriptorInfo> newState,
-                                                                Map<String, ? extends ClassDescriptorInfo> previousState) {
+    private List<? extends UniqueDescriptor> getDescriptorsToAdd(Map<String, ? extends UniqueDescriptor> newState,
+                                                                Map<String, ? extends UniqueDescriptor> previousState) {
         return newState.entrySet()
                 .stream()
                 .filter(entry -> !previousState.containsKey(entry.getKey()))
@@ -173,8 +137,8 @@ public class SchemaChangeMessageBuilder {
                 .collect(Collectors.toList());
     }
 
-    private List<? extends ClassDescriptorInfo> getDescriptorsToRemove(Map<String, ? extends ClassDescriptorInfo> newState,
-                                                                   Map<String, ? extends ClassDescriptorInfo> previousState) {
+    private List<? extends UniqueDescriptor> getDescriptorsToRemove(Map<String, ? extends UniqueDescriptor> newState,
+                                                                   Map<String, ? extends UniqueDescriptor> previousState) {
         return previousState.entrySet()
                 .stream()
                 .filter(entry -> !newState.containsKey(entry.getKey()))
@@ -182,9 +146,9 @@ public class SchemaChangeMessageBuilder {
                 .collect(Collectors.toList());
     }
 
-    private List<ObjObjPair<? extends ClassDescriptorInfo, ? extends ClassDescriptorInfo>> getDescriptorsToAlter(Map<String, ? extends ClassDescriptorInfo> newState,
-                                                                  Map<String, ? extends ClassDescriptorInfo> previousState) {
-        List<ObjObjPair<? extends ClassDescriptorInfo, ? extends ClassDescriptorInfo>> result = new ArrayList<>();
+    private List<ObjObjPair<? extends UniqueDescriptor, ? extends UniqueDescriptor>> getDescriptorsToAlter(Map<String, ? extends UniqueDescriptor> newState,
+                                                                  Map<String, ? extends UniqueDescriptor> previousState) {
+        List<ObjObjPair<? extends UniqueDescriptor, ? extends UniqueDescriptor>> result = new ArrayList<>();
         newState.forEach((key, value) -> {
             if (previousState.containsKey(key)) {
                 if (!previousState.get(key).equals(value)) {
@@ -196,17 +160,17 @@ public class SchemaChangeMessageBuilder {
         return result;
     }
 
-    private List<ObjObjPair<RecordClassDescriptorInfo, RecordClassDescriptorInfo>> getDescriptorsWithDisabledContentClass(
-            List<ObjObjPair<? extends ClassDescriptorInfo, ? extends ClassDescriptorInfo>> descriptorsToAlter) {
-        List<ObjObjPair<RecordClassDescriptorInfo, RecordClassDescriptorInfo>> result = new ArrayList<>();
+    private List<ObjObjPair<TypeDescriptor, TypeDescriptor>> getDescriptorsWithDisabledContentClass(
+            List<ObjObjPair<? extends UniqueDescriptor, ? extends UniqueDescriptor>> descriptorsToAlter) {
+        List<ObjObjPair<TypeDescriptor, TypeDescriptor>> result = new ArrayList<>();
         descriptorsToAlter.forEach(pair -> {
-            ClassDescriptorInfo newState = pair.getFirst();
-            ClassDescriptorInfo previousState = pair.getSecond();
+            UniqueDescriptor newState = pair.getFirst();
+            UniqueDescriptor previousState = pair.getSecond();
 
-            if (newState instanceof com.epam.deltix.timebase.messages.schema.RecordClassDescriptor
-                    && previousState instanceof com.epam.deltix.timebase.messages.schema.RecordClassDescriptor) {
-                com.epam.deltix.timebase.messages.schema.RecordClassDescriptor newRCD = (com.epam.deltix.timebase.messages.schema.RecordClassDescriptor) newState;
-                com.epam.deltix.timebase.messages.schema.RecordClassDescriptor prevRCD = (com.epam.deltix.timebase.messages.schema.RecordClassDescriptor) previousState;
+            if (newState instanceof TypeDescriptor
+                    && previousState instanceof TypeDescriptor) {
+                TypeDescriptor newRCD = (TypeDescriptor) newState;
+                TypeDescriptor prevRCD = (TypeDescriptor) previousState;
 
                 if (!newRCD.isContentClass() && prevRCD.isContentClass()) {
                     result.add(new ObjObjPair<>(newRCD, prevRCD));
@@ -218,24 +182,24 @@ public class SchemaChangeMessageBuilder {
     }
 
     // mutable
-    private List<ObjObjPair<? extends ClassDescriptorInfo, ? extends ClassDescriptorInfo>> getDescriptorsToRename(List<? extends ClassDescriptorInfo> descriptorsToAdd,
-                                                                              List<? extends ClassDescriptorInfo> descriptorsToRemove) {
-        List<ObjObjPair<? extends ClassDescriptorInfo, ? extends ClassDescriptorInfo>> descriptorsToRename = new ArrayList<>();
+    private List<ObjObjPair<? extends UniqueDescriptor, ? extends UniqueDescriptor>> getDescriptorsToRename(List<? extends UniqueDescriptor> descriptorsToAdd,
+                                                                              List<? extends UniqueDescriptor> descriptorsToRemove) {
+        List<ObjObjPair<? extends UniqueDescriptor, ? extends UniqueDescriptor>> descriptorsToRename = new ArrayList<>();
 
         descriptorsToAdd.forEach(descriptorToAdd -> {
-            if (descriptorToAdd instanceof RecordClassDescriptorInfo) {
-                ObjectList<DataFieldInfo> dataFieldsToAdd = ((RecordClassDescriptorInfo) descriptorToAdd).getDataFields();
+            if (descriptorToAdd instanceof TypeDescriptor) {
+                ObjectList<Field> dataFieldsToAdd = ((TypeDescriptor) descriptorToAdd).getFields();
                 descriptorsToRemove.forEach(descriptorToRemove -> {
-                    ObjectList<DataFieldInfo> dataFieldsToRemove = ((RecordClassDescriptorInfo) descriptorToRemove).getDataFields();
+                    ObjectList<Field> dataFieldsToRemove = ((TypeDescriptor) descriptorToRemove).getFields();
 
                     if (dataFieldsToAdd.equals(dataFieldsToRemove)) {
                         descriptorsToRename.add(new ObjObjPair<>(descriptorToAdd, descriptorToRemove));
                     }
                 });
-            } else {
-                ObjectList<EnumValueInfo> valuesToAdd = ((EnumClassDescriptorInfo) descriptorToAdd).getValues();
+            } else if (descriptorToAdd instanceof EnumDescriptor) {
+                ObjectList<EnumConstant> valuesToAdd = ((EnumDescriptor) descriptorToAdd).getValues();
                 descriptorsToRemove.forEach(descriptorToRemove -> {
-                    ObjectList<EnumValueInfo> valuesToRemove = ((EnumClassDescriptorInfo) descriptorToRemove).getValues();
+                    ObjectList<EnumConstant> valuesToRemove = ((EnumDescriptor) descriptorToRemove).getValues();
 
                     if (valuesToAdd.equals(valuesToRemove)) {
                         descriptorsToRename.add(new ObjObjPair<>(descriptorToAdd, descriptorToRemove));
@@ -253,7 +217,7 @@ public class SchemaChangeMessageBuilder {
         return descriptorsToRename;
     }
 
-    private SchemaDescriptorChangeActionInfo buildAddDescriptorChangeAction(ClassDescriptorInfo descriptor) {
+    private SchemaDescriptorChangeAction buildAddDescriptorChangeAction(UniqueDescriptor descriptor) {
         SchemaDescriptorChangeAction action = new SchemaDescriptorChangeAction();
         action.setNewState(descriptor);
         action.setChangeTypes(SchemaDescriptorChangeType.ADD);
@@ -261,7 +225,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaDescriptorChangeActionInfo buildRemoveDescriptorAction(ClassDescriptorInfo descriptor) {
+    private SchemaDescriptorChangeAction buildRemoveDescriptorAction(UniqueDescriptor descriptor) {
         SchemaDescriptorChangeAction action = new SchemaDescriptorChangeAction();
         action.setPreviousState(descriptor);
         action.setChangeTypes(SchemaDescriptorChangeType.DELETE);
@@ -269,7 +233,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaDescriptorChangeActionInfo buildRenameDescriptorAction(ObjObjPair<? extends ClassDescriptorInfo, ? extends ClassDescriptorInfo> descriptorPair) {
+    private SchemaDescriptorChangeAction buildRenameDescriptorAction(ObjObjPair<? extends UniqueDescriptor, ? extends UniqueDescriptor> descriptorPair) {
         SchemaDescriptorChangeAction action = new SchemaDescriptorChangeAction();
         action.setNewState(descriptorPair.getFirst());
         action.setPreviousState(descriptorPair.getSecond());
@@ -278,7 +242,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaDescriptorChangeActionInfo buildDropRecordsDescriptorAction(ObjObjPair<RecordClassDescriptorInfo, RecordClassDescriptorInfo> descriptorPair) {
+    private SchemaDescriptorChangeAction buildDropRecordsDescriptorAction(ObjObjPair<TypeDescriptor, TypeDescriptor> descriptorPair) {
         SchemaDescriptorChangeAction action = new SchemaDescriptorChangeAction();
         action.setNewState(descriptorPair.getFirst());
         action.setPreviousState(descriptorPair.getSecond());
@@ -290,8 +254,8 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private ObjectArrayList<SchemaFieldChangeActionInfo> buildFieldsChangeAction(ClassDescriptorChange descriptorChange) {
-        ObjectArrayList<SchemaFieldChangeActionInfo> actions = new ObjectArrayList<>();
+    private ObjectArrayList<SchemaFieldChangeAction> buildFieldsChangeAction(ClassDescriptorChange descriptorChange) {
+        ObjectArrayList<SchemaFieldChangeAction> actions = new ObjectArrayList<>();
 
         AbstractFieldChange[] fieldsChanges = descriptorChange.getChanges();
         for (AbstractFieldChange fieldChange : fieldsChanges) {
@@ -322,7 +286,7 @@ public class SchemaChangeMessageBuilder {
         return actions;
     }
 
-    private SchemaFieldChangeActionInfo build(CreateFieldChange change) {
+    private SchemaFieldChangeAction build(CreateFieldChange change) {
         SchemaFieldChangeAction action = new SchemaFieldChangeAction();
         action.setChangeTypes(SchemaFieldChangeType.ADD);
         action.setNewState(map(change.getTarget()));
@@ -338,7 +302,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaFieldChangeActionInfo build(DeleteFieldChange change) {
+    private SchemaFieldChangeAction build(DeleteFieldChange change) {
         SchemaFieldChangeAction action = new SchemaFieldChangeAction();
         action.setChangeTypes(SchemaFieldChangeType.DELETE);
         action.setNewState(map(change.getTarget()));
@@ -347,7 +311,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaFieldChangeActionInfo build(FieldChange change) {
+    private SchemaFieldChangeAction build(FieldChange change) {
         SchemaFieldChangeAction action = new SchemaFieldChangeAction();
         action.setNewState(map(change.getTarget()));
         action.setPreviousState(map(change.getSource()));
@@ -370,7 +334,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaFieldChangeActionInfo build(FieldModifierChange change) {
+    private SchemaFieldChangeAction build(FieldModifierChange change) {
         SchemaFieldChangeAction action = new SchemaFieldChangeAction();
         action.setChangeTypes(SchemaFieldChangeType.MODIFIER_CHANGE);
         action.setNewState(map(change.getTarget()));
@@ -386,7 +350,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaFieldChangeActionInfo build(FieldPositionChange change) {
+    private SchemaFieldChangeAction build(FieldPositionChange change) {
         SchemaFieldChangeAction action = new SchemaFieldChangeAction();
         action.setChangeTypes(SchemaFieldChangeType.ORDINAL_CHANGE);
         action.setNewState(map(change.getTarget()));
@@ -395,7 +359,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaFieldChangeActionInfo build(StaticFieldChange change) {
+    private SchemaFieldChangeAction build(StaticFieldChange change) {
         SchemaFieldChangeAction action = new SchemaFieldChangeAction();
         action.setChangeTypes(SchemaFieldChangeType.STATIC_VALUE_CHANGE);
         action.setNewState(map(change.getTarget()));
@@ -411,7 +375,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaFieldChangeActionInfo build(FieldRelationChange change) {
+    private SchemaFieldChangeAction build(FieldRelationChange change) {
         SchemaFieldChangeAction action = new SchemaFieldChangeAction();
         action.setChangeTypes(SchemaFieldChangeType.RELATION_CHANGE);
         action.setNewState(map(change.getTarget()));
@@ -420,13 +384,15 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaFieldChangeActionInfo build(FieldTypeChange change) {
+    private SchemaFieldChangeAction build(FieldTypeChange change) {
         SchemaFieldChangeAction action = new SchemaFieldChangeAction();
         action.setChangeTypes(SchemaFieldChangeType.DATA_TYPE_CHANGE);
         action.setNewState(map(change.getTarget()));
         action.setPreviousState(map(change.getSource()));
 
-        if (change.getResolution() != null && ErrorResolution.Result.Ignored.equals(change.getResolution().result)) {
+        ErrorResolution result = null; //change.getResolution();
+
+        if (result != null && result.result == ErrorResolution.Result.Ignored) {
             SchemaFieldDataTransformation transformation = new SchemaFieldDataTransformation();
             transformation.setTransformationType(SchemaFieldDataTransformationType.DROP_RECORD);
 
@@ -448,7 +414,7 @@ public class SchemaChangeMessageBuilder {
         return action;
     }
 
-    private SchemaFieldChangeActionInfo build(FieldValueChange change) {
+    private SchemaFieldChangeAction build(FieldValueChange change) {
         SchemaFieldChangeAction action = new SchemaFieldChangeAction();
         action.setChangeTypes(SchemaFieldChangeType.STATIC_VALUE_CHANGE);
         action.setNewState(map(change.getTarget()));

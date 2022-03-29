@@ -101,59 +101,59 @@ public class Test_AddDescriptorChangeMessageBuilder {
         schemaChangeMessage.setTimeStampMs(0);
         schemaChangeMessage.setSymbol("event");
 
-        ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
-        ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
+        TypeDescriptor sourceDescriptor = new TypeDescriptor();
+        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
 
-          com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        VarcharFieldType varcharDataType = new VarcharFieldType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-          com.epam.deltix.timebase.messages.schema.DataField sourceField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        Field sourceField1 = new NonStaticField();
         sourceField1.setTitle("field1_title");
         sourceField1.setName("field1");
-        sourceField1.setDataType(varcharDataType);
+        sourceField1.setType(varcharDataType);
 
-          com.epam.deltix.timebase.messages.schema.StaticDataField sourceField2 = new com.epam.deltix.timebase.messages.schema.StaticDataField();
+        StaticField sourceField2 = new StaticField();
         sourceField2.setTitle("field2_title");
         sourceField2.setName("field2");
-        sourceField2.setDataType(varcharDataType);
+        sourceField2.setType(varcharDataType);
         sourceField2.setStaticValue("default_value");
 
         sourceDescriptorFields.addAll(Arrays.asList(sourceField2, sourceField1));
 
         sourceDescriptor.setTitle("title");
         sourceDescriptor.setName("sourceName");
-        sourceDescriptor.setDataFields(sourceDescriptorFields);
+        sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
 
         previousState.add(sourceDescriptor);
         schemaChangeMessage.setPreviousState(previousState);
 
         // expected new state
-        ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-          com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
+        TypeDescriptor targetDescriptor = new TypeDescriptor();
         targetDescriptor.setName("targetName");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
 
-        ObjectArrayList<DataFieldInfo> targetDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 
-          com.epam.deltix.timebase.messages.schema.DataField targetField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
-        targetField1.setDataType(varcharDataType);
+        Field targetField1 = new NonStaticField();
+        targetField1.setType(varcharDataType);
         targetField1.setName("target_field");
         targetField1.setTitle("target_title");
 
         targetDescriptorFields.add(targetField1);
 
-        targetDescriptor.setDataFields(targetDescriptorFields);
+        targetDescriptor.setFields(targetDescriptorFields);
         newState.addAll(Arrays.asList(sourceDescriptor, targetDescriptor));
         schemaChangeMessage.setNewState(newState);
 
-        ObjectArrayList<SchemaDescriptorChangeActionInfo> changes = new ObjectArrayList<>();
+        ObjectArrayList<SchemaDescriptorChangeAction> changes = new ObjectArrayList<>();
         SchemaDescriptorChangeAction addAction = new SchemaDescriptorChangeAction();
         addAction.setNewState(targetDescriptor);
         addAction.setChangeTypes(SchemaDescriptorChangeType.ADD);

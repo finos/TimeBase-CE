@@ -101,60 +101,60 @@ public class Test_RemoveDescriptorChangeMessageBuilder {
         schemaChangeMessage.setTimeStampMs(0);
         schemaChangeMessage.setSymbol("event");
 
-        ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor descriptor2 = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
-        ObjectArrayList<DataFieldInfo> sourceDescriptor2Fields = new ObjectArrayList<>();
+        ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
+        TypeDescriptor descriptor2 = new TypeDescriptor();
+        ObjectArrayList<Field> sourceDescriptor2Fields = new ObjectArrayList<>();
 
-        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        VarcharFieldType varcharDataType = new VarcharFieldType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        com.epam.deltix.timebase.messages.schema.DataField sourceField2 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        Field sourceField2 = new NonStaticField();
         sourceField2.setTitle("title");
         sourceField2.setName("source_field2");
-        sourceField2.setDataType(varcharDataType);
+        sourceField2.setType(varcharDataType);
 
-        com.epam.deltix.timebase.messages.schema.StaticDataField sourceField3 = new com.epam.deltix.timebase.messages.schema.StaticDataField();
+        StaticField sourceField3 = new StaticField();
         sourceField3.setTitle("title");
         sourceField3.setName("source_field3");
         sourceField3.setStaticValue("default_value");
-        sourceField3.setDataType(varcharDataType);
+        sourceField3.setType(varcharDataType);
 
         sourceDescriptor2Fields.addAll(Arrays.asList(sourceField2, sourceField3));
 
         descriptor2.setTitle("title");
         descriptor2.setName("descriptor2");
-        descriptor2.setDataFields(sourceDescriptor2Fields);
+        descriptor2.setFields(sourceDescriptor2Fields);
         descriptor2.setIsAbstract(false);
 
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor descriptor1 = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        TypeDescriptor descriptor1 = new TypeDescriptor();
         descriptor1.setName("descriptor1");
         descriptor1.setTitle("title");
         descriptor1.setIsAbstract(false);
 
-        ObjectArrayList<DataFieldInfo> descriptor1Fields = new ObjectArrayList<>();
+        ObjectArrayList<Field> descriptor1Fields = new ObjectArrayList<>();
 
-        com.epam.deltix.timebase.messages.schema.DataField sourceField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
-        sourceField1.setDataType(varcharDataType);
+        Field sourceField1 = new NonStaticField();
+        sourceField1.setType(varcharDataType);
         sourceField1.setName("source_field1");
         sourceField1.setTitle("title");
 
         descriptor1Fields.add(sourceField1);
 
-        descriptor1.setDataFields(descriptor1Fields);
+        descriptor1.setFields(descriptor1Fields);
 
         previousState.addAll(Arrays.asList(descriptor1, descriptor2));
 
         schemaChangeMessage.setPreviousState(previousState);
 
-        ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
+        ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
         newState.add(descriptor1);
         schemaChangeMessage.setNewState(newState);
 
-        ObjectArrayList<SchemaDescriptorChangeActionInfo> changes = new ObjectArrayList<>();
+        ObjectArrayList<SchemaDescriptorChangeAction> changes = new ObjectArrayList<>();
         SchemaDescriptorChangeAction removeAction = new SchemaDescriptorChangeAction();
         removeAction.setNewState(null);
         removeAction.setChangeTypes(SchemaDescriptorChangeType.DELETE);

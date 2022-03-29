@@ -92,27 +92,27 @@ public class Test_DropDescriptorRecordsChangeMessageBuilder {
         schemaChangeMessage.setTimeStampMs(0);
         schemaChangeMessage.setSymbol("event");
 
-        ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
-        ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
+        TypeDescriptor sourceDescriptor = new TypeDescriptor();
+        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
 
-        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        VarcharFieldType varcharDataType = new VarcharFieldType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        com.epam.deltix.timebase.messages.schema.DataField expectedField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        Field expectedField1 = new NonStaticField();
         expectedField1.setTitle("title");
         expectedField1.setName("field");
-        expectedField1.setDataType(varcharDataType);
+        expectedField1.setType(varcharDataType);
 
         sourceDescriptorFields.add(expectedField1);
 
         sourceDescriptor.setTitle("title");
         sourceDescriptor.setName("name");
-        sourceDescriptor.setDataFields(sourceDescriptorFields);
+        sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
         sourceDescriptor.setIsContentClass(true);
 
@@ -120,20 +120,20 @@ public class Test_DropDescriptorRecordsChangeMessageBuilder {
 
         schemaChangeMessage.setPreviousState(previousState);
 
-        ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
+        TypeDescriptor targetDescriptor = new TypeDescriptor();
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
 
-        ObjectArrayList<DataFieldInfo> targetDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
         targetDescriptorFields.add(expectedField1);
 
-        targetDescriptor.setDataFields(targetDescriptorFields);
+        targetDescriptor.setFields(targetDescriptorFields);
         newState.add(targetDescriptor);
         schemaChangeMessage.setNewState(newState);
 
-        ObjectArrayList<SchemaDescriptorChangeActionInfo> changes = new ObjectArrayList<>();
+        ObjectArrayList<SchemaDescriptorChangeAction> changes = new ObjectArrayList<>();
         SchemaDescriptorChangeAction action = new SchemaDescriptorChangeAction();
         action.setNewState(targetDescriptor);
         action.setChangeTypes(SchemaDescriptorChangeType.CONTENT_TYPE_CHANGE);

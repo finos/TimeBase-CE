@@ -74,18 +74,18 @@ public class Test_RenameEnumDescriptorChangeMessageBuilder {
         schemaChangeMessage.setTimeStampMs(0);
         schemaChangeMessage.setSymbol("event");
 
-        ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.EnumClassDescriptor sourceEnumDescriptor = new com.epam.deltix.timebase.messages.schema.EnumClassDescriptor();
+        ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
+        EnumDescriptor sourceEnumDescriptor = new EnumDescriptor();
         sourceEnumDescriptor.setName("sourceName");
         sourceEnumDescriptor.setTitle("title");
 
-        ObjectArrayList<EnumValueInfo> enumValues = new ObjectArrayList<>();
+        ObjectArrayList<EnumConstant> enumValues = new ObjectArrayList<>();
 
-        EnumValue enumValue1 = new EnumValue();
+        EnumConstant enumValue1 = new EnumConstant();
         enumValue1.setSymbol("value1");
         enumValue1.setValue((short) 0);
 
-        EnumValue enumValue2 = new EnumValue();
+        EnumConstant enumValue2 = new EnumConstant();
         enumValue2.setSymbol("value2");
         enumValue2.setValue((short) 1);
 
@@ -93,7 +93,7 @@ public class Test_RenameEnumDescriptorChangeMessageBuilder {
 
         sourceEnumDescriptor.setValues(enumValues);
 
-        com.epam.deltix.timebase.messages.schema.EnumClassDescriptor targetEnumDescriptor = new com.epam.deltix.timebase.messages.schema.EnumClassDescriptor();
+        EnumDescriptor targetEnumDescriptor = new EnumDescriptor();
         targetEnumDescriptor.setName("targetName");
         targetEnumDescriptor.setTitle("title");
         targetEnumDescriptor.setValues(enumValues);
@@ -102,11 +102,11 @@ public class Test_RenameEnumDescriptorChangeMessageBuilder {
 
         schemaChangeMessage.setPreviousState(previousState);
 
-        ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
+        ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
         newState.add(targetEnumDescriptor);
         schemaChangeMessage.setNewState(newState);
 
-        ObjectArrayList<SchemaDescriptorChangeActionInfo> changes = new ObjectArrayList<>();
+        ObjectArrayList<SchemaDescriptorChangeAction> changes = new ObjectArrayList<>();
         SchemaDescriptorChangeAction renameAction = new SchemaDescriptorChangeAction();
         renameAction.setNewState(targetEnumDescriptor);
         renameAction.setChangeTypes(SchemaDescriptorChangeType.RENAME);

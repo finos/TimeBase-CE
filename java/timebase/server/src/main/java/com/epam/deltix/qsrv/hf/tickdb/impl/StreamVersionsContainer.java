@@ -129,8 +129,8 @@ public class StreamVersionsContainer extends AbstractMessageWriter implements Cl
             addNew(descriptors[i], classes[i], encoder);
         }
 
-        for (RecordClassDescriptor rcd : descriptors)
-            addNew(rcd, null, null);
+//        for (RecordClassDescriptor rcd : descriptors)
+//            addNew(rcd, null, null);
     }
 
     public boolean add(InstrumentMessage msg) {

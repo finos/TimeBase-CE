@@ -119,59 +119,59 @@ public class Test_AddFieldChangeMessageBuilder {
         schemaChangeMessage.setTimeStampMs(0);
         schemaChangeMessage.setSymbol("event");
 
-        ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
-        ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
+        TypeDescriptor sourceDescriptor = new TypeDescriptor();
+        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
 
-        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        VarcharFieldType varcharDataType = new VarcharFieldType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        com.epam.deltix.timebase.messages.schema.DataField sourceField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        Field sourceField = new NonStaticField();
         sourceField.setTitle("title");
         sourceField.setName("field");
-        sourceField.setDataType(varcharDataType);
+        sourceField.setType(varcharDataType);
 
         sourceDescriptorFields.add(sourceField);
 
         sourceDescriptor.setTitle("title");
         sourceDescriptor.setName("name");
-        sourceDescriptor.setDataFields(sourceDescriptorFields);
+        sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
 
         previousState.add(sourceDescriptor);
 
         schemaChangeMessage.setPreviousState(previousState);
 
-        ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
+        TypeDescriptor targetDescriptor = new TypeDescriptor();
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
 
-        ObjectArrayList<DataFieldInfo> targetDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 
-        com.epam.deltix.timebase.messages.schema.DataField newField = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        Field newField = new NonStaticField();
         newField.setTitle("title");
         newField.setName("field2");
-        newField.setDataType(varcharDataType);
+        newField.setType(varcharDataType);
 
         targetDescriptorFields.addAll(Arrays.asList(sourceField, newField));
 
-        targetDescriptor.setDataFields(targetDescriptorFields);
+        targetDescriptor.setFields(targetDescriptorFields);
         newState.add(targetDescriptor);
         schemaChangeMessage.setNewState(newState);
 
-        ObjectArrayList<SchemaDescriptorChangeActionInfo> changes = new ObjectArrayList<>();
+        ObjectArrayList<SchemaDescriptorChangeAction> changes = new ObjectArrayList<>();
         SchemaDescriptorChangeAction alterAction = new SchemaDescriptorChangeAction();
         alterAction.setNewState(targetDescriptor);
         alterAction.setChangeTypes(SchemaDescriptorChangeType.FIELDS_CHANGE);
         alterAction.setPreviousState(sourceDescriptor);
 
-        ObjectArrayList<SchemaFieldChangeActionInfo> fieldChanges = new ObjectArrayList<>();
+        ObjectArrayList<SchemaFieldChangeAction> fieldChanges = new ObjectArrayList<>();
         SchemaFieldChangeAction fieldAction = new SchemaFieldChangeAction();
         fieldAction.setPreviousState(null);
         fieldAction.setNewState(newField);

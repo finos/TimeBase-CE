@@ -91,69 +91,69 @@ public class Test_PositionFieldChangeMessageBuilder {
         schemaChangeMessage.setTimeStampMs(0);
         schemaChangeMessage.setSymbol("event");
 
-        ObjectArrayList<ClassDescriptorInfo> previousState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
-        ObjectArrayList<DataFieldInfo> sourceDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
+        TypeDescriptor sourceDescriptor = new TypeDescriptor();
+        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
 
-        com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataType = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        VarcharFieldType varcharDataType = new VarcharFieldType();
         varcharDataType.setEncodingType(-1000);
         varcharDataType.setEncoding("UTF8");
         varcharDataType.setLength(0);
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        com.epam.deltix.timebase.messages.schema.DataField previousFieldState1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        Field previousFieldState1 = new NonStaticField();
         previousFieldState1.setTitle("title");
         previousFieldState1.setName("field");
-        previousFieldState1.setDataType(varcharDataType);
+        previousFieldState1.setType(varcharDataType);
 
-        com.epam.deltix.timebase.messages.schema.DataField previousFieldState2 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        Field previousFieldState2 = new NonStaticField();
         previousFieldState2.setTitle("title");
         previousFieldState2.setName("field2");
-        previousFieldState2.setDataType(varcharDataType);
+        previousFieldState2.setType(varcharDataType);
 
         sourceDescriptorFields.addAll(Arrays.asList(previousFieldState2, previousFieldState1));
 
         sourceDescriptor.setTitle("title");
         sourceDescriptor.setName("name");
-        sourceDescriptor.setDataFields(sourceDescriptorFields);
+        sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
 
         previousState.add(sourceDescriptor);
 
         schemaChangeMessage.setPreviousState(previousState);
 
-        ObjectArrayList<ClassDescriptorInfo> newState = new ObjectArrayList<>();
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor targetDescriptor = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+        ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
+        TypeDescriptor targetDescriptor = new TypeDescriptor();
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
 
-        ObjectArrayList<DataFieldInfo> targetDescriptorFields = new ObjectArrayList<>();
+        ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 
-        com.epam.deltix.timebase.messages.schema.DataField targetField1 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        Field targetField1 = new NonStaticField();
         targetField1.setTitle("title");
         targetField1.setName("field");
-        targetField1.setDataType(varcharDataType);
+        targetField1.setType(varcharDataType);
 
-        com.epam.deltix.timebase.messages.schema.DataField targetField2 = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
+        Field targetField2 = new NonStaticField();
         targetField2.setTitle("title");
         targetField2.setName("field2");
-        targetField2.setDataType(varcharDataType);
+        targetField2.setType(varcharDataType);
 
         targetDescriptorFields.addAll(Arrays.asList(targetField1, targetField2));
 
-        targetDescriptor.setDataFields(targetDescriptorFields);
+        targetDescriptor.setFields(targetDescriptorFields);
         newState.add(targetDescriptor);
         schemaChangeMessage.setNewState(newState);
 
-        ObjectArrayList<SchemaDescriptorChangeActionInfo> changes = new ObjectArrayList<>();
+        ObjectArrayList<SchemaDescriptorChangeAction> changes = new ObjectArrayList<>();
         SchemaDescriptorChangeAction alterAction = new SchemaDescriptorChangeAction();
         alterAction.setNewState(targetDescriptor);
         alterAction.setChangeTypes(SchemaDescriptorChangeType.FIELDS_CHANGE);
         alterAction.setPreviousState(sourceDescriptor);
 
-        ObjectArrayList<SchemaFieldChangeActionInfo> fieldChanges = new ObjectArrayList<>();
+        ObjectArrayList<SchemaFieldChangeAction> fieldChanges = new ObjectArrayList<>();
 
         SchemaFieldChangeAction ordinalChangeAction1 = new SchemaFieldChangeAction();
         ordinalChangeAction1.setPreviousState(previousFieldState2);

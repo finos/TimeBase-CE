@@ -327,7 +327,7 @@ public class QBEnumType extends QBoundType<QEnumType> {
             addTo.add(accessor.write(initValue));
             return;
         } else if (qType.dt.descriptor.isBitmask()) {
-                throw new UnsupportedOperationException("Not supported operation with enum bitmask.");
+            throw new UnsupportedOperationException("Not supported operation with enum bitmask.");
         }
 
         if (valuesMap != null) {

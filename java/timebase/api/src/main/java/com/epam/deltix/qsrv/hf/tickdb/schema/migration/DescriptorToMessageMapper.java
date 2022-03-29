@@ -1,38 +1,61 @@
-/*
- * Copyright 2021 EPAM Systems, Inc
- *
- * See the NOTICE file distributed with this work for additional information
- * regarding copyright ownership. Licensed under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
 package com.epam.deltix.qsrv.hf.tickdb.schema.migration;
 
-import com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField;
-import com.epam.deltix.qsrv.hf.pub.md.StaticDataField;
-import com.epam.deltix.timebase.messages.schema.DataFieldInfo;
+import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.timebase.messages.schema.*;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 
 import java.util.Arrays;
 
 public class DescriptorToMessageMapper {
+    public static ObjectArrayList<UniqueDescriptor> convert(RecordClassSet recordClassSet) {
+        return convert(recordClassSet, false);
+    }
 
-    public static com.epam.deltix.timebase.messages.schema.RecordClassDescriptor map(com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor descriptorObject) {
-        com.epam.deltix.timebase.messages.schema.RecordClassDescriptor result = new com.epam.deltix.timebase.messages.schema.RecordClassDescriptor();
+    /**
+     * @param recordClassSet schema definition to serialize
+     * @param addGuid if set to true then encoded RCD will have "guid" field preserved
+     */
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
+    public static ObjectArrayList<UniqueDescriptor> convert(RecordClassSet recordClassSet, boolean addGuid) {
+        ObjectArrayList<UniqueDescriptor> descriptors = new ObjectArrayList<>();
+
+        if (recordClassSet != null && recordClassSet.getClassDescriptors() != null) {
+            synchronized (recordClassSet) {
+                ClassDescriptor[] contentClasses = recordClassSet.getClassDescriptors();
+                for (int i = 0; i < contentClasses.length; i++) {
+                    ClassDescriptor contentClass = contentClasses[i];
+                    if (contentClass instanceof RecordClassDescriptor) {
+                        TypeDescriptor recordClassDescriptor = map((RecordClassDescriptor) contentClass, addGuid);
+
+                        boolean isContentClass = recordClassSet.getContentClass(contentClass.getGuid()) != null;
+                        recordClassDescriptor.setIsContentClass(isContentClass);
+                        descriptors.add(recordClassDescriptor);
+                    } else {
+                        descriptors.add(DescriptorToMessageMapper.map((EnumClassDescriptor) contentClass));
+                    }
+                }
+            }
+        }
+
+        return descriptors;
+    }
+
+    public static TypeDescriptor map(RecordClassDescriptor descriptorObject) {
+        return map(descriptorObject, false);
+    }
+
+    public static TypeDescriptor map(RecordClassDescriptor descriptorObject, boolean addGuid) {
+        TypeDescriptor result = new TypeDescriptor();
+        result.setIsContentClass(false);
+        if (addGuid) {
+            result.setGuid(descriptorObject.getGuid());
+        }
         copyNamedDescriptorProperties(descriptorObject, result);
 
-        ObjectArrayList<DataFieldInfo> fieldMessages = new ObjectArrayList<>();
-        result.setDataFields(fieldMessages);
+        ObjectArrayList<Field> fieldMessages = new ObjectArrayList<>();
+        result.setFields(fieldMessages);
 
-        com.epam.deltix.qsrv.hf.pub.md.DataField[] fieldObjects = descriptorObject.getFields();
+        DataField[] fieldObjects = descriptorObject.getFields();
         Arrays.stream(fieldObjects)
                 .forEach(item -> fieldMessages.add(map(item)));
 
@@ -45,11 +68,12 @@ public class DescriptorToMessageMapper {
         return result;
     }
 
-    public static  com.epam.deltix.timebase.messages.schema.EnumClassDescriptor map(com.epam.deltix.qsrv.hf.pub.md.EnumClassDescriptor descriptorObject) {
-         com.epam.deltix.timebase.messages.schema.EnumClassDescriptor result = new com.epam.deltix.timebase.messages.schema.EnumClassDescriptor();
+    public static EnumDescriptor map(EnumClassDescriptor descriptorObject) {
+        EnumDescriptor result = new EnumDescriptor();
+        result.setIsBitmask(false);
         copyNamedDescriptorProperties(descriptorObject, result);
 
-        ObjectArrayList<com.epam.deltix.timebase.messages.schema.EnumValueInfo> enumValues = new ObjectArrayList<>();
+        ObjectArrayList<EnumConstant> enumValues = new ObjectArrayList<>();
         result.setValues(enumValues);
 
         Arrays.stream(descriptorObject.getValues())
@@ -58,60 +82,60 @@ public class DescriptorToMessageMapper {
         return result;
     }
 
-    public static  com.epam.deltix.timebase.messages.schema.DataField map(com.epam.deltix.qsrv.hf.pub.md.DataField dataFieldObject) {
+    public static Field map(DataField dataFieldObject) {
         if (dataFieldObject == null) {
             return null;
         }
 
-         com.epam.deltix.timebase.messages.schema.DataField result;
+        Field result;
 
-        if (dataFieldObject instanceof com.epam.deltix.qsrv.hf.pub.md.StaticDataField) {
-            result = new com.epam.deltix.timebase.messages.schema.StaticDataField();
-            copyStaticDescriptorProperties((StaticDataField) dataFieldObject, (com.epam.deltix.timebase.messages.schema.StaticDataField) result);
-        } else if (dataFieldObject instanceof com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField) {
-            result = new com.epam.deltix.timebase.messages.schema.NonStaticDataField();
-            copyNonStaticDescriptorProperties((NonStaticDataField) dataFieldObject, (com.epam.deltix.timebase.messages.schema.NonStaticDataField) result);
+        if (dataFieldObject instanceof StaticDataField) {
+            result = new StaticField();
+            copyStaticDescriptorProperties((StaticDataField) dataFieldObject, (StaticField)result);
+        } else if (dataFieldObject instanceof NonStaticDataField) {
+            result = new NonStaticField();
+            copyNonStaticDescriptorProperties((NonStaticDataField) dataFieldObject, (NonStaticField) result);
         } else
             throw new UnsupportedOperationException(String.format("Unknown data field type %s", dataFieldObject.getClass().getName()));
 
-        result.setDataType(dataTypeObjectToMessage(dataFieldObject.getType()));
+        result.setType(dataTypeObjectToMessage(dataFieldObject.getType()));
         return result;
     }
 
-    private static  com.epam.deltix.timebase.messages.schema.EnumValue enumValueObjectToMessage(com.epam.deltix.qsrv.hf.pub.md.EnumValue enumValueObject) {
-         com.epam.deltix.timebase.messages.schema.EnumValue result = new com.epam.deltix.timebase.messages.schema.EnumValue();
+    private static EnumConstant enumValueObjectToMessage(EnumValue enumValueObject) {
+        EnumConstant result = new EnumConstant();
         result.setSymbol(enumValueObject.symbol);
         result.setValue((short) enumValueObject.value);
 
         return result;
     }
 
-    private static com.epam.deltix.timebase.messages.schema.DataType dataTypeObjectToMessage(com.epam.deltix.qsrv.hf.pub.md.DataType dataTypeObject) {
-        com.epam.deltix.timebase.messages.schema.DataType result;
+    private static FieldType dataTypeObjectToMessage(DataType dataTypeObject) {
+        FieldType result;
 
-        if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.ArrayDataType) {
-            com.epam.deltix.qsrv.hf.pub.md.ArrayDataType arrayDataTypeObject = (com.epam.deltix.qsrv.hf.pub.md.ArrayDataType)dataTypeObject;
-             com.epam.deltix.timebase.messages.schema.ArrayDataType arrayDataTypeMessage = new com.epam.deltix.timebase.messages.schema.ArrayDataType();
+        if (dataTypeObject instanceof ArrayDataType) {
+            ArrayDataType arrayDataTypeObject = (ArrayDataType)dataTypeObject;
+            ArrayFieldType arrayDataTypeMessage = new ArrayFieldType();
             arrayDataTypeMessage.setElementType(dataTypeObjectToMessage(arrayDataTypeObject.getElementDataType()));
             result = arrayDataTypeMessage;
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.BinaryDataType) {
-            com.epam.deltix.qsrv.hf.pub.md.BinaryDataType binaryDataTypeObject = (com.epam.deltix.qsrv.hf.pub.md.BinaryDataType)dataTypeObject;
-             com.epam.deltix.timebase.messages.schema.BinaryDataType binaryDataTypeMessage = new com.epam.deltix.timebase.messages.schema.BinaryDataType();
+        else if (dataTypeObject instanceof BinaryDataType) {
+            BinaryDataType binaryDataTypeObject = (BinaryDataType)dataTypeObject;
+            BinaryFieldType binaryDataTypeMessage = new BinaryFieldType();
             binaryDataTypeMessage.setCompressionLevel((short) binaryDataTypeObject.getCompressionLevel());
             binaryDataTypeMessage.setMaxSize(binaryDataTypeObject.getMaxSize());
             result = binaryDataTypeMessage;
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.BooleanDataType) {
-            result = new com.epam.deltix.timebase.messages.schema.BooleanDataType();
+        else if (dataTypeObject instanceof BooleanDataType) {
+            result = new BooleanFieldType();
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.CharDataType) {
-            result = new com.epam.deltix.timebase.messages.schema.CharDataType();
+        else if (dataTypeObject instanceof CharDataType) {
+            result = new CharFieldType();
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.ClassDataType) {
-            com.epam.deltix.qsrv.hf.pub.md.ClassDataType classTypeObject = (com.epam.deltix.qsrv.hf.pub.md.ClassDataType)dataTypeObject;
-             com.epam.deltix.timebase.messages.schema.ClassDataType classDataTypeMessage = new com.epam.deltix.timebase.messages.schema.ClassDataType();
-            ObjectArrayList<com.epam.deltix.timebase.messages.schema.ClassDescriptorRefInfo> typeDescriptors = new ObjectArrayList<>();
+        else if (dataTypeObject instanceof ClassDataType) {
+            ClassDataType classTypeObject = (ClassDataType)dataTypeObject;
+            ClassFieldType classDataTypeMessage = new ClassFieldType();
+            ObjectArrayList<DescriptorRef> typeDescriptors = new ObjectArrayList<>();
 
             if (classTypeObject.isFixed()) {
                 typeDescriptors.add(descriptorObjectToRef(classTypeObject.getFixedDescriptor()));
@@ -123,18 +147,18 @@ public class DescriptorToMessageMapper {
             classDataTypeMessage.setTypeDescriptors(typeDescriptors);
             result = classDataTypeMessage;
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.DateTimeDataType) {
-            result = new com.epam.deltix.timebase.messages.schema.DateTimeDataType();
+        else if (dataTypeObject instanceof DateTimeDataType) {
+            result = new DateTimeFieldType();
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.EnumDataType) {
-            com.epam.deltix.qsrv.hf.pub.md.EnumDataType enumDataTypeObject = (com.epam.deltix.qsrv.hf.pub.md.EnumDataType)dataTypeObject;
-             com.epam.deltix.timebase.messages.schema.EnumDataType enumDataTypeMessage = new com.epam.deltix.timebase.messages.schema.EnumDataType();
+        else if (dataTypeObject instanceof EnumDataType) {
+            EnumDataType enumDataTypeObject = (EnumDataType)dataTypeObject;
+            EnumFieldType enumDataTypeMessage = new EnumFieldType();
             enumDataTypeMessage.setTypeDescriptor(descriptorObjectToRef(enumDataTypeObject.descriptor));
             result = enumDataTypeMessage;
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.FloatDataType) {
-            com.epam.deltix.qsrv.hf.pub.md.FloatDataType floatDataTypeObject = (com.epam.deltix.qsrv.hf.pub.md.FloatDataType)dataTypeObject;
-             com.epam.deltix.timebase.messages.schema.FloatDataType floatDataTypeMessage = new com.epam.deltix.timebase.messages.schema.FloatDataType();
+        else if (dataTypeObject instanceof FloatDataType) {
+            FloatDataType floatDataTypeObject = (FloatDataType)dataTypeObject;
+            FloatFieldType floatDataTypeMessage = new FloatFieldType();
             if (floatDataTypeObject.getMin() != null)
                 floatDataTypeMessage.setMinValue(floatDataTypeObject.getMin().toString());
             if (floatDataTypeObject.getMax() != null)
@@ -143,21 +167,21 @@ public class DescriptorToMessageMapper {
             floatDataTypeMessage.setEncoding(dataTypeObject.getEncoding());
             result = floatDataTypeMessage;
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.IntegerDataType) {
-            com.epam.deltix.qsrv.hf.pub.md.IntegerDataType integerDataTypeObject = (com.epam.deltix.qsrv.hf.pub.md.IntegerDataType)dataTypeObject;
-             com.epam.deltix.timebase.messages.schema.IntegerDataType integerDataTypeMessage = new com.epam.deltix.timebase.messages.schema.IntegerDataType();
+        else if (dataTypeObject instanceof IntegerDataType) {
+            IntegerDataType integerDataTypeObject = (IntegerDataType)dataTypeObject;
+            FloatFieldType integerDataTypeMessage = new FloatFieldType();
             if (integerDataTypeObject.getMin() != null)
                 integerDataTypeMessage.setMinValue(integerDataTypeObject.getMin().toString());
             if (integerDataTypeObject.getMax() != null)
                 integerDataTypeMessage.setMaxValue(integerDataTypeObject.getMax().toString());
             result = integerDataTypeMessage;
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.TimeOfDayDataType) {
-            result = new com.epam.deltix.timebase.messages.schema.TimeOfDayDataType();
+        else if (dataTypeObject instanceof TimeOfDayDataType) {
+            result = new TimeOfDayFieldType();
         }
-        else if (dataTypeObject instanceof com.epam.deltix.qsrv.hf.pub.md.VarcharDataType) {
-            com.epam.deltix.qsrv.hf.pub.md.VarcharDataType varcharDataTypeObject = (com.epam.deltix.qsrv.hf.pub.md.VarcharDataType)dataTypeObject;
-             com.epam.deltix.timebase.messages.schema.VarcharDataType varcharDataTypeMessage = new com.epam.deltix.timebase.messages.schema.VarcharDataType();
+        else if (dataTypeObject instanceof VarcharDataType) {
+            VarcharDataType varcharDataTypeObject = (VarcharDataType)dataTypeObject;
+            VarcharFieldType varcharDataTypeMessage = new VarcharFieldType();
             varcharDataTypeMessage.setEncodingType(varcharDataTypeObject.getEncodingType());
             varcharDataTypeMessage.setIsMultiline(varcharDataTypeObject.isMultiLine());
             varcharDataTypeMessage.setLength(varcharDataTypeObject.getLength());
@@ -173,31 +197,27 @@ public class DescriptorToMessageMapper {
         return result;
     }
 
-    private static  com.epam.deltix.timebase.messages.schema.ClassDescriptorRef descriptorObjectToRef(com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor descriptorObject) {
-        com.epam.deltix.timebase.messages.schema.ClassDescriptorRef result = new com.epam.deltix.timebase.messages.schema.ClassDescriptorRef();
+    private static DescriptorRef descriptorObjectToRef(ClassDescriptor descriptorObject) {
+        DescriptorRef result = new DescriptorRef();
         result.setName(descriptorObject.getName());
-
         return result;
     }
 
-    private static void copyNamedDescriptorProperties(com.epam.deltix.qsrv.hf.pub.md.NamedDescriptor source,
-                                                      com.epam.deltix.timebase.messages.schema.NamedDescriptor destination) {
+    private static void copyNamedDescriptorProperties(NamedDescriptor source, UniqueDescriptor destination) {
         destination.setName(source.getName());
         destination.setTitle(source.getTitle());
         destination.setDescription(source.getDescription());
     }
 
-    private static void copyNonStaticDescriptorProperties(NonStaticDataField source, com.epam.deltix.timebase.messages.schema.NonStaticDataField destination) {
+    private static void copyNonStaticDescriptorProperties(NonStaticDataField source, NonStaticField destination) {
         destination.setName(source.getName());
         destination.setTitle(source.getTitle());
         destination.setDescription(source.getDescription());
         destination.setRelativeTo(source.getRelativeTo());
-        if (source.isPk()) {
-            destination.setIsPrimaryKey(source.isPk());
-        }
+        destination.setIsPrimaryKey(source.isPk());
     }
 
-    private static void copyStaticDescriptorProperties(StaticDataField source,  com.epam.deltix.timebase.messages.schema.StaticDataField destination) {
+    private static void copyStaticDescriptorProperties(StaticDataField source, StaticField destination) {
         destination.setName(source.getName());
         destination.setTitle(source.getTitle());
         destination.setDescription(source.getDescription());

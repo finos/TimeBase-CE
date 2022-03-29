@@ -42,7 +42,6 @@ import com.epam.deltix.timebase.messages.*;
 
 import com.epam.deltix.timebase.messages.schema.SchemaChangeMessage;
 import com.epam.deltix.timebase.messages.schema.SchemaDescriptorChangeAction;
-import com.epam.deltix.timebase.messages.schema.SchemaDescriptorChangeActionInfo;
 import com.epam.deltix.timebase.messages.schema.SchemaDescriptorChangeType;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.concurrent.CursorIsClosedException;
@@ -1464,7 +1463,7 @@ public class Test_TDBServer {
                 StreamOptions.fixedType(StreamScope.DURABLE, "schema", "", 0, rcd));
 
         SchemaChangeMessage change = new SchemaChangeMessage();
-        ObjectArrayList<SchemaDescriptorChangeActionInfo> actions = new ObjectArrayList<>();
+        ObjectArrayList<SchemaDescriptorChangeAction> actions = new ObjectArrayList<>();
         SchemaDescriptorChangeAction changeAction = new SchemaDescriptorChangeAction();
         changeAction.setChangeTypes(SchemaDescriptorChangeType.FIELDS_CHANGE);
         actions.add(changeAction);

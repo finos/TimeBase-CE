@@ -78,6 +78,7 @@ public class Test_RenameEnumDescriptorChangeMessageBuilder {
         EnumDescriptor sourceEnumDescriptor = new EnumDescriptor();
         sourceEnumDescriptor.setName("sourceName");
         sourceEnumDescriptor.setTitle("title");
+        sourceEnumDescriptor.setIsBitmask(false);
 
         ObjectArrayList<EnumConstant> enumValues = new ObjectArrayList<>();
 
@@ -97,6 +98,7 @@ public class Test_RenameEnumDescriptorChangeMessageBuilder {
         targetEnumDescriptor.setName("targetName");
         targetEnumDescriptor.setTitle("title");
         targetEnumDescriptor.setValues(enumValues);
+        targetEnumDescriptor.setIsBitmask(false);
 
         previousState.add(sourceEnumDescriptor);
 

@@ -101,6 +101,7 @@ public class Test_RelationFieldChangeMessageBuilder {
         previousFieldState.setName("field");
         previousFieldState.setType(varcharDataType);
         previousFieldState.setRelativeTo("oldRelation");
+        previousFieldState.setIsPrimaryKey(false);
 
         sourceDescriptorFields.add(previousFieldState);
 
@@ -108,6 +109,7 @@ public class Test_RelationFieldChangeMessageBuilder {
         sourceDescriptor.setName("name");
         sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
+        sourceDescriptor.setIsContentClass(false);
 
         previousState.add(sourceDescriptor);
 
@@ -118,6 +120,7 @@ public class Test_RelationFieldChangeMessageBuilder {
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
+        targetDescriptor.setIsContentClass(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 
@@ -126,6 +129,7 @@ public class Test_RelationFieldChangeMessageBuilder {
         targetField.setName("field");
         targetField.setType(varcharDataType);
         targetField.setRelativeTo("newRelation");
+        targetField.setIsPrimaryKey(false);
 
         targetDescriptorFields.add(targetField);
 

@@ -112,10 +112,11 @@ public class Test_RemoveDescriptorChangeMessageBuilder {
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        Field sourceField2 = new NonStaticField();
+        NonStaticField sourceField2 = new NonStaticField();
         sourceField2.setTitle("title");
         sourceField2.setName("source_field2");
         sourceField2.setType(varcharDataType);
+        sourceField2.setIsPrimaryKey(false);
 
         StaticField sourceField3 = new StaticField();
         sourceField3.setTitle("title");
@@ -129,18 +130,22 @@ public class Test_RemoveDescriptorChangeMessageBuilder {
         descriptor2.setName("descriptor2");
         descriptor2.setFields(sourceDescriptor2Fields);
         descriptor2.setIsAbstract(false);
+        descriptor2.setIsContentClass(false);
+
 
         TypeDescriptor descriptor1 = new TypeDescriptor();
         descriptor1.setName("descriptor1");
         descriptor1.setTitle("title");
         descriptor1.setIsAbstract(false);
+        descriptor1.setIsContentClass(false);
 
         ObjectArrayList<Field> descriptor1Fields = new ObjectArrayList<>();
 
-        Field sourceField1 = new NonStaticField();
+        NonStaticField sourceField1 = new NonStaticField();
         sourceField1.setType(varcharDataType);
         sourceField1.setName("source_field1");
         sourceField1.setTitle("title");
+        sourceField1.setIsPrimaryKey(false);
 
         descriptor1Fields.add(sourceField1);
 

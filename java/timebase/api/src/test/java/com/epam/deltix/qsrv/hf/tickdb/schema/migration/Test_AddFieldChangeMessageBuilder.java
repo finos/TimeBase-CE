@@ -120,8 +120,6 @@ public class Test_AddFieldChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
-        TypeDescriptor sourceDescriptor = new TypeDescriptor();
-        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
 
         VarcharFieldType varcharDataType = new VarcharFieldType();
         varcharDataType.setEncodingType(-1000);
@@ -130,38 +128,17 @@ public class Test_AddFieldChangeMessageBuilder {
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        Field sourceField = new NonStaticField();
-        sourceField.setTitle("title");
-        sourceField.setName("field");
-        sourceField.setType(varcharDataType);
-
-        sourceDescriptorFields.add(sourceField);
-
-        sourceDescriptor.setTitle("title");
-        sourceDescriptor.setName("name");
-        sourceDescriptor.setFields(sourceDescriptorFields);
-        sourceDescriptor.setIsAbstract(false);
-
+        Field sourceField = Builder.createNonStatic("title", "field", varcharDataType);
+        TypeDescriptor sourceDescriptor = Builder.createDescriptor("title", "name", sourceField);
         previousState.add(sourceDescriptor);
 
         schemaChangeMessage.setPreviousState(previousState);
 
         ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
-        TypeDescriptor targetDescriptor = new TypeDescriptor();
-        targetDescriptor.setName("name");
-        targetDescriptor.setTitle("title");
-        targetDescriptor.setIsAbstract(false);
 
-        ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
+        Field newField = Builder.createNonStatic("title", "field2", varcharDataType);
+        TypeDescriptor targetDescriptor = Builder.createDescriptor("title", "name", sourceField, newField);
 
-        Field newField = new NonStaticField();
-        newField.setTitle("title");
-        newField.setName("field2");
-        newField.setType(varcharDataType);
-
-        targetDescriptorFields.addAll(Arrays.asList(sourceField, newField));
-
-        targetDescriptor.setFields(targetDescriptorFields);
         newState.add(targetDescriptor);
         schemaChangeMessage.setNewState(newState);
 

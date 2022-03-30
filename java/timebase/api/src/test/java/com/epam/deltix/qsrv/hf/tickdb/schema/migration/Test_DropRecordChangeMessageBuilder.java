@@ -16,7 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.schema.migration;
 
-import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.schema.AbstractFieldChange;
 import com.epam.deltix.qsrv.hf.tickdb.schema.ClassDescriptorChange;
 import com.epam.deltix.qsrv.hf.tickdb.schema.FieldTypeChange;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertThat;
 
 public class Test_DropRecordChangeMessageBuilder {
 
-    private SchemaChangeMessageBuilder schemaChangeMessageBuilder = new SchemaChangeMessageBuilder();
+    private final SchemaChangeMessageBuilder schemaChangeMessageBuilder = new SchemaChangeMessageBuilder();
 
     @Test
     public void testDropRecordMigration() {
@@ -46,13 +46,11 @@ public class Test_DropRecordChangeMessageBuilder {
     private StreamMetaDataChange getStreamMetaDataChange() {
         StreamMetaDataChange streamMetaDataChange = new StreamMetaDataChange();
 
-        com.epam.deltix.qsrv.hf.pub.md.DataField newFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.IntegerDataType("INT32", false));
+        DataField newFieldState = new NonStaticDataField( "field", "title", new IntegerDataType("INT32", false));
+        RecordClassDescriptor targetDescriptor = new RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState);
 
-        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor targetDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid2", "name", "title", false, null, newFieldState);
-
-        com.epam.deltix.qsrv.hf.pub.md.DataField oldFieldState = new com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField( "field", "title", new com.epam.deltix.qsrv.hf.pub.md.IntegerDataType("INT64", false));
-
-        com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor sourceDescriptor = new com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState);
+        DataField oldFieldState = new NonStaticDataField( "field", "title", new IntegerDataType("INT64", false));
+        RecordClassDescriptor sourceDescriptor = new RecordClassDescriptor( "guid1", "name", "title", false, null, oldFieldState);
 
         RecordClassSet targetClassSet = new RecordClassSet();
         targetClassSet.setClassDescriptors(targetDescriptor);
@@ -87,49 +85,29 @@ public class Test_DropRecordChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
-        TypeDescriptor sourceDescriptor = new TypeDescriptor();
-        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
-
-        IntegerFieldType int32DataType = new IntegerFieldType();
-        int32DataType.setEncoding("INT32");
-        int32DataType.setIsNullable(false);
 
         IntegerFieldType int64DataType = new IntegerFieldType();
         int64DataType.setEncoding("INT64");
         int64DataType.setIsNullable(false);
 
-        Field previousFieldState = new NonStaticField();
-        previousFieldState.setTitle("title");
-        previousFieldState.setName("field");
-        previousFieldState.setType(int64DataType);
-
-        sourceDescriptorFields.add(previousFieldState);
-
-        sourceDescriptor.setTitle("title");
-        sourceDescriptor.setName("name");
-        sourceDescriptor.setFields(sourceDescriptorFields);
-        sourceDescriptor.setIsAbstract(false);
-
+        NonStaticField previousFieldState = Builder.createNonStatic("title", "field", int64DataType);
+        TypeDescriptor sourceDescriptor = Builder.createDescriptor("title", "name", previousFieldState);
         previousState.add(sourceDescriptor);
 
         schemaChangeMessage.setPreviousState(previousState);
 
         ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
-        TypeDescriptor targetDescriptor = new TypeDescriptor();
-        targetDescriptor.setName("name");
-        targetDescriptor.setTitle("title");
-        targetDescriptor.setIsAbstract(false);
+
+        IntegerFieldType int32DataType = new IntegerFieldType();
+        int32DataType.setEncoding("INT32");
+        int32DataType.setIsNullable(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
-
-        Field targetField = new NonStaticField();
-        targetField.setTitle("title");
-        targetField.setName("field");
-        targetField.setType(int32DataType);
-
+        NonStaticField targetField = Builder.createNonStatic("title", "field", int32DataType);
         targetDescriptorFields.add(targetField);
+        
+        TypeDescriptor targetDescriptor = Builder.createDescriptor("title", "name", targetDescriptorFields);
 
-        targetDescriptor.setFields(targetDescriptorFields);
         newState.add(targetDescriptor);
         schemaChangeMessage.setNewState(newState);
 
@@ -145,7 +123,7 @@ public class Test_DropRecordChangeMessageBuilder {
         fieldAction.setNewState(targetField);
         fieldAction.setChangeTypes(SchemaFieldChangeType.DATA_TYPE_CHANGE);
         SchemaFieldDataTransformation dataTransformation = new SchemaFieldDataTransformation();
-        dataTransformation.setTransformationType(SchemaFieldDataTransformationType.DROP_RECORD);
+        dataTransformation.setTransformationType(SchemaFieldDataTransformationType.SET_DEFAULT);
         fieldAction.setDataTransformation(dataTransformation);
 
         fieldChanges.add(fieldAction);

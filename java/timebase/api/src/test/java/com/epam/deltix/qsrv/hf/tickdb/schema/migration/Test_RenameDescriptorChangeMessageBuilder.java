@@ -102,10 +102,11 @@ public class Test_RenameDescriptorChangeMessageBuilder {
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        Field expectedField1 = new NonStaticField();
+        NonStaticField expectedField1 = new NonStaticField();
         expectedField1.setTitle("title");
         expectedField1.setName("field");
         expectedField1.setType(varcharDataType);
+        expectedField1.setIsPrimaryKey(false);
 
         sourceDescriptorFields.add(expectedField1);
 
@@ -113,6 +114,7 @@ public class Test_RenameDescriptorChangeMessageBuilder {
         sourceDescriptor.setName("sourceName");
         sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
+        sourceDescriptor.setIsContentClass(false);
 
         previousState.add(sourceDescriptor);
 
@@ -123,6 +125,7 @@ public class Test_RenameDescriptorChangeMessageBuilder {
         targetDescriptor.setName("targetName");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
+        targetDescriptor.setIsContentClass(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
         targetDescriptorFields.add(expectedField1);

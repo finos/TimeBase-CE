@@ -112,10 +112,11 @@ public class Test_AddDescriptorChangeMessageBuilder {
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        Field sourceField1 = new NonStaticField();
+        NonStaticField sourceField1 = new NonStaticField();
         sourceField1.setTitle("field1_title");
         sourceField1.setName("field1");
         sourceField1.setType(varcharDataType);
+        sourceField1.setIsPrimaryKey(false);
 
         StaticField sourceField2 = new StaticField();
         sourceField2.setTitle("field2_title");
@@ -129,6 +130,7 @@ public class Test_AddDescriptorChangeMessageBuilder {
         sourceDescriptor.setName("sourceName");
         sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
+        sourceDescriptor.setIsContentClass(false);
 
         previousState.add(sourceDescriptor);
         schemaChangeMessage.setPreviousState(previousState);
@@ -139,13 +141,15 @@ public class Test_AddDescriptorChangeMessageBuilder {
         targetDescriptor.setName("targetName");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
+        targetDescriptor.setIsContentClass(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 
-        Field targetField1 = new NonStaticField();
+        NonStaticField targetField1 = new NonStaticField();
         targetField1.setType(varcharDataType);
         targetField1.setName("target_field");
         targetField1.setTitle("target_title");
+        targetField1.setIsPrimaryKey(false);
 
         targetDescriptorFields.add(targetField1);
 

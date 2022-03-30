@@ -146,6 +146,7 @@ public class Test_RemoveFieldChangeMessageBuilder {
         sourceDescriptor.setName("name");
         sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
+        sourceDescriptor.setIsContentClass(false);
 
         previousState.add(sourceDescriptor);
 
@@ -156,6 +157,7 @@ public class Test_RemoveFieldChangeMessageBuilder {
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
+        targetDescriptor.setIsContentClass(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 

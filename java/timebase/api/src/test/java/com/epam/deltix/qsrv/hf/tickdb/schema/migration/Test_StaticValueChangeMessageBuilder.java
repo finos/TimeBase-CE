@@ -23,12 +23,12 @@ import com.epam.deltix.qsrv.hf.tickdb.schema.StaticFieldChange;
 import com.epam.deltix.qsrv.hf.tickdb.schema.StreamMetaDataChange;
 import com.epam.deltix.timebase.messages.schema.*;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
+import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 
 import java.util.ArrayList;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 public class Test_StaticValueChangeMessageBuilder {
 
@@ -40,7 +40,7 @@ public class Test_StaticValueChangeMessageBuilder {
 
         SchemaChangeMessage actualSchemaChangeMessage = schemaChangeMessageBuilder.build(streamMetaDataChange, "event", 0l);
 
-        assertThat(actualSchemaChangeMessage, is(getExpectedSchemaChangeMessage()));
+        MatcherAssert.assertThat(actualSchemaChangeMessage, is(getExpectedSchemaChangeMessage()));
     }
 
     private StreamMetaDataChange getStreamMetaDataChange() {
@@ -87,6 +87,7 @@ public class Test_StaticValueChangeMessageBuilder {
 
         ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
         TypeDescriptor sourceDescriptor = new TypeDescriptor();
+
         ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
 
         VarcharFieldType varcharDataType = new VarcharFieldType();
@@ -108,6 +109,7 @@ public class Test_StaticValueChangeMessageBuilder {
         sourceDescriptor.setName("name");
         sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
+        sourceDescriptor.setIsContentClass(false);
 
         previousState.add(sourceDescriptor);
 
@@ -118,6 +120,7 @@ public class Test_StaticValueChangeMessageBuilder {
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
+        targetDescriptor.setIsContentClass(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 

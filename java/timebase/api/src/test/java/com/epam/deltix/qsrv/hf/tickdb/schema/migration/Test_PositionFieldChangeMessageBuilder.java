@@ -102,15 +102,17 @@ public class Test_PositionFieldChangeMessageBuilder {
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        Field previousFieldState1 = new NonStaticField();
+        NonStaticField previousFieldState1 = new NonStaticField();
         previousFieldState1.setTitle("title");
         previousFieldState1.setName("field");
         previousFieldState1.setType(varcharDataType);
+        previousFieldState1.setIsPrimaryKey(false);
 
-        Field previousFieldState2 = new NonStaticField();
+        NonStaticField previousFieldState2 = new NonStaticField();
         previousFieldState2.setTitle("title");
         previousFieldState2.setName("field2");
         previousFieldState2.setType(varcharDataType);
+        previousFieldState2.setIsPrimaryKey(false);
 
         sourceDescriptorFields.addAll(Arrays.asList(previousFieldState2, previousFieldState1));
 
@@ -118,6 +120,7 @@ public class Test_PositionFieldChangeMessageBuilder {
         sourceDescriptor.setName("name");
         sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
+        sourceDescriptor.setIsContentClass(false);
 
         previousState.add(sourceDescriptor);
 
@@ -128,18 +131,21 @@ public class Test_PositionFieldChangeMessageBuilder {
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
+        targetDescriptor.setIsContentClass(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 
-        Field targetField1 = new NonStaticField();
+        NonStaticField targetField1 = new NonStaticField();
         targetField1.setTitle("title");
         targetField1.setName("field");
         targetField1.setType(varcharDataType);
+        targetField1.setIsPrimaryKey(false);
 
-        Field targetField2 = new NonStaticField();
+        NonStaticField targetField2 = new NonStaticField();
         targetField2.setTitle("title");
         targetField2.setName("field2");
         targetField2.setType(varcharDataType);
+        targetField2.setIsPrimaryKey(false);
 
         targetDescriptorFields.addAll(Arrays.asList(targetField1, targetField2));
 

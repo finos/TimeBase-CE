@@ -53,11 +53,6 @@ public class Test_DescriptorToMessageMapper {
 
         TypeDescriptor actualDescriptorMessage = DescriptorToMessageMapper.map(descriptor);
 
-        TypeDescriptor expectedDescriptorMessage = new TypeDescriptor();
-        expectedDescriptorMessage.setName("name");
-        expectedDescriptorMessage.setTitle("title");
-        expectedDescriptorMessage.setIsAbstract(false);
-
         ObjectArrayList<Field> expectedFields = new ObjectArrayList<>();
 
         VarcharFieldType varcharDataType = new VarcharFieldType();
@@ -67,10 +62,7 @@ public class Test_DescriptorToMessageMapper {
         varcharDataType.setLength(0);
         varcharDataType.setEncodingType(INLINE_VARSIZE);
 
-        Field expectedField1 = new NonStaticField();
-        expectedField1.setName("field1");
-        expectedField1.setTitle("field1_title");
-        expectedField1.setType(varcharDataType);
+        NonStaticField expectedField1 = Builder.createNonStatic("field1_title", "field1", varcharDataType);
 
         StaticField expectedField2 = new StaticField();
         expectedField2.setName("field2");
@@ -81,7 +73,7 @@ public class Test_DescriptorToMessageMapper {
         expectedFields.add(expectedField2);
         expectedFields.add(expectedField1);
 
-        expectedDescriptorMessage.setFields(expectedFields);
+        TypeDescriptor expectedDescriptorMessage = Builder.createDescriptor("title", "name", expectedFields);
 
         assertThat(actualDescriptorMessage, is(expectedDescriptorMessage));
     }

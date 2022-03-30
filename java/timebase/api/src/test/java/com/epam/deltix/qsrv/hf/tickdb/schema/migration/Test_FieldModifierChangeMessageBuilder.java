@@ -87,8 +87,8 @@ public class Test_FieldModifierChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
-        TypeDescriptor sourceDescriptor = new TypeDescriptor();
-        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
+
+
 
         VarcharFieldType varcharDataType = new VarcharFieldType();
         varcharDataType.setEncodingType(-1000);
@@ -97,18 +97,11 @@ public class Test_FieldModifierChangeMessageBuilder {
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        Field previousFieldState = new NonStaticField();
-        previousFieldState.setTitle("title");
-        previousFieldState.setName("field");
-        previousFieldState.setType(varcharDataType);
-
+        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
+        NonStaticField previousFieldState = Builder.createNonStatic("title", "field", varcharDataType);
         sourceDescriptorFields.add(previousFieldState);
 
-        sourceDescriptor.setTitle("title");
-        sourceDescriptor.setName("name");
-        sourceDescriptor.setFields(sourceDescriptorFields);
-        sourceDescriptor.setIsAbstract(false);
-
+        TypeDescriptor sourceDescriptor = Builder.createDescriptor("title", "name", sourceDescriptorFields);
         previousState.add(sourceDescriptor);
 
         schemaChangeMessage.setPreviousState(previousState);
@@ -118,6 +111,7 @@ public class Test_FieldModifierChangeMessageBuilder {
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
+        targetDescriptor.setIsContentClass(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 

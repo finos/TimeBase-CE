@@ -93,8 +93,6 @@ public class Test_DropDescriptorRecordsChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
-        TypeDescriptor sourceDescriptor = new TypeDescriptor();
-        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
 
         VarcharFieldType varcharDataType = new VarcharFieldType();
         varcharDataType.setEncodingType(-1000);
@@ -103,19 +101,9 @@ public class Test_DropDescriptorRecordsChangeMessageBuilder {
         varcharDataType.setIsMultiline(false);
         varcharDataType.setIsNullable(false);
 
-        Field expectedField1 = new NonStaticField();
-        expectedField1.setTitle("title");
-        expectedField1.setName("field");
-        expectedField1.setType(varcharDataType);
-
-        sourceDescriptorFields.add(expectedField1);
-
-        sourceDescriptor.setTitle("title");
-        sourceDescriptor.setName("name");
-        sourceDescriptor.setFields(sourceDescriptorFields);
-        sourceDescriptor.setIsAbstract(false);
+        NonStaticField expectedField1 = Builder.createNonStatic("title", "field", varcharDataType);
+        TypeDescriptor sourceDescriptor = Builder.createDescriptor("title", "name", expectedField1);
         sourceDescriptor.setIsContentClass(true);
-
         previousState.add(sourceDescriptor);
 
         schemaChangeMessage.setPreviousState(previousState);
@@ -125,6 +113,7 @@ public class Test_DropDescriptorRecordsChangeMessageBuilder {
         targetDescriptor.setName("name");
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
+        targetDescriptor.setIsContentClass(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
         targetDescriptorFields.add(expectedField1);

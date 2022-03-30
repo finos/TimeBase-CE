@@ -169,12 +169,14 @@ public class DescriptorToMessageMapper {
         }
         else if (dataTypeObject instanceof IntegerDataType) {
             IntegerDataType integerDataTypeObject = (IntegerDataType)dataTypeObject;
-            FloatFieldType integerDataTypeMessage = new FloatFieldType();
+            IntegerFieldType integerFieldType = new IntegerFieldType();
             if (integerDataTypeObject.getMin() != null)
-                integerDataTypeMessage.setMinValue(integerDataTypeObject.getMin().toString());
+                integerFieldType.setMinValue(integerDataTypeObject.getMin().toString());
             if (integerDataTypeObject.getMax() != null)
-                integerDataTypeMessage.setMaxValue(integerDataTypeObject.getMax().toString());
-            result = integerDataTypeMessage;
+                integerFieldType.setMaxValue(integerDataTypeObject.getMax().toString());
+            integerFieldType.setEncoding(integerDataTypeObject.getEncoding());
+
+            result = integerFieldType;
         }
         else if (dataTypeObject instanceof TimeOfDayDataType) {
             result = new TimeOfDayFieldType();

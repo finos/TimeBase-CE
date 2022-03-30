@@ -86,8 +86,6 @@ public class Test_ConvertFieldChangeMessageBuilder {
         schemaChangeMessage.setSymbol("event");
 
         ObjectArrayList<UniqueDescriptor> previousState = new ObjectArrayList<>();
-        TypeDescriptor sourceDescriptor = new TypeDescriptor();
-        ObjectArrayList<Field> sourceDescriptorFields = new ObjectArrayList<>();
 
         IntegerFieldType int32DataType = new IntegerFieldType();
         int32DataType.setEncoding("INT32");
@@ -97,38 +95,16 @@ public class Test_ConvertFieldChangeMessageBuilder {
         int64DataType.setEncoding("INT64");
         int64DataType.setIsNullable(false);
 
-        Field previousFieldState = new NonStaticField();
-        previousFieldState.setTitle("title");
-        previousFieldState.setName("field");
-        previousFieldState.setType(int32DataType);
-
-        sourceDescriptorFields.add(previousFieldState);
-
-        sourceDescriptor.setTitle("title");
-        sourceDescriptor.setName("name");
-        sourceDescriptor.setFields(sourceDescriptorFields);
-        sourceDescriptor.setIsAbstract(false);
-
+        Field previousFieldState = Builder.createNonStatic("title", "field", int32DataType);
+        TypeDescriptor sourceDescriptor = Builder.createDescriptor("title", "name", previousFieldState);
         previousState.add(sourceDescriptor);
 
         schemaChangeMessage.setPreviousState(previousState);
 
         ObjectArrayList<UniqueDescriptor> newState = new ObjectArrayList<>();
-        TypeDescriptor targetDescriptor = new TypeDescriptor();
-        targetDescriptor.setName("name");
-        targetDescriptor.setTitle("title");
-        targetDescriptor.setIsAbstract(false);
 
-        ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
-
-        Field targetField = new NonStaticField();
-        targetField.setTitle("title");
-        targetField.setName("field");
-        targetField.setType(int64DataType);
-
-        targetDescriptorFields.add(targetField);
-
-        targetDescriptor.setFields(targetDescriptorFields);
+        Field targetField = Builder.createNonStatic("title", "field", int64DataType);
+        TypeDescriptor targetDescriptor = Builder.createDescriptor("title", "name", targetField);
         newState.add(targetDescriptor);
         schemaChangeMessage.setNewState(newState);
 

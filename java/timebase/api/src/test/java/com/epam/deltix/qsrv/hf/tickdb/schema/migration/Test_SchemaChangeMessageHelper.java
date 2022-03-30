@@ -66,6 +66,7 @@ public class Test_SchemaChangeMessageHelper {
         sourceDescriptor.setFields(sourceDescriptorFields);
         sourceDescriptor.setIsAbstract(false);
         sourceDescriptor.setIsContentClass(true);
+        sourceDescriptor.setIsContentClass(false);
 
         previousState.add(sourceDescriptor);
 
@@ -77,6 +78,7 @@ public class Test_SchemaChangeMessageHelper {
         targetDescriptor.setTitle("title");
         targetDescriptor.setIsAbstract(false);
         targetDescriptor.setIsContentClass(true);
+        targetDescriptor.setIsContentClass(false);
 
         ObjectArrayList<Field> targetDescriptorFields = new ObjectArrayList<>();
 

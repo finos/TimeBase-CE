@@ -4,20 +4,20 @@
 set max 20
 test select char_n from alltypes where char_n > 'A'c and char_n < 'D'c
 >_,TIMESTAMP,SYMBOL,TYPE,char_n
-0,2011-01-01 00:00:02,S0,CUSTOM,B
-1,2011-01-01 00:00:02.001,S1,CUSTOM,B
-2,2011-01-01 00:00:03,S0,CUSTOM,C
-3,2011-01-01 00:00:03,S1,CUSTOM,C
+0,2011-01-01 00:00:02,S0,B
+1,2011-01-01 00:00:02.001,S1,B
+2,2011-01-01 00:00:03,S0,C
+3,2011-01-01 00:00:03,S1,C
 !end
 #
 #   Between and !=
 #
 test select char_n from alltypes where char_n between 'B'c and 'D'c and char_n != 'C'c
 >_,TIMESTAMP,SYMBOL,TYPE,char_n
-0,2011-01-01 00:00:02,S0,CUSTOM,B
-1,2011-01-01 00:00:02.001,S1,CUSTOM,B
-2,2011-01-01 00:00:04,S0,CUSTOM,D
-3,2011-01-01 00:00:04.001,S1,CUSTOM,D
+0,2011-01-01 00:00:02,S0,B
+1,2011-01-01 00:00:02.001,S1,B
+2,2011-01-01 00:00:04,S0,D
+3,2011-01-01 00:00:04.001,S1,D
 !end
 #
 #   impossible in ()
@@ -29,15 +29,15 @@ test select char_n from alltypes where char_n in ('\''c)
 #
 test select char_n from alltypes where char_n in ('X'c, 'x'c)
 >_,TIMESTAMP,SYMBOL,TYPE,char_n
-0,2011-01-01 00:00:24,S0,CUSTOM,X
-1,2011-01-01 00:00:24.001,S1,CUSTOM,X
-2,2011-01-01 00:00:56,S0,CUSTOM,x
-3,2011-01-01 00:00:56.001,S1,CUSTOM,x
+0,2011-01-01 00:00:24,S0,X
+1,2011-01-01 00:00:24.001,S1,X
+2,2011-01-01 00:00:56,S0,x
+3,2011-01-01 00:00:56.001,S1,x
 !end
 #
 #   check nullable char = non-nullable char
 #
 test select count{}() from alltypes where char_n == char_c
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:38.001,S1,CUSTOM,180
+0,2011-01-01 00:01:38.001,S1,180
 !end

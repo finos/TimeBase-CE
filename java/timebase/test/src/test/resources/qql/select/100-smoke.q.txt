@@ -4,49 +4,49 @@
 set max 20
 test select sequence from alltypes
 >_,TIMESTAMP,SYMBOL,TYPE,sequence
-0,2011-01-01 00:00:00,S0,CUSTOM,0
-1,2011-01-01 00:00:00.001,S1,CUSTOM,0
-2,2011-01-01 00:00:01,S0,CUSTOM,1
-3,2011-01-01 00:00:01,S1,CUSTOM,1
-4,2011-01-01 00:00:02,S0,CUSTOM,2
-5,2011-01-01 00:00:02.001,S1,CUSTOM,2
-6,2011-01-01 00:00:03,S0,CUSTOM,3
-7,2011-01-01 00:00:03,S1,CUSTOM,3
-8,2011-01-01 00:00:04,S0,CUSTOM,4
-9,2011-01-01 00:00:04.001,S1,CUSTOM,4
-10,2011-01-01 00:00:05,S0,CUSTOM,5
-11,2011-01-01 00:00:05,S1,CUSTOM,5
-12,2011-01-01 00:00:06,S0,CUSTOM,6
-13,2011-01-01 00:00:06.001,S1,CUSTOM,6
-14,2011-01-01 00:00:07,S0,CUSTOM,7
-15,2011-01-01 00:00:07,S1,CUSTOM,7
-16,2011-01-01 00:00:08,S0,CUSTOM,8
-17,2011-01-01 00:00:08.001,S1,CUSTOM,8
-18,2011-01-01 00:00:09,S0,CUSTOM,9
-19,2011-01-01 00:00:09,S1,CUSTOM,9
+0,2011-01-01 00:00:00,S0,0
+1,2011-01-01 00:00:00.001,S1,0
+2,2011-01-01 00:00:01,S0,1
+3,2011-01-01 00:00:01,S1,1
+4,2011-01-01 00:00:02,S0,2
+5,2011-01-01 00:00:02.001,S1,2
+6,2011-01-01 00:00:03,S0,3
+7,2011-01-01 00:00:03,S1,3
+8,2011-01-01 00:00:04,S0,4
+9,2011-01-01 00:00:04.001,S1,4
+10,2011-01-01 00:00:05,S0,5
+11,2011-01-01 00:00:05,S1,5
+12,2011-01-01 00:00:06,S0,6
+13,2011-01-01 00:00:06.001,S1,6
+14,2011-01-01 00:00:07,S0,7
+15,2011-01-01 00:00:07,S1,7
+16,2011-01-01 00:00:08,S0,8
+17,2011-01-01 00:00:08.001,S1,8
+18,2011-01-01 00:00:09,S0,9
+19,2011-01-01 00:00:09,S1,9
 !end
 #
 #   Futures by name (official example)
 #
 test select name from securities where symbol == 'ESZ11'
 >_,TIMESTAMP,SYMBOL,TYPE,name
-0,2011-04-06 01:47:24.194,ESZ11,FUTURE,S&P 500 E-Mini Dec11
+0,2011-04-06 01:47:24.194,ESZ11,S&P 500 E-Mini Dec11
 !end
 #
 #   Futures by root (official example)
 #
 test select distinct symbol from securities where rootSymbol == 'ES'
 >_,TIMESTAMP,SYMBOL,TYPE,$SYMBOL
-0,_,,SYSTEM,ESZ11
-1,_,,SYSTEM,ESU11
+0,_,,ESZ11
+1,_,,ESU11
 !end
 #
 #   Futures by root (in condition)
 #
 test select distinct symbol from securities where rootSymbol IN ('ES')
 >_,TIMESTAMP,SYMBOL,TYPE,$SYMBOL
-0,_,,SYSTEM,ESZ11
-1,_,,SYSTEM,ESU11
+0,_,,ESZ11
+1,_,,ESU11
 !end
 #
 #   By symbol (official example)
@@ -54,7 +54,7 @@ test select distinct symbol from securities where rootSymbol IN ('ES')
 set max 1
 test select symbol from alltypes where symbol=='S1'
 >_,TIMESTAMP,SYMBOL,TYPE,$SYMBOL
-0,2011-01-01 00:00:00.001,S1,CUSTOM,S1
+0,2011-01-01 00:00:00.001,S1,S1
 !end
 #
 #   Static expression
@@ -63,14 +63,14 @@ set max 100
 test select null as nullcol, 38 as intcol
 >_,TIMESTAMP,SYMBOL,TYPE,NULLCOL,INTCOL
 >>,,,,_,38
-0,_,,CUSTOM
+0,_,
 !end
 #
 #   Select from void message source
 #
 test select *
 >VOID,TIMESTAMP,SYMBOL,TYPE
-0,_,,CUSTOM
+0,_,
 !end
 #
 #   Select constant
@@ -78,42 +78,42 @@ test select *
 test select 1
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,1
-0,_,,CUSTOM
+0,_,
 !end
 #
 #   Select without a list
 #
 test select
 >_,TIMESTAMP,SYMBOL,TYPE
-0,_,,CUSTOM
+0,_,
 !end
 #
 #   distinct between
 #
 test select distinct sequence from alltypes where sequence between 4 and 8
 >_,TIMESTAMP,SYMBOL,TYPE,sequence
-0,_,,SYSTEM,4
-1,_,,SYSTEM,5
-2,_,,SYSTEM,6
-3,_,,SYSTEM,7
-4,_,,SYSTEM,8
+0,_,,4
+1,_,,5
+2,_,,6
+3,_,,7
+4,_,,8
 !end
 #
 #   in condition
 #
 test select distinct sequence from alltypes where sequence IN (4,8)
 >_,TIMESTAMP,SYMBOL,TYPE,sequence
-0,_,,SYSTEM,4
-1,_,,SYSTEM,8
+0,_,,4
+1,_,,8
 !end
 #
 #   logic precedence
 #
 test select distinct sequence from alltypes where sequence < 4 and not sequence < 2 or sequence > 98
 >_,TIMESTAMP,SYMBOL,TYPE,sequence
-0,_,,SYSTEM,2
-1,_,,SYSTEM,3
-2,_,,SYSTEM,99
+0,_,,2
+1,_,,3
+2,_,,99
 !end
 #
 #   binary type
@@ -121,19 +121,19 @@ test select distinct sequence from alltypes where sequence < 4 and not sequence 
 set max 5
 test select binary_n from alltypes
 >_,TIMESTAMP,SYMBOL,TYPE,binary_n
-0,2011-01-01 00:00:00,S0,CUSTOM,
-1,2011-01-01 00:00:00.001,S1,CUSTOM,
-2,2011-01-01 00:00:01,S0,CUSTOM,01
-3,2011-01-01 00:00:01,S1,CUSTOM,01
-4,2011-01-01 00:00:02,S0,CUSTOM,0202
+0,2011-01-01 00:00:00,S0,
+1,2011-01-01 00:00:00.001,S1,
+2,2011-01-01 00:00:01,S0,01
+3,2011-01-01 00:00:01,S1,01
+4,2011-01-01 00:00:02,S0,0202
 !end
 
 test select distinct(binary_n) from alltypes where sequence < 4
 >_,TIMESTAMP,SYMBOL,TYPE,binary_n
-0,_,,SYSTEM,
-1,_,,SYSTEM,01
-2,_,,SYSTEM,0202
-3,_,,SYSTEM,030303
+0,_,,
+1,_,,01
+2,_,,0202
+3,_,,030303
 !end
 
 set max 20

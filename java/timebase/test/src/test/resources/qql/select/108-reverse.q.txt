@@ -3,5 +3,5 @@
 #
 test select first (*) from reverse (tickquerydemo)
 >deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
-0,2011-10-17 17:21:44,GREATCO,EQUITY,44.0,100.0
+0,2011-10-17 17:21:44,GREATCO,44.0,100.0
 !end

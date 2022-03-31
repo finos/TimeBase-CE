@@ -1,59 +1,59 @@
 set printJson false
 test select first{}(boolField), first{}(boolNullableField), last{}(boolField), last{}(boolNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(boolField),FIRST{}(boolNullableField),boolField,boolNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,false,false,true,false
+0,2021-04-19 12:13:16.646,S3,false,false,true,false
 !end
 test select first{}(binaryField), first{}(binaryNullableField), last{}(binaryField), last{}(binaryNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(binaryField),FIRST{}(binaryNullableField),binaryField,binaryNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,#F6AF422F,#4847DCE1,#0534F809,_
+0,2021-04-19 12:13:16.646,S3,#F6AF422F,#4847DCE1,#0534F809,_
 !end
 test select first{}(byteField), first{}(byteNullableField), last{}(byteField), last{}(byteNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(byteField),FIRST{}(byteNullableField),byteField,byteNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,42,123,-29,-78
+0,2021-04-19 12:13:16.646,S3,42,123,-29,-78
 !end
 test select first{}(shortField), first{}(shortNullableField), last{}(shortField), last{}(shortNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(shortField),FIRST{}(shortNullableField),shortField,shortNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,29137,_,-12442,7886
+0,2021-04-19 12:13:16.646,S3,29137,_,-12442,7886
 !end
 test select first{}(intField), first{}(intNullableField), last{}(intField), last{}(intNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(intField),FIRST{}(intNullableField),intField,intNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,1187042131,_,-1291529235,-262869128
+0,2021-04-19 12:13:16.646,S3,1187042131,_,-1291529235,-262869128
 !end
 test select first{}(longField), first{}(longNullableField), last{}(longField), last{}(longNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(longField),FIRST{}(longNullableField),longField,longNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,-4455585974335323739,_,-2505859202681297432,4196738096688441686
+0,2021-04-19 12:13:16.646,S3,-4455585974335323739,_,-2505859202681297432,4196738096688441686
 !end
 test select first{}(doubleField), first{}(doubleNullableField), last{}(doubleField), last{}(doubleNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(doubleField),FIRST{}(doubleNullableField),doubleField,doubleNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,575.3601252120983,558.6796537746641,176.94144625685294,988.2214307766836
+0,2021-04-19 12:13:16.646,S3,575.3601252120983,558.6796537746641,176.94144625685294,988.2214307766836
 !end
 test select first{}(floatField), first{}(floatNullableField), last{}(floatField), last{}(floatNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(floatField),FIRST{}(floatNullableField),floatField,floatNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,722.7768,639.29114,680.54486,_
+0,2021-04-19 12:13:16.646,S3,722.7768,639.29114,680.54486,_
 !end
 test select first{}(decimalField), first{}(decimalNullableField), last{}(decimalField), last{}(decimalNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(decimalField),FIRST{}(decimalNullableField),decimalField,decimalNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,949.205300891957,651.6746355126851,306.9859898859655,_
+0,2021-04-19 12:13:16.646,S3,949.205300891957,651.6746355126851,306.9859898859655,_
 !end
 test select first{}(textAlphaNumericField), first{}(textAlphaNumericNullableField), last{}(textAlphaNumericField), last{}(textAlphaNumericNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(textAlphaNumericField),FIRST{}(textAlphaNumericNullableField),textAlphaNumericField,textAlphaNumericNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,;7]0+$/MX[,A41[(I5[[J,]2/;T/C5Z/,_
+0,2021-04-19 12:13:16.646,S3,;7]0+$/MX[,A41[(I5[[J,]2/;T/C5Z/,_
 !end
 test select first{}(asciiTextField), first{}(asciiTextNullableField), last{}(asciiTextField), last{}(asciiTextNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(asciiTextField),FIRST{}(asciiTextNullableField),asciiTextField,asciiTextNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,=0n n-WH,_,".C,k+IjS",_
+0,2021-04-19 12:13:16.646,S3,=0n n-WH,_,".C,k+IjS",_
 !end
 test select first{}(timeOfDayField), first{}(timeOfDayNullableField), last{}(timeOfDayField), last{}(timeOfDayNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(timeOfDayField),FIRST{}(timeOfDayNullableField),timeOfDayField,timeOfDayNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,00:00,_,00:00,_
+0,2021-04-19 12:13:16.646,S3,00:00,_,00:00,_
 !end
 test select first{}(timestampField), first{}(timestampNullableField), last{}(timestampField), last{}(timestampNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(timestampField),FIRST{}(timestampNullableField),timestampField,timestampNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,2021-04-06 14:26:34.460,_,2021-04-17 06:24:27.380,_
+0,2021-04-19 12:13:16.646,S3,2021-04-06 14:26:34.460,_,2021-04-17 06:24:27.380,_
 !end
 test select first{}(enumField), first{}(enumNullableField), last{}(enumField), last{}(enumNullableField) from "1min-1h-1h-3"
 >_,TIMESTAMP,SYMBOL,TYPE,FIRST{}(enumField),FIRST{}(enumNullableField),enumField,enumNullableField
-0,2021-04-19 12:13:16.646,S3,CUSTOM,ZERO,_,THREE,_
+0,2021-04-19 12:13:16.646,S3,ZERO,_,THREE,_
 !end
 set printJson true
 #

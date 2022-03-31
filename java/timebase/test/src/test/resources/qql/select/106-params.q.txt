@@ -9,11 +9,11 @@ param add s varchar qql is awesome
 #
 test select s
 >_,TIMESTAMP,SYMBOL,TYPE,S
-0,_,,CUSTOM,qql is awesome
+0,_,,qql is awesome
 !end
 test select s
 >_,TIMESTAMP,SYMBOL,TYPE,S
-0,_,,CUSTOM,qql is awesome
+0,_,,qql is awesome
 !end
 #
 #   Make sure parameter values are not cached
@@ -21,16 +21,16 @@ test select s
 param set s qql wins
 test select s
 >_,TIMESTAMP,SYMBOL,TYPE,S
-0,_,,CUSTOM,qql wins
+0,_,,qql wins
 !end
 #
 #   Now try using parameters in dynamic queries
 #
 test select count{}() from alltypes where sequence > n
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:39,S1,CUSTOM,190
+0,2011-01-01 00:01:39,S1,190
 !end
 test select count{}() from alltypes where sequence > n
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:39,S1,CUSTOM,190
+0,2011-01-01 00:01:39,S1,190
 !end

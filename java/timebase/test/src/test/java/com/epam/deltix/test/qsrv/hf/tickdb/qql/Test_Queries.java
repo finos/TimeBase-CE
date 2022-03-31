@@ -16,11 +16,10 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb.qql;
 
-import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.TickDBShell;
 import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.lang.Util;
-import org.junit.Ignore;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -43,6 +42,11 @@ public class Test_Queries {
         } finally {
             Util.close(shell.dbmgr.getDB());
         }
+    }
+
+    @BeforeClass
+    public static void prepareHome() {
+        Home.getFile("testdata/tickdb/qqltest").mkdirs();
     }
 
     @Test

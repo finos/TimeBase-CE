@@ -328,38 +328,34 @@ public class ImportExportHelper {
 
     private static SchemaMapping getSchemaMapping(RecordClassDescriptor[] inTypes, RecordClassDescriptor[] outTypes) {
         SchemaMapping mapping = new SchemaMapping();
-        //todo
-//        ClassMappings classMappings = new ClassMappings();
-//        HashMap<String, RecordClassDescriptor> map = new HashMap<>();
-//        if (outTypes != null) {
-//            for (RecordClassDescriptor outType : outTypes) {
-//                map.put(outType.getName(), outType);
-//            }
-//        }
-//        if (inTypes != null) {
-//            for (RecordClassDescriptor inType : inTypes) {
-//                String name = inType.getName();
-//                String classMapping = classMappings.getClassName(name);
-//                if (classMapping != null) {
-//                    mapping.descriptors.put(inType.getGuid(), map.get(classMapping).getGuid());
-//                }
-//            }
-//        }
+        HashMap<String, RecordClassDescriptor> map = new HashMap<>();
+        if (outTypes != null) {
+            for (RecordClassDescriptor outType : outTypes) {
+                map.put(outType.getName(), outType);
+            }
+        }
+        if (inTypes != null) {
+            for (RecordClassDescriptor inType : inTypes) {
+                String name = inType.getName();
+                String classMapping = name;
+                if (classMapping != null) {
+                    mapping.descriptors.put(inType.getGuid(), map.get(classMapping).getGuid());
+                }
+            }
+        }
         return mapping;
     }
 
     private static RecordClassDescriptor find(RecordClassDescriptor[] types, RecordClassDescriptor type) {
-        //todo:
-//        ClassMappings classMappings = new ClassMappings();
-//        String newName = classMappings.getClassName(type.getName());
-//        for (RecordClassDescriptor desc : types) {
-//            if (type.getName().compareTo(desc.getName()) == 0) {
-//                return desc;
-//            }
-//            if (newName != null && newName.compareTo(desc.getName()) == 0) {
-//                return desc;
-//            }
-//        }
+        String newName = type.getName();
+        for (RecordClassDescriptor desc : types) {
+            if (type.getName().compareTo(desc.getName()) == 0) {
+                return desc;
+            }
+            if (newName != null && newName.compareTo(desc.getName()) == 0) {
+                return desc;
+            }
+        }
         return null;
     }
 

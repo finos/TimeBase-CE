@@ -170,7 +170,7 @@ public class TickDBShell extends AbstractShell {
         }
 
         if (option.equalsIgnoreCase ("src")) {            
-            srcMsgFile = new File (value);
+            srcMsgFile = new File (expandPath(value));
 
             if (srcMsgFile.canRead()) {
                 if (!Util.QUIET)

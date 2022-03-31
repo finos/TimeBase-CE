@@ -4,72 +4,72 @@
 set max 100
 test select * from tickquerydemo
 >deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
-0,2011-10-17 17:21:40,GREATCO,EQUITY,43.5,100.0,42.5,200.0
-1,2011-10-17 17:21:40,XBANK,EQUITY,301.75,40000.0,301.25,800.0
+0,2011-10-17 17:21:40,GREATCO,43.5,100.0,42.5,200.0
+1,2011-10-17 17:21:40,XBANK,301.75,40000.0,301.25,800.0
 >deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
-2,2011-10-17 17:21:41,XBANK,EQUITY,301.25,800.0
+2,2011-10-17 17:21:41,XBANK,301.25,800.0
 >deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
-3,2011-10-17 17:21:42,XBANK,EQUITY,301.5,60000.0,298.5,800.0
-4,2011-10-17 17:21:43,GREATCO,EQUITY,45.0,100.0,43.0,400.0
-5,2011-10-17 17:21:43,XBANK,EQUITY,299.5,40000.0,295.0,300.0
+3,2011-10-17 17:21:42,XBANK,301.5,60000.0,298.5,800.0
+4,2011-10-17 17:21:43,GREATCO,45.0,100.0,43.0,400.0
+5,2011-10-17 17:21:43,XBANK,299.5,40000.0,295.0,300.0
 >deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
-6,2011-10-17 17:21:44,GREATCO,EQUITY,44.0,100.0
+6,2011-10-17 17:21:44,GREATCO,44.0,100.0
 !end
 #
 #   Discover symbols
 #
 test select distinct symbol from securities
 >_,TIMESTAMP,SYMBOL,TYPE,$SYMBOL
-0,_,,SYSTEM,ESZ11
-1,_,,SYSTEM,NQZ11
-2,_,,SYSTEM,ESU11
-3,_,,SYSTEM,NQU11
-4,_,,SYSTEM,AAPL
-5,_,,SYSTEM,GOOG
+0,_,,ESZ11
+1,_,,NQZ11
+2,_,,ESU11
+3,_,,NQU11
+4,_,,AAPL
+5,_,,GOOG
 !end
 test select distinct symbol as sym from securities
 >_,TIMESTAMP,SYMBOL,TYPE,SYM
-0,_,,SYSTEM,ESZ11
-1,_,,SYSTEM,NQZ11
-2,_,,SYSTEM,ESU11
-3,_,,SYSTEM,NQU11
-4,_,,SYSTEM,AAPL
-5,_,,SYSTEM,GOOG
+0,_,,ESZ11
+1,_,,NQZ11
+2,_,,ESU11
+3,_,,NQU11
+4,_,,AAPL
+5,_,,GOOG
 !end
 test select distinct symbol as "*Symbol*" from securities
 >_,TIMESTAMP,SYMBOL,TYPE,*Symbol*
-0,_,,SYSTEM,ESZ11
-1,_,,SYSTEM,NQZ11
-2,_,,SYSTEM,ESU11
-3,_,,SYSTEM,NQU11
-4,_,,SYSTEM,AAPL
-5,_,,SYSTEM,GOOG
+0,_,,ESZ11
+1,_,,NQZ11
+2,_,,ESU11
+3,_,,NQU11
+4,_,,AAPL
+5,_,,GOOG
 !end
 #
 #   By symbol
 #
 test select * from tickquerydemo where symbol == 'XBANK'
 >deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
-0,2011-10-17 17:21:40,XBANK,EQUITY,301.75,40000.0,301.25,800.0
+0,2011-10-17 17:21:40,XBANK,301.75,40000.0,301.25,800.0
 >deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
-1,2011-10-17 17:21:41,XBANK,EQUITY,301.25,800.0
+1,2011-10-17 17:21:41,XBANK,301.25,800.0
 >deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
-2,2011-10-17 17:21:42,XBANK,EQUITY,301.5,60000.0,298.5,800.0
-3,2011-10-17 17:21:43,XBANK,EQUITY,299.5,40000.0,295.0,300.0
+2,2011-10-17 17:21:42,XBANK,301.5,60000.0,298.5,800.0
+3,2011-10-17 17:21:43,XBANK,299.5,40000.0,295.0,300.0
 !end
 #
 #   Confusing query
 #
 test select * from tickquerydemo where price > 300
 >deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
-0,2011-10-17 17:21:41,XBANK,EQUITY,301.25,800.0
+0,2011-10-17 17:21:41,XBANK,301.25,800.0
 !end
 #
 #   Correct filter by price
 #
 test select * from tickquerydemo where price > 300 and this is deltix.timebase.api.messages.TradeMessage
 >deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
-0,2011-10-17 17:21:41,XBANK,EQUITY,301.25,800.0
+0,2011-10-17 17:21:41,XBANK,301.25,800.0
 !end
 #
 #   Errors
@@ -82,90 +82,90 @@ test select * from tickquerydemo where symbol == "XBANK"
 #
 test select * from tIcKquErydeMO where priCE > 300 and this is deltix.timebase.api.messages.tRADEmESSAGE
 >deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
-0,2011-10-17 17:21:41,XBANK,EQUITY,301.25,800.0
+0,2011-10-17 17:21:41,XBANK,301.25,800.0
 !end
 #
 #   Polymorphic queries with and without GROUP BY
 #
 test select price, bidPrice, offerPrice from tickquerydemo
 >_,TIMESTAMP,SYMBOL,TYPE,price,bidPrice,offerPrice
-0,2011-10-17 17:21:40,GREATCO,EQUITY,_,42.5,43.5
-1,2011-10-17 17:21:40,XBANK,EQUITY,_,301.25,301.75
-2,2011-10-17 17:21:41,XBANK,EQUITY,301.25,_,_
-3,2011-10-17 17:21:42,XBANK,EQUITY,_,298.5,301.5
-4,2011-10-17 17:21:43,GREATCO,EQUITY,_,43.0,45.0
-5,2011-10-17 17:21:43,XBANK,EQUITY,_,295.0,299.5
-6,2011-10-17 17:21:44,GREATCO,EQUITY,44.0,_,_
+0,2011-10-17 17:21:40,GREATCO,_,42.5,43.5
+1,2011-10-17 17:21:40,XBANK,_,301.25,301.75
+2,2011-10-17 17:21:41,XBANK,301.25,_,_
+3,2011-10-17 17:21:42,XBANK,_,298.5,301.5
+4,2011-10-17 17:21:43,GREATCO,_,43.0,45.0
+5,2011-10-17 17:21:43,XBANK,_,295.0,299.5
+6,2011-10-17 17:21:44,GREATCO,44.0,_,_
 !end
 test select price, bidPrice, offerPrice from tickquerydemo group by symbol
 >_,TIMESTAMP,SYMBOL,TYPE,price,bidPrice,offerPrice
-0,2011-10-17 17:21:44,GREATCO,EQUITY,44.0,_,_
-1,2011-10-17 17:21:43,XBANK,EQUITY,_,295.0,299.5
+0,2011-10-17 17:21:44,GREATCO,44.0,_,_
+1,2011-10-17 17:21:43,XBANK,_,295.0,299.5
 !end
 #
 #   Aggregates chapter
 #
 test select count{}() from securities
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-10-26 18:47:18.381,GOOG,EQUITY,6
+0,2011-10-26 18:47:18.381,GOOG,6
 !end
 test select count{}() from tickquerydemo group by symbol
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-10-17 17:21:44,GREATCO,EQUITY,3
-1,2011-10-17 17:21:43,XBANK,EQUITY,4
+0,2011-10-17 17:21:44,GREATCO,3
+1,2011-10-17 17:21:43,XBANK,4
 !end
 test select min{}(price), max{}(price) from tickquerydemo
 >_,TIMESTAMP,SYMBOL,TYPE,MIN{}(price),MAX{}(price)
-0,2011-10-17 17:21:44,GREATCO,EQUITY,44.0,301.25
+0,2011-10-17 17:21:44,GREATCO,44.0,301.25
 !end
 test select min{}(bidPrice), max{}(bidPrice) from tickquerydemo group by symbol
 >_,TIMESTAMP,SYMBOL,TYPE,MIN{}(bidPrice),MAX{}(bidPrice)
-0,2011-10-17 17:21:44,GREATCO,EQUITY,42.5,43.0
-1,2011-10-17 17:21:43,XBANK,EQUITY,295.0,301.25
+0,2011-10-17 17:21:44,GREATCO,42.5,43.0
+1,2011-10-17 17:21:43,XBANK,295.0,301.25
 !end
 #
 #   MAX (expr)
 #
 test select max{}(offerPrice - bidPrice) as maxspread from tickquerydemo group by symbol
 >_,TIMESTAMP,SYMBOL,TYPE,MAXSPREAD
-0,2011-10-17 17:21:44,GREATCO,EQUITY,2.0
-1,2011-10-17 17:21:43,XBANK,EQUITY,4.5
+0,2011-10-17 17:21:44,GREATCO,2.0
+1,2011-10-17 17:21:43,XBANK,4.5
 !end
 #
 test select running count{}(), name from securities
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}(),name
-0,2011-04-06 01:47:24.194,ESZ11,FUTURE,1,S&P 500 E-Mini Dec11
-1,2011-04-06 01:47:40.790,NQZ11,FUTURE,2,Nasdaq 100 E-Mini Dec11
-2,2011-04-06 01:50:55.354,ESU11,FUTURE,3,S&P 500 E-Mini Sep11
-3,2011-04-06 01:51:00.442,NQU11,FUTURE,4,Nasdaq 100 E-Mini Sep11
-4,2011-10-26 18:45:11.952,AAPL,EQUITY,5,Apple Inc
-5,2011-10-26 18:47:18.381,GOOG,EQUITY,6,Google
+0,2011-04-06 01:47:24.194,ESZ11,1,S&P 500 E-Mini Dec11
+1,2011-04-06 01:47:40.790,NQZ11,2,Nasdaq 100 E-Mini Dec11
+2,2011-04-06 01:50:55.354,ESU11,3,S&P 500 E-Mini Sep11
+3,2011-04-06 01:51:00.442,NQU11,4,Nasdaq 100 E-Mini Sep11
+4,2011-10-26 18:45:11.952,AAPL,5,Apple Inc
+5,2011-10-26 18:47:18.381,GOOG,6,Google
 !end
 test select running count{}(), price, bidPrice, offerPrice from tickquerydemo group by symbol
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}(),price,bidPrice,offerPrice
-0,2011-10-17 17:21:40,GREATCO,EQUITY,1,_,42.5,43.5
-1,2011-10-17 17:21:40,XBANK,EQUITY,1,_,301.25,301.75
-2,2011-10-17 17:21:41,XBANK,EQUITY,2,301.25,_,_
-3,2011-10-17 17:21:42,XBANK,EQUITY,3,_,298.5,301.5
-4,2011-10-17 17:21:43,GREATCO,EQUITY,2,_,43.0,45.0
-5,2011-10-17 17:21:43,XBANK,EQUITY,4,_,295.0,299.5
-6,2011-10-17 17:21:44,GREATCO,EQUITY,3,44.0,_,_
+0,2011-10-17 17:21:40,GREATCO,1,_,42.5,43.5
+1,2011-10-17 17:21:40,XBANK,1,_,301.25,301.75
+2,2011-10-17 17:21:41,XBANK,2,301.25,_,_
+3,2011-10-17 17:21:42,XBANK,3,_,298.5,301.5
+4,2011-10-17 17:21:43,GREATCO,2,_,43.0,45.0
+5,2011-10-17 17:21:43,XBANK,4,_,295.0,299.5
+6,2011-10-17 17:21:44,GREATCO,3,44.0,_,_
 !end
 #
 #   FIRST (*)
 #
 test select first (*) from tickquerydemo
 >deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
-0,2011-10-17 17:21:40,GREATCO,EQUITY,43.5,100.0,42.5,200.0
+0,2011-10-17 17:21:40,GREATCO,43.5,100.0,42.5,200.0
 !end
 #
 test select first (*) from tickquerydemo group by symbol
 >deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
-0,2011-10-17 17:21:40,GREATCO,EQUITY,43.5,100.0,42.5,200.0
-1,2011-10-17 17:21:40,XBANK,EQUITY,301.75,40000.0,301.25,800.0
+0,2011-10-17 17:21:40,GREATCO,43.5,100.0,42.5,200.0
+1,2011-10-17 17:21:40,XBANK,301.75,40000.0,301.25,800.0
 !end
 #
 test select first (*) from tickquerydemo where symbol=='XBANK' and offerPrice < 301.6
 >deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
-0,2011-10-17 17:21:42,XBANK,EQUITY,301.5,60000.0,298.5,800.0
+0,2011-10-17 17:21:42,XBANK,301.5,60000.0,298.5,800.0
 !end

@@ -3,7 +3,7 @@
 #
 test select count{}() from alltypes where enum_n == RED
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:36.001,S1,CUSTOM,60
+0,2011-01-01 00:01:36.001,S1,60
 !end
 
 #
@@ -11,7 +11,7 @@ test select count{}() from alltypes where enum_n == RED
 #
 test select count{}() from alltypes where enum_n IN (RED, BLUE)
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:38.001,S1,CUSTOM,120
+0,2011-01-01 00:01:38.001,S1,120
 !end
 
 #
@@ -19,30 +19,30 @@ test select count{}() from alltypes where enum_n IN (RED, BLUE)
 #
 test select count{}() from alltypes where enum_n is null
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:39,S1,CUSTOM,20
+0,2011-01-01 00:01:39,S1,20
 !end
 test select count{}() from alltypes where enum_n is not null
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:38.001,S1,CUSTOM,180
+0,2011-01-01 00:01:38.001,S1,180
 !end
 test select count{}() from alltypes where not enum_n is null
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:38.001,S1,CUSTOM,180
+0,2011-01-01 00:01:38.001,S1,180
 !end
 #
 #   (!)= null
 #
 test select count{}() from alltypes where enum_n == null
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:39,S1,CUSTOM,20
+0,2011-01-01 00:01:39,S1,20
 !end
 test select count{}() from alltypes where enum_n != null
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:38.001,S1,CUSTOM,180
+0,2011-01-01 00:01:38.001,S1,180
 !end
 test select count{}() from alltypes where not enum_n == null
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}()
-0,2011-01-01 00:01:38.001,S1,CUSTOM,180
+0,2011-01-01 00:01:38.001,S1,180
 !end
 #
 #   enum_n != enum_n  ==> false

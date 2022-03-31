@@ -84,9 +84,9 @@ CREATE DURABLE STREAM "custom" 'custom name' (
 )
 COMMENT 'custom description'
 /
->deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
-0,*,,SYSTEM,_,SUCCESS,INFO,Stream created,0
+0,*,,_,SUCCESS,INFO,Stream created,0
 !end
 #
 #   Describe
@@ -179,7 +179,7 @@ COMMENT 'custom description'
 #   Drop stream via qql
 #
 test drop stream custom
->deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
-0,*,,SYSTEM,_,SUCCESS,INFO,Stream dropped,0
+0,*,,_,SUCCESS,INFO,Stream dropped,0
 !end

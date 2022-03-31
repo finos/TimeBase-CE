@@ -61,7 +61,7 @@ public class SelectionOptions extends CommonOptions {
 
     /**
      *  When true, allows receiving notification messages
-     *  {@link deltix.timebase.api.messages.service.StreamTruncatedMessage}, {@link deltix.timebase.api.messages.service.MetaDataChangeMessage}
+     *  {@link deltix.timebase.messages.service.StreamTruncatedMessage}, {@link deltix.timebase.messages.service.MetaDataChangeMessage}
      *  and {@link deltix.timebase.messages.schema.SchemaChangeMessage}
      *  when stream is truncated / stream metadata is changed.
      */

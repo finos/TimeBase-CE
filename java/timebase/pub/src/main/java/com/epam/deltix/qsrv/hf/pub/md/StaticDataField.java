@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
+import java.util.Map;
 
 import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.readNullableString;
 import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.writeNullableString;
@@ -154,7 +155,6 @@ public final class StaticDataField extends DataField {
     }
 
     @Override
-    public void setAttributes(Hashtable<String, String> attrs) {
-
+    public void setAttributes(Map<String, String> attrs) {
     }
 }

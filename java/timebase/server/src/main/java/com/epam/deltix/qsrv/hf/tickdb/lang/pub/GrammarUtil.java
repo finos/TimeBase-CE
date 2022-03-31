@@ -515,7 +515,7 @@ public class GrammarUtil {
         printComment (" ", df, out);
     }
 
-    private static void describe(Writer out, Hashtable<String, String> allTags) throws IOException {
+    private static void describe(Writer out, Map<String, String> allTags) throws IOException {
         if (allTags != null) {
             // todo: temporary hack (displayIdentifier is always presents in the map)
             // skip displayIdentifier if it false

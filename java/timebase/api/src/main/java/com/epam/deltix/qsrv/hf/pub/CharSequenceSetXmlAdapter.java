@@ -21,7 +21,7 @@ import com.epam.deltix.util.collections.CharSequenceSet;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 /**
- * Converts a {@link deltix.util.collections.CharSequenceSet} object to a String and vice versa.
+ * Converts a {@link com.epam.deltix.util.collections.CharSequenceSet} object to a String and vice versa.
  */
 public class CharSequenceSetXmlAdapter extends XmlAdapter<String, CharSequenceSet> {
 

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
+import java.util.Map;
 
 /**
  *
@@ -159,10 +160,10 @@ public abstract class DataField extends NamedDescriptor {
     /*
         Returns custom attributes associated with this field.
      */
-    public abstract Hashtable<String, String>   getAttributes();
+    public abstract Map<String, String> getAttributes();
 
     /*
         Set custom attributes for this instance.
      */
-    public abstract void                        setAttributes(Hashtable<String, String> attrs);
+    public abstract void                setAttributes(Map<String, String> attrs);
 }

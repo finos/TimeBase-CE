@@ -35,27 +35,29 @@ import com.epam.deltix.util.JUnitCategories.TickDBQQL;
 @Category(TickDBQQL.class)
 public class Test_Queries {
 
-    public void             test (String path)
-        throws IOException, InterruptedException 
-    {
-        TickDBShell             shell = new TickDBShell ();
-        
+    public void test(String path) throws IOException, InterruptedException {
+        TickDBShell shell = new TickDBShell();
         try {
-            shell.doExec (path);
-            assertEquals (0, shell.getErrorCode ());
+            shell.doExec(path);
+            assertEquals(0, shell.getErrorCode());
         } finally {
-            Util.close (shell.dbmgr.getDB ());
-        }        
-    }
-    
-    @Ignore()
-    public void             testSelect () throws Exception {
-        test ("${home}/java/timebase/client/src/test/java/qql/select/*.q.txt");
+            Util.close(shell.dbmgr.getDB());
+        }
     }
 
-    @Test()
-    public void             testDDL () throws Exception {
-        test ("${home}/java/timebase/client/src/test/java/qql/ddl/*.q.txt");
+    @Test
+    public void testSelect() throws Exception {
+        test("${home}/java/timebase/test/src/test/resources/qql/select/*.q.txt");
+    }
+
+    @Test
+    public void testDDL() throws Exception {
+        test("${home}/java/timebase/test/src/test/resources/qql/ddl/*.q.txt");
+    }
+
+    @Test
+    public void testComputations() throws Exception {
+        test("${home}/java/timebase/test/src/test/resources/qql/computations/*.q.txt");
     }
 
 //    @Test()

@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.readNullableString;
 import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.writeNullableString;
@@ -40,6 +42,9 @@ public final class NonStaticDataField extends DataField {
 
     @XmlElement (name = "relativeTo")
     private String            relativeTo;
+
+    @XmlElement(name = "tags")
+    Attributes                tags;
 
     /**
      *  JAXB constructor
@@ -166,6 +171,18 @@ public final class NonStaticDataField extends DataField {
         writeNullableString (relativeTo, out);
         if (serial == 1)
             out.writeBoolean (false);
+
+        out.writeInt(tags != null ? tags.items.size() : -1);
+
+        if (tags != null) {
+            for (int i = 0; i < tags.items.size(); i++) {
+                MapElement e = tags.items.get(i);
+                out.writeUTF(e.name);
+                out.writeBoolean(e.value != null);
+                if (e.value != null)
+                    out.writeUTF(e.value);
+            }
+        }
     }
 
     @Override
@@ -182,14 +199,41 @@ public final class NonStaticDataField extends DataField {
         relativeTo = readNullableString (in);
         if (serial == 1)
             in.readBoolean();
+
+        int length = in.readInt();
+        if (length != -1) {
+            tags = new Attributes();
+
+            for (int i = 0; i < length; i++) {
+                String name = in.readUTF();
+                String value = null;
+                boolean isNull = in.readBoolean();
+                if (!isNull)
+                    value = in.readUTF();
+                tags.items.add(new MapElement(name, value));
+            }
+        } else {
+            tags = null;
+        }
     }
 
     @Override
-    public void         setAttributes(Hashtable<String, String> attrs) {
+    public void                     setAttributes(Map<String, String> attrs) {
+        if (attrs != null) {
+            tags = new Attributes();
+            for (var e : attrs.entrySet())
+                tags.items.add(new MapElement(e.getKey(), e.getValue()));
+        } else {
+            tags = null;
+        }
     }
 
     @Override
-    public Hashtable<String, String> getAttributes() {
-        return new Hashtable<String, String>();
+    public Map<String, String>      getAttributes() {
+
+        if (tags != null)
+            return tags.items.stream().collect(Collectors.toMap(MapElement::getName, MapElement::getValue));
+
+        return null;
     }
 }

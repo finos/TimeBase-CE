@@ -28,9 +28,9 @@ import java.util.Map;
 public class Attributes {
 
     @XmlElement(name = "item")
-    public ArrayList<MapElement> items = new ArrayList<>();
+    public ArrayList<MapItem> items = new ArrayList<>();
 
-    public Attributes(ArrayList<MapElement> items) {
+    public Attributes(ArrayList<MapItem> items) {
         this.items = items;
     }
 
@@ -42,7 +42,7 @@ public class Attributes {
     }
 }
 
-class MapElement {
+class MapItem {
 
     @XmlElement()
     public String   name;
@@ -50,9 +50,9 @@ class MapElement {
     @XmlElement()
     public String   value;
 
-    private MapElement() { } //Required by JAXB
+    private MapItem() { } //Required by JAXB
 
-    public MapElement(String name, String value) {
+    public MapItem(String name, String value) {
         this.name = name;
         this.value = value;
     }
@@ -74,29 +74,29 @@ class MapElement {
     }
 }
 
-class MapAdapter extends XmlAdapter<MapElement[], Map<String, String>> {
+class MapAdapter extends XmlAdapter<MapItem[], Map<String, String>> {
     public MapAdapter() {
     }
 
-    public MapElement[] marshal(Map<String, String> map) throws Exception {
-        MapElement[] mapElements = null;
+    public MapItem[] marshal(Map<String, String> map) throws Exception {
+        MapItem[] mapElements = null;
 
         if (map != null) {
-            mapElements = new MapElement[map.size()];
+            mapElements = new MapItem[map.size()];
             int i = 0;
             for (Map.Entry<String, String> entry : map.entrySet())
-                mapElements[i++] = new MapElement(entry.getKey(), entry.getValue());
+                mapElements[i++] = new MapItem(entry.getKey(), entry.getValue());
         }
 
         return mapElements;
     }
 
-    public Map<String, String> unmarshal(MapElement[] elements) throws Exception {
+    public Map<String, String> unmarshal(MapItem[] elements) throws Exception {
         Map<String, String> map = null;
 
         if (elements != null) {
             map = new HashMap<>();
-            for (MapElement e : elements)
+            for (MapItem e : elements)
                 map.put(e.name, e.value);
         }
 

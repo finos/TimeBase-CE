@@ -26,7 +26,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -176,7 +175,7 @@ public final class NonStaticDataField extends DataField {
 
         if (tags != null) {
             for (int i = 0; i < tags.items.size(); i++) {
-                MapElement e = tags.items.get(i);
+                MapItem e = tags.items.get(i);
                 out.writeUTF(e.name);
                 out.writeBoolean(e.value != null);
                 if (e.value != null)
@@ -210,7 +209,7 @@ public final class NonStaticDataField extends DataField {
                 boolean isNull = in.readBoolean();
                 if (!isNull)
                     value = in.readUTF();
-                tags.items.add(new MapElement(name, value));
+                tags.items.add(new MapItem(name, value));
             }
         } else {
             tags = null;
@@ -222,7 +221,7 @@ public final class NonStaticDataField extends DataField {
         if (attrs != null) {
             tags = new Attributes();
             for (var e : attrs.entrySet())
-                tags.items.add(new MapElement(e.getKey(), e.getValue()));
+                tags.items.add(new MapItem(e.getKey(), e.getValue()));
         } else {
             tags = null;
         }
@@ -232,7 +231,7 @@ public final class NonStaticDataField extends DataField {
     public Map<String, String>      getAttributes() {
 
         if (tags != null)
-            return tags.items.stream().collect(Collectors.toMap(MapElement::getName, MapElement::getValue));
+            return tags.items.stream().collect(Collectors.toMap(MapItem::getName, MapItem::getValue));
 
         return null;
     }

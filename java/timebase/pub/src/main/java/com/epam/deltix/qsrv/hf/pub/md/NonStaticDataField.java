@@ -168,18 +168,21 @@ public final class NonStaticDataField extends DataField {
 
         out.writeBoolean (pk);
         writeNullableString (relativeTo, out);
-        if (serial == 1)
+
+        if (serial >= 1)
             out.writeBoolean (false);
 
-        out.writeInt(tags != null ? tags.items.size() : -1);
+        if (serial >= 2) {
+            out.writeInt(tags != null ? tags.items.size() : -1);
 
-        if (tags != null) {
-            for (int i = 0; i < tags.items.size(); i++) {
-                MapItem e = tags.items.get(i);
-                out.writeUTF(e.name);
-                out.writeBoolean(e.value != null);
-                if (e.value != null)
-                    out.writeUTF(e.value);
+            if (tags != null) {
+                for (int i = 0; i < tags.items.size(); i++) {
+                    MapItem e = tags.items.get(i);
+                    out.writeUTF(e.name);
+                    out.writeBoolean(e.value != null);
+                    if (e.value != null)
+                        out.writeUTF(e.value);
+                }
             }
         }
     }
@@ -196,23 +199,26 @@ public final class NonStaticDataField extends DataField {
 
         pk = in.readBoolean ();
         relativeTo = readNullableString (in);
-        if (serial == 1)
+        if (serial >= 1)
             in.readBoolean();
 
-        int length = in.readInt();
-        if (length != -1) {
-            tags = new Attributes();
+        // read attributes
+        if (serial >= 2) {
+            int length = in.readInt();
+            if (length != -1) {
+                tags = new Attributes();
 
-            for (int i = 0; i < length; i++) {
-                String name = in.readUTF();
-                String value = null;
-                boolean isNull = in.readBoolean();
-                if (!isNull)
-                    value = in.readUTF();
-                tags.items.add(new MapItem(name, value));
+                for (int i = 0; i < length; i++) {
+                    String name = in.readUTF();
+                    String value = null;
+                    boolean isNull = in.readBoolean();
+                    if (!isNull)
+                        value = in.readUTF();
+                    tags.items.add(new MapItem(name, value));
+                }
+            } else {
+                tags = null;
             }
-        } else {
-            tags = null;
         }
     }
 

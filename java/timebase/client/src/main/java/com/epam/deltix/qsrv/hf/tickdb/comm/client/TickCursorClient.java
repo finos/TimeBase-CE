@@ -132,6 +132,8 @@ class TickCursorClient implements
         @Override
         public int version() {
             int v = conn.getServerProtocolVersion();
+            if (v >= 132)
+                return 2;
             return (v <= 99 || v >= 106) ? 0 : 1;
         }
     });

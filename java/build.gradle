@@ -9,7 +9,7 @@ plugins {
     id "com.github.spotbugs" version "4.2.3" apply false
     id "com.github.hierynomus.license-report" version "0.15.0"
 
-    id 'com.github.jk1.dependency-license-report' version '1.16'
+    id 'com.github.jk1.dependency-license-report' version '1.17'
     id "com.vanniktech.dependency.graph.generator" version "0.5.0"
 }
 
@@ -57,7 +57,7 @@ licenseReport {
 //    }
 
     excludeGroups = ['javax.servlet.*']
-    excludes = ['asm:asm', 'com.sun.codemodel:codemodel-project', 'net.jcip:jcip-annotations']
+    excludes = ['asm:asm', 'com.sun.codemodel:codemodel-project', 'net.jcip:jcip-annotations', 'com.fasterxml.jackson:jackson-bom']
 
     configurations = ['runtimeClasspath']
     allowedLicensesFile = new File("$rootDir/allowed-lic.json")
@@ -89,6 +89,10 @@ configure(leafProjects) {
             // Disable this line on case of version conflict and then run :dependency task OR execute build with --scan option
             failOnVersionConflict()
         }
+
+        // same api defined in javax.annotation-api-*
+        exclude group: 'jakarta.annotation', module: 'jakarta.annotation-api' // GNU license
+
     }
 
     spotbugsMain {
@@ -130,7 +134,7 @@ configure(leafProjects) {
             dependency 'com.epam.deltix:gflog-mail:3.0.1'
 
             dependency 'com.epam.deltix:value-types:0.9.3'
-            dependency 'com.epam.deltix:dfp:0.11.01'
+            dependency 'com.epam.deltix:dfp:0.11.25'
             dependency 'com.epam.deltix:thread-affinity:1.0.4'
             dependency 'com.epam.deltix:hd-date-time:0.2.11'
             dependency 'com.epam.deltix:containers:3.1.2'
@@ -254,11 +258,12 @@ configure(leafProjects) {
 
             dependency 'org.objenesis:objenesis:2.2'
 
-            dependencySet(group: 'com.fasterxml.jackson.core', version: '2.10.5') {
+            dependencySet(group: 'com.fasterxml.jackson.core', version: '2.13.2') {
                 entry 'jackson-core'
                 entry 'jackson-annotations'
             }
-            dependency 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
+            dependency 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
+            dependency 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.2'
 
             dependencySet(group: 'com.squareup.okhttp3', version: '3.3.1') {
                 entry 'okhttp'

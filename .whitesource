@@ -3,7 +3,7 @@
     "configMode": "AUTO",
 	"configExternalURL": "",
 	"projectToken": "",
-	"baseBranches": []
+	"baseBranches": ["release-6.1"]
   },
   "checkRunSettings": {
     "displayMode": "diff",

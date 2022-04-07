@@ -57,6 +57,17 @@ Full clean and build of all modules
     $ ./gradlew clean build
 ```
 
+## Run
+Start TimeBase using [Docker](https://www.docker.com/) 
+
+```
+docker run --rm -d \ 
+    -p 8011:8011 \
+    --name=timebase-server \
+    --ulimit nofile=65536:65536 \
+    finos/timebase-ce-server:6.1
+```    
+
 ## Usage example
 
 https://kb.timebase.info/community/development/libs

@@ -26,7 +26,7 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.CompositePreparedQuery;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.msgsrcs.SingleMessagePreparedQuery;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.PreparedQuery;
-import com.epam.deltix.qsrv.hf.tickdb.schema.SimpleClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.SimpleClassSet;
 import com.epam.deltix.util.jcg.JCompoundStatement;
 import com.epam.deltix.util.lang.JavaCompilerHelper;
 

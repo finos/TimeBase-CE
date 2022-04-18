@@ -119,6 +119,8 @@ public class Test_QQL extends TDBRunnerBase {
 
         DXTickStream stream = db.getStream("bbo");
 
+        db.describeQuery("select * from bbo", new SelectionOptions());
+
         assertEquals("bbo", stream.getName());
 
         try ( InstrumentMessageSource source = db.executeQuery(MODIFY_STATEMENT, new SelectionOptions(true, false)) ) {

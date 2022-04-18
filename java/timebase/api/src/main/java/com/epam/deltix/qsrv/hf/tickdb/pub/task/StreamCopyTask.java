@@ -16,14 +16,12 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.pub.task;
 
-import com.epam.deltix.qsrv.hf.pub.*;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.SimpleClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.schema.*;
-import com.epam.deltix.timebase.messages.IdentityKey;
 
 import javax.xml.bind.annotation.*;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
 
 /**

@@ -135,6 +135,7 @@ CharLiteral =                       \'(([^\n\r\'\\]) | (\\\') | (\\\") | (\\\\) 
     "durable"                       { return symbol (Symbols.DURABLE); }
     "class"                         { return symbol (Symbols.CLASS); }
     "instantiable"                  { return symbol (Symbols.INSTANTIABLE); }
+    "auxiliary"                     { return symbol (Symbols.AUXILIARY); }
     "relative"                      { return symbol (Symbols.RELATIVE); }
     "to"                            { return symbol (Symbols.TO); }
     "comment"                       { return symbol (Symbols.COMMENT); }

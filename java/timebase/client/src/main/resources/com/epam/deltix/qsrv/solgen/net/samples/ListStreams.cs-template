@@ -66,8 +66,7 @@ namespace TimebaseSample
                     foreach (IInstrumentIdentity id in stream.ListEntities())
                     {
                         Console.WriteLine(
-                            "    ENTITY  type: " + id.InstrumentType +
-                            "; symbol: " + id.Symbol.ToString()
+                            "symbol: " + id.Symbol.ToString()
                         );
                     }
                 }

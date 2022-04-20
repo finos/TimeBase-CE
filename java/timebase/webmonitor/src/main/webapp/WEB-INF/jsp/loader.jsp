@@ -151,7 +151,6 @@
                             <tr>
                                 <td align="center">${loop.index}</td>
                                 <td><c:out value="${row.symbol}"/></td>
-                                <td><c:out value="${row.instrumentType}"/></td>
                                 <td align="right"><fmt:formatNumber groupingUsed="true" value="${row.totalNumMessages}"/></td>
                                 <td><fmt:formatDate pattern="yyyy-MM-dd HH:mm:ss.SSS" timeZone="UTC" value="${row.lastMessageDate}"/></td>
                                 <td><fmt:formatDate pattern="yyyy-MM-dd HH:mm:ss.SSS" value="${row.lastMessageSysDate}"/></td>

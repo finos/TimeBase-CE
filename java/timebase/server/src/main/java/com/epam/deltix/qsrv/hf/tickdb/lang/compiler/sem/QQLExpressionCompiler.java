@@ -1234,6 +1234,7 @@ public class QQLExpressionCompiler {
             CompiledExpression cond = null;
             TupleConstructor compiledSelector = null;
             TimestampLimits tslimits = null;
+            SymbolLimits symbolLimits = null;
             GroupBySpec groupBy;
 
             try {
@@ -1267,6 +1268,8 @@ public class QQLExpressionCompiler {
 
                     tslimits =
                         QQLPostProcessingPatterns.adjustTimestampLimits(flatCond, e.getEndTime());
+
+                    symbolLimits = QQLPostProcessingPatterns.symbolLimits(cond);
 
                     cond = QQLPostProcessingPatterns.reconstructConjunction(flatCond);
                 } else {
@@ -1327,6 +1330,7 @@ public class QQLExpressionCompiler {
                 groupBy,
                 compiledSelector,
                 tslimits,
+                symbolLimits,
                 limit,
                 e.getOverExpression()
             );

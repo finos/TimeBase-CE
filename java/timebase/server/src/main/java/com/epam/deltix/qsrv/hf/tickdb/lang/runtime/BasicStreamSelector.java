@@ -62,19 +62,15 @@ public final class BasicStreamSelector implements PreparedQuery {
         
         switch (mode) {
             case NORMAL:
-                options.reversed = false;
-                options.live = false;
                 break;
                 
             case REVERSE:
                 options.reversed = true;
-                options.live = false;
                 break;
                 
             case LIVE:
                 options.live = true;
                 options.realTimeNotification = false;
-                options.reversed = false;
                 break;
                 
             case HYBRID:

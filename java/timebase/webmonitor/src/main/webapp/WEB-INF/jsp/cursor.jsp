@@ -101,7 +101,6 @@
                             <c:when test="${model.cursor.isAllEntitiesSubscribed() == false}">
                                 <c:forEach items="${model.cursor.subscribedEntities}" var="iid">
                                     <tr>
-                                        <td><c:out value="${iid.instrumentType}"/></td>
                                         <td><c:out value="${iid.symbol}"/></td>
                                     </tr>
                                 </c:forEach>
@@ -171,7 +170,6 @@
                         <tr>
                             <td align="center">${loop.index + 1}</td>
                             <td><c:out value="${row.symbol}"/></td>
-                            <td><c:out value="${row.instrumentType}"/></td>
                             <td align="right"><fmt:formatNumber groupingUsed="true" value="${row.totalNumMessages}"/></td>
                             <td><fmt:formatDate pattern="yyyy-MM-dd HH:mm:ss.SSS" timeZone="UTC" value="${row.lastMessageDate}"/></td>
                             <td><fmt:formatDate pattern="yyyy-MM-dd HH:mm:ss.SSS" value="${row.lastMessageSysDate}"/></td>

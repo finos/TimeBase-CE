@@ -230,8 +230,9 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
         if (lastStates == null) {
             return false;
         }
-        if (lastStates.hasMoreElements()) {
+        while (lastStates.hasMoreElements()) {
             writeLast(lastStates.nextElement());
+            if (outMsg.data != null)
             return true;
         }
         lastStates = null;

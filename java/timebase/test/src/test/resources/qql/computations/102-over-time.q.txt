@@ -346,3 +346,5 @@ test select max{}(decimalField), min{}(decimalField) from "1min-1h-1h-3" over ev
 8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:17:00.000Z"}
 9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:18:00.000Z"}
 !end
+test select * from "1min-1h-1h-3" over time(10s) where false
+!end

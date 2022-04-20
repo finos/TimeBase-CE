@@ -140,7 +140,7 @@ cleanup                     Remove entities with no data from the specified stre
 send <JSON array>           Write messages to the specified stream.
 
     Example: ==> set stream bars
-             ==> send [{"type":"deltix.timebase.api.messages.BarMessage","symbol":"BTC/USD","instrumentType":"CUSTOM","timestamp":"2019-11-12T13:39:46.118Z","currencyCode":999,"close":"42.4","exchangeId":"","high":"66.0","low":"13.5","open":"12.8","volume":"200.0"}]
+             ==> send [{"type":"deltix.timebase.api.messages.BarMessage","symbol":"BTC/USD","timestamp":"2019-11-12T13:39:46.118Z","currencyCode":999,"close":"42.4","exchangeId":"","high":"66.0","low":"13.5","open":"12.8","volume":"200.0"}]
 
 set targetDF keep           mkstream command will copy DF from template.
 

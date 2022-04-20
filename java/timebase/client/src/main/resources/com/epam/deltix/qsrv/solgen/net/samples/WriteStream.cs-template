@@ -44,8 +44,6 @@ namespace TimebaseSample
                 ITickLoader loader = stream.CreateLoader(options);
                 for (int ii = 0; ii < 10; ii++)
                 {
-
-                    msg_Activity.InstrumentType = InstrumentType.Equity;
                     msg_Activity.Symbol = "DLTX";
                     // Initialize the fields of hubstaff.Activity:
                     msg_Activity.ClientInvoiced = BooleanDataType.Null;

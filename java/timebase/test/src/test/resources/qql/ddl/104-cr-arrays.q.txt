@@ -69,6 +69,7 @@ testdesc TEST_ARR
 DURABLE STREAM "TEST_ARR" (
     CLASS "deltix.qsrv.hf.server.es.db.tb.data.OrderAttribute" (
     )
+        AUXILIARY
         NOT INSTANTIABLE;
     CLASS "deltix.qsrv.hf.server.es.db.tb.data.CustomAttribute" UNDER "deltix.qsrv.hf.server.es.db.tb.data.OrderAttribute" (
         "key" 'Key' VARCHAR NOT NULL,

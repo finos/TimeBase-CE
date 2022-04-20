@@ -85,12 +85,7 @@ public final class AccessorBlockLink {
                 if (nextTimestamp >= nstime)
                     break;
 
-                mdi.skipBytes (1);  // type
-
-                int             bodyLength = SymmetricSizeCodec.readForward (mdi);
-
-                mdi.skipBytes (bodyLength);
-
+                skipMessageBody(mdi);
                 SymmetricSizeCodec.skipForward (mdi);
             }
         }
@@ -122,17 +117,18 @@ public final class AccessorBlockLink {
                 if (nextTimestamp > nstime)
                     break;
 
-                mdi.skipBytes (1);  // type
-
-                int             bodyLength = SymmetricSizeCodec.readForward (mdi);
-
-                mdi.skipBytes (bodyLength);
-
+                skipMessageBody(mdi);
                 SymmetricSizeCodec.skipForward (mdi);
             }
         }
 
         return true;
+    }
+
+    private void        skipMessageBody(MemoryDataInput mdi) {
+        mdi.skipBytes(1); // sequence + type
+        int bodyLength = SymmetricSizeCodec.readForward (mdi);
+        mdi.skipBytes (bodyLength);
     }
 
     //
@@ -175,12 +171,7 @@ public final class AccessorBlockLink {
                 if (nextTimestamp >= nstime)
                     break;
 
-                mdi.skipBytes (1);  // Skip type
-
-                int     bodyLength = SymmetricSizeCodec.readForward (mdi);
-
-                mdi.skipBytes (bodyLength);
-
+                skipMessageBody(mdi);
                 SymmetricSizeCodec.skipForward (mdi);
 
                 offset = getCurrentOffset(mdi);
@@ -255,9 +246,7 @@ public final class AccessorBlockLink {
                     }
 
                     nextTimestamp = TimeCodec.readNanoTime(mdi);
-                    mdi.skipBytes(1);  // Skip type
-                    int bodyLength = SymmetricSizeCodec.readForward(mdi);
-                    mdi.skipBytes(bodyLength);
+                    skipMessageBody(mdi);
                     SymmetricSizeCodec.skipForward(mdi);
 
                     if (getCurrentOffset(mdi) >= middle && current != nextTimestamp)
@@ -554,9 +543,7 @@ public final class AccessorBlockLink {
                                 nextTimestamp + "; read " + check
                 );
 
-            mdi.readUnsignedByte(); // type
-            int bodyLength = SymmetricSizeCodec.readForward(mdi);
-            mdi.skipBytes(bodyLength);
+            skipMessageBody(mdi);
             return getCurrentOffset(mdi); // tail
         }
     }

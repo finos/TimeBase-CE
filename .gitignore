@@ -33,5 +33,3 @@ lib/**
 
 /web/
 
-bin/*.exe
-bin/*.dll

@@ -41,7 +41,7 @@ terminal            OR,         NEW,        FALSE,      TRUE;
 terminal            DISTINCT,   CAST,       IN,         GROUP;
 terminal            BY,         RUNNING,    BETWEEN,    ARRAY,      OBJECT;
 terminal            AS,         CREATE,     STREAM,     OPTIONS;
-terminal            TRANSIENT,  DURABLE,    CLASS,      INSTANTIABLE;
+terminal            TRANSIENT,  DURABLE,    CLASS,      AUXILIARY,  INSTANTIABLE;
 terminal            RELATIVE,   TO,         COMMENT,    ENUM;
 terminal            FLAGS,      UNDER,      STATIC,     DROP;
 terminal            ALTER,      MODIFY,     DEFAULT,    CONFIRM;
@@ -95,7 +95,7 @@ non terminal OptionElement          Option;
 non terminal ClassDef               Stream_Member_Definition;
 non terminal RecordClassDef         Class_Type_Definition;
 non terminal EnumClassDef           Enumerated_Type_Definition;
-non terminal Boolean                Instantiable_Clause;
+non terminal boolean[]              Auxiliary_Instantiable_Clause;
 non terminal AttributeDef []        Attribute_Definition_List;
 non terminal ArrayList              Non_Empty_Attribute_Definition_List;
 non terminal AttributeDef           Attribute_Definition;
@@ -748,24 +748,29 @@ Class_Type_Definition ::=
     [ STRING:title {: RESULT = title; :} ]:title  
     [ UNDER Type_Id:sup {: RESULT = sup; :} ]:sup  
     LPAREN Attribute_Definition_List:attrs RPAREN:rp
-    [ Instantiable_Clause:inst {: RESULT = inst; :} ]:inst
+    [ Auxiliary_Instantiable_Clause:inst {: RESULT = inst; :} ]:inst
     [ COMMENT STRING:comment {: RESULT = comment; :} ]:comment
         {:          
             RESULT = 
                 new RecordClassDef (
                     lx (tleft, commentright),
                     id, (String) title, (String) comment,
-                    inst == null, 
+                    inst != null ? ((boolean[]) inst)[0] : false,
+                    inst != null ? ((boolean[]) inst)[1] : true,
                     (TypeIdentifier) sup,
                     attrs
                 );
         :};
 
-Instantiable_Clause ::=
-    INSTANTIABLE 
-        {: RESULT = null; :} | 
-    NOT INSTANTIABLE
-        {: RESULT = Boolean.FALSE; :};
+Auxiliary_Instantiable_Clause ::=
+    [NOT {: RESULT = ""; :}]:na AUXILIARY [NOT {: RESULT = ""; :}]:ni [INSTANTIABLE {: RESULT = ""; :}]:i
+        {:
+        if (ni != null && i == null) {
+            throw new SyntaxErrorException("Invalid syntax", lx(nileft, niright));
+        }
+        RESULT = new boolean[] { na == null, i == null || ni == null}; :} |
+    [NOT {: RESULT = ""; :}]:ni2 INSTANTIABLE
+        {: RESULT = new boolean[] { false, ni2 == null }; :};
 
 Non_Empty_Attribute_Definition_List ::=
     Attribute_Definition:adef 

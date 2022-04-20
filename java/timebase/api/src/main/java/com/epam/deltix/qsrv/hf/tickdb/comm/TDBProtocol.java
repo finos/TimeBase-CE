@@ -317,8 +317,8 @@ public abstract class TDBProtocol extends SerializationUtils {
         }
     }
 
-    public static Parameter []          readParameters (DataInputStream in)
-        throws IOException
+    public static Parameter []          readParameters (DataInputStream in, int clientVersion)
+            throws IOException
     {
         int size = in.readInt();
         if (size < 0)
@@ -452,7 +452,7 @@ public abstract class TDBProtocol extends SerializationUtils {
 
     public static void                  writeClassSet (
         DataOutputStream                    out,
-        RecordClassSet                      md
+        ClassSet                            md
     )
         throws IOException
     {

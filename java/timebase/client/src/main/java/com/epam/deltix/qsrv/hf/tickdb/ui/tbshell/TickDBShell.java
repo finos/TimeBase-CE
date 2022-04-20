@@ -29,7 +29,7 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
 import com.epam.deltix.qsrv.hf.tickdb.schema.MetaDataChange;
 import com.epam.deltix.qsrv.hf.tickdb.schema.SchemaAnalyzer;
 import com.epam.deltix.qsrv.hf.tickdb.schema.SchemaConverter;
-import com.epam.deltix.qsrv.hf.tickdb.schema.SimpleClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.SimpleClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.benchmark.BenchmarkCommandProcessor;
 import com.epam.deltix.qsrv.util.json.JSONHelper;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;

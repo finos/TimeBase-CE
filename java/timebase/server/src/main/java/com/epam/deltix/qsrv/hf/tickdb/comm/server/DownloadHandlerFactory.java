@@ -100,7 +100,7 @@ public class DownloadHandlerFactory {
 
             String              qql = din.readUTF ();
             long                endTimestamp = clientVersion >= 131 ? din.readLong(): Long.MIN_VALUE; // added in 114 protocol version
-            Parameter[]        params = TDBProtocol.readParameters (din);
+            Parameter[]        params = TDBProtocol.readParameters (din, clientVersion);
 
             if (UserLogger.canTrace(user))
                 UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), UserLogger.CREATE_CURSOR_PATTERN, qql);

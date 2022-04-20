@@ -139,6 +139,7 @@ DURABLE STREAM "custom" 'custom name' (
         STATIC "static_binary_null" BINARY = NULL,
         STATIC "static_binary_notnull" BINARY = ''X
     ) 
+        AUXILIARY
         NOT INSTANTIABLE;
     CLASS "class3" UNDER "class2" (
         "nonstatic_boolean_nullable" 'nonstatic' BOOLEAN,

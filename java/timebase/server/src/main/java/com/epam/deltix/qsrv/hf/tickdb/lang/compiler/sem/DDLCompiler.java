@@ -158,10 +158,12 @@ public class DDLCompiler {
             
             if (cd instanceof RecordClassDescriptor) {
                 RecordClassDescriptor   rcd = (RecordClassDescriptor) cd;
-                
-                if (!rcd.isAbstract ())
+                boolean auxiliary = cdef instanceof RecordClassDef && ((RecordClassDef) cdef).auxiliary;
+
+                if (!rcd.isAbstract() && !auxiliary) {
                     rcs.addContentClasses (rcd);
-                
+                }
+
                 senv.bindNoDup (cdef.id, new ClassDataType (true, rcd));
             }        
             else if (cd instanceof EnumClassDescriptor) {

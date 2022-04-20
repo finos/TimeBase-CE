@@ -164,7 +164,7 @@ public class DownloadStructHandler extends AbstractHandler implements Runnable {
 
             final ColumnStruct csSymbol = columns.get(0);
             final ColumnStruct csTimestamp = columns.get(1);
-            final ColumnStruct csInstrumentType = columns.get(2);
+            //final ColumnStruct csInstrumentType = columns.get(2);
 
             int rowNum = 0;
             while (cursor.next()) {

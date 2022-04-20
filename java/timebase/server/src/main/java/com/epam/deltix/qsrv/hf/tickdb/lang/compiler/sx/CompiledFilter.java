@@ -44,6 +44,7 @@ public class CompiledFilter extends CompiledQuery {
     private final boolean                       running;
     public final GroupBySpec                    groupBy;
     public final TimestampLimits                tslimits;
+    public final SymbolLimits                   symbolLimits;
     public final SelectLimit limit;
     private final OverExpression over;
     public TupleConstructor                     selector;  // selector can be changed during union merge
@@ -59,6 +60,7 @@ public class CompiledFilter extends CompiledQuery {
             GroupBySpec                     groupBy,
             TupleConstructor                selector,
             TimestampLimits                 tslimits,
+            SymbolLimits                    symbolLimits,
             SelectLimit limit,
             OverExpression over
     )
@@ -73,6 +75,7 @@ public class CompiledFilter extends CompiledQuery {
         this.groupBy = groupBy;
         this.selector = selector;
         this.tslimits = tslimits;
+        this.symbolLimits = symbolLimits;
         this.limit = limit;
         this.over = over;
     }

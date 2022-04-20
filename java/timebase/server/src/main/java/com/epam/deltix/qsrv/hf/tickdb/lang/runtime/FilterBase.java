@@ -20,7 +20,7 @@ import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
-import com.epam.deltix.qsrv.hf.tickdb.schema.SimpleClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.SimpleClassSet;
 
 /**
  *  Base class for compiled filters.

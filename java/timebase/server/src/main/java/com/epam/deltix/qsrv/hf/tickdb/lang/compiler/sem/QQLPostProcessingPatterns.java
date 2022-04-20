@@ -22,6 +22,7 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.pub.BinaryLogicalOperation;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OrderRelation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -32,6 +33,10 @@ abstract class QQLPostProcessingPatterns {
         return e instanceof LogicalOperation && ((LogicalOperation) e).getOperation() == BinaryLogicalOperation.AND;
     }
     
+    public static boolean       isDisjunction(CompiledExpression e) {
+        return e instanceof LogicalOperation && ((LogicalOperation) e).getOperation() == BinaryLogicalOperation.OR;
+    }
+
     public static boolean       isNull (CompiledExpression e) {
         return (e instanceof CompiledConstant && ((CompiledConstant) e).isNull ());
     }
@@ -138,5 +143,79 @@ abstract class QQLPostProcessingPatterns {
         }
 
         return (range);
+    }
+
+    public static SymbolLimits symbolLimits(CompiledExpression<?> e) {
+        boolean conj = isConjunction(e);
+        boolean disj = isDisjunction(e);
+        if (conj || disj) {
+            LogicalOperation ae = (LogicalOperation) e;
+
+            SymbolLimits s1 = symbolLimits(ae.args[0]);
+            SymbolLimits s2 = symbolLimits(ae.args[1]);
+            if (s1.isSubscribeAll() && s2.isSubscribeAll()) {
+                return new SymbolLimits(true);
+            } else if (s1.isSubscribeAll() && !s2.isSubscribeAll()) {
+                if (disj) {
+                    return new SymbolLimits(true);
+                } else {
+                    return new SymbolLimits(false, s2.symbols());
+                }
+            } else if (!s1.isSubscribeAll() && s2.isSubscribeAll()) {
+                if (disj) {
+                    return new SymbolLimits(true);
+                } else {
+                    return new SymbolLimits(false, s1.symbols());
+                }
+            } else if (!s1.isSubscribeAll() && !s2.isSubscribeAll()) {
+                if (disj) {
+                    return new SymbolLimits(false, symbolsUnion(s1.symbols(), s2.symbols()));
+                } else {
+                    return new SymbolLimits(false, symbolsIntersection(s1.symbols(), s2.symbols()));
+                }
+            }
+        } else {
+            if (e instanceof EqualityCheckOperation) {
+                EqualityCheckOperation operation = (EqualityCheckOperation) e;
+                CompiledExpression<?> left = operation.args[0];
+                CompiledExpression<?> right = operation.args[1];
+                if (left instanceof SymbolSelector && right instanceof CompiledConstant) {
+                    return new SymbolLimits(false, ((CompiledConstant) right).value.toString());
+                } else if (right instanceof SymbolSelector && left instanceof CompiledConstant) {
+                    return new SymbolLimits(false, ((CompiledConstant) left).value.toString());
+                }
+            } else if (e instanceof ConnectiveExpression) {
+                ConnectiveExpression operation = (ConnectiveExpression) e;
+                if (!operation.isConjunction() && operation.getArgument() instanceof SymbolSelector) {
+                    List<String> symbols = new ArrayList<>();
+                    for (int i = 1; i < operation.args.length; ++i) {
+                        if (operation.args[i] instanceof CompiledConstant) {
+                            symbols.add(((CompiledConstant) operation.args[i]).value.toString());
+                        }
+                    }
+
+                    return new SymbolLimits(false, symbols);
+                }
+            }
+        }
+
+        return new SymbolLimits(true);
+}
+
+    private static List<String> symbolsUnion(List<String> s1, List<String> s2) {
+        HashSet<String> symbols = new HashSet<>(s1);
+        symbols.addAll(s2);
+        return new ArrayList<>(symbols);
+    }
+
+    private static List<String> symbolsIntersection(List<String> s1, List<String> s2) {
+        HashSet<String> s1Symbols = new HashSet<>(s1);
+        ArrayList<String> symbols = new ArrayList<>();
+        s2.forEach(s -> {
+            if (s1Symbols.contains(s)) {
+                symbols.add(s);
+            }
+        });
+        return symbols;
     }
 }

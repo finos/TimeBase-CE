@@ -64,8 +64,20 @@ public class GrammarUtil {
             char ch = str.charAt (i);
 
             if (ch == '\'')
-                out.append ("''");
-            else if (ch != '\n' && ch != '\r') // skip CRLF
+                out.append ("\\'");
+            else if (ch == '\\')
+                out.append("\\\\");
+            else if (ch == '\t')
+                out.append("\\t");
+            else if (ch == '\b')
+                out.append("\\b");
+            else if (ch == '\r')
+                out.append("\\r");
+            else if (ch == '\f')
+                out.append("\\f");
+            else if (ch == '\n')
+                out.append("\\n");
+            else
                 out.append (ch);
         }
 
@@ -547,6 +559,7 @@ public class GrammarUtil {
     public static void      describe (
         String                  indent,
         RecordClassDescriptor   rcd,   
+        boolean                 auxiliary,
         Writer                  out
     ) 
         throws IOException
@@ -588,6 +601,11 @@ public class GrammarUtil {
         
         String      subindent = "\n" + indent + "    ";
                 
+        if (auxiliary) {
+            out.write (subindent);
+            out.write ("AUXILIARY");
+        }
+
         if (rcd.isAbstract ()) {
             out.write (subindent);
             out.write ("NOT INSTANTIABLE");
@@ -605,7 +623,7 @@ public class GrammarUtil {
         StringWriter    swr = new StringWriter ();
         
         try {
-            describe (indent, cd, swr);
+            describe (indent, cd, false, swr);
         } catch (IOException x) {
             throw new UncheckedIOException(x);
         }
@@ -616,6 +634,7 @@ public class GrammarUtil {
     public static void      describe (
         String                  indent,
         ClassDescriptor         cd,   
+        boolean                 auxiliary,
         Writer                  out
     ) 
         throws IOException
@@ -623,7 +642,7 @@ public class GrammarUtil {
         if (cd instanceof EnumClassDescriptor)
             describe (indent, (EnumClassDescriptor) cd, out);
         else if (cd instanceof RecordClassDescriptor)
-            describe (indent, (RecordClassDescriptor) cd, out);
+            describe (indent, (RecordClassDescriptor) cd, auxiliary, out);
         else
             throw new RuntimeException (cd.toString ());        
     }    
@@ -680,8 +699,11 @@ public class GrammarUtil {
         
         String                  subindent = indent + "    ";
         
-        for (ClassDescriptor cd : ClassDescriptor.depSort (s.getAllDescriptors ()))              
-            GrammarUtil.describe (subindent, cd, out);        
+        RecordClassSet recordClassSet = s.getStreamOptions().getMetaData();
+        for (ClassDescriptor cd : ClassDescriptor.depSort (s.getAllDescriptors ())) {
+            boolean auxiliary = recordClassSet.getContentClass(cd.getGuid()) == null;
+            GrammarUtil.describe(subindent, cd, auxiliary, out);
+        }
 
         out.write (indent);
         out.write (")\n");

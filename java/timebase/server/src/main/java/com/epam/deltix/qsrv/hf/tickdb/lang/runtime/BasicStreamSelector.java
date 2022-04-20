@@ -21,7 +21,7 @@ import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
-import com.epam.deltix.qsrv.hf.tickdb.schema.SimpleClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.SimpleClassSet;
 
 /**
  *  Executable stream selector.
@@ -59,28 +59,26 @@ public final class BasicStreamSelector implements PreparedQuery {
     {
         if (options == null)
             options = new SelectionOptions ();
+
+        options.live = false;
+        options.reversed = false;
         
         switch (mode) {
             case NORMAL:
-                options.reversed = false;
-                options.live = false;
                 break;
                 
             case REVERSE:
                 options.reversed = true;
-                options.live = false;
                 break;
                 
             case LIVE:
                 options.live = true;
                 options.realTimeNotification = false;
-                options.reversed = false;
                 break;
                 
             case HYBRID:
                 options.live = true;
                 options.realTimeNotification = true;
-                options.reversed = false;
                 break;
         }
         

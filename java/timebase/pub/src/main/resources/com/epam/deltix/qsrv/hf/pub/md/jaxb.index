@@ -11,6 +11,7 @@ ClassDataType
 ArrayDataType
 RecordClassDescriptor
 RecordClassSet
+SimpleClassSet
 ClassDescriptorArray
 StaticDataField
 NonStaticDataField

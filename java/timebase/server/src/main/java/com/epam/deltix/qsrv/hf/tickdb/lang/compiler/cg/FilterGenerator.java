@@ -20,18 +20,7 @@ import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.ReadableValue;
 import com.epam.deltix.qsrv.hf.pub.md.DataField;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ArrayJoinElement;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledComplexExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledFilter;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.GroupByEntity;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.GroupByExpressions;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.GroupBySpec;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.PluginSimpleFunction;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.PluginStatefulFunction;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.SelectLimit;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.TimestampLimits;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.TupleConstructor;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OverCountExpression;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OverTimeExpression;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.FilterBase;
@@ -326,6 +315,7 @@ class FilterGenerator {
         // generate message source impl body (accept method)
         // generate start checks
         generateLimitCheck();
+        generateSymbolSubscription();
         generateFirstOnlyCheck();
         initializeSelectLimits(f.limit);
 
@@ -464,7 +454,7 @@ class FilterGenerator {
             filterBody.add(outMsgInFilter.call("setTimeStampMs", inMsg.call("getTimeStampMs")));
             filterBody.add(outMsgInFilter.call("setNanoTime", inMsg.call("getNanoTime")));
             filterBody.add(outMsgInFilter.call("setSymbol", inMsg.call("getSymbol")));
-            filterBody.add(outMsgInFilter.call("setInstrumentType", inMsg.call("getInstrumentType")));
+            //filterBody.add(outMsgInFilter.call("setInstrumentType", inMsg.call("getInstrumentType")));
 
             JInitMemberVariable mdoVar = generateVar(stateClass, MemoryDataOutput.class, "out");
             JExpr outMsgInState = msgVar.access();
@@ -791,6 +781,22 @@ class FilterGenerator {
                         returnAbort
                 )
             );
+    }
+
+    private void generateSymbolSubscription() {
+        SymbolLimits symbolLimits = compFilter.symbolLimits;
+        if (symbolLimits == null || symbolLimits.symbols().size() == 0) {
+            return;
+        }
+
+        JMethod adj = msiClass.addMethod(Modifier.PROTECTED, String[].class, "symbolsToAdjust");
+        adj.body().add(
+            CTXT.newArrayExpr(
+                String.class,
+                symbolLimits.symbols().stream().map(CTXT::stringLiteral)
+                    .toArray(JExpr[]::new)
+            ).returnStmt ()
+        );
     }
 
     private void                overrideNext (String delegateTo) {

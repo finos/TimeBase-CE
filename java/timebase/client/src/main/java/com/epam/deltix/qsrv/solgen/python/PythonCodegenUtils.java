@@ -69,11 +69,10 @@ public class PythonCodegenUtils {
             sends.append(rcd.getName ());
             sends.append(":").append(PythonCodegenUtils.NL);
             sends.append(INDENT[indentLevel])
-                .append(varname).append(".symbol = 'DLTX'")
+                .append(varname).append(".symbol = 'GOOD'")
                 .append(PythonCodegenUtils.NL);
             sends.append(INDENT[indentLevel])
                 .append(varname)
-                .append(".instrumentType = 'EQUITY'")
                 .append(PythonCodegenUtils.NL);
 
             for (; rcd != null; rcd = rcd.getParent ()) {

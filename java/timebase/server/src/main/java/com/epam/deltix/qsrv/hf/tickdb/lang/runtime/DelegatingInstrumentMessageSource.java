@@ -70,7 +70,23 @@ public class DelegatingInstrumentMessageSource
     }
 
     public void subscribeToAllEntities () {
-        source.subscribeToAllEntities ();
+        if (!adjustSymbolsSubscription()) {
+            source.subscribeToAllEntities ();
+        }
+    }
+
+    private boolean adjustSymbolsSubscription() {
+        String[] symbolsToAdjust = symbolsToAdjust();
+        if (symbolsToAdjust == null) {
+            return false;
+        } else {
+            addSymbols(symbolsToAdjust);
+            return true;
+        }
+    }
+
+    protected String[] symbolsToAdjust() {
+        return null;
     }
 
     public void close () {
@@ -168,7 +184,9 @@ public class DelegatingInstrumentMessageSource
 
     @Override
     public void subscribeToAllSymbols() {
-        source.subscribeToAllSymbols();
+        if (!adjustSymbolsSubscription()) {
+            source.subscribeToAllSymbols();
+        }
     }
 
     @Override

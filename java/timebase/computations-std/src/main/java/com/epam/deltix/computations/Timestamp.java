@@ -14,7 +14,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.epam.deltix.computations;
+
+package com.epam.deltix.computations;
 
 import com.epam.deltix.computations.api.annotations.Function;
 import com.epam.deltix.computations.api.annotations.FunctionsRepo;
@@ -23,7 +24,7 @@ import com.epam.deltix.util.annotations.TimestampMs;
 @FunctionsRepo
 public class Timestamp {
 
-    @Function("CURRENTTIMEMS")
+    @Function("NOW")
     @TimestampMs
     public static long now() {
         return System.currentTimeMillis();

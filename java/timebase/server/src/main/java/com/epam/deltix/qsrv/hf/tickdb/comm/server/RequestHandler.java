@@ -16,6 +16,10 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.comm.server;
 
+import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.tickdb.comm.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.query.Parameter;
 import com.google.common.collect.ImmutableList;
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
@@ -27,11 +31,6 @@ import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.qsrv.hf.pub.md.MetaData;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
-import com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol;
-import com.epam.deltix.qsrv.hf.tickdb.comm.TopicChannelOption;
-import com.epam.deltix.qsrv.hf.tickdb.comm.TopicProtocol;
-import com.epam.deltix.qsrv.hf.tickdb.comm.UnknownStreamException;
-import com.epam.deltix.qsrv.hf.tickdb.comm.UserCredentials;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.AeronThreadTracker;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.DXServerAeronContext;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.download.multicast.DownloadHandlerFactoryMulticast;
@@ -63,11 +62,6 @@ import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.TopicChannelOptio
 import com.epam.deltix.qsrv.hf.tickdb.lang.parser.QQLParser;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TextMap;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token;
-import com.epam.deltix.qsrv.hf.tickdb.pub.BackgroundProcessInfo;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
-import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.TickStream;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLock;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLockImpl;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
@@ -271,6 +265,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
                         case TDBProtocol.REQ_LIST_SYMBOLS_FOR_SPACE:    doListSymbolsForSpace(ds); break;
                         case TDBProtocol.REQ_LIST_IDS_FOR_SPACE:        doListIdsForSpace(ds); break;
                         case TDBProtocol.REQ_GET_TIME_RANGE_FOR_SPACE:  doGetTimeRangeForSpace(ds); break;
+                        case TDBProtocol.REQ_DESCRIBE_QUERY:            doDescribeQQL(ds); break;
 
                         case TDBProtocol.REQ_CREATE_TOPIC:              doCreateIpcTopic(ds); break;
                         case TDBProtocol.REQ_CREATE_MULTICAST_TOPIC:    doCreateMulticastTopic(ds); break;
@@ -544,6 +539,21 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         stream.renameInstruments(from, to);
 
         out.writeInt(TDBProtocol.RESP_OK);
+    }
+
+    private void                doDescribeQQL(VSChannel ds) throws IOException {
+        final DataInputStream is = ds.getDataInputStream();
+        String query = is.readUTF();
+
+        SelectionOptions options = new SelectionOptions();
+        SelectionOptionsCodec.read(is, options, clientVersion);
+        Parameter[] parameters = TDBProtocol.readParameters(is, clientVersion);
+
+        ClassSet set = db.describeQuery(query, options, parameters);
+
+        out.writeInt(TDBProtocol.RESP_OK);
+        TDBProtocol.writeClassSet(ds.getDataOutputStream(), set);
+        out.flush();
     }
 
     private void                doCompileQQL(VSChannel ds) throws IOException {

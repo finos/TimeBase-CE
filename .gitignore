@@ -32,6 +32,3 @@ lib/**
 /python/dxapi/
 
 /web/
-
-bin/*.exe
-bin/*.dll

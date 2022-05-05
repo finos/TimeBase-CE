@@ -90,7 +90,6 @@ jobs:
       - name: Build with gradle
         run: ./gradlew build windowsTimebaseInstaller linuxTimebaseInstaller
       - name: Archive installer jars
-        if: ${{ failure() }}
         uses: actions/upload-artifact@v2
         with:
           path: java/installer/build/installer/timebase-*.jar

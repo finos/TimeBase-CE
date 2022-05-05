@@ -56,7 +56,7 @@
         <res id="windscamd64.dll" src="@{izpack.resources.path}/windscamd64.dll"/>
         <res id="windscx86.dll" src="@{izpack.resources.path}/windscx86.dll"/>
 
-        <res id="samples.zip" src="testdata/samples/samples.zip"/>
+<!--        <res id="samples.zip" src="testdata/samples/samples.zip"/>-->
     </resources>
 
     <!-- default variables -->

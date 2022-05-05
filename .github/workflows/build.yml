@@ -89,8 +89,13 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Build with gradle
         run: ./gradlew build windowsTimebaseInstaller linuxTimebaseInstaller
-      - name: Archive installer jars
+      - name: Archive Linux installer
         uses: actions/upload-artifact@v2
         with:
-          path: java/installer/build/installer/timebase-*.jar
-          name: timebase-installers
+          path: java/installer/build/installer/timebase-linux-installer-*.jar
+          name: timebase-linux-installer
+      - name: Archive Windows installer
+        uses: actions/upload-artifact@v2
+        with:
+          path: java/installer/build/installer/timebase-windows-installer-*.jar
+          name: timebase-windows-installer

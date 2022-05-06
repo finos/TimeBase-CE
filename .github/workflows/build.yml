@@ -57,3 +57,45 @@ jobs:
         with:
           path: build/reports/junit
           name: Test Report
+
+  build-installer:
+    name: Build Windows and Linux TimeBase Installer (Java version ${{ matrix.java }} (${{ matrix.os }}))
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [ '11' ]
+        os: [ 'windows-2019' ] # we need windows for building native service libs.
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Cache gradle dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-caches-
+      - name: Cache gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+      - name: Setup java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Build with gradle
+        run: ./gradlew build windowsTimebaseInstaller linuxTimebaseInstaller
+      - name: Archive Linux installer
+        uses: actions/upload-artifact@v2
+        with:
+          path: java/installer/build/installer/timebase-linux-installer-*.jar
+          name: timebase-linux-installer
+      - name: Archive Windows installer
+        uses: actions/upload-artifact@v2
+        with:
+          path: java/installer/build/installer/timebase-windows-installer-*.jar
+          name: timebase-windows-installer

@@ -48,21 +48,21 @@ public class DBMgr {
     private ShutdownHook        shutdownHook;
     private boolean             compression = false;
     private int                 targetDF = -1;
-    
+
     private final ObjectToObjectHashMap<String, DBLock> locks = new ObjectToObjectHashMap<>();
 
     public DBMgr (TickDBShell shell) {
         this.shell = shell;
-    }    
-    
+    }
+
     public void                 setDb (DXTickDB db) {
         this.db = db;
     }
-    
+
     public void                 setStreams (DXTickStream ... streams) {
         this.streams = streams;
     }
-    
+
     public DXTickDB             getDB () {
         return (db);
     }
@@ -78,7 +78,7 @@ public class DBMgr {
     public DXTickStream         getSingleStream () {
         return (streams[0]);
     }
-    
+
     private String              targetDFString () {
         switch (targetDF) {
             case -1:    return "keep";
@@ -90,7 +90,7 @@ public class DBMgr {
     public int getDF() {
         return targetDF;
     }
-    
+
     protected void              doSet () {
         System.out.println ("db:            " + db);
         System.out.println ("stream:        " + pstreams ());
@@ -101,7 +101,7 @@ public class DBMgr {
 
     boolean                     doSet (String option, String value) throws Exception {
         switch (option) {
-            case "db":      
+            case "db":
                 if (db != null) {
                     db.close ();
                     db = null;
@@ -109,15 +109,15 @@ public class DBMgr {
 
                 if (TickDBFactory.isRemote(value))
                     db = TickDBFactory.createFromUrl (value);
-                else 
-                    db = 
-                        TickDBFactory.create (
-                            new DataCacheOptions (Integer.MAX_VALUE, ramdisksize), 
-                            shell.expandPath (value)
-                        );            
+                else
+                    db =
+                            TickDBFactory.create (
+                                    new DataCacheOptions (Integer.MAX_VALUE, ramdisksize),
+                                    shell.expandPath (value)
+                            );
 
                 return (true);
-        
+
             case "ramdisksize":
                 ramdisksize = Long.parseLong (value);
                 shell.confirm ("RAM Disk size: ~" + (ramdisksize >> 20) + "MB");
@@ -195,18 +195,18 @@ public class DBMgr {
                 }
 
                 return (true);
-                
+
             case "targetDF": {
                 switch (value) {
                     case "keep":    targetDF = -1; break;
                     case "max":     targetDF = 0; break;
                     default:        targetDF = Integer.parseInt (value); break;
                 }
-                
+
                 return (true);
             }
-        }        
-        
+        }
+
         return (false);
     }
 
@@ -224,9 +224,9 @@ public class DBMgr {
 
         shutdownHook = null;
     }
-    
-    public boolean       doCommand (String key, String args) 
-        throws Exception 
+
+    public boolean       doCommand (String key, String args)
+            throws Exception
     {
         switch (key) {
             case "open": {
@@ -252,7 +252,7 @@ public class DBMgr {
 
                 return (true);
             }
-            
+
             case "format":
                 if (!checkDb())
                     return true;
@@ -272,7 +272,7 @@ public class DBMgr {
                     throw new IllegalStateException("Database is open.");
 
                 return (true);
-        
+
             case "close":
                 if (!checkDb())
                     return true;
@@ -280,21 +280,21 @@ public class DBMgr {
                 db.close ();
                 onClose();
                 return (true);
-                
+
             case "warmup":
                 if (!checkDb())
                     return true;
 
                 db.warmUp ();
                 return (true);
-                
+
             case "cooldown":
                 if (!checkDb())
                     return true;
 
                 db.coolDown ();
                 return (true);
-                
+
             case "trim": {
                 if (!checkDb())
                     return true;
@@ -304,21 +304,21 @@ public class DBMgr {
                 long        after = db.getSizeOnDisk ();
 
                 System.out.printf (
-                    "Trimmed: %,d -> %,d bytes (%d%%).\n",
-                    before,
-                    after,
-                    (before - after) * 100L / before
+                        "Trimmed: %,d -> %,d bytes (%d%%).\n",
+                        before,
+                        after,
+                        (before - after) * 100L / before
                 );
                 return (true);
             }
-            
+
             case "showsize":
                 if (!checkDb())
                     return true;
 
                 System.out.printf ("Approximate DB size: %,d bytes\n", ((DXTickDB) db).getSizeOnDisk ());
                 return (true);
-                
+
             case "streams":
                 if (!checkDb())
                     return true;
@@ -326,9 +326,9 @@ public class DBMgr {
                 for (WritableTickStream s : db.listStreams ()) {
                     if (!s.getKey ().endsWith ("#"))
                         System.out.printf (
-                            "%-16s %-32s\n",
-                            s.getKey (),
-                            s.getName ()
+                                "%-16s %-32s\n",
+                                s.getKey (),
+                                s.getName ()
                         );
                 }
 
@@ -350,29 +350,7 @@ public class DBMgr {
                 }
 
                 return (true);
-                
-//            case "mkfilestream": {
-//                String []   argx = args.split (" ");
-//
-//                if (argx.length != 2) {
-//                    System.out.println ("Wrong # of arguments. Check help for details.");
-//                    return (true);
-//                }
-//
-//                String              streamKey = argx [0];
-//                String              dataFile = argx [1];
-//
-//                DXTickStream        stream =
-//                    db.createFileStream (streamKey, dataFile);
-//
-//                streams = new DXTickStream [] { stream };
-//
-//                if (!Util.QUIET)
-//                    System.out.println("Created. Current stream is: " + stream.getKey());
-//
-//                return (true);
-//            }
-            
+
             case "delete":
                 if (args != null)
                     return false;
@@ -398,12 +376,12 @@ public class DBMgr {
 
                     return (true);
                 }
-                
+
             case "mkstream": {
                 if (!checkSingleStream ())
                     return (true);
 
-                DXTickStream    template = streams [0];            
+                DXTickStream    template = streams [0];
                 StreamOptions   opts = template.getStreamOptions ();
                 opts.name = null;
 
@@ -474,7 +452,7 @@ public class DBMgr {
                 return (true);
             }
         }
-        
+
         return (false);
     }
 
@@ -504,7 +482,7 @@ public class DBMgr {
 
         return stream;
     }
-    
+
     private DBLock            getStreamLock(boolean remove) {
         if (!checkSingleStream())
             throw new IllegalStateException("Please select single stream to lock.");
@@ -512,15 +490,15 @@ public class DBMgr {
         return remove ? locks.remove(streams[0].getKey(), null) : locks.get(streams[0].getKey(), null);
     }
 
-    
-    public DXTickStream     getStream (String key) {        
+
+    public DXTickStream     getStream (String key) {
         DXTickStream    s = db.getStream (key);
 
         if (s == null) {
             System.out.printf ("Stream '%s' was not found.\n", key);
             return (null);
         }
-        
+
         return (s);
     }
 
@@ -609,11 +587,11 @@ public class DBMgr {
 
         return (sb.toString ());
     }
-    
+
     public boolean         checkStream () {
         if (streams == null)
             shell.error ("Current stream is not chosen. Use set stream <key>", 1);
-        
+
         return (streams != null);
     }
 
@@ -630,16 +608,16 @@ public class DBMgr {
 
         return (db != null);
     }
-    
+
     public boolean         checkSingleStream () {
         if (!checkStream ())
             return (false);
-        
+
         if (streams.length > 1)
             System.out.println ("Operation will be applied to stream " + streams [0].getKey () + " only.");
-        
+
         return (true);
-    }     
-    
+    }
+
 
 }

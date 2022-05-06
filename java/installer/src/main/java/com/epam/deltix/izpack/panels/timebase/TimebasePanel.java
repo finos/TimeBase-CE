@@ -334,7 +334,7 @@ public class TimebasePanel extends IzPanel implements ActionListener {
         String home = homeSelectionPanel.getPath();
         File destDir = new File(home, "timebase");
 
-        copySamples(destDir);
+//        copySamples(destDir);
     }
 
     private static void copySamples(File destDir) throws IOException {

@@ -1,2 +1,5 @@
 *.cmd
 *.sh
+launcher*.exe
+windsc*.dll
+winsvc*.dll

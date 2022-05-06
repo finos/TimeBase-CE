@@ -1,7 +1,7 @@
 <img align="right" src="https://github.com/finos/TimeBase-CE/blob/main/timebase-logo.svg">
 
 
-# Timebase CE
+# TimeBase CE
 
 [![FINOS - Incubating](https://cdn.jsdelivr.net/gh/finos/contrib-toolbox@master/images/badge-incubating.svg)](https://finosfoundation.atlassian.net/wiki/display/FINOS/Incubating)
 

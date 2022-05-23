@@ -213,6 +213,11 @@ public abstract class CompilerUtil {
             CompiledQuery cq = (CompiledQuery) compiler.compile(selectExpression, StandardTypes.CLEAN_QUERY);
 
             return (QCodeGenerator.createQuery(cq, db));
+        } else if (qql instanceof UnionExpression) {
+            UnionExpression unionExpression = (UnionExpression) qql;
+            unionExpression.setEndTime(endTimestamp);
+            CompiledQuery cq = (CompiledQuery) compiler.compile(unionExpression, StandardTypes.CLEAN_QUERY);
+            return (QCodeGenerator.createQuery(cq, db));
         }
         if (qql instanceof Statement) {
             return (compiler.compileStatement((Statement) qql));

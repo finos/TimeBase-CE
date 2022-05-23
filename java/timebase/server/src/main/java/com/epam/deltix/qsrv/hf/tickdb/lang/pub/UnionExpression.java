@@ -42,6 +42,20 @@ public final class UnionExpression extends ComplexExpression {
         this.limit = limit;
     }
 
+    public void setEndTime(long endTime) {
+        if (left instanceof SelectExpression) {
+            ((SelectExpression) left).setEndTime(endTime);
+        } else if (left instanceof UnionExpression) {
+            ((UnionExpression) left).setEndTime(endTime);
+        }
+
+        if (right instanceof SelectExpression) {
+            ((SelectExpression) right).setEndTime(endTime);
+        } else if (right instanceof UnionExpression) {
+            ((UnionExpression) right).setEndTime(endTime);
+        }
+    }
+
     @Override
     protected void print(int outerPriority, StringBuilder s) {
         s.append("(");

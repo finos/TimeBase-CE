@@ -44,20 +44,4 @@
         <appender-ref ref="safeAppender"/>
     </logger>
 
-    <logger name="net.sourceforge.stripes" level="WARN">
-        <appender-ref ref="safeAppender"/>
-    </logger>
-
-    <logger name="flx" level="WARN">
-        <appender-ref ref="safeAppender"/>
-    </logger>
-
-    <logger name="xstream" level="WARN">
-        <appender-ref ref="safeAppender"/>
-    </logger>
-
-    <logger name="deltix.qsrv.util.rpc.http.server.UhfWebApplicationContext" level="WARN">
-        <appender-ref ref="safeAppender"/>
-    </logger>
-
 </config>

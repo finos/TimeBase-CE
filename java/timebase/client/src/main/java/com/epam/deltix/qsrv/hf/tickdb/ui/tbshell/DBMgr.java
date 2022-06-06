@@ -490,7 +490,6 @@ public class DBMgr {
         return remove ? locks.remove(streams[0].getKey(), null) : locks.get(streams[0].getKey(), null);
     }
 
-
     public DXTickStream     getStream (String key) {
         DXTickStream    s = db.getStream (key);
 

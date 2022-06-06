@@ -372,6 +372,23 @@ class TickStreamClient implements DXTickStream {
         }
     }
 
+    private boolean     updateStreamProperties(int ...  properties) {
+        boolean[] states = new boolean[properties.length];
+
+        // complex code to overcome possible JIT optimization, we need to check each property
+        synchronized (this) {
+            for (int i = 0; i < properties.length; i++)
+                states[i] = conn.getSession().getStreamProperty(key, properties[i]);
+        }
+
+        for (boolean state : states) {
+            if (state)
+                return true;
+        }
+
+        return false;
+    }
+
     public long []                      getTimeRange (IdentityKey... ids) {
 
         if (!CACHE_ENTITIES)
@@ -384,8 +401,9 @@ class TickStreamClient implements DXTickStream {
 
         boolean changed;
         synchronized (this) {
-            conn.getSession().getStreamProperty(key, TickStreamProperties.ENTITIES);
-            timeRange.invalidate = changed = conn.getSession().getStreamProperty(key, TickStreamProperties.TIME_RANGE);
+            changed = updateStreamProperties(TickStreamProperties.ENTITIES, TickStreamProperties.TIME_RANGE);
+            if (changed)
+                timeRange.invalidate = changed;
         }
 
         synchronized (entities) {
@@ -458,11 +476,7 @@ class TickStreamClient implements DXTickStream {
 
         ArrayList<IdentityKey> update = new ArrayList<IdentityKey>();
 
-        boolean changed;
-        synchronized (this) {
-            conn.getSession().getStreamProperty(key, TickStreamProperties.ENTITIES);
-            timeRange.invalidate = changed = conn.getSession().getStreamProperty(key, TickStreamProperties.TIME_RANGE);
-        }
+        boolean changed = updateStreamProperties(TickStreamProperties.ENTITIES, TickStreamProperties.TIME_RANGE);
 
         synchronized (entities) {
             if (changed) {
@@ -856,6 +870,8 @@ class TickStreamClient implements DXTickStream {
 
             checkResponse(ds);
 
+            setWriteMode(false);
+
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {
@@ -950,6 +966,7 @@ class TickStreamClient implements DXTickStream {
             out.flush ();
 
             checkResponse(ds);
+            setWriteMode(false);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {
@@ -975,6 +992,8 @@ class TickStreamClient implements DXTickStream {
             conn.getSession().resetProperty(key, TickStreamProperties.BG_PROCESS);
 
             checkResponse(ds);
+
+            setWriteMode(false);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {
@@ -1512,7 +1531,7 @@ class TickStreamClient implements DXTickStream {
 
     @Nullable
     @Override
-    public long[] getTimeRange(String space) {
+    public long[]       getTimeRange(String space) {
         assertSupportsStreamSpaces();
 
         if (space == null) {

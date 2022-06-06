@@ -216,19 +216,8 @@ public class TickDBImpl
         return thread;
     }
 
-    static boolean                       isVersion5(String version) {
-        if (version == null)
-            version = System.getProperty(VERSION_PROPERTY);
-
-        return "5.0".equals(version) || "5".equals(version);
-    }
-
-    public static String    getFolderName(String      version) {
-        return isVersion5(version) ? "timebase" : "tickdb";
-
-//        String      version = config.getString("version", System.getProperty(TickDBImpl.VERSION_PROPERTY, "4.3"));
-//        System.setProperty(TickDBImpl.VERSION_PROPERTY, version);
-//        File tbFolder = QSHome.getFile ("5.0".equals(version) ? "timebase" : "tickdb");
+    public static String    getFolderName() {
+        return  "timebase";
     }
 
     public TickDBImpl (File ... dbDirs) {
@@ -258,28 +247,19 @@ public class TickDBImpl
         store = PDSFactory.create(this.contextContainer.getQuickExecutor());
         store.setEmergencyShutdownControl(TickDBImpl.this::startEmergencyShutdown);
 
-        if (isVersion5(null)) {
-            final long cacheSize = options.cacheSize;
-            long ramdiskSize = 0;
-            if (cacheSize > 0) {
-                // We have to split cache quota between RamDisk, LocalFS cache and DFS cache. Each of them can be disabled.
-                CacheQuotaSettings quota = divideCacheQuota(cacheSize, ENABLE_RAMDISK_CACHE, ENABLE_CHUNKED_CACHE_FOR_LOCAL, ENABLE_CHUNKED_CACHE_FOR_DFS, CHUNKED_CACHE_DFS_SIZE_MB);
-                ramdiskSize = quota.ramdiskSize;
+        final long cacheSize = options.cacheSize;
+        long ramdiskSize = 0;
+        if (cacheSize > 0) {
+            // We have to split cache quota between RamDisk, LocalFS cache and DFS cache. Each of them can be disabled.
+            CacheQuotaSettings quota = divideCacheQuota(cacheSize, ENABLE_RAMDISK_CACHE, ENABLE_CHUNKED_CACHE_FOR_LOCAL, ENABLE_CHUNKED_CACHE_FOR_DFS, CHUNKED_CACHE_DFS_SIZE_MB);
+            ramdiskSize = quota.ramdiskSize;
 
-                FSFactory.init(options.fs.maxFileSize, quota.localFsCacheSize, quota.dsfCacheSize, options.preallocateRatio);
-            }
-            if (ramdiskSize > 0) {
-                this.ramdisk = RAMDisk.createCached(options.maxNumOpenFiles, ramdiskSize, options.getInitialCacheSize());
-            } else {
-                this.ramdisk = RAMDisk.createNonCached(options.maxNumOpenFiles);
-            }
+            FSFactory.init(options.fs.maxFileSize, quota.localFsCacheSize, quota.dsfCacheSize, options.preallocateRatio);
+        }
+        if (ramdiskSize > 0) {
+            this.ramdisk = RAMDisk.createCached(options.maxNumOpenFiles, ramdiskSize, options.getInitialCacheSize());
         } else {
-            if (options.cacheSize > 0)
-                this.ramdisk = RAMDisk.createCached(options.maxNumOpenFiles, options.cacheSize, options.getInitialCacheSize());
-            else
-                this.ramdisk = RAMDisk.createNonCached(options.maxNumOpenFiles);
-
-            this.ramdisk.setShutdownTimeout(options.shutdownTimeout);
+            this.ramdisk = RAMDisk.createNonCached(options.maxNumOpenFiles);
         }
 
         this.fs = options.fs != null ? options.fs : new FSOptions();
@@ -590,8 +570,7 @@ public class TickDBImpl
             synchronized (this) {
                 try {
 
-                    if (isVersion5(null))
-                        LOGGER.warning("Timebase running using 5.0 data streams engine.");
+                    LOGGER.warning("Timebase running using 5.0 data streams engine.");
 
                     openLocked(readOnly);
 
@@ -1404,20 +1383,14 @@ public class TickDBImpl
             }
 
             if (options.scope == StreamScope.DURABLE) {
-                //if (isVersion5(options.version))
-                {
-                    options.location = locator != null ? locator.getPath(key, "data") : null;
-                    isRemoteStream = REMOTE_STREAMS && isRemoteFsLocation(options.location);
+                options.location = locator != null ? locator.getPath(key, "data") : null;
+                isRemoteStream = REMOTE_STREAMS && isRemoteFsLocation(options.location);
 
-                    stream = new PDStream(this, key, options);
+                stream = new PDStream(this, key, options);
 
-                    if (isRemoteStream) {
-                        remoteStreamLock = getRemoteStreamLock(key);
-                    }
+                if (isRemoteStream) {
+                    remoteStreamLock = getRemoteStreamLock(key);
                 }
-//                else {
-//                    stream = new DurableStreamImpl(this, key, options);
-//                }
             } else {
                 if (options.isFlagSet(TDBProtocol.AF_STUB_STREAM)) {
                     stream = new StubTimeStream(key, options.name, this);

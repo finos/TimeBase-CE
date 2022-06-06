@@ -24,8 +24,11 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 
+import com.epam.deltix.util.io.TokenReplacingReader;
 import com.epam.deltix.util.xml.JAXBContextFactory;
 
 @XmlRootElement(name = "config")
@@ -52,11 +55,19 @@ public class SimpleSecurityConfiguration {
     }
 
     public static SimpleSecurityConfiguration read(File file) {
+
         try {
+            TokenReplacingReader reader = new TokenReplacingReader(new FileReader(file), new TokenReplacingReader.TokenResolver() {
+                @Override
+                public String resolveToken(String token) {
+                    return System.getenv(token);
+                }
+            });
+
             JAXBContext jaxbContext = JAXBContextFactory.newInstance(SimpleSecurityConfiguration.class.getPackage().getName());
             Unmarshaller unmarshaller = JAXBContextFactory.createStdUnmarshaller(jaxbContext);
-            return (SimpleSecurityConfiguration) unmarshaller.unmarshal(file);
-        } catch (JAXBException exc) {
+            return (SimpleSecurityConfiguration) unmarshaller.unmarshal(reader);
+        } catch (JAXBException | FileNotFoundException exc) {
             throw new RuntimeException("Principals could not be read from file: " + file, exc);
         }
     }

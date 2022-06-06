@@ -98,10 +98,9 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
 
         long shutdownTimeout = config.getLong("shutdownTimeout", Long.MAX_VALUE);
 
-        String      version = config.getString("version", System.getProperty(TickDBImpl.VERSION_PROPERTY, "5.0"));
-        System.setProperty(TickDBImpl.VERSION_PROPERTY, version);
+        System.setProperty(TickDBImpl.VERSION_PROPERTY, "5.0");
 
-        File tbFolder = QSHome.getFile(TickDBImpl.getFolderName(version));
+        File tbFolder = QSHome.getFile(TickDBImpl.getFolderName());
         if (!tbFolder.exists() && !tbFolder.mkdirs())
             throw new IllegalStateException("Unable to create " + tbFolder);
 

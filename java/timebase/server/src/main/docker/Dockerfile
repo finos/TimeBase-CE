@@ -4,9 +4,6 @@ ENV LANG=C.UTF-8
 ENV DELTIX_HOME /timebase-server
 
 # Here we install GNU libc (aka glibc) and set C.UTF-8 locale as default.
-
-COPY timebase /timebase-server
-
 RUN apk add --no-cache openjdk11-jdk
 RUN ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases/download" && \
     ALPINE_GLIBC_PACKAGE_VERSION="2.30-r0" && \
@@ -36,9 +33,13 @@ RUN ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases
         "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME" && \
-    apk add musl=1.2.2-r7 && \
-    mkdir timebase-home
+    apk add musl=1.2.2-r7
 
-COPY timebase /timebase-server
+RUN addgroup -S deltix --gid 8001 && adduser -S deltix -G deltix -u 8001 && \
+    mkdir -p /timebase-home && \
+	chown deltix:deltix -R /timebase-home
+
+USER deltix
+COPY --chown=deltix:deltix timebase /timebase-server
 EXPOSE 8011
 ENTRYPOINT ["/bin/sh", "-c", "/timebase-server/bin/tdbserver.sh -tb -home /timebase-home"]

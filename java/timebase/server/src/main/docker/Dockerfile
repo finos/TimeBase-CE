@@ -35,7 +35,7 @@ RUN ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases
         "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME" && \
     apk add musl=1.2.2-r7
 
-RUN addgroup -S deltix --gid 8001 && adduser -S deltix -G deltix -u 8001 && \
+RUN addgroup -S deltix --gid 1666 && adduser -S deltix -G deltix -u 1666 && \
     mkdir -p /timebase-home && \
 	chown deltix:deltix -R /timebase-home
 

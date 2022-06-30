@@ -38,5 +38,5 @@ RUN ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases
 RUN addgroup -S deltix --gid 1666 && adduser -S deltix -G deltix -u 1666
 
 USER deltix
-COPY --chown=deltix:deltix timebase /timebase-client
+COPY timebase /timebase-client
 ENTRYPOINT ["/bin/sh", "-c", "/timebase-client/bin/tickdb.sh"]

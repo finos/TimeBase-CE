@@ -44,7 +44,7 @@ import java.util.*;
 /**
  *
  */
-class TickCursorImpl implements 
+public class TickCursorImpl implements
     TickCursor,
     TBCursor,
     SubscriptionManager,

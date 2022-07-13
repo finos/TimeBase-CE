@@ -93,7 +93,7 @@ _NOTE:_ Commits and pull requests to FINOS repositories will only be accepted fr
 ## Development Team
 
 - [Stuart Farr](https://github.com/stuartfarr) - Business    
-- Matthew Gorelik - Business Consult
+- Matthew Gorelik - Product Manager
 - [Aliaksei Vavilov](https://github.com/avavilau) - Delivery Manager    
 - [Alex Karpovich](https://github.com/alex-karpovich) - Chief Solution Architect / Main Developer / Maintainer            
 - [Alexei Osipov](https://github.com/alexei-osipov) - Solution Architect / Main Developer    

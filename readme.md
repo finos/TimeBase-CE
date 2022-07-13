@@ -102,7 +102,7 @@ _NOTE:_ Commits and pull requests to FINOS repositories will only be accepted fr
 - [Daniil Yarmalkevich](https://github.com/ypldan) - Backend Developer      
 - [Maxim Gadalov](https://github.com/Maxim-Gadalov) - Backend Developer     
 - [Dzmitry Barkouski](https://github.com/MitoZ) - Front-end Developer     
-- [Vitali Zavarski](https://github.com/antshater) - Front-end Developer     
+- [Vitalii Zavarskii](https://github.com/antshater) - Front-end Developer     
 - [Maksim Samusenka](https://github.com/msamusenka) - Solution Architect (Integrations)     
 - [Eugene Karankow](https://github.com/ekarankow) - Backend Developer (Integrations)     
 - [Polina Gurinovich](https://github.com/PolinaGurinovich) - Front-end Developer (Integrations)     

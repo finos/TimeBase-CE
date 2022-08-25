@@ -1,12 +1,10 @@
 <img align="right" src="https://github.com/finos/TimeBase-CE/blob/main/timebase-logo.svg">
 
-
 # TimeBase CE
 
 [![FINOS - Incubating](https://cdn.jsdelivr.net/gh/finos/contrib-toolbox@master/images/badge-incubating.svg)](https://finosfoundation.atlassian.net/wiki/display/FINOS/Incubating)
 
 [![Maven Central](https://img.shields.io/maven-central/v/org.finos/finos.svg?maxAge=2592000)](https://search.maven.org/search?q=g:org.finos.timebase-ce)
-
 
 ## Business Problem
 
@@ -21,15 +19,33 @@ The goal is to provide enterprise grade time-series data management and messagin
 
 TimeBase can be used, simultaneously, as a traditional time-series database and real-time data messaging/streaming server. Data structures (“streams”) are user-defined. There is a rich API for interacting (ingesting, streaming) with TimeBase, which provide the necessary hooks for data population and data utilization.
 
+## Learn About TimeBase-CE
+
+### Leveraging the Open-source TimeBase CE to PowerCloud Hosted Analytical Application
+
+<a href="https://resources.finos.org/content/video-osff-nyc-2021-leveraging-the-open-source-timebase-ce-to-powercloud-hosted-analytical-application-ilya-gorelik-2021/?projects-sigs=timebase-ce">
+    <img src="https://www.finos.org/hubfs/FINOS/2021%20OSSF%20NYC%20Working%20Folder/OSSF%202021%20Videos/Leveraging%20the%20Open-source%20TimeBase%20CE%20Event-oriented%20Time-series%20Database%20to%20PowerCloud%20Hosted%20Analytical%20Applications%20-%20Ilya%20Gorelik%2c%20EPAM%20Systems_e3.png" width="250">
+</a>
+
+<a href="https://resources.finos.org/content/video-osff-nyc-2021-leveraging-the-open-source-timebase-ce-to-powercloud-hosted-analytical-application-ilya-gorelik-2021/?projects-sigs=timebase-ce">Leveraging the Open-source TimeBase-CE event-oriented time-series Database to PowerCloud Hosted Analytical Application.</a>
+
+### Timebase CE, with Connectivity to Crypto Exchanges
+
+<a href="https://resources.finos.org/content/timebase-ce-with-connectivity-to-crypto-exchanges/?projects-sigs=timebase-ce">
+    <img src="https://www.finos.org/hubfs/OSFF%202022%20London/Videos/Click%20to%20View%20Recording/Matthew%20Gorelik%20-%20OSFF%20London%202022-3.png" width="250">
+</a>
+         
+<a href="https://resources.finos.org/content/timebase-ce-with-connectivity-to-crypto-exchanges/?projects-sigs=timebase-ce" rel="bookmark">In this session, Matt will talk about TimeBase Community Edition and how the Open Source Community can leverage this technology to build their own analytical models, data visualizations, and unique applications.</a>
+
 ## Current State
 
 ### History:
 
-- 2006 – Timebase 1.0 (historical data analytics, SQL)    
-- 2010 – Timebase 2.0 (timeseries data base, live streaming)    
-- 2015 – Timebase 5.0 (Very large databases, HDFS)    
-- 2018 – IPC/UDP low latency mode (Timebase topics)    
-- 2019 – Cloud support (REST/WS, Docker, Kuber)    
+- 2006 – Timebase 1.0 (historical data analytics, SQL)
+- 2010 – Timebase 2.0 (timeseries data base, live streaming)
+- 2015 – Timebase 5.0 (Very large databases, HDFS)
+- 2018 – IPC/UDP low latency mode (Timebase topics)
+- 2019 – Cloud support (REST/WS, Docker, Kuber)
 - 2021 – Timebase 6.0 Community Edition (open source) and Clustering
 
 ## Roadmap
@@ -40,9 +56,9 @@ TimeBase can be used, simultaneously, as a traditional time-series database and 
 
 ## Existing Materials
 
-* [TimeBase repository](https://github.com/epam/TimeBase)
-* [Web site](http://timebase.info)
-* [Documentation](https://kb.timebase.info) 
+- [TimeBase repository](https://github.com/epam/TimeBase)
+- [Web site](http://timebase.info)
+- [Documentation](https://kb.timebase.info)
 
 ## Build
 
@@ -58,21 +74,23 @@ Full clean and build of all modules
 ```
 
 ## Run
-Start TimeBase using [Docker](https://www.docker.com/) 
+
+Start TimeBase using [Docker](https://www.docker.com/)
 
 ```
-docker run --rm -d \ 
+docker run --rm -d \
     -p 8011:8011 \
     --name=timebase-server \
     --ulimit nofile=65536:65536 \
     finos/timebase-ce-server:6.1
-```    
+```
 
 ## Usage example
 
 https://kb.timebase.info/community/development/libs
 
 ## Releases
+
 The following file lists known Timebase CE vulnerabilities:
 
 https://github.com/finos/TimeBase-CE/blob/main/CVE.md
@@ -88,24 +106,24 @@ https://github.com/finos/TimeBase-CE/blob/main/CVE.md
 
 _NOTE:_ Commits and pull requests to FINOS repositories will only be accepted from those contributors with an active, executed Individual Contributor License Agreement (ICLA) with FINOS OR who are covered under an existing and active Corporate Contribution License Agreement (CCLA) executed with FINOS. Commits from individuals not covered under an ICLA or CCLA will be flagged and blocked by the FINOS Clabot tool. Please note that some CCLAs require individuals/employees to be explicitly named on the CCLA. The EasyCLA bot will monitor all pull requests to ensure compliance.
 
-*Need an ICLA? Unsure if you are covered under an existing CCLA? Email [help@finos.org](mailto:help@finos.org)*
+_Need an ICLA? Unsure if you are covered under an existing CCLA? Email [help@finos.org](mailto:help@finos.org)_
 
 ## Development Team
 
-- [Stuart Farr](https://github.com/stuartfarr) - Business    
+- [Stuart Farr](https://github.com/stuartfarr) - Business
 - Matthew Gorelik - Product Manager
-- [Aliaksei Vavilov](https://github.com/avavilau) - Delivery Manager    
-- [Alex Karpovich](https://github.com/alex-karpovich) - Chief Solution Architect / Main Developer / Maintainer            
-- [Alexei Osipov](https://github.com/alexei-osipov) - Solution Architect / Main Developer    
-- [Andy Malakov](https://github.com/andymalakov) - Solution Architect     
-- [Raman Kisel](https://github.com/Romkisel) - Backend Developer    
-- [Daniil Yarmalkevich](https://github.com/ypldan) - Backend Developer      
-- [Maxim Gadalov](https://github.com/Maxim-Gadalov) - Backend Developer     
-- [Dzmitry Barkouski](https://github.com/MitoZ) - Front-end Developer     
-- [Vitalii Zavarskii](https://github.com/antshater) - Front-end Developer     
-- [Maksim Samusenka](https://github.com/msamusenka) - Solution Architect (Integrations)     
-- [Eugene Karankow](https://github.com/ekarankow) - Backend Developer (Integrations)     
-- [Polina Gurinovich](https://github.com/PolinaGurinovich) - Front-end Developer (Integrations)     
+- [Aliaksei Vavilov](https://github.com/avavilau) - Delivery Manager
+- [Alex Karpovich](https://github.com/alex-karpovich) - Chief Solution Architect / Main Developer / Maintainer
+- [Alexei Osipov](https://github.com/alexei-osipov) - Solution Architect / Main Developer
+- [Andy Malakov](https://github.com/andymalakov) - Solution Architect
+- [Raman Kisel](https://github.com/Romkisel) - Backend Developer
+- [Daniil Yarmalkevich](https://github.com/ypldan) - Backend Developer
+- [Maxim Gadalov](https://github.com/Maxim-Gadalov) - Backend Developer
+- [Dzmitry Barkouski](https://github.com/MitoZ) - Front-end Developer
+- [Vitalii Zavarskii](https://github.com/antshater) - Front-end Developer
+- [Maksim Samusenka](https://github.com/msamusenka) - Solution Architect (Integrations)
+- [Eugene Karankow](https://github.com/ekarankow) - Backend Developer (Integrations)
+- [Polina Gurinovich](https://github.com/PolinaGurinovich) - Front-end Developer (Integrations)
 - [Aliaksei Strakh](https://github.com/astrakh) - QA Automation
 - [Sergei Remsha](https://github.com/sr-remsha) - Technical Writer
 

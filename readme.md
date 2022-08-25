@@ -19,15 +19,13 @@ The goal is to provide enterprise grade time-series data management and messagin
 
 TimeBase can be used, simultaneously, as a traditional time-series database and real-time data messaging/streaming server. Data structures (“streams”) are user-defined. There is a rich API for interacting (ingesting, streaming) with TimeBase, which provide the necessary hooks for data population and data utilization.
 
-## Learn About TimeBase-CE
-
-### Leveraging the Open-source TimeBase CE to PowerCloud Hosted Analytical Application
+### Leveraging TimeBase-CE
 
 <a href="https://resources.finos.org/content/video-osff-nyc-2021-leveraging-the-open-source-timebase-ce-to-powercloud-hosted-analytical-application-ilya-gorelik-2021/?projects-sigs=timebase-ce">
     <img src="https://www.finos.org/hubfs/FINOS/2021%20OSSF%20NYC%20Working%20Folder/OSSF%202021%20Videos/Leveraging%20the%20Open-source%20TimeBase%20CE%20Event-oriented%20Time-series%20Database%20to%20PowerCloud%20Hosted%20Analytical%20Applications%20-%20Ilya%20Gorelik%2c%20EPAM%20Systems_e3.png" width="250">
 </a>
 
-<a href="https://resources.finos.org/content/video-osff-nyc-2021-leveraging-the-open-source-timebase-ce-to-powercloud-hosted-analytical-application-ilya-gorelik-2021/?projects-sigs=timebase-ce">Leveraging the Open-source TimeBase-CE event-oriented time-series Database to PowerCloud Hosted Analytical Application.</a>
+<a href="https://resources.finos.org/content/video-osff-nyc-2021-leveraging-the-open-source-timebase-ce-to-powercloud-hosted-analytical-application-ilya-gorelik-2021/?projects-sigs=timebase-ce">Leveraging TimeBase-CE event-oriented time-series database to PowerCloud hosted analytical application.</a>
 
 ### Timebase CE, with Connectivity to Crypto Exchanges
 

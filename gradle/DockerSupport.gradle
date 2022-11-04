@@ -59,7 +59,7 @@ task dockerLogout(type: Exec) {
 }
 
 // Always do a logout if login was executed
-dockerLogin.finalizedBy dockerLogout
+//dockerLogin.finalizedBy dockerLogout
 
 // Example: 5.3.21
 def dockerFullTagVersion = rootProject.properties['version'].toString()
@@ -78,7 +78,7 @@ task printDockerTagVersion {
         println "Docker short tag version: " + dockerShortTagVersion
     }
 }
-dockerLogin.dependsOn printDockerTagVersion
+//dockerLogin.dependsOn printDockerTagVersion
 
 allprojects {
 
@@ -138,7 +138,7 @@ allprojects {
                 // dockerRemoveExistingImage
                 def dockerRemoveExistingImageTask = tasks.create('dockerRemoveExistingImage' + flavorTaskSuffix, Exec) {
                     group 'docker'
-                    dependsOn dockerLogin
+                    //dependsOn dockerLogin
                     description 'Removes existing docker image tags if it\'s has same tags as image we going to create'
 
                     workingDir rootDir
@@ -154,7 +154,7 @@ allprojects {
                         }
                     }
                 }
-                dockerLogout.mustRunAfter dockerRemoveExistingImageTask
+                //dockerLogout.mustRunAfter dockerRemoveExistingImageTask
 
                 def dockerFileReplaceTokens = project.ext.has('dockerFileReplaceTokens') ? project.ext['dockerFileReplaceTokens'] : null
 
@@ -185,7 +185,7 @@ allprojects {
 
                     dependsOn prepareFilesForDockerTask
                     dependsOn copyDockerfileTask
-                    dependsOn dockerLogin
+                    //dependsOn dockerLogin
                     dependsOn dockerRemoveExistingImageTask
 
 
@@ -200,7 +200,7 @@ allprojects {
                         }
                     }
                 }
-                dockerLogout.mustRunAfter dockerBuildImageTask
+                //dockerLogout.mustRunAfter dockerBuildImageTask
                 dockerBuildAllImagesTask.dependsOn dockerBuildImageTask
 
                 // dockerPublishImage
@@ -225,7 +225,7 @@ allprojects {
                         }
                     }
                 }
-                dockerLogout.mustRunAfter dockerPublishImageTask
+                //dockerLogout.mustRunAfter dockerPublishImageTask
                 dockerPublishAllImagesTask.dependsOn dockerPublishImageTask
 
                 def dockerPublishShortVersionImageTask = tasks.create('dockerPublishShortVersionImage' + flavorTaskSuffix, Exec) {
@@ -243,7 +243,7 @@ allprojects {
                         }
                     }
                 }
-                dockerLogout.mustRunAfter dockerPublishShortVersionImageTask
+                //dockerLogout.mustRunAfter dockerPublishShortVersionImageTask
                 dockerPublishAllImagesTask.dependsOn dockerPublishShortVersionImageTask
             }
         }

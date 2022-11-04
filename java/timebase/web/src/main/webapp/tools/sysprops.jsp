@@ -1,5 +1,7 @@
-
-<%@ page import="java.lang.management.RuntimeMXBean"%><%@ page import="java.lang.management.ManagementFactory"%><%@ page import="java.util.*"%>
+<%@ page import="java.lang.*"%>
+<%@ page import="java.lang.management.RuntimeMXBean"%>
+<%@ page import="java.lang.management.ManagementFactory"%>
+<%@ page import="java.util.*"%>
 
 <%!
     private static Map<String, String> getSortedProperties() {

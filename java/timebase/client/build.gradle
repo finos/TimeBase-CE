@@ -2,6 +2,10 @@ evaluationDependsOn(':java')
 
 ext {
     dockerImageName = 'timebase-ce-client'
+    dockerImages = [
+            main   : 'src/main/docker/Dockerfile',
+            java17 : 'src/main/docker/java17/Dockerfile',
+    ]
 }
 
 description = "Timebase Client API Library"

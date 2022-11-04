@@ -160,7 +160,6 @@ ext.commitTimestamp = getBuildTimestamp()
 println '======================================================================'
 println 'Platform                 ' + platformType
 println 'Current JVM              ' + currentJvm
-println 'Dotnet Configuration     ' + dotnetConfiguration
 println 'Platform Toolset         ' + platformToolsetVersion
 println 'Project version          ' + project.version
 println 'Revision                 ' + ext.revision

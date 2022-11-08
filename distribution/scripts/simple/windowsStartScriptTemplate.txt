@@ -17,7 +17,7 @@ set APP_HOME=%DIRNAME%${appHomeRelativePath}
 set HADOOP_HOME=%DELTIX_HOME%
 
 @rem Add default JVM options here. You can also use JAVA_OPTS and ${optsEnvironmentVar} to pass JVM options to this script.
-set DEFAULT_JVM_OPTS=${defaultJvmOpts}
+@rem set DEFAULT_JVM_OPTS=${defaultJvmOpts}
 
 @rem Find JAVACOMMAND.exe
 :setJavaHome

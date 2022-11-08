@@ -213,7 +213,7 @@ allprojects {
                     dependsOn dockerBuildImageTask
 
                     workingDir rootDir
-                    commandLine "docker", "push", urlWithFullVersion
+                    commandLine "docker", "push", urlWithFullVersion, "--all-tags"
                     standardOutput = stdout
 
                     if (debugDockerBuild) {

@@ -36,7 +36,7 @@ def dockerFullCommonPath = DOCKER_REGISTRY_URL + dockerCommonPath
 
 ext.dockerFullCommonPath = dockerFullCommonPath
 
-def debugDockerBuild = Boolean.parseBoolean(project.findProperty("debugDockerBuild") ?: 'false')
+def debugDockerBuild = Boolean.parseBoolean(project.findProperty("debugDockerBuild") ?: 'true')
 
 task dockerLogin(type: Exec) {
     commandLine "docker", "login", "--username=$DOCKER_REGISTRY_USERNAME", "--password=$DOCKER_REGISTRY_PASSWORD", "$DOCKER_REGISTRY_URL"

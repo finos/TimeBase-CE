@@ -4,6 +4,10 @@ description = "Timebase Server"
 
 ext {
     dockerImageName = 'timebase-ce-server'
+    dockerImages = [
+            main   : 'src/main/docker/Dockerfile',
+            java17 : 'src/main/docker/java17/Dockerfile',
+    ]
 }
 
 shadowJar {

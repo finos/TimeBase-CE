@@ -51,6 +51,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipOutputStream;
 
 /**
  *  Timebase command line shell. See help for info.
@@ -398,7 +399,7 @@ public class TickDBShell extends AbstractShell {
 
             return (true);
         }
-                
+
         if (key.equalsIgnoreCase ("import")) {
 
             if (srcMsgFile == null) {
@@ -413,27 +414,14 @@ public class TickDBShell extends AbstractShell {
                 ImportExportHelper.filterMessageFile(srcMsgFile, dbmgr.getStreams()[0], selector, writeMode);
             } else if (args.length() > 0) {
                 DXTickStream stream = dbmgr.getStream(args);
-                if (stream == null) {
-                    //MessageFileHeader header = Protocol.readHeader(srcMsgFile);
-                    MessageFileHeader header = MessageFileHeader.migrate(Protocol.readHeader(srcMsgFile));
-                    RecordClassDescriptor[] types = header.getTypes();
+                if (stream == null)
+                    stream = ImportExportHelper.createStream(dbmgr.getDB(), args, srcMsgFile);
 
-                    RecordClassSet set = new RecordClassSet();
-                    for (RecordClassDescriptor type : types) {
-                        if (set.getClassDescriptor(type.getName()) == null)
-                            set.addContentClasses(type);
-                        else
-                            System.out.println("Skipped RCD " + type + " as duplicate");
-                    }
-
-                    StreamOptions options = new StreamOptions();
-                    options.name = args;
-                    options.distributionFactor = dbmgr.getDF();
-                    options.setMetaData(set.getContentClasses().length > 1, set);
-
-                    stream = dbmgr.getDB().createStream(options.name, options);
+                if (srcMsgFile.getName().endsWith(".zip")) {
+                    ImportExportHelper.filterArchiveFile(srcMsgFile, stream, selector, writeMode);
+                } else {
+                    ImportExportHelper.filterMessageFile(srcMsgFile, stream, selector, writeMode);
                 }
-                ImportExportHelper.filterMessageFile(srcMsgFile, stream, selector, writeMode);
             }
 
             return (true);
@@ -464,6 +452,22 @@ public class TickDBShell extends AbstractShell {
                 writer.close ();
             }
             
+            return (true);
+        }
+
+        if (key.equalsIgnoreCase ("export-with-spaces")) {
+            if (!dbmgr.checkSingleStream ())
+                return (true);
+
+            if (args == null) {
+                System.out.println ("Usage: export-with-spaces <destination>");
+                return (true);
+            }
+
+            try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(args))) {
+                ImportExportHelper.exportSpaces(zipOutputStream, dbmgr.getSingleStream(), selector);
+            }
+
             return (true);
         }
 

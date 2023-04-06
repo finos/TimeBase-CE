@@ -94,7 +94,7 @@ set channel <key> ...       Set current channels key(s). DB must be open.
 
     Example: ==> set channel trades
 
-set src <file>              Set source .qsmsg file for subsequent import 
+set src <file>              Set source .qsmsg or .zip file for subsequent import
                             and filtering.
 
 set writemode               Set WriteMode for messages import from .qsmsg file.
@@ -375,11 +375,16 @@ import [name]               Load the source .qsmsg file into the stream with
                             will be used. Use 'set src' and 'set stream' commands
                             to specify a source file and an active stream
                             respectively. if specified stream is not exists, then
-                            it will created with schema defined in message file.
+                            it will be created with schema defined in message file.
 
 export <dest>               Export active streams to the specified message file.
                             Use 'set stream' command to specify active streams.
     Example: ==> export d:\temp\exp.qsmsg.gz
+
+export-with-spaces <dest>   Export active stream spaces to the specified zip file.
+                            Result zip file will contain qsmsg file for each space.
+                            Use 'set stream' command to specify active stream.
+    Example: ==> export d:\temp\export.zip
 
 copyfrom <src stream> ...   Copy all data from the specified streams to the
                             current stream, using the currently set time range

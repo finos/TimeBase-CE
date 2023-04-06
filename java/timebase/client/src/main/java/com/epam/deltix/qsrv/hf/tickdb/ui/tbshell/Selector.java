@@ -843,6 +843,14 @@ public class Selector {
     public InstrumentMessageSource  select (boolean raw, boolean live) {
         return (select (new SelectionOptions (raw, live)));
     }
+
+    public boolean                  isAccepted(long timestamp) {
+        return timestamp >= getTime() && timestamp <= getEndtime();
+    }
+
+    public boolean                  isAccepted(long start, long end) {
+        return isAccepted(start) || isAccepted(end);
+    }
     
     private InstrumentMessageSource selectLiveOnly (SelectionOptions options) {
         options.live = true;

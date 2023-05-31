@@ -56,8 +56,20 @@ public abstract class SelectionOptionsCodec {
         if (serverVersion >= VERSION_WITH_FIXED_STREAM_TYPE_SUPPORT)
             out.writeBoolean(options.restrictStreamType);
 
-        if (serverVersion >= VERSION_WITH_SPACES_SUPPORT)
-            SerializationUtils.writeNullableString(options.space, out);
+        if (serverVersion >= VERSION_WITH_SPACES_SUPPORT) {
+            String[] spaces = options.spaces;
+
+            if (serverVersion >= 132) {
+                out.writeInt(spaces != null ? spaces.length : -1);
+                for (int i = 0; spaces != null && i < spaces.length; i++)
+                    SerializationUtils.writeNullableString(spaces[i], out);
+            } else {
+                if (spaces != null && spaces.length == 1)
+                    SerializationUtils.writeNullableString(options.spaces[0], out);
+                else
+                    throw new UnsupportedOperationException("Server version: " + serverVersion + " is not supporting multiply spaces.");
+            }
+        }
     }
 
     public static void read(DataInputStream in, SelectionOptions options, int clientVersion) throws IOException {
@@ -85,7 +97,17 @@ public abstract class SelectionOptionsCodec {
             options.restrictStreamType = in.readBoolean();
 
         if (clientVersion >= VERSION_WITH_SPACES_SUPPORT) {
-            options.space = SerializationUtils.readNullableString(in);
+            if (clientVersion >= 132) {
+                int size = in.readInt();
+                if (size >= 0) {
+                    options.spaces = new String[size];
+                    for (int i = 0; i < size; i++)
+                        options.spaces[i] = SerializationUtils.readNullableString(in);
+                }
+            } else {
+                String space = SerializationUtils.readNullableString(in);
+                options.spaces = (space != null) ? new String[] {space} : null;
+            }
         }
     }
 }

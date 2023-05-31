@@ -27,6 +27,7 @@ import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.qsrv.hf.tickdb.pub.SelectionOptions;
 import com.epam.deltix.util.collections.ElementsEnumeration;
 import com.epam.deltix.util.collections.KeyEntry;
+import com.epam.deltix.util.collections.SmallArrays;
 import com.epam.deltix.util.collections.generated.*;
 import com.epam.deltix.util.lang.DisposableListener;
 import com.epam.deltix.util.lang.Util;
@@ -289,7 +290,7 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
     }
 
     private boolean addSources(long timestamp, long nstime, SourceSubscription sub, long limit) {
-        TSRoot[] roots = stream.getRoots(sub, nstime, options.live, options.space);
+        TSRoot[] roots = stream.getRoots(sub, nstime, options.live, options.spaces);
         return addSources(timestamp, nstime, sub, limit, roots);
     }
 
@@ -456,10 +457,18 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
         return false;
     }
 
+    private boolean            isSubscribed(String space) {
+        if (options.spaces != null)
+            return SmallArrays.indexOf(space, options.spaces) != -1;
+
+        return true;
+    }
+
     @Override
     public boolean          spaceCreated(String space) {
-        // we subscribed to the single space
-        if (options.space != null && !space.equals(options.space))
+
+        // skip, if spaces is not subscribed
+        if (!isSubscribed(space))
             return false;
 
         long timestamp = mx.getCurrentTime();

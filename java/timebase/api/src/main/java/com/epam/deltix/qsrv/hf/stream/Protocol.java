@@ -59,6 +59,8 @@ public class Protocol {
     public static final int     CUSTOM_BAR_CODE = 255;
     public static final int     CUSTOM_BAR_CODE2 = 254;
 
+    public static final String        FILE_EXTENSION = ".qsmsg.gz";
+
     public static long          MAX_TIME =
             GMT.getCalendarInstance(2099, 11, 31, 0, 0, 0, 0).getTimeInMillis();
 

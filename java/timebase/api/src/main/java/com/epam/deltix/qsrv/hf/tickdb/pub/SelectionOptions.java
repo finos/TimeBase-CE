@@ -101,7 +101,7 @@ public class SelectionOptions extends CommonOptions {
      *
      * See also {@link LoadingOptions#space}
      */
-    public String space = null;
+    public String[] spaces = null;
 
     /**
      * Include/Exclude schema change messages.
@@ -209,5 +209,9 @@ public class SelectionOptions extends CommonOptions {
 
     public void setIncludeSchemaChangeMessages(boolean includeSchemaChangeMessages) {
         this.includeSchemaChangeMessages = includeSchemaChangeMessages;
+    }
+
+    public void withSpaces(String ... spaces) {
+        this.spaces = spaces;
     }
 }

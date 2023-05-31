@@ -441,7 +441,7 @@ public class ImportExportHelper {
                 GZIPOutputStream gzos = new GZIPOutputStream(zipOutputStream, 1 << 16 / 2);
 
                 MessageWriter2 messageWriter = new MessageWriter2(gzos, interval, null, descriptors);
-                options.space = space;
+                options.withSpaces(space);
 
                 try (InstrumentMessageSource source =
                              stream.select(selector.getTime(), options, selector.getSelectedTypes(), selector.getSelectedEntities()))

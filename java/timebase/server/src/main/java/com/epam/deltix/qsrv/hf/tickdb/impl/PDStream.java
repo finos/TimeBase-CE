@@ -286,20 +286,26 @@ public class PDStream extends TickStreamImpl {
         }
     }
 
-    TSRoot[]        getRoots(PDStreamSource.SourceSubscription sub, long nstime, boolean live, @Nullable String space) {
-        if (space == null) {
+    TSRoot[]        getRoots(PDStreamSource.SourceSubscription sub, long nstime, boolean live, @Nullable String ... spaces) {
+        if (spaces == null) {
             return getRoots(sub, nstime, live);
         } else {
-            return getRootsForSpace(space);
+            return getRootsForSpace(spaces);
         }
     }
 
-    private TSRoot[]            getRootsForSpace(@Nonnull String space) {
+    private TSRoot[]            getRootsForSpace(@Nonnull String[] spaces) {
         assertOpen();
 
-        TSRoot tsr = getRootBySpaceName(space);
+        ArrayList<TSRoot> result = new ArrayList<>();
 
-        return new TSRoot[]{tsr};
+        for (int i = 0; i < spaces.length; i++) {
+            TSRoot tsr = getOrCreateRoot(spaces[i], false);
+            if (tsr != null)
+                result.add(tsr);
+        }
+
+        return result.toArray(new TSRoot[0]);
     }
 
     @Nonnull

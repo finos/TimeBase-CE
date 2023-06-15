@@ -34,7 +34,7 @@ public final class EnumClassDef extends ClassDef {
         EnumValueDef ...    values        
     )
     {
-        super (location, id, title, comment);
+        super (location, id, title, null, comment);
         this.isFlags = isFlags;
         this.values = values;
     }

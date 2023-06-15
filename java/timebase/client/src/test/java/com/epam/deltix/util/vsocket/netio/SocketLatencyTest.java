@@ -200,5 +200,3 @@ public class SocketLatencyTest extends DefaultApplication {
         new SocketLatencyTest(args).start();
     }
 }
-
-

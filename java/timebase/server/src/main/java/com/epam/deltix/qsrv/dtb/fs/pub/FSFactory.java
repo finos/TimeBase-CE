@@ -78,9 +78,8 @@ public final class FSFactory {
 
     public static AbstractFileSystem getLocalFS() {
         synchronized (cache) {
-            if (LOCAL_FS == null) {
+            if (LOCAL_FS == null)
                 LOCAL_FS = wrapChunkedCache(new LocalFS(), localFsCacheSizeInBytes);
-            }
             return LOCAL_FS;
         }
     }

@@ -109,6 +109,7 @@ CharLiteral =                       \'(([^\n\r\'\\]) | (\\\') | (\\\") | (\\\\) 
 <YYINITIAL> {
     "union"                         { return symbol (Symbols.UNION); }
     "select"                        { return symbol (Symbols.SELECT); }
+    "record"                        { return symbol (Symbols.RECORD); }
     "where"                         { return symbol (Symbols.WHERE); }
     "from"                          { return symbol (Symbols.FROM); }
     "and"                           { return symbol (Symbols.AND); }
@@ -118,7 +119,9 @@ CharLiteral =                       \'(([^\n\r\'\\]) | (\\\') | (\\\") | (\\\\) 
     "is"                            { return symbol (Symbols.IS); }
     "not"                           { return symbol (Symbols.NOT); }
     "null"                          { return symbol (Symbols.NULL); }
+    "nan"                           { return symbol (Symbols.NAN); }
     "as"                            { return symbol (Symbols.AS); }
+    "field"                         { return symbol (Symbols.FIELD); }
     "new"                           { return symbol (Symbols.NEW); }
     "true"                          { return symbol (Symbols.TRUE); }
     "false"                         { return symbol (Symbols.FALSE); }
@@ -134,6 +137,7 @@ CharLiteral =                       \'(([^\n\r\'\\]) | (\\\') | (\\\") | (\\\\) 
     "transient"                     { return symbol (Symbols.TRANSIENT); }
     "durable"                       { return symbol (Symbols.DURABLE); }
     "class"                         { return symbol (Symbols.CLASS); }
+    "guid"                          { return symbol (Symbols.GUID); }
     "instantiable"                  { return symbol (Symbols.INSTANTIABLE); }
     "auxiliary"                     { return symbol (Symbols.AUXILIARY); }
     "relative"                      { return symbol (Symbols.RELATIVE); }
@@ -161,7 +165,13 @@ CharLiteral =                       \'(([^\n\r\'\\]) | (\\\') | (\\\") | (\\\\) 
     "with"                          { return symbol (Symbols.WITH); }
     "limit"                         { return symbol (Symbols.LIMIT); }
     "offset"                        { return symbol (Symbols.OFFSET); }
-    
+    "if"                            { return symbol (Symbols.IF); }
+    "else"                          { return symbol (Symbols.ELSE); }
+    "case"                          { return symbol (Symbols.CASE); }
+    "when"                          { return symbol (Symbols.WHEN); }
+    "then"                          { return symbol (Symbols.THEN); }
+    "end"                           { return symbol (Symbols.END); }
+
     /* identifiers */
     {UnescapedIdentifier}           { return symbol (Symbols.IDENTIFIER, yytext ().toUpperCase ()); }
     \"                              { startBuffering (); yybegin (ESCID); }

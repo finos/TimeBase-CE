@@ -22,6 +22,7 @@ import com.epam.deltix.qsrv.dtb.store.codecs.BlockCompressorFactory;
 import com.epam.deltix.qsrv.dtb.store.codecs.TSFFormat;
 import com.epam.deltix.qsrv.dtb.store.codecs.TSNames;
 import com.epam.deltix.qsrv.dtb.store.impl.FileUtils;
+import com.epam.deltix.qsrv.dtb.store.impl.Restorer;
 import com.epam.deltix.util.collections.generated.ByteArrayList;
 
 import java.io.*;
@@ -52,10 +53,13 @@ public class MutableRawTSF extends RawTSF {
     }
 
     public void saveTo() throws IOException {
-        int sizeOnDisk;
 
-        AbstractPath tmp = path.getParentPath().append(TSNames.TMP_PREFIX + path.getName());
         int[] compLengths;
+        int sizeOnDisk;
+        AbstractPath tmp = path.getParentPath().append(TSNames.TMP_PREFIX + path.getName());
+
+        Restorer.LOGGER.debug("Saving data file to: " + path);
+
         int indexSize = computeIndexBlockSize(compressed, numEntities);
         ByteArrayList compressedData = new ByteArrayList();
         BlockCompressor compressor = null;

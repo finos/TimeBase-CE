@@ -16,12 +16,15 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers;
 
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.ARRT;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.Instance;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.InstancePool;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.memory.MemoryDataInput;
 import com.epam.deltix.util.memory.MemoryDataOutput;
+
+import java.util.List;
 
 /**
  *  Variable holding an array value.
@@ -44,10 +47,10 @@ public class InstanceArray extends BaseInstanceArray<Instance, ObjectArrayList<I
         this.polyArrayCodec = null;
     }
 
-    public InstanceArray(InstancePool pool, Class<?> ... classes) {
+    public InstanceArray(InstancePool pool, RecordClassDescriptor[] descriptors, Class<?>[] classes) {
         super(ObjectArrayList::new);
         this.pool = pool;
-        this.polyArrayCodec = new PolyArrayCodec(classes);
+        this.polyArrayCodec = new PolyArrayCodec(descriptors, classes);
     }
 
     @Override
@@ -66,6 +69,34 @@ public class InstanceArray extends BaseInstanceArray<Instance, ObjectArrayList<I
     @Override
     public Instance getElement() {
         return array.get(i);
+    }
+
+    @Override
+    public void decode(MemoryDataInput mdi) {
+        typedDecoded = false;
+        super.decode(mdi);
+    }
+
+    @Override
+    public void setNull() {
+        typedDecoded = false;
+        super.setNull();
+    }
+
+    @Override
+    public void setEmpty() {
+        typedDecoded = false;
+        super.setEmpty();
+    }
+
+    @Override
+    public void setTypedList(List list) {
+        tempTypedArray.clear();
+        tempTypedArray.addAll(list);
+        typedArray = tempTypedArray;
+        typedChanged = true;
+        writeTyped();
+        decode();
     }
 
     public void add(Instance value) {
@@ -93,7 +124,7 @@ public class InstanceArray extends BaseInstanceArray<Instance, ObjectArrayList<I
     }
 
     @Override
-    public void adjustTypeId(int adjustTypeIndex) {
+    public void adjustTypeId(int[] adjustTypeIndex) {
         decode();
         for (int i = 0; i < array.size(); ++i) {
             array.get(i).adjustTypeId(adjustTypeIndex);
@@ -135,7 +166,7 @@ public class InstanceArray extends BaseInstanceArray<Instance, ObjectArrayList<I
         if (!typedDecoded) {
             encode();
             typedDecoded = true;
-            in.setBytes(bytes());
+            in.setBytes(bytes(), offset(), length());
             polyArrayCodec.decodeList(tempTypedArray, in);
             typedArray = tempTypedArray;
         }

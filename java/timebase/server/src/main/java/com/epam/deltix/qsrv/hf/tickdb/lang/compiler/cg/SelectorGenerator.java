@@ -89,7 +89,7 @@ abstract class SelectorGenerator {
                 QValue cache;
                 QType fstype = fsi.qtype;
 
-                String comment = "Decoded " + fsi.fieldSelector;
+                String comment = "Decoded " + fsi.fieldSelector + " [" + csi.type.getName() + "]";
 
                 if (fsi.fieldSelector == null)  // base field, but not used anywhere else
                     if (fstype.instanceAllocatesMemory())

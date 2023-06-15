@@ -89,20 +89,26 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
             lastStates = getStates();
         }
         //
-        while (lastStates != null && nextLast()) {
-            switch (applyLimit(ACCEPT)) {
-                case ABORT:     return false;
-                case ACCEPT:    return true;
+        if (processedMessages > 0) {
+            while (lastStates != null && nextLast()) {
+                switch (applyLimit(ACCEPT)) {
+                    case ABORT:
+                        return false;
+                    case ACCEPT:
+                        return true;
+                }
             }
+            return next || nextLast();
         }
-        return next || nextLast();
+
+        return next;
     }
 
     protected final int acceptFirst(RawMessage inMsg, FilterState state) {
         timeSaver.reset(inMsg.getNanoTime(), timeInterval);
         emptyMessages = timeSaver.put(inMsg.getNanoTime()); // couldn't be > -1 on this iteration, cause it's first value
         int result = acceptGroupByTime(inMsg, state);
-        if (result == REJECT) {
+        if (result == REJECT || result == ABORT) {
             return result;
         } else {
             initialized = true;
@@ -233,7 +239,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
         while (lastStates.hasMoreElements()) {
             writeLast(lastStates.nextElement());
             if (outMsg.data != null)
-            return true;
+                return true;
         }
         lastStates = null;
         return false;

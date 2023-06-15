@@ -18,6 +18,7 @@ package com.epam.deltix.qsrv.dtb.store.raw;
 
 import com.epam.deltix.qsrv.dtb.store.codecs.*;
 import com.epam.deltix.qsrv.dtb.fs.pub.*;
+import com.epam.deltix.qsrv.dtb.store.impl.Restorer;
 import com.epam.deltix.qsrv.hf.pub.codec.TimeCodec;
 import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.lang.*;
@@ -78,6 +79,8 @@ public class RawTSF extends RawNode {
     )
         throws IOException 
     {
+        Restorer.LOGGER.debug("Read index from file: " + path);
+
         physicalLength = path.length ();
         minTimestamp = Long.MAX_VALUE;
         maxTimestamp = Long.MIN_VALUE;
@@ -216,6 +219,8 @@ public class RawTSF extends RawNode {
     {
         byte []                     buffer = new byte [1 << 20];
         MemoryDataInput             mdi = new MemoryDataInput ();
+
+        Restorer.LOGGER.debug("Read data file: " + path);
 
         try (BufferedInputStream is = open ()) {
             readIndex (is, startTimestamp, limitTimestamp);

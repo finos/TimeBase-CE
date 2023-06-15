@@ -108,7 +108,7 @@ public class ObjectContainer<T> extends Instance {
     public void decode() {
         if (!decoded) {
             decoded = true;
-            in.setBytes(bytes());
+            in.setBytes(bytes(), offset(), length());
             message = bufferMessage;
             decoder.decode(in, message);
         }

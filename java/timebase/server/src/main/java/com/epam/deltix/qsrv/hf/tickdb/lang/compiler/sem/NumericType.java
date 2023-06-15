@@ -272,6 +272,9 @@ public enum NumericType {
     public static NumericType resultType(@Nullable NumericType type1, @Nullable NumericType type2) {
         if (type1 == null || type2 == null)
             return null;
+        if (type1 == NumericType.Timestamp && type2 == NumericType.Timestamp) {
+            return NumericType.Int64;
+        }
         NumericType result = type1.getPriority() < type2.getPriority() ? type1 : type2;
         return result.getPriority() > Int32.getPriority() ? Int32: result;
     }
@@ -293,7 +296,8 @@ public enum NumericType {
     }
 
     public static boolean isNumericType(DataType type) {
-        return type instanceof IntegerDataType || type instanceof FloatDataType;
+        return type instanceof IntegerDataType || type instanceof FloatDataType ||
+            type instanceof DateTimeDataType;
     }
 
     public static boolean isNumericArrayType(DataType type) {

@@ -150,6 +150,10 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
             configIsDirty = true;
             storePropertiesIfDirty(path);
+
+            sequence.set(0);
+
+            writingStarted();
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {
@@ -167,6 +171,11 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     @Override
     public long             getVersion() {
         return sequence.get();
+    }
+
+    @Override
+    public void             setVersion(long version) {
+        sequence.set(version);
     }
 
     @Override
@@ -450,6 +459,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     public void iterate(TimeRange range, EntityFilter filter, TimeSliceIterator it) {
 
         sequence.incrementAndGet();
+        boolean writingStarted = false;
 
         try {
             long from = range != null ? range.from : Long.MIN_VALUE;
@@ -484,6 +494,11 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
                     getCache().checkWriteQueueLimit(getMaxFileSize());
 
                     locked = acquireWriteLock();
+
+                    if (!writingStarted)
+                        writingStarted();
+
+                    writingStarted = true;
 
                     if (filter == null || tsf.hasDataFor(filter)) {
 
@@ -532,23 +547,36 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         }
     }
 
-    public void drop(TimeRange range) {
+    public boolean drop(TimeRange range) {
 
         long from = range != null ? range.from : Long.MIN_VALUE;
         long to = range != null ? range.to : Long.MAX_VALUE;
 
-        acquireWriteLock();
+        boolean changed = false;
 
         sequence.incrementAndGet();
+        writingStarted();
 
         try {
-            TSFile tsf = findTSFForRead(this, from);
+            boolean locked = false;
+            TSFile tsf;
+
+            try {
+                locked = acquireSharedLock();
+                tsf = findTSFForRead(this, from);
+            } catch (IOException iox) {
+                throw new com.epam.deltix.util.io.UncheckedIOException(iox);
+            } finally {
+                if (locked)
+                    releaseSharedLock();
+            }
 
             for (;;) {
-                if (tsf == null)
-                    return;
-
+                locked = false;
                 TSFile next;
+
+                if (tsf == null)
+                    return false;
 
                 try {
                     long timestamp = tsf.getStartTimestamp();
@@ -556,21 +584,30 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
                     if (timestamp >= to)
                         break;
 
+                    locked = acquireWriteLock();
+
                     next = getNextFile(tsf, null);
 
                     if (!tsf.isFirst()) { // do not touch first file
 
                         if (next != null && next.getStartTimestamp() <= to) {
-                            if (timestamp > from)
+                            if (timestamp > from) {
+                                changed = true;
                                 tsf.drop();
+                            }
                         } else if (next == null) {
                             // tsf is last file, we can load into memory to check actual time range
-                            if (timestamp > from && tsf.getToTimestamp() < to)
+                            if (timestamp > from && tsf.getToTimestamp() < to) {
+                                changed = true;
                                 tsf.drop();
+                            }
                         }
                     }
                 } finally {
-                    unuse(tsf);
+                    release(tsf, locked);
+
+                    if (locked)
+                        releaseWriteLock();
                 }
 
                 tsf = next;
@@ -578,9 +615,8 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
-        } finally {
-            releaseWriteLock();
         }
+        return changed;
     }
 
     @Override
@@ -617,13 +653,16 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
     //
     //  TimeSliceStore IMPLEMENTATION
-    //
+    //    
     @Override
     public TimeSlice checkOutTimeSliceForRead(
             DAPrivate accessor,
             long timestamp,
             EntityFilter filter
     ) {
+        // check that we have enough memory
+        root.getCache().checkWriteQueueLimit(root.getMaxFileSize());
+
         acquireSharedLock();
 
         try {
@@ -722,6 +761,9 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             tsf.hasDataFor(EntityFilter.ALL); // make sure that all data is loaded
             writing.incrementAndGet();
 
+            if (writing.get() == 1)
+                writingStarted();
+
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {
@@ -731,6 +773,19 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         // out of write lock
         onSliceCheckout(tsf);
         return (tsf);
+    }
+
+    public void         writingStarted() {
+        AbstractPath tmp = root.getPath().append(TSNames.LOCK_NAME);
+
+        if (!tmp.exists()) {
+            try (OutputStream os = new BufferedOutputStream(tmp.openOutput(0))) {
+                DataOutputStream out = new DataOutputStream(os);
+                out.writeLong(System.currentTimeMillis());
+            } catch (IOException ex) {
+                LOGGER.warn(ex.getMessage());
+            }
+        }
     }
 
     @Nullable
@@ -752,9 +807,8 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
                     forward ? getNextFile(prevTSF, filter) : getPreviousFile(prevTSF, filter);
 
             if (keepPrevCheckout) {
-                if (next != null) {
+                if (next != null)
                     next.checkOutTo(accessor);
-                }
             } else {
                 safeSwitch(prevTSF, next, accessor); // Note: "next" may be null
             }
@@ -789,6 +843,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         assert rwl.isWriteLockedByCurrentThread();
 
         sequence.incrementAndGet(); // increment global sequence
+        writingStarted();
 
         insertNotify(file.getParent());
 
@@ -1023,8 +1078,8 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
         assert rwl.getReadHoldCount() == 0;
 
-        if (rwl.getReadHoldCount() > 0)
-            System.out.println(rwl + " has read locks: " + rwl.getReadHoldCount());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug(rwl + " has read locks: " + rwl.getReadHoldCount());
 
         try {
             symRegistry.clearRange(); // clear ranges - temp fix

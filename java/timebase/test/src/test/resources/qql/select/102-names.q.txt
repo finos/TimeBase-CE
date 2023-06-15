@@ -30,5 +30,5 @@ test select timestamp from alltypes
 test select 361. / 5 as "divisionResult"
 >_,TIMESTAMP,SYMBOL,TYPE,divisionResult
 >>,,,,72.2
-0,_,
+0,_,,CUSTOM
 !end

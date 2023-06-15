@@ -139,15 +139,18 @@ abstract class FieldAccessGenerator {
                     action.add(fsi.cache.decodeRelative(inVar, fsi.relativeTo.cache));
                 } else {
                     action.add(writeStatement(target));
-                    int adjustTypeIndex = adjustTypeIndex(fsi);
-                    if (adjustTypeIndex >= 0) {
-                        if (target instanceof QObjectValue) {
-                            action.add(((QObjectValue) target).adjustType(adjustTypeIndex));
-                        } else if (target instanceof QArrayValue) {
-                            QArrayValue arrayValue = (QArrayValue) target;
-                            if (arrayValue.isObjectArray()) {
-                                action.add(arrayValue.adjustType(adjustTypeIndex));
-                            }
+                }
+
+                int[] adjustTypeIndices = adjustTypeIndices(fsi);
+                if (adjustTypeIndices != null) {
+                    if (target instanceof QObjectValue) {
+                        JVariable variable = makeTypeMapVariable(fsi.field.getName(), adjustTypeIndices);
+                        action.add(((QObjectValue) target).adjustTypes(evalGenerator.interimStateVarContainer.access(variable)));
+                    } else if (target instanceof QArrayValue) {
+                        QArrayValue arrayValue = (QArrayValue) target;
+                        if (arrayValue.isObjectArray()) {
+                            JVariable variable = makeTypeMapVariable(fsi.field.getName(), adjustTypeIndices);
+                            action.add(arrayValue.adjustTypes(evalGenerator.interimStateVarContainer.access(variable)));
                         }
                     }
                 }
@@ -163,7 +166,7 @@ abstract class FieldAccessGenerator {
         return written;
     }
 
-    private int adjustTypeIndex(FieldSelectorInfo fsi) {
+    private int[] adjustTypeIndices(FieldSelectorInfo fsi) {
         DataType type = fsi.qtype.dt;
         if (type instanceof ArrayDataType) {
             type = ((ArrayDataType) type).getElementDataType();
@@ -171,30 +174,47 @@ abstract class FieldAccessGenerator {
 
         if (type instanceof ClassDataType) {
             ClassDataType classDataType = (ClassDataType) type;
-
-            int adjustIndex = 0;
             if (fsi.fieldAccessor != null) {
                 FieldAccessor fa = fsi.fieldAccessor;
-                for (int i = 0; i < fa.fieldRefs.length; ++i) {
-                    DataType faType = fa.fieldRefs[i].field.getType();
-                    if (faType instanceof ArrayDataType) {
-                        faType = ((ArrayDataType) faType).getElementDataType();
+                DataType outputType = fa.type;
+                if (outputType instanceof ArrayDataType) {
+                    outputType = ((ArrayDataType) outputType).getElementDataType();
+                }
+
+                if (outputType instanceof ClassDataType) {
+                    ClassDataType outputClassDataType = (ClassDataType) outputType;
+
+                    RecordClassDescriptor[] sourceDescriptors = classDataType.getDescriptors();
+                    RecordClassDescriptor[] targetDescriptors = outputClassDataType.getDescriptors();
+                    List<Integer> mapping = new ArrayList<>();
+                    for (int iSource = 0; iSource < sourceDescriptors.length; ++iSource) {
+                        for (int iTarget = 0; iTarget < targetDescriptors.length; ++iTarget) {
+                            if (sourceDescriptors[iSource].getName().equals(targetDescriptors[iTarget].getName())) {
+                                mapping.add(iSource);
+                                mapping.add(iTarget);
+                                break;
+                            }
+                        }
                     }
 
-                    if (faType instanceof ClassDataType) {
-                        ClassDataType faClassDataType = (ClassDataType) faType;
-                        if (faClassDataType.equals(classDataType)) {
-                            return adjustIndex;
-                        } else {
-                            adjustIndex += faClassDataType.getDescriptors().length;
-                        }
-                    } else {
-                        return -1;
-                    }
+                    return mapping.stream().mapToInt(m -> m).toArray();
                 }
             }
         }
 
-        return -1;
+        return null;
+    }
+
+    private JVariable makeTypeMapVariable(String fieldName, int[] adjustTypeIndices) {
+        JArrayInitializer arrayInitializer = CTXT.arrayInitializer(int[].class);
+        for (int i = 0; i < adjustTypeIndices.length; ++i) {
+            arrayInitializer.add(CTXT.intLiteral(adjustTypeIndices[i]));
+        }
+
+        return evalGenerator.interimStateVarContainer.addVar(
+            "Adjust types map for " + fieldName,
+            true, int[].class,
+            arrayInitializer
+        );
     }
 }

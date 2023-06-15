@@ -207,6 +207,10 @@ public class EqualityCheckOperation extends BinaryExpression {
         return predicate.test(dt1) && predicate.test(dt2);
     }
 
+    public OrderRelation getRelation() {
+        return relation;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -77,4 +77,3 @@ public enum CMEEventType {
         return value;
     }
 }
-

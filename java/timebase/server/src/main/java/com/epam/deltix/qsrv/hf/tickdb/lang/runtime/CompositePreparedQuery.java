@@ -53,13 +53,18 @@ public class CompositePreparedQuery implements PreparedQuery {
         private long limit = Long.MIN_VALUE;
         private long offset = Long.MIN_VALUE;
 
-        private InstrumentMessageSourceMultiplexer(InstrumentMessageSource[] feeds, SelectLimit limit) {
-            super(feeds);
+        private InstrumentMessageSourceMultiplexer(boolean ascending, boolean realTimeNotification, boolean live,
+                                                   InstrumentMessageSource[] feeds, SelectLimit limit) {
+
+            super(ascending, realTimeNotification);
             this.feeds = feeds;
             if (limit != null) {
                 this.limit = limit.getLimit();
                 this.offset = limit.getOffset();
             }
+
+            setLive(live);
+            reset(feeds);
         }
 
         private void setSchema(ClassSet<RecordClassDescriptor> schema) {
@@ -373,7 +378,13 @@ public class CompositePreparedQuery implements PreparedQuery {
             feeds[i] = subQueries[i].executeQuery(options, params);
         }
 
-        multiplexer = new InstrumentMessageSourceMultiplexer(feeds, limit);
+        if (options == null) {
+            options = new SelectionOptions();
+        }
+
+        multiplexer = new InstrumentMessageSourceMultiplexer(
+            !options.reversed, options.realTimeNotification, options.live, feeds, limit
+        );
         multiplexer.setSchema(schema);
         return multiplexer;
     }

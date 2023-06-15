@@ -57,7 +57,7 @@ public class StreamModifier extends LoggingActivityLauncher {
                 }                
             }
         );
-    }    
+    }
 
     @Override
     public ClassSet<RecordClassDescriptor> getSchema() {

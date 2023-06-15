@@ -176,6 +176,10 @@ public class ArithmeticOperation extends BinaryExpression {
             if (expression.function != ArithmeticFunction.ADD && expression.function != ArithmeticFunction.SUB) {
                 throw new IllegalTypeCombinationException(expression, left.type, right.type);
             }
+        } else if (DataTypeHelper.isTimestampAndTimestamp(left.type, right.type)) {
+            if (expression.function != ArithmeticFunction.SUB) {
+                throw new IllegalTypeCombinationException(expression, left.type, right.type);
+            }
         } else {
             if (!NumericType.isNumericOrNumericArray(left.type) || !NumericType.isNumericOrNumericArray(right.type)) {
                 throw new IllegalTypeCombinationException(expression, left.type, right.type);

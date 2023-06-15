@@ -36,12 +36,14 @@ public abstract class ClassDef extends Element {
     
     public final TypeIdentifier id;
     public final String         title;
+    public final String         guid;
     public final String         comment;
 
-    protected ClassDef (long location, TypeIdentifier id, String title, String comment) {
+    protected ClassDef (long location, TypeIdentifier id, String title, String guid, String comment) {
         super (location);
         this.id = id;
         this.title = title;
+        this.guid = guid;
         this.comment = comment;
     }        
     
@@ -51,6 +53,11 @@ public abstract class ClassDef extends Element {
         if (title != null) {
             s.append (' ');
             GrammarUtil.escapeStringLiteral (title, s);
+        }
+
+        if (guid != null) {
+            s.append(" GUID ");
+            GrammarUtil.escapeStringLiteral(guid, s);
         }
     }
     

@@ -113,5 +113,3 @@ public class NotificationHandler implements PropertyMonitorHandler {
             aSnapshot.propertyChanged(id, properties[index].name(), newValue);
     }
 }
-
-

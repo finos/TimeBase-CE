@@ -58,6 +58,14 @@ public abstract class BaseInstanceArray<V, T extends List<V>> extends Instance i
         return array;
     }
 
+    public void addAll(T value) {
+        setInstance();
+        setChanged();
+        if (value != null) {
+            get().addAll(value);
+        }
+    }
+
     public ObjectPool<? extends V> getPool() {
         return null;
     }
@@ -76,6 +84,10 @@ public abstract class BaseInstanceArray<V, T extends List<V>> extends Instance i
     public void setList(T list) {
         setArray(list);
         setChanged();
+    }
+
+    public void setTypedList(List list) {
+        throw new UnsupportedOperationException("Types are not supported");
     }
 
     @Override

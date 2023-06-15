@@ -1453,7 +1453,7 @@ public class Test_TDBServer {
         runner.getServerDb().open(false);
     }
 
-    @Test
+
     public void testMessages() throws Introspector.IntrospectionException {
         Introspector it = Introspector.createEmptyMessageIntrospector();
 

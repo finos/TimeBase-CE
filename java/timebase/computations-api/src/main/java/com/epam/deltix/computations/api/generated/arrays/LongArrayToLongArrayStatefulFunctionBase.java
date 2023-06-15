@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.epam.deltix.computations.api.generated.arrays;
+package com.epam.deltix.computations.api.generated.arrays;
 
 public abstract class LongArrayToLongArrayStatefulFunctionBase extends LongArrayStatefulFunctionBase
         implements LongArrayToLongArrayStatefulFunction {

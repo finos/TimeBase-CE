@@ -52,7 +52,7 @@ public class StreamKiller extends LoggingActivityLauncher {
                 }                
             }
         );            
-    }    
+    }
 
     @Override
     public ClassSet<RecordClassDescriptor> getSchema() {

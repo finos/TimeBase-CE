@@ -51,16 +51,27 @@ public class DataTypeCompiler {
                 case 48:    resenc = IntegerDataType.ENCODING_INT48;    break;
                 case 64:    resenc = IntegerDataType.ENCODING_INT64;    break;                
             }
-        }
-        else if (enc.equals (UNSIGNED)) {
+        } else if (enc.equals (UNSIGNED)) {
             switch (dts.dimension) {
                 case 30:    resenc = IntegerDataType.ENCODING_PUINT30;  break;
                 case 61:    resenc = IntegerDataType.ENCODING_PUINT61;  break;                              
             }
-        }
-        else if (enc.equals (INTERVAL) && dts.dimension == SimpleDataTypeSpec.NO_DIMENSION)
+        } else if (enc.equals (INTERVAL) && dts.dimension == SimpleDataTypeSpec.NO_DIMENSION) {
             resenc = IntegerDataType.ENCODING_PINTERVAL;
-        
+        } else if (enc.equals(IntegerDataType.ENCODING_INT8)) {
+            resenc = IntegerDataType.ENCODING_INT8;
+        } else if (enc.equals(IntegerDataType.ENCODING_INT16)) {
+            resenc = IntegerDataType.ENCODING_INT16;
+        } else if (enc.equals(IntegerDataType.ENCODING_INT32)) {
+            resenc = IntegerDataType.ENCODING_INT32;
+        } else if (enc.equals(IntegerDataType.ENCODING_INT64)) {
+            resenc = IntegerDataType.ENCODING_INT64;
+        } else if (enc.equals(IntegerDataType.ENCODING_PUINT30)) {
+            resenc = IntegerDataType.ENCODING_PUINT30;
+        } else if (enc.equals(IntegerDataType.ENCODING_PUINT61)) {
+            resenc = IntegerDataType.ENCODING_PUINT61;
+        }
+
         if (resenc == null)
             throw new IllegalEncodingException (dts);
         
@@ -78,14 +89,17 @@ public class DataTypeCompiler {
                 case 32:    resenc = FloatDataType.ENCODING_FIXED_FLOAT;    break;
                 case 64:    resenc = FloatDataType.ENCODING_FIXED_DOUBLE;    break;                
             }
-        }
-        else if (enc.equals (DECIMAL)) {
+        } else if (enc.equals (DECIMAL)) {
             if (dts.dimension >= 0 && dts.dimension <= MAX_DECIMAL_SCALE)
                 resenc = "DECIMAL(" + dts.dimension + ")";
             else if (dts.dimension == SimpleDataTypeSpec.NO_DIMENSION)
                 resenc = "DECIMAL";
         } else if (enc.equals (DECIMAL64)) {
             resenc = "DECIMAL64";
+        } else if (enc.equals(FloatDataType.ENCODING_FIXED_FLOAT)) {
+            resenc = FloatDataType.ENCODING_FIXED_FLOAT;
+        } else if (enc.equals(FloatDataType.ENCODING_FIXED_DOUBLE)) {
+            resenc = FloatDataType.ENCODING_FIXED_DOUBLE;
         }
         
         if (resenc == null)

@@ -85,9 +85,13 @@ configure(leafProjects) {
     compileJava.options.compilerArgs += '--add-opens=java.base/java.lang=ALL-UNNAMED'
     compileJava.options.compilerArgs += '--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED'
 
+
     compileTestJava.options.compilerArgs += '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED'
     compileTestJava.options.compilerArgs += '--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED'
     compileTestJava.options.compilerArgs += '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED'
+    compileTestJava.options.compilerArgs += '--add-opens=java.base/java.io=ALL-UNNAMED'
+    compileTestJava.options.compilerArgs += '--add-opens=java.base/java.lang=ALL-UNNAMED'
+    compileTestJava.options.compilerArgs += '--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED'
 
     sourceCompatibility = 11
     targetCompatibility = 11
@@ -210,7 +214,7 @@ configure(leafProjects) {
                 entry 'tomcat-embed-logging-juli' // Tomcat Logging
             }
 
-            dependencySet(group: 'io.aeron', version: '1.17.0') {
+            dependencySet(group: 'io.aeron', version: '1.38.1') {
                 entry 'aeron-client'
                 entry 'aeron-driver'
                 entry 'aeron-archive'

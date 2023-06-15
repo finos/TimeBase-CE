@@ -58,9 +58,9 @@ CREATE DURABLE STREAM TEST_ARR (
 )
 OPTIONS (DF = 1)
 /
->com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
-0,*,,_,SUCCESS,INFO,Stream created,0
+0,*,,SYSTEM,_,SUCCESS,INFO,Stream created,0
 !end
 #
 #   Describe
@@ -117,13 +117,13 @@ DURABLE STREAM "TEST_ARR" (
     )
         COMMENT 'This class tests the majority of field types';
 )
-OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
 !end
 #
 #   Drop stream via qql
 #
 test drop stream TEST_ARR
->com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
-0,*,,_,SUCCESS,INFO,Stream dropped,0
+0,*,,SYSTEM,_,SUCCESS,INFO,Stream dropped,0
 !end

@@ -16,10 +16,7 @@
  */
 package com.epam.deltix.qsrv.dtb.store.impl;
 
-import com.epam.deltix.gflog.api.AppendableEntry;
-import com.epam.deltix.gflog.api.Log;
-import com.epam.deltix.gflog.api.LogLevel;
-import com.epam.deltix.gflog.api.Loggable;
+import com.epam.deltix.gflog.api.*;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 import com.epam.deltix.util.lang.MathUtil;
 
@@ -31,9 +28,10 @@ import java.io.IOException;
 abstract class TSFolderEntry
     implements Comparable <TSFolderEntry>, Loggable
 {
-    //private final ArrayList<String> usages = new ArrayList();
-
-    static final Log                LOGGER = PDSImpl.LOGGER;
+    static final Log                LOGGER = LogFactory.getLog("deltix.dtb.filesystem");
+//    static {
+//        LOGGER.setLevel(LogLevel.DEBUG);
+//    }
     protected static final boolean  TRACE = false;
 
     private static final int        DESTROYED = -199;
@@ -114,6 +112,10 @@ abstract class TSFolderEntry
         assert root.currentThreadHoldsAnyLock ();
         
         return version;
+    }
+
+    public void                 setVersion(long version) {
+        this.version = version;
     }
 
 //    public int                  nextVersion () {

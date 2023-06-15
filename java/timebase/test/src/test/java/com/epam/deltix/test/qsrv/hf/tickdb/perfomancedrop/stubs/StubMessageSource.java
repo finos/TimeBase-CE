@@ -119,4 +119,3 @@ public class StubMessageSource<T extends InstrumentMessage> implements MessageSo
         throw new UnsupportedOperationException();
     }
 }
-

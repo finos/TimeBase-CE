@@ -40,7 +40,9 @@ class ConstantsProcessor {
         } else if (leftType instanceof FloatDataType && rightType instanceof FloatDataType) {
             return compute(e.function, left, right, (FloatDataType) leftType, (FloatDataType) leftType);
         } else if (DataTypeHelper.isTimestampAndInteger(leftType, rightType)) {
-            return computeDateTime(e.function, left, right);
+            return computeDateTimeAndInteger(e.function, left, right);
+        } else if (DataTypeHelper.isTimestampAndTimestamp(leftType, rightType)) {
+            return computeDateTimeAndDateTime(e.function, left, right);
         } else {
             throw new IllegalTypeCombinationException(e, leftType, rightType);
         }
@@ -50,8 +52,15 @@ class ConstantsProcessor {
                                                   CompiledConstant second, boolean swap) {
         DataType secondType = second.type;
         if (first.type.getElementDataType() instanceof DateTimeDataType) {
-            return CompiledArrayConstant.createDateArrayConstant(compute(e.function, (LongArrayList) first.getList(),
-                    second.getLong(), swap));
+            if (secondType instanceof DateTimeDataType) {
+                return CompiledArrayConstant.createLongArrayConstant(
+                    compute(e.function, (LongArrayList) first.getList(), second.getLong(), swap)
+                );
+            } else {
+                return CompiledArrayConstant.createDateArrayConstant(
+                    compute(e.function, (LongArrayList) first.getList(), second.getLong(), swap)
+                );
+            }
         } else if (first.type.getElementDataType() instanceof IntegerDataType) {
             IntegerDataType dataType = (IntegerDataType) first.type.getElementDataType();
             if (secondType instanceof DateTimeDataType) {
@@ -196,6 +205,10 @@ class ConstantsProcessor {
                 return CompiledArrayConstant.createDateArrayConstant(compute(function, (LongArrayList) left.getList(),
                         (IntegerArrayList) right.getList(), false));
             }
+        } else if (leftType instanceof DateTimeDataType && rightType instanceof DateTimeDataType) {
+            return CompiledArrayConstant.createLongArrayConstant(
+                compute(function, (LongArrayList) left.getList(), (LongArrayList) right.getList())
+            );
         } else {
             throw new IllegalTypeCombinationException(e, left.type, right.type);
         }
@@ -214,10 +227,16 @@ class ConstantsProcessor {
         }
     }
 
-    static CompiledConstant computeDateTime(ArithmeticFunction function, CompiledConstant left, CompiledConstant right) {
+    static CompiledConstant computeDateTimeAndInteger(ArithmeticFunction function, CompiledConstant left, CompiledConstant right) {
         long a = left.getLong();
         long b = right.getLong();
         return new CompiledConstant(StandardTypes.DATE_TIME_CONTAINER.getType(false), compute(function, a, b));
+    }
+
+    static CompiledConstant computeDateTimeAndDateTime(ArithmeticFunction function, CompiledConstant left, CompiledConstant right) {
+        long a = left.getLong();
+        long b = right.getLong();
+        return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(false), compute(function, a, b));
     }
 
     static CompiledConstant compute(ArithmeticFunction function, CompiledConstant left, CompiledConstant right,

@@ -28,5 +28,7 @@ public interface DataBlockInfo {
 
     public int                  getDataLength ();
 
+    public int                  getAllocatedLength ();
+
     public void                 clear();
 }

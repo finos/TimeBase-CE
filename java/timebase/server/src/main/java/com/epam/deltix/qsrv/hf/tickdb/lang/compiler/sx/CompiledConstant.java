@@ -73,8 +73,22 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
         return (value == null);
     }
 
+    public boolean isNan() {
+        if (value instanceof String) {
+            return "NaN".equals(value);
+        } else if (value instanceof Long && decimalLong) {
+            return Decimal64Utils.isNaN((Long) value);
+        } else if (value instanceof Double) {
+            return Double.isNaN((Double) value);
+        } else if (value instanceof Float) {
+            return Float.isNaN((Float) value);
+        }
+
+        return false;
+    }
+
     public long                     getLong () {
-        if (type == StandardTypes.CLEAN_DECIMAL) {
+        if (type == StandardTypes.CLEAN_DECIMAL || type == StandardTypes.NULLABLE_DECIMAL) {
             return Decimal64Utils.parse((String) value);
         }
         return ((Number) value).longValue ();
@@ -136,9 +150,9 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
 
     public Object getValue() {
         if (value instanceof String) {
-            if (type == StandardTypes.CLEAN_DECIMAL) {
+            if (type == StandardTypes.CLEAN_DECIMAL || type == StandardTypes.NULLABLE_DECIMAL) {
                 return Decimal64Utils.parse((String) value);
-            } else if (type == StandardTypes.CLEAN_FLOAT) {
+            } else if (type == StandardTypes.CLEAN_FLOAT || type == StandardTypes.NULLABLE_FLOAT) {
                 return Double.parseDouble((String) value);
             }
         }

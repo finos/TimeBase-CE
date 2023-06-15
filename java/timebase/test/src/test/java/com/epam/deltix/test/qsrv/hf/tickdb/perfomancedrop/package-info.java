@@ -14,7 +14,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 @javax.xml.bind.annotation.XmlSchema (
         namespace = "http://xml.deltixlab.com/internal/quantserver/3.0",
         elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED
@@ -62,5 +61,3 @@ package com.epam.deltix.test.qsrv.hf.tickdb.perfomancedrop;
  *
  * @author Alexei Osipov
  */
-
-

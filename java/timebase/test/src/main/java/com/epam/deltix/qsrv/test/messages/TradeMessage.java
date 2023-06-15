@@ -557,4 +557,3 @@ public class TradeMessage extends MarketMessage {
         return str;
     }
 }
-

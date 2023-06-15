@@ -57,7 +57,12 @@ final class DataBlockStub implements DataBlockInfo {
     @Override
     public int                  getDataLength () {
         return dataLength;
-    }    
+    }
+
+    @Override
+    public int                  getAllocatedLength () {
+        return SIZE_ON_DISK;
+    }
 
     public int                  getLengthOnDisk () {
         return lengthOnDisk;

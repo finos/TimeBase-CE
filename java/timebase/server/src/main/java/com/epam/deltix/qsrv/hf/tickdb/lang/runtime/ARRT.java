@@ -272,6 +272,15 @@ public class ARRT {
         return sizeOfList;
     }
 
+    public static int encodeArrayWithoutSize(ObjectArrayList<CharSequence> list, MemoryDataOutput out, AlphanumericCodec codec) {
+        int startPosition = out.getPosition();
+        MessageSizeCodec.write(list.size(), out);
+        for (int i = 0; i < list.size(); ++i) {
+            codec.writeCharSequence(list.get(i), out);
+        }
+        return out.getPosition() - startPosition;
+    }
+
     public static int encodeArrayWithoutSize(LongArrayList list, MemoryDataOutput out, AlphanumericCodec codec) {
         int startPosition = out.getPosition();
         MessageSizeCodec.write(list.size(), out);
@@ -413,6 +422,16 @@ public class ARRT {
         int length = MessageSizeCodec.read(mdi);
         for (int i = 0; i < length; ++i) {
             list.add(codec.readLong(mdi));
+        }
+    }
+
+    public static void decodeArray(ObjectArrayList<CharSequence> list, MemoryDataInput mdi, AlphanumericCodec codec, StringBuilderPool pool) {
+        int length = MessageSizeCodec.read(mdi);
+        for (int i = 0; i < length; ++i) {
+            StringBuilder sb = pool.borrow();
+            sb.setLength(0);
+            sb.append(codec.readCharSequence(mdi));
+            list.add(sb);
         }
     }
 

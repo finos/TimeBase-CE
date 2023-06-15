@@ -93,7 +93,7 @@ public interface DataReader extends DataAccessor, IntermittentlyAvailableResourc
     /*
         Reopens reader to the given timestamp in nanoseconds.
      */
-    public void                 reopen(long timestamp);    
+    public void                 reopen(long timestamp);
 
     /**
      *  Closed all allocated and opened slices. Data reading can be resumed again calling reopen() method.

@@ -232,10 +232,10 @@ public final class LiveDataReaderImpl
         if (processor.processRealTime(currentTimestamp))
             return true;
 
-        if (currentTimeSlice != null && currentTimeSlice.isCheckoutOnly(this)) {
-            release(currentTimeSlice);
-            currentTimeSlice = null;
-        }
+//        if (currentTimeSlice != null && currentTimeSlice.isCheckoutOnly(this)) {
+//            release(currentTimeSlice);
+//            currentTimeSlice = null;
+//        }
 
         if (listener != null)
             throw UnavailableResourceException.INSTANCE;
@@ -280,9 +280,14 @@ public final class LiveDataReaderImpl
                     continue;
             }
 
-            if (!pqIsLoaded) {
-                currentTimeSlice.processBlocks(currentFilter, this);
-                pqIsLoaded = true;
+            try {
+                if (!pqIsLoaded) {
+                    currentTimeSlice.processBlocks(currentFilter, this);
+                    pqIsLoaded = true;
+                }
+            } catch (Exception ex) {
+                // in case of race conditions currentTimeSlice can be deleted here
+                DataReaderImpl.LOG.warn("Skipping error while reading slice: %s").with(ex);
             }
 
             // process waiting blocks (for live mode)
@@ -300,6 +305,10 @@ public final class LiveDataReaderImpl
 
             if (next != null) {
                 int state;
+
+                // TSFile already closed
+                if (!next.isActive())
+                    continue;
 
                 if (forward)
                     state = next.readMessageForward(processor);
@@ -336,7 +345,6 @@ public final class LiveDataReaderImpl
                 else
                     continue;
             } else {
-
                 release(currentTimeSlice);
 
                 if (limit != Long.MAX_VALUE && limit != Long.MIN_VALUE) {

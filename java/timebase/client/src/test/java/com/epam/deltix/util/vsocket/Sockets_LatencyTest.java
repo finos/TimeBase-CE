@@ -183,5 +183,3 @@ public class Sockets_LatencyTest {
         }
    }
 }
-
-

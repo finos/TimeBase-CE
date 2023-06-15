@@ -614,4 +614,3 @@ public class Test_MemoryExchangeThroughput extends TDBTestBase {
     }
 
 }
-

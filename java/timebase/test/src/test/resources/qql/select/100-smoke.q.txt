@@ -28,25 +28,25 @@ test select sequence from alltypes
 #
 #   Futures by name (official example)
 #
-test select name from securities where symbol == 'ESZ11'
+test select "name" from securities where symbol == 'ESZ11'
 >_,TIMESTAMP,SYMBOL,TYPE,name
-0,2011-04-06 01:47:24.194,ESZ11,S&P 500 E-Mini Dec11
+0,2011-04-06 01:47:24.194,ESZ11,FUTURE,S&P 500 E-Mini Dec11
 !end
 #
 #   Futures by root (official example)
 #
 test select distinct symbol from securities where rootSymbol == 'ES'
 >_,TIMESTAMP,SYMBOL,TYPE,$SYMBOL
-0,_,,ESZ11
-1,_,,ESU11
+0,_,,SYSTEM,ESZ11
+1,_,,SYSTEM,ESU11
 !end
 #
 #   Futures by root (in condition)
 #
 test select distinct symbol from securities where rootSymbol IN ('ES')
 >_,TIMESTAMP,SYMBOL,TYPE,$SYMBOL
-0,_,,ESZ11
-1,_,,ESU11
+0,_,,SYSTEM,ESZ11
+1,_,,SYSTEM,ESU11
 !end
 #
 #   By symbol (official example)
@@ -63,14 +63,13 @@ set max 100
 test select null as nullcol, 38 as intcol
 >_,TIMESTAMP,SYMBOL,TYPE,NULLCOL,INTCOL
 >>,,,,_,38
-0,_,
+0,_,,CUSTOM
 !end
 #
 #   Select from void message source
 #
 test select *
->VOID,TIMESTAMP,SYMBOL,TYPE
-0,_,
+>>> Error: CompilationException: 1.8..9: Can't use * without source
 !end
 #
 #   Select constant
@@ -78,42 +77,42 @@ test select *
 test select 1
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,1
-0,_,
+0,_,,CUSTOM
 !end
 #
 #   Select without a list
 #
 test select
 >_,TIMESTAMP,SYMBOL,TYPE
-0,_,
+0,_,,CUSTOM
 !end
 #
 #   distinct between
 #
 test select distinct sequence from alltypes where sequence between 4 and 8
 >_,TIMESTAMP,SYMBOL,TYPE,sequence
-0,_,,4
-1,_,,5
-2,_,,6
-3,_,,7
-4,_,,8
+0,_,,SYSTEM,4
+1,_,,SYSTEM,5
+2,_,,SYSTEM,6
+3,_,,SYSTEM,7
+4,_,,SYSTEM,8
 !end
 #
 #   in condition
 #
 test select distinct sequence from alltypes where sequence IN (4,8)
 >_,TIMESTAMP,SYMBOL,TYPE,sequence
-0,_,,4
-1,_,,8
+0,_,,SYSTEM,4
+1,_,,SYSTEM,8
 !end
 #
 #   logic precedence
 #
 test select distinct sequence from alltypes where sequence < 4 and not sequence < 2 or sequence > 98
 >_,TIMESTAMP,SYMBOL,TYPE,sequence
-0,_,,2
-1,_,,3
-2,_,,99
+0,_,,SYSTEM,2
+1,_,,SYSTEM,3
+2,_,,SYSTEM,99
 !end
 #
 #   binary type
@@ -130,10 +129,10 @@ test select binary_n from alltypes
 
 test select distinct(binary_n) from alltypes where sequence < 4
 >_,TIMESTAMP,SYMBOL,TYPE,binary_n
-0,_,,
-1,_,,01
-2,_,,0202
-3,_,,030303
+0,_,,SYSTEM,
+1,_,,SYSTEM,01
+2,_,,SYSTEM,0202
+3,_,,SYSTEM,030303
 !end
 
 set max 20

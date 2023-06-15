@@ -32,6 +32,7 @@ import com.epam.deltix.util.collections.generated.ObjectHashSet;
 
 import java.io.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.epam.deltix.qsrv.dtb.store.impl.TSFState.*;
 
@@ -49,6 +50,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             return new FileInput();
         }
     };
+
+    private final static ThreadLocal<SingleEntityFilter> filters = ThreadLocal.withInitial(SingleEntityFilter::new);
 
     static final int                        FILE_FORMAT_VERSION = 3;
 
@@ -76,7 +79,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     private TSFState                            state = null;
 
     // Indicates that file belongs to the write queue. Guarded by PDSImpl.
-    // Added to resolve race condition when file processed by WriterThread and does not belongs to queue.
+    // Added to resolve race condition when file processed by WriterThread and does not belong to queue.
 
     volatile boolean                            queued;
 
@@ -103,6 +106,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         Timestamp of the next slice
      */
     long                                        limitTimestamp = Long.MAX_VALUE;
+
+    private long                                allocatedSize;
 
     private final ThreadLocal<SingleEntityFilter>     sef = new ThreadLocal<>();
 
@@ -154,7 +159,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                 if (state == TSFState.DIRTY_CHECKED_OUT) {
                     //PDSImpl.LOGGER.log (Level.FINE, this + ": " + state + "->" + TSFState.DIRTY_QUEUED_FOR_WRITE);
 
-                    state = DIRTY_QUEUED_FOR_WRITE;
+                    setState(DIRTY_QUEUED_FOR_WRITE);
                     addToWriteQueue(cache);
 
                 } else if (state == DIRTY_QUEUED_FOR_WRITE) {
@@ -162,7 +167,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                 } else {
                     //LOGGER.log (Level.FINE, this + ": " + state + "->" + TSFState.CLEAN_CACHED);
 
-                    state = TSFState.CLEAN_CACHED;
+                    setState(TSFState.CLEAN_CACHED);
                     cache.fileWasCheckedInClean(this);
                 }
             }
@@ -187,7 +192,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
 
         assert state != DIRTY_QUEUED_FOR_WRITE;
 
-        state = TSFState.DIRTY_CHECKED_OUT;
+        setState(DIRTY_CHECKED_OUT);
     }
 
     @Override
@@ -199,16 +204,15 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         long timestamp
     )
     {
-        DAPrivate[] snapshot = getCheckouts();
+        if (checkouts == null || checkouts.isEmpty())
+            return;
 
-        boolean checkedOut = false;
+        DAPrivate[] snapshot = checkoutsSnapshot;
 
         for (int ii = 0, size = snapshot.length; ii < size; ii++) {
-            DAPrivate   acc = snapshot [ii];
+            DAPrivate acc = snapshot[ii];
 
-            if (accessor == acc)
-                checkedOut = true;
-            else if (acc != null)
+            if (acc != null && acc != accessor)
                 acc.asyncDataInserted(db, dataOffset, msgLength, timestamp);
         }
 
@@ -219,10 +223,12 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     public void             dataDropped(DAPrivate accessor, DataBlock db, int dataOffset, int length, long timestamp) {
         assert isCheckedOutTo (accessor);
 
-        DAPrivate[] snapshot = getCheckouts();
+        if (checkouts == null || checkouts.isEmpty())
+            return;
 
+        DAPrivate[] snapshot = checkoutsSnapshot;
         for (int ii = 0, size = snapshot.length; ii < size; ii++) {
-            DAPrivate   acc = snapshot [ii];
+            DAPrivate acc = snapshot[ii];
 
             if (acc != null && acc != accessor)
                 acc.asyncDataDropped(db, dataOffset, length, timestamp);
@@ -247,11 +253,31 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     }
 
     DAPrivate[]             getCheckouts() {
-        return checkoutsSnapshot;
+        return checkouts != null ? checkouts.toArray(new DAPrivate[checkouts.size()]) : null;
     }
 
     public int              getUncompressedSize() {
         return uncompressedSize;
+    }
+
+    public long              getAllocatedSize(boolean revalidate) {
+        if (revalidate)
+            allocatedSize = 0;
+
+        if (allocatedSize == 0) {
+            synchronized (this) {
+                if (dbs == null)
+                    return allocatedSize;
+
+                int numEntities = dbs.size();
+                for (int pos = 0; pos < numEntities; pos++) {
+                    DataBlockInfo test = dbs.getObjectNoRangeCheck(pos);
+                    allocatedSize += test.getAllocatedLength();
+                }
+            }
+        }
+
+        return allocatedSize;
     }
 
     boolean                 hasDataFor (EntityFilter filter)
@@ -279,7 +305,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     boolean                 hasDataFor (int entity)
             throws IOException
     {
-        ensureIndexAndDataLoaded (null, null);
+        SingleEntityFilter filter = filters.get();
+        filter.entity = entity;
+
+        ensureIndexAndDataLoaded (filter, null);
 
         synchronized (this) {
             int pos = find(entity);
@@ -290,21 +319,30 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
 
     @Override
     public DataBlock                getBlock (int entity, boolean create) {
-        DataBlock db;
+        DataBlock db = null;
 
-        ensureIndexAndDataLoadedCatchIOX (single (entity), null);
+        SingleEntityFilter filter = filters.get();
+        filter.entity = entity;
+
+        ensureIndexAndDataLoadedCatchIOX (filter, null);
 
         boolean             justCreated = false;
 
         synchronized (this) {
 
-            db = getOrLoadBlock (entity);
+            int pos = find(entity);
+
+            if (pos >= 0) {
+                DataBlockInfo info = dbs.getObjectNoRangeCheck(pos);
+
+                // we should have all blocks loaded here
+                assert info instanceof DataBlock;
+                db = (DataBlock) info;
+            }
 
             if (db == null) {
                 if (!create)
                     return (null);
-
-                int                 pos = find (entity);
 
                 assert pos < 0;
 
@@ -365,6 +403,9 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
 
         if (strategy == null)
             return;
+
+        // should be out of structure lock to prevent dead-lock on waiting
+        root.getCache().checkWriteQueueLimit(Math.max(getUncompressedSize(), root.getMaxFileSize()));
 
         root.acquireWriteLock();
 
@@ -550,11 +591,12 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     }
 
     @Override
-    public  void       truncate(final long timestamp, int entity, final DataAccessorBase accessor) {
+    public  boolean       truncate(final long timestamp, int entity, final DataAccessorBase accessor) {
 
         assertCheckedOutTo(accessor);
-
         root.acquireSharedLock();
+
+        AtomicBoolean changed = new AtomicBoolean(false);
 
         try {
             //  make sure that we have index loaded and entity data
@@ -569,7 +611,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                     AccessorBlockLink link = accessor.getBlockLink(block.getEntity(), block);
 
                     if (!link.isEmpty()) {
-                        uncompressedSize -= link.truncate(timestamp);
+                        long size = link.truncate(timestamp);
+                        uncompressedSize -= size;
+
+                        changed.set(size > 0);
 
                         if (link.isEmpty())
                             TreeOps.propagateDataDeletion(TSFile.this, block.getEntity());
@@ -585,6 +630,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         } finally {
             root.releaseSharedLock();
         }
+
+        return changed.get();
     }
 
     private void        setLastTimestamp(long timestamp) {
@@ -593,8 +640,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         lastTimestamp = timestamp;
     }
 
-    public void       cut(final long[] range, final int[] entities, final DataAccessorBase accessor) {
+    public boolean       cut(final long[] range, final int[] entities, final DataAccessorBase accessor) {
         assertCheckedOutTo(accessor);
+
+        AtomicBoolean changed = new AtomicBoolean(false);
 
         ensureIndexAndDataLoadedCatchIOX(new ListEntityFilter(entities), new AbstractBlockProcessor() {
 
@@ -604,7 +653,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                 // synchronized by TSFile
                 AccessorBlockLink link = accessor.getBlockLink(block.getEntity(), block);
                 if (!link.isEmpty()) {
-                    uncompressedSize -= link.cut(range[0], range[1]);
+                    long size = link.cut(range[0], range[1]);
+                    uncompressedSize -= size;
+
+                    changed.set(size > 0);
 
                     if (link.isEmpty())
                         TreeOps.propagateDataDeletion(TSFile.this, block.getEntity());
@@ -617,11 +669,15 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                 invalidateTime();
             }
         });
+
+        return changed.get();
     }
 
-    public  void       cut (final long startTime, final long endTime, final DataAccessorBase accessor) {
+    public  boolean       cut (final long startTime, final long endTime, final DataAccessorBase accessor) {
 
         assertCheckedOutTo(accessor);
+
+        AtomicBoolean changed = new AtomicBoolean(false);
 
         ensureIndexAndDataLoadedCatchIOX(EntityFilter.ALL, new AbstractBlockProcessor() {
             private long end = Long.MIN_VALUE;
@@ -633,7 +689,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                 AccessorBlockLink link = accessor.getBlockLink(block.getEntity(), block);
 
                 if (!link.isEmpty()) {
-                    uncompressedSize -= link.cut(startTime, endTime);
+                    long size = link.cut(startTime, endTime);
+                    uncompressedSize -= size;
+
+                    changed.set(size > 0);
 
                     if (link.isEmpty()) {
                         TreeOps.propagateDataDeletion(TSFile.this, block.getEntity());
@@ -652,9 +711,11 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                 updateStartTimestamp(start != Long.MAX_VALUE ? start : Long.MIN_VALUE);
             }
         });
+
+        return changed.get();
     }
 
-    private void                             updateStartTimestamp(long ts) {
+    private void                     updateStartTimestamp(long ts) {
         if (setStartTimestamp(ts) && getIdxInParent() == 0)
             TreeOps.setStartTimestamp(getParent(), ts);
     }
@@ -741,9 +802,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
 
         super.activate ();
 
+        root.getCache().fileActivated();
         //PDSImpl.LOGGER.log(Level.INFO, this + ": " + state + "->" + TSFState.CLEAN_CACHED);
 
-        state = TSFState.CLEAN_CACHED;
+        setState(TSFState.CLEAN_CACHED);
 
         if (isNew) {
             lastTimestamp = Long.MIN_VALUE;
@@ -764,16 +826,17 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             dropped = true;
 
             if (state == CLEAN_CACHED) {
-                state = DIRTY_QUEUED_FOR_WRITE;
+                setState(DIRTY_QUEUED_FOR_WRITE);
                 addToWriteQueue(root.getCache());
             } else if (state == CLEAN_CHECKED_OUT) {
-                state = DIRTY_CHECKED_OUT;
+                setState(DIRTY_CHECKED_OUT);
             }
         }
     }
 
     @Override
     synchronized void                deactivate () {
+        root.getCache().fileDeactivated();
 
         if (dbs != null) {
             for (int pos = 0, numEntities = dbs.size(); pos < numEntities; pos++)
@@ -785,10 +848,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         checkouts = null;
         uncompressedSize = -1;
 
-        if (LOGGER.isDebugEnabled())
-            LOGGER.debug().append(this).append(": ").append(state).append("-> null").commit(); //append(new Exception()).commit();
+        setState(null);
 
-        state = null;
         //lastTimestamp = Long.MAX_VALUE;
 
         super.deactivate();
@@ -813,16 +874,11 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         accessor.checkedOut(this);
 
         // prepare snapshot
-        if (checkoutsSnapshot == null)
-            checkoutsSnapshot = new DAPrivate[checkouts.size()];
-
-        checkoutsSnapshot = checkouts.toArray (checkoutsSnapshot);
+        checkoutsSnapshot = getCheckouts();
 
         switch (state) {
             case CLEAN_CACHED:
-                //PDSImpl.LOGGER.log (Level.INFO, this + ": " + state + "->" + TSFState.CLEAN_CHECKED_OUT);
-
-                state = TSFState.CLEAN_CHECKED_OUT;
+                setState(TSFState.CLEAN_CHECKED_OUT);
                 break;
 
             case DIRTY_QUEUED_FOR_WRITE:
@@ -835,9 +891,18 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                 //    PDSImpl.LOGGER.log(Level.WARN, this + ": " + state + "->" + TSFState.DIRTY_CHECKED_OUT + (dropped ? "(deleted)" : ""));
                 //}
 
-                state = TSFState.DIRTY_CHECKED_OUT;
+                setState(TSFState.DIRTY_CHECKED_OUT);
                 break;
         }
+    }
+
+    private void    setState(TSFState newState) {
+        assert Thread.holdsLock(this);
+
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug().append(this).append(": ").append(state).append("-> ").append(newState).commit(); //append(new Exception()).commit();
+
+        this.state = newState;
     }
 
     boolean                   store (BlockCompressor compressor) throws IOException {
@@ -850,10 +915,6 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         throws IOException
     {
         assert root.currentThreadHoldsAnyLock ();
-
-        // file can be checked out again - reject storing
-        if (state != DIRTY_QUEUED_FOR_WRITE)
-            return false;
 
         int             numEntities = dbs.size ();
 
@@ -878,6 +939,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                     ByteArray data = db.getData();
                     compLengths[ii] = compressor.deflate(data.getArray(), data.getOffset(), db.getDataLength(), compressedData);
                 }
+
+                db.setClean();
             }
 
             sizeOnDisk = indexSize + compressedData.size ();
@@ -893,7 +956,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         //  Rebuild the offsets array to correspond to the data on disk.
         //  Must get a shared structure lock to prevent folder changes.
         //
+
         AbstractPath    tmp = TreeOps.makeTempPath (getParent ().getPath (), getNormalName ());
+
+        //long                            t0 = System.currentTimeMillis ();
 
         try (OutputStream os = new BufferedOutputStream (tmp.openOutput (sizeOnDisk))) {
             DataOutputStream        dos = new DataOutputStream (os);
@@ -945,35 +1011,51 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         }
 
         TreeOps.finalize (tmp);
-
         isNew = false;
 
-//        if (DEBUG_VERIFY_FILE_AFTER_STORE) {
-//            TSFVerifier tsfv = new TSFVerifier ();
-//
-//            tsfv.setFile (getPath ());
-//
-//            try {
-//                tsfv.verifyAll ();
-//            } catch (Throwable x) {
-//                System.exit (1);
-//            }
-//        }
+        // change state
+        setClean();
+
+//        long                            t1 = System.currentTimeMillis ();
+//        double                          s = (t1 - t0);
+//        System.out.printf ("%s stored in %,3fms\n", tmp, s);
+
+        root.getCache().fileWritten();
+
         return true;
     }
-    //
-    //  INTERNALS
-    //
-    private EntityFilter            single (int entity) {
-        SingleEntityFilter filter = sef.get();
 
-        if (filter == null)
-            sef.set(filter = new SingleEntityFilter (entity));
-        else
-            filter.entity = entity;
+    private void            setClean() {
+        assert Thread.holdsLock(this);
 
-        return (filter);
+        if (checkouts == null || checkouts.isEmpty ()) {
+            if (state == DIRTY_QUEUED_FOR_WRITE) {
+                setState(CLEAN_CACHED);
+            } else {
+                LOGGER.warn().append(this).append(": ").append(state).append(" -> ").append(CLEAN_CACHED).commit();
+            }
+        } else {
+            if (state == DIRTY_QUEUED_FOR_WRITE) {
+                setState(DIRTY_CHECKED_OUT);
+            } else if (state != DIRTY_CHECKED_OUT) {
+                LOGGER.warn().append(this).append(": ").append(state).append(" -> ").append(TSFState.CLEAN_CACHED).commit();
+            }
+        }
     }
+
+//    //
+//    //  INTERNALS
+//    //
+//    private EntityFilter            single (int entity) {
+//        SingleEntityFilter filter = sef.get();
+//
+//        if (filter == null)
+//            sef.set(filter = new SingleEntityFilter (entity));
+//        else
+//            filter.entity = entity;
+//
+//        return (filter);
+//    }
 
     synchronized boolean               checkedInBy (DAPrivate accessor) {
         if (state == null)
@@ -988,21 +1070,18 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                 this + " is not checked out to " + accessor
             );
 
-        checkoutsSnapshot = checkouts.toArray (checkoutsSnapshot);
+        checkoutsSnapshot = getCheckouts();
 
         if (checkouts.isEmpty ()) {
             PDSImpl     cache = root.getCache ();
 
-            if (state == TSFState.DIRTY_CHECKED_OUT) {
-                //PDSImpl.LOGGER.log (Level.FINE, this + ": " + state + "->" + TSFState.DIRTY_QUEUED_FOR_WRITE);
-
-                state = DIRTY_QUEUED_FOR_WRITE;
+            if (state == DIRTY_CHECKED_OUT) {
+                setState(DIRTY_QUEUED_FOR_WRITE);
                 addToWriteQueue(cache);
-
             } else if (state == DIRTY_QUEUED_FOR_WRITE) {
                 LOGGER.warn().append(this).append(": ").append(state).append(" -> ").append(TSFState.CLEAN_CACHED).commit();
             } else {
-                state = TSFState.CLEAN_CACHED;
+                setState(CLEAN_CACHED);
                 cache.fileWasCheckedInClean(this);
             }
         }
@@ -1010,7 +1089,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         return true;
     }
 
-    private void    addToWriteQueue(PDSImpl cache) {
+    private void        addToWriteQueue(PDSImpl cache) {
         assert Thread.holdsLock(this);
 
         if (!queued) {
@@ -1118,6 +1197,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug().append("closing ").append(getPathString()).commit();
 
+            inputs.release(in);
             root.releaseSharedLock();
         }
     }
@@ -1162,9 +1242,11 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         return (db);
     }
     
-    private DataBlock               getOrLoadBlock (int entity) {
-        return (ensureIndexAndDataLoadedCatchIOX (single (entity), null));
-    }
+//    private DataBlock               getOrLoadBlock (int entity) {
+//        SingleEntityFilter filter = filters.get();
+//        filter.entity = entity;
+//        return (ensureIndexAndDataLoadedCatchIOX (filter, null));
+//    }
             
     private DataBlock               ensureIndexAndDataLoadedCatchIOX (
         EntityFilter                    filter,
@@ -1186,9 +1268,16 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
        Returns false if index is not loaded and creates index blocks
      */
     private FileInput                   ensureIndexLoaded() throws IOException {
+
+        synchronized (this) {
+            if (state == null)
+                throw new IllegalStateException(this + " is deactivated");
+        }
+
         boolean loadIndex = !isIndexLoaded();
 
         FileInput input = inputs.borrow();
+
         if (loadIndex) // accept that index maybe already loaded on this line
             openOrSeek (input, 0);
 
@@ -1216,8 +1305,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         BlockProcessor                  bp
     ) 
         throws IOException
-    {     
-        if (isIndexLoaded() && filter == null)
+    {
+        if (filter == null && isIndexLoaded())
             return (null);
         
         DataBlock               lastDB = null;
@@ -1307,7 +1396,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             return (lastDB);
         } finally {
             close(input);
-            inputs.release(input);
+            root.getCache().fileRead();
         }
     }
 
@@ -1354,8 +1443,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             long            endTime = dis.readLong ();
 
             if (dataLength == 0) {
-                if (LOGGER.isTraceEnabled())
-                    LOGGER.trace().append(this).append(": Skipping empty data block for ").append(entity).commit();
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug().append(this).append(": Skipping empty data block for ").append(entity).commit();
 
                 blockOffsetOnDisk += lengthOnDisk;
                 continue;

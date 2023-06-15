@@ -19,7 +19,7 @@ CREATE DURABLE STREAM "custom" 'custom name' (
         "nonstatic_float_ieee32" FLOAT NOT NULL BINARY (32),
         "nonstatic_float_decimal" FLOAT DECIMAL,
         "nonstatic_float_decimal_10" FLOAT DECIMAL (10)
-    );
+    ) AUXILIARY;
     CLASS "class2" UNDER "class1" (
         STATIC "static_boolean_true" BOOLEAN = true,
         STATIC "static_boolean_false" BOOLEAN NOT NULL = false TAGS ("adjustmentType":"Size","displayIdentifier":"true"),
@@ -84,9 +84,9 @@ CREATE DURABLE STREAM "custom" 'custom name' (
 )
 COMMENT 'custom description'
 /
->com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
-0,*,,_,SUCCESS,INFO,Stream created,0
+0,*,,SYSTEM,_,SUCCESS,INFO,Stream created,0
 !end
 #
 #   Describe
@@ -108,7 +108,8 @@ DURABLE STREAM "custom" 'custom name' (
         "nonstatic_float_ieee32" FLOAT NOT NULL BINARY (32),
         "nonstatic_float_decimal" FLOAT DECIMAL,
         "nonstatic_float_decimal_10" FLOAT DECIMAL (10)
-    );
+    )
+        AUXILIARY;
     CLASS "class2" UNDER "class1" (
         STATIC "static_boolean_true" BOOLEAN = true,
         STATIC "static_boolean_false" BOOLEAN NOT NULL = false,
@@ -173,14 +174,14 @@ DURABLE STREAM "custom" 'custom name' (
         "nonstatic_binary_notnullable" BINARY NOT NULL
     );
 )
-OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
 COMMENT 'custom description'
 !end
 #
 #   Drop stream via qql
 #
 test drop stream custom
->com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
-0,*,,_,SUCCESS,INFO,Stream dropped,0
+0,*,,SYSTEM,_,SUCCESS,INFO,Stream dropped,0
 !end

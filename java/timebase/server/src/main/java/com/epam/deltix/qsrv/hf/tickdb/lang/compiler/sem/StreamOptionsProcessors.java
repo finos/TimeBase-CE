@@ -216,6 +216,32 @@ public abstract class StreamOptionsProcessors {
                 target.highAvailability = value;
             }            
         };
+
+    private static final BooleanOptionProcessor<StreamOptions> UNIQUE_PROC =
+        new BooleanOptionProcessor<StreamOptions>("unique") {
+            @Override
+            protected boolean get(StreamOptions source) {
+                return (source.unique);
+            }
+
+            @Override
+            protected void set(StreamOptions target, boolean value) {
+                target.unique = value;
+            }
+        };
+
+    private static final StringOptionProcessor<StreamOptions> STORAGE_VERSION_PROC =
+        new StringOptionProcessor<StreamOptions>("storageVersion") {
+            @Override
+            protected String get(StreamOptions source) {
+                return (source.version);
+            }
+
+            @Override
+            protected void set(StreamOptions target, String value) {
+                target.version = value;
+            }
+        };
     
     static final OptionProcessor []     DURABLE_STREAM_OPS = {
         //LOCATION_PROC,
@@ -223,7 +249,9 @@ public abstract class StreamOptionsProcessors {
         POLYMORPHIC_PROC,
         PERIODICITY_PROC,
         DF_PROC,
-        HA_PROC
+        HA_PROC,
+        UNIQUE_PROC,
+        STORAGE_VERSION_PROC
     }; 
     
     static final OptionProcessor []     TRANSIENT_STREAM_OPS = {
@@ -235,7 +263,8 @@ public abstract class StreamOptionsProcessors {
         LOSSY_PROC,
         IBS_PROC,
         MAXBS_PROC,
-        MAXTD_PROC
+        MAXTD_PROC,
+        UNIQUE_PROC
     };
     
     @SuppressWarnings ("unchecked")

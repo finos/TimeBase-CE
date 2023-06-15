@@ -35,19 +35,20 @@ terminal            QUESTION;
 
 /* Keywords. Please keep UNION first, it is used for range checks... */
 
-terminal            UNION,      SELECT,     WHERE,      FROM;
-terminal            IS,         NOT,        NULL,       AND;
+terminal            UNION,      SELECT,     RECORD,     WHERE,      FROM;
+terminal            IS,         NOT,        NULL,       NAN,        AND;
 terminal            OR,         NEW,        FALSE,      TRUE;
 terminal            DISTINCT,   CAST,       IN,         GROUP;
 terminal            BY,         RUNNING,    BETWEEN,    ARRAY,      OBJECT;
-terminal            AS,         CREATE,     STREAM,     OPTIONS;
-terminal            TRANSIENT,  DURABLE,    CLASS,      AUXILIARY,  INSTANTIABLE;
+terminal            AS,         FIELD,      CREATE,     STREAM,     OPTIONS;
+terminal            TRANSIENT,  DURABLE,    CLASS,      GUID,       AUXILIARY,  INSTANTIABLE;
 terminal            RELATIVE,   TO,         COMMENT,    ENUM;
 terminal            FLAGS,      UNDER,      STATIC,     DROP;
 terminal            ALTER,      MODIFY,     DEFAULT,    CONFIRM;
 terminal            LIKE,       TAGS,       JOIN,       LEFT;
 terminal            TRIGGER,    RESET,      OVER,       EVERY;
 terminal            TYPE,       WITH,       LIMIT,      OFFSET;
+terminal            IF,         ELSE,       CASE,       WHEN,   THEN,   END;
 
 /* Please keep IDENTIFIER first, it is used for range checks... */
 
@@ -78,6 +79,9 @@ non terminal TupleExpression        New_Expression;
 non terminal Expression []          Expression_List;
 non terminal ArrayList              Non_Empty_Expression_List;
 non terminal ArrayList              Non_Empty_Arithmetic_Expression_List;
+non terminal Expression[]           Selector_Expression_List;
+non terminal ArrayList              Non_Empty_Selector_Expression_List;
+non terminal Expression             Selector_Expression;
 non terminal TypeIdentifier         Type_Id;
 non terminal FieldIdentifier        Field_Id;
 non terminal FieldIdentifierPath    Field_Path;
@@ -143,16 +147,22 @@ non terminal TimeIntervalConstant   Time_Expression;
 non terminal Integer                Count_Expression;
 non terminal OverExpression         Over_Expression;
 non terminal LimitExpression        Select_Limit;
+non terminal ArrayList              When_Expression;
+non terminal ArrayList              Select_Records_List;
+non terminal Expression             Select_Record;
+non terminal TypeIdentifier         Type_Identifier;
+non terminal Expression[]           Selector;
 
 /* Precedences */
 precedence left UNION;
-precedence left DISTINCT, SELECT, FROM, WHERE, GROUP, ARRAY, JOIN, LEFT, TYPE, WITH;
+precedence left DISTINCT, SELECT, RECORD, FROM, WHERE, GROUP, ARRAY, JOIN, LEFT, TYPE, WITH;
 precedence left TRIGGER, RESET, OVER, EVERY, OFFSET, LIMIT;
 precedence left COMMA;
-precedence right AS;
+precedence left IF, CASE, WHEN, THEN, ELSE, END;
+precedence right AS, FIELD;
 precedence left COLON;
-precedence left OR;
-precedence left BETWEEN, AND;
+precedence left OR, AND;
+precedence left BETWEEN;
 precedence right NOT;
 precedence left IN;
 precedence left EQ, NEQ, STRICT_EQ, STRICT_NEQ, ASSIGN, LE, GE, LT, GT;
@@ -219,6 +229,13 @@ Expression ::=
         {: RESULT = new LikeExpression (lx (e1left, e2right), e1, e2, false); :} |
     Expression:e1 NOT LIKE Expression:e2
         {: RESULT = new LikeExpression (lx (e1left, e2right), e1, e2, true); :} |
+    Expression:e1 IF Expression:cond [ ELSE Expression:e {: RESULT = e; :} ]:e2
+        {: RESULT = new IfExpression(lx(e1left, e2right), cond, e1, (Expression) e2); :} |
+    CASE [ Expression:e1 {: RESULT = e1; :} ]:case_expr
+    When_Expression:when_expr
+    [ELSE Expression:e2 {: RESULT = e2; :} ]:else_expr
+    END
+        {: RESULT = new CaseExpression(lx(case_exprleft - 1, else_exprright + 1), (Expression) case_expr, when_expr, (Expression) else_expr); :} |
     Expression:q1 UNION Expression:q2
         {: RESULT = new UnionExpression(lx(q1left, q2right), q1, q2); :} |
     LPAREN Expression:q1 RPAREN Select_Limit:limit
@@ -231,6 +248,11 @@ Expression ::=
             }
         :};
 
+When_Expression ::=
+    WHEN Expression:e1 THEN Expression:e2
+        {: RESULT = new ArrayList(); RESULT.add(new WhenExpression(lx(e1left - 1, e2right), e1, e2)); :} |
+    When_Expression:list WHEN Expression:e1 THEN Expression:e2
+        {: list.add(new WhenExpression(lx(e1left - 1, e2right), e1, e2)); RESULT = list; :};
 
 Arithmetic_Expression ::=
     IDENTIFIER:t COLON Field_Id:f
@@ -280,6 +302,12 @@ Arithmetic_Expression ::=
         {: RESULT = new NullCheckExpression (lx (eleft, nright), e, false); :} |
     NULL:n
         {: RESULT = new Null (lx (nleft, nright)); :} |
+    Arithmetic_Expression:e IS NAN:n
+        {: RESULT = new NanCheckExpression(lx (eleft, nright), e, true); :} |
+    Arithmetic_Expression:e IS NOT NAN:n
+        {: RESULT = new NanCheckExpression(lx (eleft, nright), e, false); :} |
+    NAN:n
+        {: RESULT = new Nan(lx(nleft, nright)); :} |
     UINT:n
         {: RESULT = new IntegerConstant (lx (nleft, nright), Long.parseLong (n)); :} |
     ULONG:n
@@ -489,6 +517,26 @@ Non_Empty_Arithmetic_Expression_List ::=
     Non_Empty_Arithmetic_Expression_List:list COMMA Arithmetic_Expression:e
         {: list.add(e); RESULT = list; :};
 
+Selector_Expression_List ::=
+    /* empty */
+        {: RESULT = new Expression [0]; :} |
+    Non_Empty_Selector_Expression_List:list
+        {: RESULT = (Expression []) list.toArray (new Expression [list.size ()]); :};
+
+Non_Empty_Selector_Expression_List ::=
+    Selector_Expression:e
+        {: RESULT = new ArrayList (); RESULT.add (e); :} |
+    Non_Empty_Selector_Expression_List:list COMMA Selector_Expression:e
+        {: list.add (e); RESULT = list; :};
+
+Selector_Expression ::=
+    Expression:e
+        {: RESULT = e; :} |
+    Expression:e FIELD STRING:s
+        {: RESULT = new NamedFieldExpression(lx(eleft, sright), e, s); :} |
+    Expression:e FIELD IDENTIFIER:i
+        {: RESULT = new NamedFieldExpression(lx(eleft, iright), e, i); :};
+
 Field_List ::=
     Field_Id:id 
         {: RESULT = new ArrayList (); RESULT.add (id); :} |
@@ -541,8 +589,8 @@ Select_With_Expression ::=
 Select_Expression ::=
     SELECT:s  
         Select_Mode:m
-        Expression_List:sel
-        [ TYPE IDENTIFIER:tn {: RESULT = new TypeIdentifier(lx(tnleft - 1, tnright), tn); :} ]:t
+        Selector:sel
+        [ Type_Identifier:ti {: RESULT = ti; :} ]:t
         [ FROM Expression:q {: RESULT = q; :} ]:src
         [ Array_Join_Expression:aj {: RESULT = aj; :} ]:arrayJoin
         [ Over_Expression:o {: RESULT = o; :} ]:over
@@ -564,6 +612,36 @@ Select_Expression ::=
                     sel
                 );
         :};
+
+Selector ::=
+    Selector_Expression_List:sel
+        {: RESULT = sel; :} |
+    Select_Records_List:sel
+        {: RESULT = (Expression[]) sel.toArray(new Expression[sel.size ()]); :};
+
+Select_Records_List ::=
+    Select_Record:e
+        {: RESULT = new ArrayList(); RESULT.add(e); :} |
+    Select_Records_List:list Select_Record:e
+        {: list.add(e); RESULT = list; :};
+
+Select_Record ::=
+    RECORD Selector_Expression_List:sel
+    Type_Identifier:type
+    WHEN Expression:e
+    {:
+        RESULT =
+            new SelectRecordExpression (
+                lx (selleft, eright),
+                sel, type, (Expression) e
+            );
+    :};
+
+Type_Identifier ::=
+    TYPE IDENTIFIER:tn
+    {:
+        RESULT = new TypeIdentifier(lx(tnleft - 1, tnright), tn);
+    :};
 
 Array_Join_Expression ::=
     ARRAY JOIN Non_Empty_Arithmetic_Expression_List:joins
@@ -745,7 +823,8 @@ Stream_Member_Definition ::=
 
 Class_Type_Definition ::=
     CLASS:t Type_Id:id
-    [ STRING:title {: RESULT = title; :} ]:title  
+    [ STRING:title {: RESULT = title; :} ]:title
+    [ GUID STRING:guid {: RESULT = guid; :} ]:guid
     [ UNDER Type_Id:sup {: RESULT = sup; :} ]:sup  
     LPAREN Attribute_Definition_List:attrs RPAREN:rp
     [ Auxiliary_Instantiable_Clause:inst {: RESULT = inst; :} ]:inst
@@ -754,7 +833,7 @@ Class_Type_Definition ::=
             RESULT = 
                 new RecordClassDef (
                     lx (tleft, commentright),
-                    id, (String) title, (String) comment,
+                    id, (String) title, (String) guid, (String) comment,
                     inst != null ? ((boolean[]) inst)[0] : false,
                     inst != null ? ((boolean[]) inst)[1] : true,
                     (TypeIdentifier) sup,

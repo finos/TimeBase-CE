@@ -18,6 +18,8 @@ package com.epam.deltix.util.jcg;
 
 import com.epam.deltix.util.jcg.scg.JTypeImpl;
 
+import java.util.List;
+
 /**
  *
  */
@@ -25,17 +27,17 @@ public interface JContext {
     JCompoundStatement   compStmt ();
 
     JClass       newClass (
-        int                 modifiers,
-        String              packageName,
-        String              simpleName,
-        JClass              parent
+            int                 modifiers,
+            String              packageName,
+            String              simpleName,
+            JClass              parent
     );
 
     JClass       newClass (
-        int                 modifiers,
-        String              packageName,
-        String              simpleName,
-        Class <?>           parent
+            int                 modifiers,
+            String              packageName,
+            String              simpleName,
+            Class <?>           parent
     );
 
     JType        asType (Class <?> cls);
@@ -61,7 +63,7 @@ public interface JContext {
     JExpr        localVarRef(final String fieldName);
 
     JStatement   ifStmt (JExpr cond, JStatement then, JStatement els);
-    
+
     JStatement   ifStmt (JExpr cond1, JStatement then1, JExpr cond2, JExpr then2, JStatement els);
 
     JStatement   ifStmt (JExpr left, JExpr right, JStatement bothTrue, JStatement leftTrue, JStatement rightTrue, JStatement bothFalse);
@@ -69,6 +71,8 @@ public interface JContext {
     default JStatement ifStmt (JExpr left, JExpr right, JExpr bothTrue, JExpr leftTrue, JExpr rightTrue, JExpr bothFalse) {
         return ifStmt(left, right, bothTrue.asStmt(), leftTrue.asStmt(), rightTrue.asStmt(), bothFalse.asStmt());
     }
+
+    JStatement   ifStmt(List<JExpr> cond, List<JStatement> then, JStatement els);
 
     JStatement   ifStmt (JExpr cond, JStatement then);
 
@@ -93,7 +97,7 @@ public interface JContext {
     JExpr        staticCall (Class <?> cls, String method, JExpr ... args);
 
     JExpr        staticCall (Class <?> cls, String method, Class <?> typeArgument, JExpr ... args);
-    
+
     JExpr        newExpr (Class <?> cls, JExpr ... args);
 
     JExpr        newGenericExpr(Class<?> cls, JExpr ... args);

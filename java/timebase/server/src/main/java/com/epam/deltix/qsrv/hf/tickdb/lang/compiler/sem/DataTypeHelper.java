@@ -27,10 +27,17 @@ public class DataTypeHelper {
     public static int computeDistance(DataType source, DataType target) {
         if (NumericType.isNumericType(source) && NumericType.isNumericType(target)) {
             return NumericType.computeDistance(source, target);
+        } else if (source instanceof EnumDataType && target instanceof IntegerDataType) {
+            return 0;
         } else if (source instanceof ArrayDataType && target instanceof ArrayDataType) {
-            DataType e1 = ((ArrayDataType) source).getElementDataType();
-            DataType e2 = ((ArrayDataType) target).getElementDataType();
-            return e1.getClass() == e2.getClass() && Objects.equals(e1.getEncoding(), e2.getEncoding()) ? 0 : -1;
+            DataType sourceElement = ((ArrayDataType) source).getElementDataType();
+            DataType targetElement = ((ArrayDataType) target).getElementDataType();
+            if (sourceElement instanceof EnumDataType && targetElement instanceof IntegerDataType) {
+                return 0;
+            }
+
+            return sourceElement.getClass() == targetElement.getClass() &&
+                Objects.equals(sourceElement.getEncoding(), targetElement.getEncoding()) ? 0 : -1;
         }
         return target.getClass() == source.getClass() ? 0: -1;
     }
@@ -90,6 +97,10 @@ public class DataTypeHelper {
     public static boolean isTimestampAndInteger(DataType left, DataType right) {
         return TimebaseTypes.isDateTimeOrDateTimeArray(left) && NumericType.isInteger(right) ||
                 TimebaseTypes.isDateTimeOrDateTimeArray(right) && NumericType.isInteger(left);
+    }
+
+    public static boolean isTimestampAndTimestamp(DataType left, DataType right) {
+        return TimebaseTypes.isDateTimeOrDateTimeArray(left) && TimebaseTypes.isDateTimeOrDateTimeArray(right);
     }
 
 }

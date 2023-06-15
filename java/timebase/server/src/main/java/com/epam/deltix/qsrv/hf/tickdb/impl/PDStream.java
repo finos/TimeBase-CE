@@ -80,6 +80,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @XmlRootElement(name = "pdstream")
 public class PDStream extends TickStreamImpl {
@@ -132,11 +133,15 @@ public class PDStream extends TickStreamImpl {
      * Performs {@link #format()} without taking remote lock.
      */
     synchronized void formatWithoutLock() {
+        boolean isEmpty = root == null;
+
         init();
 
-        TSRoot[] active = getActiveRoots();
-        for (TSRoot tsr : active)
-            tsr.format();
+        if (!isEmpty) {
+            TSRoot[] active = getActiveRoots();
+            for (TSRoot tsr : active)
+                tsr.format();
+        }
 
         onDelete(); // clear redundant files
 
@@ -144,6 +149,8 @@ public class PDStream extends TickStreamImpl {
         isReadOnly = false;
 
         writeMetadata(true);
+
+        setDirty(true);
     }
 
     public synchronized void        rename (String key) {
@@ -237,11 +244,14 @@ public class PDStream extends TickStreamImpl {
     public void                     truncate(long timestamp, IdentityKey ... ids) {
         long time = TimeStamp.getNanoTime(timestamp);
 
-        TSRoot[] active = getActiveRoots();
-        for (TSRoot tsr : active)
-            deleteInternal(tsr, time, Long.MAX_VALUE, ids);
+        boolean changed = false;
+        for (TSRoot tsr : getActiveRoots()) {
+            if (deleteInternal(tsr, time, Long.MAX_VALUE, ids))
+                changed = true;
+        }
 
-        onStreamTruncated(time, ids.length != 0 ? ids : listEntities());
+        if (changed)
+            onStreamTruncated(time, ids.length != 0 ? ids : listEntities());
     }
 
     /**
@@ -250,18 +260,21 @@ public class PDStream extends TickStreamImpl {
      * @param id Instrument Identity to truncate
      */
     void                     truncateInternal(TSRoot root, long nstime, IdentityKey id) {
-        deleteInternal(root, nstime, Long.MAX_VALUE, id);
-
-        onStreamTruncated(nstime, id);
+        if (deleteInternal(root, nstime, Long.MAX_VALUE, id))
+           onStreamTruncated(nstime, id);
     }
 
     @Override
     public void                     delete(TimeStamp start, TimeStamp end, IdentityKey ... ids) {
-        TSRoot[] active = getActiveRoots();
-        for (TSRoot tsr : active)
-            deleteInternal(tsr, start.getNanoTime(), end.getNanoTime(), ids);
+        boolean changed = false;
 
-        onStreamTruncated(start.getNanoTime(), ids.length != 0 ? ids : listEntities());
+        for (TSRoot tsr : getActiveRoots()) {
+            if (deleteInternal(tsr, start.getNanoTime(), end.getNanoTime(), ids))
+                changed = true;
+        }
+
+        if (changed)
+            onStreamTruncated(start.getNanoTime(), ids.length != 0 ? ids : listEntities());
     }
 
     private TSRoot                  getRoot(IdentityKey id) {
@@ -442,36 +455,49 @@ public class PDStream extends TickStreamImpl {
     /*
         Deletes data, time range defined in nanoseconds
      */
-    private void                     deleteInternal(TSRoot root, final long from, final long to, IdentityKey... ids) {
+     /*
+        Deletes data, time range defined in nanoseconds
+     */
+    private boolean                     deleteInternal(TSRoot root, final long from, final long to, IdentityKey... ids) {
 
         assertOpen();
+
+        AtomicBoolean dataChanged = new AtomicBoolean(false);
 
         if (from > to)
             throw new IllegalArgumentException("Start time (" + GMT.formatNanos(from) + ") > End Time (" + GMT.formatNanos(to) + ")");
 
         if (ids == null || ids.length == 0) {
+
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Deleting data from [" + getKey() + ", space=" + root.getSpace() +
+                        " using time range [" + GMT.formatNanos(from) + "," + GMT.formatNanos(to) + "; instruments = ALL");
+
             // drop files first
-            root.drop(new com.epam.deltix.qsrv.dtb.store.pub.TimeRange(from, to));
+            dataChanged.set(root.drop(new TimeRange(from, to)));
 
             try (DataWriter writer = getDBImpl().store.createWriter ()) {
                 writer.associate(root);
 
-                root.iterate(new com.epam.deltix.qsrv.dtb.store.pub.TimeRange(from, to), null, new TimeSliceIterator(){ @Override public DataAccessor getAccessor(){ return writer;
+                root.iterate(new TimeRange(from, to), null, new TimeSliceIterator() {
+
+                    @Override
+                    public DataAccessor getAccessor() {
+                        return writer;
                     }
 
                     @Override
                     public void process(TimeSlice slice) {
                         //System.out.println("Process slice: " + slice);
-                        slice.cut(from, to, (DataAccessorBase)writer);
+                        dataChanged.set(slice.cut(from, to, (DataAccessorBase) writer));
                     }
                 });
             }
-            firePropertyChanged(TickStreamProperties.ENTITIES);
         } else {
             IntegerArrayList list = new IntegerArrayList(ids.length);
+            SymbolRegistry sr = root.getSymbolRegistry();
             ArrayList<CharSequence> names = new ArrayList<>();
 
-            SymbolRegistry sr = root.getSymbolRegistry();
             for (IdentityKey entity : ids) {
                 int id = sr.symbolToId(entity.getSymbol());
 
@@ -485,30 +511,39 @@ public class PDStream extends TickStreamImpl {
             final long[] range = new long[] {from, to};
             final int[] entities = list.toIntArray();
 
-            // actual entities is not found in this root
-            if (entities.length == 0)
-                return;
+            // actual entities exists found in this root
 
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Deleting data from [" + getKey() + ", space=" + root.getSpace() +
-                        " using time range [" + GMT.formatNanos(from) + "," + GMT.formatNanos(to) + "; instruments = (" + Arrays.toString(names.toArray()) + ")" );
+            if (entities.length > 0) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Deleting data from [" + getKey() + ", space=" + root.getSpace() +
+                            " using time range [" + GMT.formatNanos(from) + "," + GMT.formatNanos(to) + "; instruments = (" + Arrays.toString(names.toArray()) + ")");
 
-            try (final DataWriter writer = getDBImpl().store.createWriter ()) {
-                writer.associate(root);
+                try (final DataWriter writer = getDBImpl().store.createWriter()) {
+                    writer.associate(root);
 
-                root.iterate(new com.epam.deltix.qsrv.dtb.store.pub.TimeRange(from, to), null, new TimeSliceIterator(){ @Override public DataAccessor getAccessor(){ return writer;
-                    }
+                    root.iterate(new TimeRange(from, to), null, new TimeSliceIterator() {
 
-                    @Override
-                    public void process(TimeSlice slice) {
-                        //System.out.println("Process slice: " + slice);
-                        slice.cut(range, entities, (DataAccessorBase)writer);
-                    }
-                });
+                        @Override
+                        public DataAccessor getAccessor() {
+                            return writer;
+                        }
+
+                        @Override
+                        public void process(TimeSlice slice) {
+                            //System.out.println("Process slice: " + slice);
+                            dataChanged.set(slice.cut(range, entities, (DataAccessorBase) writer));
+                        }
+                    });
+                }
             }
         }
 
-        firePropertyChanged(TickStreamProperties.TIME_RANGE);
+        if (dataChanged.get()) {
+            firePropertyChanged(TickStreamProperties.ENTITIES);
+            firePropertyChanged(TickStreamProperties.TIME_RANGE);
+        }
+
+        return dataChanged.get();
     }
 
     @Override
@@ -924,19 +959,13 @@ public class PDStream extends TickStreamImpl {
 //            }
 //        }
 
+        TickDBImpl.LOG.info("[%s] open: checking data consistency...").with(getKey());
+
         TSRoot[] active = getActiveRoots();
+        for (TSRoot r : active)
+            Restorer.restore(r, isReadOnly(), verify || CONSISTENCY_CHECK);
 
-        if (verify || CONSISTENCY_CHECK)
-        {
-            if (!getHighAvailability()) {
-                TickDBImpl.LOG.info("[%s] open: checking data consistency...").with(getKey());
-
-                for (TSRoot r : active)
-                    Restorer.restore(r, isReadOnly());
-            } else if (verify) {
-                TickDBImpl.LOG.warn("[%s] open: skipping data consistency check.").with(getKey());
-            }
-        }
+        TickDBImpl.LOG.info("[%s] open: consistency check done successfully.").with(getKey());
 
         for (TSRoot r : active)
             r.open(isReadOnly());

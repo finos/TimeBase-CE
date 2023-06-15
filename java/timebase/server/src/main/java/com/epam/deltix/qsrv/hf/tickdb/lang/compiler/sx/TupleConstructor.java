@@ -26,11 +26,16 @@ import java.util.*;
  */
 public class TupleConstructor extends CompiledComplexExpression {
 
-    public Map<RecordClassDescriptor, List<CompiledExpression<?>>> typeToInitializers = new HashMap<>();
+    public final Map<RecordClassDescriptor, List<CompiledExpression<?>>> typeToExpressions;
+
+    public final Map<RecordClassDescriptor, CompiledExpression<?>> typeToCondition;
+
+    private final ClassDataType classType;
 
     private static CompiledExpression []    cat (
         CompiledExpression        timestampInitializer,
         CompiledExpression        symbolInitializer,
+        //CompiledExpression        typeInitializer,
         CompiledExpression ...    nonStaticInitializers
     )
     {
@@ -39,6 +44,7 @@ public class TupleConstructor extends CompiledComplexExpression {
 
         a [0] = timestampInitializer;
         a [1] = symbolInitializer;
+        //a [2] = typeInitializer;
 
         if (n != 0)
             System.arraycopy (nonStaticInitializers, 0, a, 2, n);
@@ -46,26 +52,57 @@ public class TupleConstructor extends CompiledComplexExpression {
         return (a);
     }
 
-    public TupleConstructor (
-        ClassDataType             type,
-        CompiledExpression        timestampInitializer,
-        CompiledExpression        symbolInitializer,
-        CompiledExpression ...    nonStaticInitializers
-    )
-    {
-        super (type, cat (timestampInitializer, symbolInitializer, nonStaticInitializers));
+    public static TupleConstructor polymorphicTuple(TupleConstructor[] tuples, Map<String, CompiledExpression<?>> conditions) {
+        List<RecordClassDescriptor> descriptors = new ArrayList<>();
+        Map<RecordClassDescriptor, List<CompiledExpression<?>>> expressions = new HashMap<>();
+        Map<RecordClassDescriptor, CompiledExpression<?>> typeToCondition = new HashMap<>();
+        for (int i = 0; i < tuples.length; ++i) {
+            descriptors.addAll(Arrays.asList(tuples[i].classType.getDescriptors()));
+            expressions.putAll(tuples[i].typeToExpressions);
+        }
+        descriptors.forEach(d -> {
+            CompiledExpression<?> e = conditions.get(d.getName());
+            if (e != null) {
+                typeToCondition.put(d, e);
+            }
+        });
+
+        return new TupleConstructor(
+            new ClassDataType(true, descriptors.toArray(new RecordClassDescriptor[0])),
+            tuples[0].getTimestampInitializer(),
+            tuples[0].getSymbolInitializer(),
+            //tuples[0].getTypeInitializer(),
+            expressions, typeToCondition
+        );
+    }
+
+    private static CompiledExpression[] listExpressions(Map<RecordClassDescriptor, List<CompiledExpression<?>>> typeToExpressions) {
+        return typeToExpressions.values().stream().flatMap(Collection::stream).toArray(CompiledExpression[]::new);
     }
 
     public TupleConstructor(
         ClassDataType type,
-        CompiledExpression timestampInitializer,
-        CompiledExpression symbolInitializer,
-        Map<RecordClassDescriptor, List<CompiledExpression<?>>> typeToInitializers,
-        CompiledExpression... nonStaticInitializers
+        CompiledExpression<?> timestampInitializer,
+        CompiledExpression<?> symbolInitializer,
+        //CompiledExpression<?> typeInitializer,
+        Map<RecordClassDescriptor, List<CompiledExpression<?>>> typeToExpressions
     ) {
-        super(type, cat(timestampInitializer, symbolInitializer, nonStaticInitializers));
+        this(type, timestampInitializer, symbolInitializer, typeToExpressions, new HashMap<>());
+    }
 
-        this.typeToInitializers = typeToInitializers;
+    public TupleConstructor(
+        ClassDataType type,
+        CompiledExpression<?> timestampInitializer,
+        CompiledExpression<?> symbolInitializer,
+        //CompiledExpression<?> typeInitializer,
+        Map<RecordClassDescriptor, List<CompiledExpression<?>>> typeToExpressions,
+        Map<RecordClassDescriptor, CompiledExpression<?>> typeToCondition
+    ) {
+        super(type, cat(timestampInitializer, symbolInitializer, listExpressions(typeToExpressions)));
+
+        this.classType = type;
+        this.typeToExpressions = typeToExpressions;
+        this.typeToCondition = typeToCondition;
     }
 
     public RecordClassDescriptor[] getClassDescriptors() {
@@ -79,6 +116,10 @@ public class TupleConstructor extends CompiledComplexExpression {
     public CompiledExpression getSymbolInitializer() {
         return (args[1]);
     }
+
+//    public CompiledExpression getTypeInitializer() {
+//        return (args[2]);
+//    }
 
     public CompiledExpression[] getNonStaticInitializers() {
         int n = args.length - 2;

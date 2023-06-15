@@ -45,18 +45,19 @@ public abstract class FilterIMSImpl
     protected boolean                           atEnd = false;
     protected final RecordClassDescriptor []    inputTypes;
     protected final RecordClassDescriptor []    outputTypes;
+    protected final RecordClassSet inputClassSet;
     protected final ClassSet<? extends ClassDescriptor> outputClassSet;
     protected final ReadableValue []            params;
     protected final DXTickDB db;
     private final int []                        inputTypeIndexMap;
     private final InstrumentIndex               instrumentIndex =
-            new InstrumentIndex ();
+        new InstrumentIndex ();
 
     private final IndexedArrayList <String>     streamKeyIndex =
-            new IndexedArrayList <String> ();
+        new IndexedArrayList <String> ();
 
     private final IndexedArrayList <RecordClassDescriptor> typeIndex =
-            new IndexedArrayList <RecordClassDescriptor> ();
+        new IndexedArrayList <RecordClassDescriptor> ();
 
     protected RawMessage                        outMsg;
     private Enumeration <FilterState>           aggregateEnum = null;
@@ -77,19 +78,22 @@ public abstract class FilterIMSImpl
     private boolean groupByWarningSent;
     private long firstMessageTimestamp = Long.MIN_VALUE;
 
+    protected long processedMessages;
+    
     protected FilterIMSImpl (
-            InstrumentMessageSource             source,
-            RecordClassDescriptor []            inputTypes,
-            RecordClassDescriptor []            outputTypes,
-            ReadableValue []                    params,
-            DXTickDB db
+        InstrumentMessageSource             source,
+        RecordClassDescriptor []            inputTypes,
+        RecordClassDescriptor []            outputTypes,
+        ReadableValue []                    params,
+        DXTickDB db
     )
     {
         super (source);
-
+        
         this.outputTypes = outputTypes;
         this.inputTypes = inputTypes;
         this.params = params;
+        this.inputClassSet = new RecordClassSet(inputTypes);
         this.outputClassSet = new RecordClassSet(outputTypes);
         this.db = db;
 
@@ -135,7 +139,7 @@ public abstract class FilterIMSImpl
     InstrumentMessageSource getSource() {
         return source;
     }
-
+    
     @Override
     public int                              getCurrentStreamIndex () {
         if (source.getCurrentStream() != null)
@@ -182,10 +186,17 @@ public abstract class FilterIMSImpl
                 }
             }
 
+            for (int ii = 0; ii < inputTypes.length; ii++) {
+                if (curType.getName().equals(inputTypes[ii].getName())) {
+                    out = ii;
+                    break;
+                }
+            }
+
             if (out == -1)
                 throw new IllegalStateException (
-                        "Type " + curType +
-                                " is not found in the preset list of input types"
+                    "Type " + curType + 
+                    " is not found in the preset list of input types"
                 );
 
             inputTypeIndexMap [ctix] = out;
@@ -270,6 +281,7 @@ public abstract class FilterIMSImpl
             return true;
         }
 
+        processedMessages = 0;
         for (;;) {
             if ((lastState == null || !lastState.waitingByTime) && !hasWaitingMessages()) {
                 if (!source.next()) {
@@ -281,13 +293,17 @@ public abstract class FilterIMSImpl
             int s = getStateAndProcess();
             s = applyLimit(s);
 
+            if (s != ABORT) {
+                processedMessages++;
+            }
+            
             switch (s) {
                 case ABORT:     return (false);
                 case ACCEPT:    return (true);
             }
         }
     }
-
+    
     protected int getStateAndProcess() {
         final RawMessage inMsg = (RawMessage) source.getMessage();
         final FilterState state = lastState = getState(inMsg);
@@ -364,7 +380,7 @@ public abstract class FilterIMSImpl
         if (!groupByWarningSent && state != null && state.warningMessage != null) {
             groupByWarningSent = true;
             queryStatusMessage = queryStatusMessageProvider.prepareQueryStatusMessage(
-                    QueryStatus.WARNING, lastState.warningMessage
+                QueryStatus.WARNING, lastState.warningMessage
             );
         }
     }

@@ -167,5 +167,3 @@ public class SocketTest {
         client ("localhost", server.ss.getLocalPort(), packetSize);
     }
 }
-
-

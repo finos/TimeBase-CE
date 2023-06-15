@@ -29,6 +29,7 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
 import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.PreparedQuery;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.StreamChangeTask;
+import com.epam.deltix.util.parsers.CompilationException;
 
 import java.util.*;
 
@@ -150,18 +151,23 @@ public class DDLCompiler {
     {
         RecordClassSet                      rcs = optionsBean.getMetaData ();                
         EnvironmentFrame                    senv = new EnvironmentFrame (env);
-            
+
+        Set<String> guids = new HashSet<>();
         for (ClassDef cdef : members) {
             ClassDescriptor     cd = compileClassDef (senv, cdef, outDefaults);                                    
-            
+            if (guids.contains(cd.getGuid())) {
+                throw new CompilationException("Duplicate type guid", cdef);
+            }
+            guids.add(cd.getGuid());
+
             rcs.addClasses (cd);
             
             if (cd instanceof RecordClassDescriptor) {
                 RecordClassDescriptor   rcd = (RecordClassDescriptor) cd;
                 boolean auxiliary = cdef instanceof RecordClassDef && ((RecordClassDef) cdef).auxiliary;
-
+                
                 if (!rcd.isAbstract() && !auxiliary) {
-                    rcs.addContentClasses (rcd);
+                    rcs.addContentClasses(rcd);
                 }
 
                 senv.bindNoDup (cdef.id, new ClassDataType (true, rcd));
@@ -223,13 +229,22 @@ public class DDLCompiler {
             fields [ii] = compileAttributeDef (senv, cdef.attributes [ii], outDefaults);
             
         RecordClassDescriptor   rcd =
-            new RecordClassDescriptor (
-                cdef.id.typeName, 
-                cdef.title,
-                isAbstract, 
-                parent,
-                fields
-            );
+            cdef.guid != null ?
+                new RecordClassDescriptor (
+                    cdef.guid,
+                    cdef.id.typeName,
+                    cdef.title,
+                    isAbstract,
+                    parent,
+                    fields
+                ) :
+                new RecordClassDescriptor (
+                    cdef.id.typeName,
+                    cdef.title,
+                    isAbstract,
+                    parent,
+                    fields
+                );
         
         rcd.setDescription (cdef.comment);
         return (rcd);

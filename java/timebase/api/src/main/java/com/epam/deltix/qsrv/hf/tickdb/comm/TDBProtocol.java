@@ -65,8 +65,8 @@ public abstract class TDBProtocol extends SerializationUtils {
     public static final boolean USE_MAGIC = false;
     public static final boolean SEND_SEQUENCE = false;
 
-    public static final boolean ALLOW_AERON_FOR_CURSOR = false;
-    public static final boolean ALLOW_AERON_FOR_LOADER = false;
+    public static final boolean ALLOW_AERON_FOR_CURSOR = true;
+    public static final boolean ALLOW_AERON_FOR_LOADER = true;
 
     @SuppressWarnings("ConstantConditions")
     public static final boolean NEEDS_AERON_DRIVER = ALLOW_AERON_FOR_CURSOR || ALLOW_AERON_FOR_LOADER;

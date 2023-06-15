@@ -398,8 +398,8 @@ res1 : NULL
 res1 : 39 [9990000, 9990111, 9990222, 10001100, 10001211, 10001322, 10012200, 10012311, 10012422, 10034400, 10034511, 10034622, 10101000, 10101111, 10101222, 10112100, 10112211, 10112322, 10123200, 10123311, 10123422, 10134300, 10134411, 10134522, 10145400, 10145511, 10145622, 10212000, 10212111, 10212222, 10234200, 10234311, 10234422, 10245300, 10245411, 10245522, 10256400, 10256511, 10256622]
 res1 : NULL
 !END
-Running QQL: select entries.attributes[this is deltix.FixAttribute] as res1 from packages where where any((entries.attributes as array(deltix.FixAttribute).key < 5300)
-res1 : 4 [FixAttribute{key=5100, value='null'}, FixAttribute{key=5102, value='Value #6102'}, FixAttribute{any((entrikey=5110, value='Value #6110'}, FixAttribute{key=5112, value='null'}]
+Running QQL: select entries.attributes[this is deltix.FixAttribute] as res1 from packages where any((entries.attributes as array(deltix.FixAttribute)).key < 5300)
+res1 : 4 [FixAttribute{key=5100, value='null'}, FixAttribute{key=5102, value='Value #6102'}, FixAttribute{key=5110, value='Value #6110'}, FixAttribute{key=5112, value='null'}]
 res1 : 4 [FixAttribute{key=5200, value='null'}, FixAttribute{key=5202, value='Value #6202'}, FixAttribute{key=5210, value='Value #6210'}, FixAttribute{key=5212, value='null'}]
 !END
 Running QQL: select entries[entries.level] as res1 from packages

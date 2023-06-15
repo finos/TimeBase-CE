@@ -567,4 +567,3 @@ public class Test_RecordCodecsBinary extends Test_RecordCodecsBase {
 }
 
 // remove fast test to Test_RecCode2 ...
-

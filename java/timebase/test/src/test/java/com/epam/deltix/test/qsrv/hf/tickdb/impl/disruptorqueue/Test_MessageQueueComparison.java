@@ -295,4 +295,3 @@ public class Test_MessageQueueComparison extends TDBTestBase {
         System.out.println(TimeUnit.NANOSECONDS.toSeconds(t1 - t0));
     }
 }
-

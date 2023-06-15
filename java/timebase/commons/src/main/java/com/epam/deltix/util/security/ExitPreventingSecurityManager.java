@@ -87,4 +87,3 @@ public class ExitPreventingSecurityManager extends SecurityManager {
         }
     }
 }
-

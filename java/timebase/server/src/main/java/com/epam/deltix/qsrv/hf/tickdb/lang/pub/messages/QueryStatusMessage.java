@@ -244,6 +244,9 @@ public class QueryStatusMessage extends InstrumentMessage {
         if (hasTimeStampMs()) {
             str.append(", \"timestamp\": \"").append(formatNanos(getTimeStampMs(), (int)getNanoTime())).append("\"");
         }
+//        if (hasInstrumentType()) {
+//            str.append(", \"instrumentType\": \"").append(getInstrumentType()).append("\"");
+//        }
         if (hasSymbol()) {
             str.append(", \"symbol\": \"").append(getSymbol()).append("\"");
         }

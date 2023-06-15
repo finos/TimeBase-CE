@@ -28,39 +28,7 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.FirstFunctionD
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.FunctionInfoDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.StatefulFunctionDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.StatelessFunctionDescriptor;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ArrayBooleanIndexer;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ArrayIndexer;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ArrayIntegerIndexer;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ArrayJoinElement;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ArrayPredicate;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ArraySlice;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.BinaryExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CastArrayClassType;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CastClassType;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CastPrimitiveType;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledArrayConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledComplexExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledFilter;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledNullConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ConnectiveExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.FieldAccessor;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ParamAccess;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.PluginFunction;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.PluginSimpleFunction;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.PluginStatefulFunction;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.Predicate;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.PredicateFunction;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.PredicateIterator;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.SimpleFunction;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.SimpleFunctionCode;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.SymbolSelector;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.ThisSelector;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.TimestampSelector;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.TupleConstructor;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.TypeCheck;
-import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.UnaryExpression;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.ARRT;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.QRT;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.Varchar;
@@ -417,6 +385,10 @@ class EvalGenerator {
             genCastPrimitiveType((CastPrimitiveType) e, outValue);
         } else if (e instanceof CompiledNullConstant) {
             genCompiledNullConstant((CompiledNullConstant) e, outValue);
+        } else if (e instanceof CompiledIfExpression) {
+            genCompiledIfExpression((CompiledIfExpression) e, outValue);
+        } else if (e instanceof CompiledCaseExpression) {
+            genCompiledCaseExpression((CompiledCaseExpression) e, outValue);
         } else {
             throw new UnsupportedOperationException(e.getClass().getName());
         }
@@ -447,7 +419,7 @@ class EvalGenerator {
         SourceClassMap scm = new SourceClassMap(descriptors);
         accessors.forEach(accessor -> {
             if (accessor.fetchNulls == fetchNulls) {
-                if (accessor.getFieldName().equalsIgnoreCase(fieldAccessor.getFieldName())) {
+                if (accessor.getSourceFieldName().equalsIgnoreCase(fieldAccessor.getSourceFieldName())) {
                     if (accessor.equals(fieldAccessor)) {
                         scm.discoverFieldAccessors(accessor);
                     }
@@ -1341,11 +1313,28 @@ class EvalGenerator {
         }
         resetFunctionsMethod.add(instanceVar.access().call(fd.resetMethod()));
         addTo.add(functionInstance.call(fd.computeMethod(), actualArgs));
-        if (outValue instanceof QArrayValue) {
-            addTo.add(((QArrayValue) outValue).setList(functionInstance.call(fd.resultMethod())));
+        DataType returnType = fd.returnType();
+        if (outValue instanceof QArrayValue && returnType instanceof ArrayDataType) {
+            if (isConcreteArrayType((ArrayDataType) returnType)) {
+                if (outValue.type instanceof QArrayType && ((QArrayType) outValue.type).hasClasses()) {
+                    addTo.add(((QArrayValue) outValue).setTypedList(functionInstance.call(fd.resultMethod())));
+                } else {
+                    throw new RuntimeException("Failed to compile function " + function.name + ": types mismatch");
+                }
+            } else {
+                addTo.add(((QArrayValue) outValue).setList(functionInstance.call(fd.resultMethod())));
+            }
         } else {
             addTo.add(outValue.write(functionInstance.call(fd.resultMethod())));
         }
+    }
+
+    private static boolean isConcreteArrayType(ArrayDataType type) {
+        if (type.getElementDataType() instanceof ClassDataType) {
+            return ((ClassDataType) type.getElementDataType()).getDescriptors().length > 0;
+        }
+
+        return false;
     }
 
     private static JExpr expressionWithType(QValue value, DataType source, DataType target) {
@@ -1356,6 +1345,14 @@ class EvalGenerator {
             try {
                 return value.read().cast(Class.forName(((ClassDataType) target).getFixedDescriptor().getName()));
             } catch (ClassNotFoundException ignored) {
+            }
+        } else if (source instanceof ArrayDataType && target instanceof ArrayDataType && value instanceof QArrayValue) {
+            DataType sourceElement = ((ArrayDataType) source).getElementDataType();
+            DataType targetElement = ((ArrayDataType) target).getElementDataType();
+            if (sourceElement instanceof ClassDataType && targetElement instanceof ClassDataType) {
+                if (((QArrayValue) value).hasClasses() && ((ClassDataType) targetElement).getDescriptors().length > 0) {
+                    return ((QArrayValue) value).readTyped();
+                }
             }
         }
         return value.read();
@@ -1381,6 +1378,55 @@ class EvalGenerator {
             argValues[ii] = genEval(args[ii]);
 
         expression.generateOperation(argValues[0], argValues[1], outValue, addTo);
+    }
+
+    private void genCompiledIfExpression(CompiledIfExpression e, QValue outValue) {
+        QValue conditionVal = genEval(e.condition);
+        QValue thenVal = genEval(e.thenExpression);
+        QValue elseVal = genEval(e.elseExpression);
+
+        JExpr conditionExpression = CTXT.condExpr(
+            CTXT.binExpr(conditionVal.read(), "==", CTXT.intLiteral(1)),
+            thenVal.read(), elseVal.read()
+        );
+        if (outValue instanceof QArrayValue) {
+            this.addTo.add(((QArrayValue) outValue).setNull());
+            this.addTo.add(((QArrayValue) outValue).writeAll(conditionExpression));
+        } else {
+            this.addTo.add(outValue.write(conditionExpression));
+        }
+    }
+
+    private void genCompiledCaseExpression(CompiledCaseExpression e, QValue outValue) {
+        QValue caseVal = genEval(e.caseExpression);
+        QValue elseVal = genEval(e.elseExpression);
+        List<QValue> whenVals = new ArrayList<>();
+        List<QValue> thenVals = new ArrayList<>();
+        for (int i = 0; i < e.whenExpressions.size(); ++i) {
+            whenVals.add(genEval(e.whenExpressions.get(i).whenExpression));
+            thenVals.add(genEval(e.whenExpressions.get(i).thenExpression));
+        }
+
+        List<JExpr> cond = new ArrayList<>();
+        List<JStatement> then = new ArrayList<>();
+        for (int i = 0; i < whenVals.size(); ++i) {
+            cond.add(
+                CTXT.binExpr(whenVals.get(i).read(), "==", caseVal.read())
+            );
+            then.add(
+                outValue instanceof QArrayValue ?
+                    ((QArrayValue) outValue).writeAll(thenVals.get(i).read()) :
+                    outValue.write(thenVals.get(i).read())
+            );
+        }
+        JStatement els = outValue instanceof QArrayValue ?
+            ((QArrayValue) outValue).writeAll(elseVal.read()) :
+            outValue.write(elseVal.read());
+
+        if (outValue instanceof QArrayValue) {
+            this.addTo.add(((QArrayValue) outValue).setNull());
+        }
+        this.addTo.add(CTXT.ifStmt(cond, then, els));
     }
 
     private void                genSimpleFunctionEval (
@@ -1427,7 +1473,19 @@ class EvalGenerator {
                     )
                 );
                 break;
-                
+
+            case IS_NAN:
+            case IS_NOT_NAN:
+                addTo.add (
+                    outValue.write (
+                        CTXT.staticCall(
+                            QRT.class, "bpos",
+                            argValues[0].type.checkNan(argValues[0].read(), e.code == SimpleFunctionCode.IS_NAN)
+                        )
+                    )
+                );
+                break;
+
             default:
                 throw new UnsupportedOperationException (e.code.name ());
         }

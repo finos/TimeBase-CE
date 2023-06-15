@@ -41,6 +41,7 @@ public class SingleMessageEmitter implements InstrumentMessageSource,
         msg.setSymbol("");
         msg.setTimeStampMs(TimeConstants.TIMESTAMP_UNKNOWN);
         msg.type = VOID_TYPE;
+        msg.setBytes(new byte[0], 0, 0);
     }
     
     public InstrumentMessage getMessage () {

@@ -50,5 +50,3 @@ public final class JUnitCategories {
      */
     public interface External {}
 }
-
-

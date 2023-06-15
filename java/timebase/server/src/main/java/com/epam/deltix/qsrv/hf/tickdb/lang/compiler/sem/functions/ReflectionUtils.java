@@ -40,6 +40,7 @@ import com.epam.deltix.qsrv.hf.pub.md.Introspector;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.TimebaseTypes;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.functions.DB;
+import com.epam.deltix.util.annotations.Alphanumeric;
 import com.epam.deltix.util.annotations.Bool;
 import com.epam.deltix.util.annotations.TimeOfDay;
 import com.epam.deltix.util.annotations.TimestampMs;
@@ -57,10 +58,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 
 import javax.annotation.Nonnull;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -79,8 +77,8 @@ public class ReflectionUtils {
     private static final String GENERIC_OBJECT_PATTERN = "%s(?<nullable>\\?)?";
     private static final String GENERIC_ARRAY_PATTERN = "ARRAY\\(T(?<nullable>\\?)?\\)(?<arrayNullable>\\?)?";
 
-    private static final Pattern OBJECT_PATTERN = Pattern.compile("OBJECT\\((?<class>\\w+(\\.\\w+)*)\\)(?<nullable>\\?)?");
-    private static final Pattern OBJECT_ARRAY_PATTERN = Pattern.compile("ARRAY\\(OBJECT\\((?<class>\\w+(\\.\\w+)*)\\)(?<nullable>\\?)?\\)(?<arrayNullable>\\?)?");
+    private static final Pattern OBJECT_PATTERN = Pattern.compile("OBJECT\\((?<classes>[\\.\\w,]+)\\)(?<nullable>\\?)?");
+    private static final Pattern OBJECT_ARRAY_PATTERN = Pattern.compile("ARRAY\\(OBJECT\\((?<classes>[\\.\\w,]+)\\)(?<nullable>\\?)?\\)(?<arrayNullable>\\?)?");
 
     private static Class<? extends Annotation>[] IGNORE_IN_METHODS = new Class[]{
             BuiltInStartTimestampMs.class, BuiltInStartNanoTime.class,
@@ -307,8 +305,8 @@ public class ReflectionUtils {
                 Matcher arrayMapper = arrayPattern.matcher(typeAnnotation.value());
                 if (arrayMapper.matches()) {
                     genericType = gType;
-                    dt = new ArrayDataType(objectMatcher.group("arrayNullable") != null,
-                            new ClassDataType(objectMatcher.group("nullable") != null));
+                    dt = new ArrayDataType(arrayMapper.group("arrayNullable") != null,
+                            new ClassDataType(arrayMapper.group("nullable") != null));
                     break;
                 }
             }
@@ -414,6 +412,8 @@ public class ReflectionUtils {
                 return TimebaseTypes.DATE_TIME_CONTAINER.getArrayType(nullable, elementNullable);
             } else if (annotatedElement.isAnnotationPresent(Decimal.class)) {
                 return TimebaseTypes.DECIMAL64_CONTAINER.getArrayType(nullable, elementNullable);
+            } else if (annotatedElement.isAnnotationPresent(Alphanumeric.class)) {
+                return TimebaseTypes.ALPHANUMERIC10_CONTAINER.getArrayType(nullable, elementNullable);
             }
         }
         return extractType(type, nullable, elementNullable);
@@ -502,7 +502,7 @@ public class ReflectionUtils {
         String type = typeAnnotation.value();
         Matcher matcher = OBJECT_ARRAY_PATTERN.matcher(type);
         if (matcher.matches()) {
-            String className = matcher.group("class");
+            String className = matcher.group("classes");
             try {
                 Class<?> cls = Class.forName(className);
                 return ObjectArrayList.class.getName() + "<" + cls.getName() + ">";
@@ -568,16 +568,14 @@ public class ReflectionUtils {
         Matcher matcher = OBJECT_PATTERN.matcher(s);
         if (matcher.matches()) {
             boolean nullable = matcher.group("nullable") != null;
-            String className = matcher.group("class");
+            String classes = matcher.group("classes");
             try {
-                Class<?> cls = Class.forName(className);
-                RecordClassDescriptor rcd = Introspector.createEmptyMessageIntrospector().introspectRecordClass(cls);
-                return new ClassDataType(nullable, rcd);
+                return new ClassDataType(nullable, introspectClasses(classes));
             } catch (ClassNotFoundException exc) {
-                LOG.info().append("Class ").append(className).append(" not found, so type '")
+                LOG.info().append("Class ").append(classes).append(" not found, so type '")
                         .append(s).appendLast("' couldn't be parsed and created.");
             } catch (Introspector.IntrospectionException e) {
-                LOG.info().append("Error while introspecting class ").append(className)
+                LOG.info().append("Error while introspecting class ").append(classes)
                         .append(". Message: ").appendLast(e.getMessage());
             }
         }
@@ -585,20 +583,37 @@ public class ReflectionUtils {
         if (matcher.matches()) {
             boolean arrayNullable = matcher.group("arrayNullable") != null;
             boolean nullable = matcher.group("nullable") != null;
-            String className = matcher.group("class");
+            String classes = matcher.group("classes");
             try {
-                Class<?> cls = Class.forName(className);
-                RecordClassDescriptor rcd = Introspector.createEmptyMessageIntrospector().introspectRecordClass(cls);
-                return new ArrayDataType(arrayNullable, new ClassDataType(nullable, rcd));
+                return new ArrayDataType(arrayNullable, new ClassDataType(nullable, introspectClasses(classes)));
             } catch (ClassNotFoundException exc) {
-                LOG.info().append("Class ").append(className).append(" not found, so type '")
+                LOG.info().append("Class ").append(classes).append(" not found, so type '")
                         .append(s).appendLast("' couldn't be parsed and created.");
             } catch (Introspector.IntrospectionException e) {
-                LOG.info().append("Error while introspecting class ").append(className)
+                LOG.info().append("Error while introspecting class ").append(classes)
                         .append(". Message: ").appendLast(e.getMessage());
             }
         }
         return null;
+    }
+
+    private static RecordClassDescriptor[] introspectClasses(String classes) throws ClassNotFoundException, Introspector.IntrospectionException {
+        String[] classNamesStr = classes.split(",");
+        List<RecordClassDescriptor> descriptors = new ArrayList<>();
+        for (String className : classNamesStr) {
+            if (className != null && !className.trim().isEmpty()) {
+                Class<?> cls = Class.forName(className.trim());
+                descriptors.add(
+                    Introspector.createEmptyMessageIntrospector().introspectMemberClass("", cls)
+                );
+            }
+        }
+
+        if (descriptors.size() == 0) {
+            throw new ClassNotFoundException(classes);
+        }
+
+        return descriptors.toArray(new RecordClassDescriptor[0]);
     }
 
     private static Pattern genericObjectPattern(GenericType genericType) {

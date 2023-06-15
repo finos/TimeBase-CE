@@ -33,12 +33,17 @@ public enum SimpleFunctionCode {
     
     IS_NULL,
     IS_NOT_NULL,
+
+    IS_NAN,
+    IS_NOT_NAN,
     ;
 
     public DataType     getOuputType (CompiledExpression ... args) {
         switch (this) {
             case IS_NULL:
             case IS_NOT_NULL:
+            case IS_NAN:
+            case IS_NOT_NAN:
                 return (CLEAN_BOOLEAN);
         }
         

@@ -46,7 +46,7 @@ public interface TSRoot {
 
     public void                     setMaxFileSize (int numBytes);
     
-    public int                      getMaxFileSize (); 
+    public int                      getMaxFileSize ();
     
     public String                   getCompression();
 
@@ -80,7 +80,12 @@ public interface TSRoot {
 
     public String                   getPathString();
 
-    public void                     drop (TimeRange range);
+    /**
+     * Delete given time range from data.
+     * @param range time range to delete
+     * @return true, if any data was deleted. otherwise false.
+     */
+    public boolean                  drop (TimeRange range);
 
     public  void                    iterate(TimeRange range, EntityFilter filter, TimeSliceIterator it);
 
@@ -88,7 +93,7 @@ public interface TSRoot {
 
     int MAX_FILE_SIZE_DEF          =  1 << 23;
     int MAX_FILE_SIZE_LOW          =  100;
-    int MAX_FILE_SIZE_HIGH         =  100 << 20;
+    int MAX_FILE_SIZE_HIGH         =  1 << 30;
 
     int MAX_FOLDER_SIZE_DEF        =  100;
     int MAX_FOLDER_SIZE_LOW        =  10;

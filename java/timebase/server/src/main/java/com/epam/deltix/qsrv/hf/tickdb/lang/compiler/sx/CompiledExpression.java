@@ -25,6 +25,7 @@ import com.epam.deltix.qsrv.hf.pub.md.DataType;
 public abstract class CompiledExpression <T extends DataType> {
     public final T                              type;
     public String                               name;
+    public String                               fieldName;
     public boolean                              impliesAggregation = false;
 
     protected CompiledExpression (T type) {
@@ -33,6 +34,10 @@ public abstract class CompiledExpression <T extends DataType> {
 
     public boolean              impliesAggregation () {
         return (impliesAggregation);
+    }
+
+    public String getFieldName() {
+        return fieldName != null ? fieldName : name;
     }
 
     public abstract void     print (StringBuilder out);
@@ -46,6 +51,11 @@ public abstract class CompiledExpression <T extends DataType> {
         if (name != null) {
             sb.append (" as ");
             sb.append (name);
+        }
+
+        if (fieldName != null) {
+            sb.append(" name ");
+            sb.append(fieldName);
         }
 
         return (sb.toString ());

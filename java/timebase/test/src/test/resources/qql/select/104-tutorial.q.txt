@@ -20,30 +20,30 @@ test select * from tickquerydemo
 #
 test select distinct symbol from securities
 >_,TIMESTAMP,SYMBOL,TYPE,$SYMBOL
-0,_,,ESZ11
-1,_,,NQZ11
-2,_,,ESU11
-3,_,,NQU11
-4,_,,AAPL
-5,_,,GOOG
+0,_,,SYSTEM,ESZ11
+1,_,,SYSTEM,NQZ11
+2,_,,SYSTEM,ESU11
+3,_,,SYSTEM,NQU11
+4,_,,SYSTEM,AAPL
+5,_,,SYSTEM,GOOG
 !end
 test select distinct symbol as sym from securities
 >_,TIMESTAMP,SYMBOL,TYPE,SYM
-0,_,,ESZ11
-1,_,,NQZ11
-2,_,,ESU11
-3,_,,NQU11
-4,_,,AAPL
-5,_,,GOOG
+0,_,,SYSTEM,ESZ11
+1,_,,SYSTEM,NQZ11
+2,_,,SYSTEM,ESU11
+3,_,,SYSTEM,NQU11
+4,_,,SYSTEM,AAPL
+5,_,,SYSTEM,GOOG
 !end
 test select distinct symbol as "*Symbol*" from securities
 >_,TIMESTAMP,SYMBOL,TYPE,*Symbol*
-0,_,,ESZ11
-1,_,,NQZ11
-2,_,,ESU11
-3,_,,NQU11
-4,_,,AAPL
-5,_,,GOOG
+0,_,,SYSTEM,ESZ11
+1,_,,SYSTEM,NQZ11
+2,_,,SYSTEM,ESU11
+3,_,,SYSTEM,NQU11
+4,_,,SYSTEM,AAPL
+5,_,,SYSTEM,GOOG
 !end
 #
 #   By symbol
@@ -132,12 +132,12 @@ test select max{}(offerPrice - bidPrice) as maxspread from tickquerydemo group b
 1,2011-10-17 17:21:43,XBANK,4.5
 !end
 #
-test select running count{}(), name from securities
+test select running count{}(), "name" from securities
 >_,TIMESTAMP,SYMBOL,TYPE,COUNT{}(),name
-0,2011-04-06 01:47:24.194,ESZ11,1,S&P 500 E-Mini Dec11
-1,2011-04-06 01:47:40.790,NQZ11,2,Nasdaq 100 E-Mini Dec11
-2,2011-04-06 01:50:55.354,ESU11,3,S&P 500 E-Mini Sep11
-3,2011-04-06 01:51:00.442,NQU11,4,Nasdaq 100 E-Mini Sep11
+0,2011-04-06 01:47:24.194,ESZ11,FUTURE,1,S&P 500 E-Mini Dec11
+1,2011-04-06 01:47:40.790,NQZ11,FUTURE,2,Nasdaq 100 E-Mini Dec11
+2,2011-04-06 01:50:55.354,ESU11,FUTURE,3,S&P 500 E-Mini Sep11
+3,2011-04-06 01:51:00.442,NQU11,FUTURE,4,Nasdaq 100 E-Mini Sep11
 4,2011-10-26 18:45:11.952,AAPL,5,Apple Inc
 5,2011-10-26 18:47:18.381,GOOG,6,Google
 !end

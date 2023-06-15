@@ -334,6 +334,7 @@ configure(leafProjects) {
 
     javadoc {
         exclude "**/package-info.java" // javadoc error with java 11.0.17
+        options.encoding = 'UTF-8'
     }
 
     dependencies {

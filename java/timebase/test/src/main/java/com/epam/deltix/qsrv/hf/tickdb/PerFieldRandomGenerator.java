@@ -14,7 +14,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.epam.deltix.qsrv.hf.tickdb;
+
+package com.epam.deltix.qsrv.hf.tickdb;
 
 import com.epam.deltix.qsrv.hf.pub.codec.AlphanumericCodec;
 import com.epam.deltix.qsrv.hf.pub.md.BooleanDataType;
@@ -157,7 +158,7 @@ public class PerFieldRandomGenerator implements Generator {
     }
 
     private static final char[] asciiChars = ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_+-=[]\\{}|" +
-            ";':\",./<>?АБВГДЕЁЖЗ�?ЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя").toCharArray();
+            ";':\",./<>?АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя").toCharArray();
 
     @Override
     public AlphanumericCodec getCodec(int size) {

@@ -2,7 +2,15 @@
 #   Preparation
 #
 set db ${home}/testdata/tickdb/qqltest
-open ro
+open
+set src ${home}/java/timebase/test/src/main/resources/com/epam/deltix/qqltest/securities.qsmsg.gz
+import securities
+set src ${home}/java/timebase/test/src/main/resources/com/epam/deltix/qqltest/alltypes.qsmsg.gz
+import alltypes
+set src ${home}/java/timebase/test/src/main/resources/com/epam/deltix/qqltest/statics.qsmsg.gz
+import lotsastatics
+set src ${home}/java/timebase/test/src/main/resources/com/epam/deltix/qqltest/tickquerydemo.qsmsg.gz
+import tickquerydemo
 set confirm off
 set exitOnError off
 set max 100

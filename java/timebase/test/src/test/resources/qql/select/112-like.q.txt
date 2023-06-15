@@ -1,27 +1,27 @@
 #
 #   like
 #
-test select "name" from securities where symbol like '%11'
+test select name from securities where symbol like '%11'
 >_,TIMESTAMP,SYMBOL,TYPE,name
-0,2011-04-06 01:47:24.194,ESZ11,FUTURE,S&P 500 E-Mini Dec11
-1,2011-04-06 01:47:40.790,NQZ11,FUTURE,Nasdaq 100 E-Mini Dec11
-2,2011-04-06 01:50:55.354,ESU11,FUTURE,S&P 500 E-Mini Sep11
-3,2011-04-06 01:51:00.442,NQU11,FUTURE,Nasdaq 100 E-Mini Sep11
+0,2011-04-06 01:47:24.194,ESZ11,S&P 500 E-Mini Dec11
+1,2011-04-06 01:47:40.790,NQZ11,Nasdaq 100 E-Mini Dec11
+2,2011-04-06 01:50:55.354,ESU11,S&P 500 E-Mini Sep11
+3,2011-04-06 01:51:00.442,NQU11,Nasdaq 100 E-Mini Sep11
 !end
 
-test select "name" from securities where symbol like 'ES%'
+test select name from securities where symbol like 'ES%'
 >_,TIMESTAMP,SYMBOL,TYPE,name
-0,2011-04-06 01:47:24.194,ESZ11,FUTURE,S&P 500 E-Mini Dec11
-1,2011-04-06 01:50:55.354,ESU11,FUTURE,S&P 500 E-Mini Sep11
+0,2011-04-06 01:47:24.194,ESZ11,S&P 500 E-Mini Dec11
+1,2011-04-06 01:50:55.354,ESU11,S&P 500 E-Mini Sep11
 !end
 
-test select "name" from securities where symbol like '__U%'
+test select name from securities where symbol like '__U%'
 >_,TIMESTAMP,SYMBOL,TYPE,name
-0,2011-04-06 01:50:55.354,ESU11,FUTURE,S&P 500 E-Mini Sep11
-1,2011-04-06 01:51:00.442,NQU11,FUTURE,Nasdaq 100 E-Mini Sep11
+0,2011-04-06 01:50:55.354,ESU11,S&P 500 E-Mini Sep11
+1,2011-04-06 01:51:00.442,NQU11,Nasdaq 100 E-Mini Sep11
 !end
 
-test select "name" from securities where symbol not like '%11'
+test select name from securities where symbol not like '%11'
 >_,TIMESTAMP,SYMBOL,TYPE,name
 0,2011-10-26 18:45:11.952,AAPL,Apple Inc
 1,2011-10-26 18:47:18.381,GOOG,Google

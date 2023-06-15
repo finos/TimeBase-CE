@@ -5,7 +5,7 @@ set max 1
 test select s_boolean_c, s_boolean_n, s_integer_c, s_integer_n, s_float_c, s_float_n from lotsastatics
 >_,TIMESTAMP,SYMBOL,TYPE,s_boolean_c,s_boolean_n,s_integer_c,s_integer_n,s_float_c,s_float_n
 >>,,,,true,_,2011,_,3.1415926,_
-0,2011-01-01 00:00:00,S1,EQUITY
+0,2011-01-01 00:00:00,S1
 !end
 #
 #   #2
@@ -13,7 +13,7 @@ test select s_boolean_c, s_boolean_n, s_integer_c, s_integer_n, s_float_c, s_flo
 test select s_varchar_c, s_varchar_n, s_char_c, s_char_n from lotsastatics
 >_,TIMESTAMP,SYMBOL,TYPE,s_varchar_c,s_varchar_n,s_char_c,s_char_n
 >>,,,,Deltix,_,X,_
-0,2011-01-01 00:00:00,S1,EQUITY
+0,2011-01-01 00:00:00,S1
 !end
 #
 #   #3
@@ -21,7 +21,7 @@ test select s_varchar_c, s_varchar_n, s_char_c, s_char_n from lotsastatics
 test select s_timeofday_c, s_timeofday_n, s_timestamp_c, s_timestamp_n from lotsastatics
 >_,TIMESTAMP,SYMBOL,TYPE,s_timeofday_c,s_timeofday_n,s_timestamp_c,s_timestamp_n
 >>,,,,12:10:33.987,_,2012-01-01 08:10:05.0,_
-0,2011-01-01 00:00:00,S1,EQUITY
+0,2011-01-01 00:00:00,S1
 !end
 #
 #   Test static equality when it holds
@@ -29,17 +29,17 @@ test select s_timeofday_c, s_timeofday_n, s_timestamp_c, s_timestamp_n from lots
 test select 1==1 and 1.0==1.0 and 'aa'=='aa' and 'X'c == 'X'c and (true==true)
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,true
-0,_,,CUSTOM
+0,_,
 !end
 test select '2020-03-10 04:06:00 America/New_York'd == '2020-03-10 04:06:00'd
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,false
-0,_,,CUSTOM
+0,_,
 !end
 test select '12:10:33.987'T == '12:10:33.987'T and '2012-01-01 08:10:05.0'D=='2012-01-01 08:10:05.0'D
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,true
-0,_,,CUSTOM
+0,_,
 !end
 #
 #   Test static equality when it fails
@@ -47,12 +47,12 @@ test select '12:10:33.987'T == '12:10:33.987'T and '2012-01-01 08:10:05.0'D=='20
 test select 1==5 or 1.0==1.5 or 'aa'=='ag' or 'X'c == 'x'c or (true==false)
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,false
-0,_,,CUSTOM
+0,_,
 !end
 test select '12:10:33.987'T == '12:10:33.982'T or '2012-01-01 08:10:01.0'D=='2012-01-01 08:10:05.0'D
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,false
-0,_,,CUSTOM
+0,_,
 !end
 #
 #   Test static inequality when it holds
@@ -60,12 +60,12 @@ test select '12:10:33.987'T == '12:10:33.982'T or '2012-01-01 08:10:01.0'D=='201
 test select 1!=7 and 1.0!=3.0 and 'aa'!='ra' and 'X'c != '\''c and (false!=true)
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,true
-0,_,,CUSTOM
+0,_,
 !end
 test select '12:10:33.987'T != '12:13:33.987'T and '2012-01-01 08:10:05.0'D!='2012-01-01 08:10:05.1'D
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,true
-0,_,,CUSTOM
+0,_,
 !end
 #
 #   Test static inequality when it fails
@@ -73,10 +73,10 @@ test select '12:10:33.987'T != '12:13:33.987'T and '2012-01-01 08:10:05.0'D!='20
 test select 1!=1 or 1.0!=1.0 or 'aa'!='aa' or 'X'c != 'X'c or (false!=false)
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,false
-0,_,,CUSTOM
+0,_,
 !end
 test select '12:10:33.987'T != '12:10:33.987'T or '2012-01-01 08:10:01.0'D!='2012-01-01 08:10:01.0'D
 >_,TIMESTAMP,SYMBOL,TYPE,$1
 >>,,,,false
-0,_,,CUSTOM
+0,_,
 !end

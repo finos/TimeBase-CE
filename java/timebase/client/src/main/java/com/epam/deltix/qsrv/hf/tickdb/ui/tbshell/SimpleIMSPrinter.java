@@ -14,7 +14,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.epam.deltix.qsrv.hf.tickdb.ui.tbshell;
+
+package com.epam.deltix.qsrv.hf.tickdb.ui.tbshell;
 
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.codec.*;
@@ -245,8 +246,8 @@ public class SimpleIMSPrinter implements IMSPrinter {
         throws IOException
     {
         String      typeName = type.getName ();
-        
-        if (typeName == null)
+
+        if (typeName == null || typeName.startsWith("QUERY"))
             typeName = NULLSTR;
         
         print ("%s%s", NEWTYPE, typeName);

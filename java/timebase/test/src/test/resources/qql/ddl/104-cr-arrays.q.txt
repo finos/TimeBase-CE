@@ -58,9 +58,9 @@ CREATE DURABLE STREAM TEST_ARR (
 )
 OPTIONS (DF = 1)
 /
->deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
-0,*,,SYSTEM,_,SUCCESS,INFO,Stream created,0
+0,*,,_,SUCCESS,INFO,Stream created,0
 !end
 #
 #   Describe
@@ -123,7 +123,7 @@ OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQU
 #   Drop stream via qql
 #
 test drop stream TEST_ARR
->deltix.timebase.api.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
-0,*,,SYSTEM,_,SUCCESS,INFO,Stream dropped,0
+0,*,,_,SUCCESS,INFO,Stream dropped,0
 !end

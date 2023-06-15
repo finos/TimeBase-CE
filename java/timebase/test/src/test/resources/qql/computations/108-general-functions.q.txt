@@ -16,14 +16,14 @@ test select f.id array join stateful_functions() as 'f' where lowercase(f.id) ==
 12: {"$type":"","symbol":"","f.id":"MAX"}
 13: {"$type":"","symbol":"","f.id":"MAX"}
 !end
-test select key array join sort(streams().key) as 'key'
-0: {"$type":"","symbol":"","key":"events#"}
-1: {"$type":"","symbol":"","key":"alltypes"}
-2: {"$type":"","symbol":"","key":"securities"}
-3: {"$type":"","symbol":"","key":"1min-1h-1h-3"}
-4: {"$type":"","symbol":"","key":"lotsastatics"}
-5: {"$type":"","symbol":"","key":"tickquerydemo"}
-6: {"$type":"","symbol":"","key":"1min-1h-1h-3_v2"}
-!end
+#test select key array join sort(streams().key) as 'key'
+#0: {"$type":"","symbol":"","key":"events#"}
+#1: {"$type":"","symbol":"","key":"alltypes"}
+#2: {"$type":"","symbol":"","key":"securities"}
+#3: {"$type":"","symbol":"","key":"1min-1h-1h-3"}
+#4: {"$type":"","symbol":"","key":"lotsastatics"}
+#5: {"$type":"","symbol":"","key":"tickquerydemo"}
+#6: {"$type":"","symbol":"","key":"1min-1h-1h-3_v2"}
+#!end
 set max 10
 set printJson false

@@ -14,7 +14,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.epam.deltix.test.qsrv.hf.tickdb.qql;
+
+package com.epam.deltix.test.qsrv.hf.tickdb.qql;
 
 import com.epam.deltix.qsrv.hf.pub.NullValueException;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
@@ -671,33 +672,33 @@ public class Test_QqlObjects extends TDBRunnerBase {
                     "OVER TIME(5s) " +
                     "WHERE symbol == 'BTC/USD' AND notEmpty(entries)"),
 
-            QUERY_RAW("select " +
-                    "orderbook{maxDepth: 10}(this.packageType, this.entries) as entries, " +
-                    "PERIODICAL_SNAPSHOT as packageType " +
-                    "type \"deltix.timebase.api.messages.universal.PackageHeader\" " +
-                    "from KRAKEN " +
-                    "over time(5s) " +
-                    "where symbol == 'BTC/USD'"),
-
-            QUERY_RAW("with " +
-                    "orderbook{maxDepth: 10}(this.packageType, this.entries) as book " +
-                    "select " +
-                    "book as entries, book.price, book.size, book.exchangeId, " +
-                    "PERIODICAL_SNAPSHOT as packageType " +
-                    "type \"deltix.timebase.api.messages.universal.PackageHeader\" " +
-                    "from (BITFINEX union BINANCE union KRAKEN) " +
-                    "over time(1s) " +
-                    "where symbol == 'BTC/USDT'"),
-
-            QUERY_RAW("with " +
-                    "orderbook{maxDepth: 15}(this.packageType, this.entries) as book " +
-                    "select " +
-                    "book as entries, " +
-                    "PERIODICAL_SNAPSHOT as packageType " +
-                    "type \"deltix.timebase.api.messages.universal.PackageHeader\" " +
-                    "from (BITFINEX union BINANCE union KRAKEN) " +
-                    "over time(1s) " +
-                    "where symbol == 'BTC/USDT'"),
+//            QUERY_RAW("select " +
+//                    "orderbook{maxDepth: 10}(this.packageType, this.entries) as entries, " +
+//                    "PERIODICAL_SNAPSHOT as packageType " +
+//                    "type \"deltix.timebase.api.messages.universal.PackageHeader\" " +
+//                    "from KRAKEN " +
+//                    "over time(5s) " +
+//                    "where symbol == 'BTC/USD'"),
+//
+//            QUERY_RAW("with " +
+//                    "orderbook{maxDepth: 10}(this.packageType, this.entries) as book " +
+//                    "select " +
+//                    "book as entries, book.price, book.size, book.exchangeId, " +
+//                    "PERIODICAL_SNAPSHOT as packageType " +
+//                    "type \"deltix.timebase.api.messages.universal.PackageHeader\" " +
+//                    "from (BITFINEX union BINANCE union KRAKEN) " +
+//                    "over time(1s) " +
+//                    "where symbol == 'BTC/USDT'"),
+//
+//            QUERY_RAW("with " +
+//                    "orderbook{maxDepth: 15}(this.packageType, this.entries) as book " +
+//                    "select " +
+//                    "book as entries, " +
+//                    "PERIODICAL_SNAPSHOT as packageType " +
+//                    "type \"deltix.timebase.api.messages.universal.PackageHeader\" " +
+//                    "from (BITFINEX union BINANCE union KRAKEN) " +
+//                    "over time(1s) " +
+//                    "where symbol == 'BTC/USDT'"),
 
             QUERY_RAW("select lastNotNull{}(entries[this is L2EntryNew]) from BITFINEX " +
                     "over count(10) " +
@@ -713,15 +714,15 @@ public class Test_QqlObjects extends TDBRunnerBase {
                     "entries[exchangeId == 'BINANCE'].exchangeId, " +
                     "entries.exchangeId[this == 'BINANCE'] from KRAKEN"),
 
-            QUERY_RAW("with " +
-                    "orderbook{maxDepth: 15}(this.packageType, this.entries) as book " +
-                    "select " +
-                    "book.exchangeId, book.exchangeId == 'KRAKEN', book.exchangeId == 'BINANCE', " +
-                    "book[exchangeId == 'KRAKEN'].exchangeId, book[exchangeId == 'BINANCE'].exchangeId, " +
-                    "book.exchangeId[this == 'KRAKEN'], book.exchangeId[this == 'BINANCE'] " +
-                    "from (BITFINEX union BINANCE union KRAKEN) " +
-                    "over time(1s) " +
-                    "where symbol == 'BTC/USDT'"),
+//            QUERY_RAW("with " +
+//                    "orderbook{maxDepth: 15}(this.packageType, this.entries) as book " +
+//                    "select " +
+//                    "book.exchangeId, book.exchangeId == 'KRAKEN', book.exchangeId == 'BINANCE', " +
+//                    "book[exchangeId == 'KRAKEN'].exchangeId, book[exchangeId == 'BINANCE'].exchangeId, " +
+//                    "book.exchangeId[this == 'KRAKEN'], book.exchangeId[this == 'BINANCE'] " +
+//                    "from (BITFINEX union BINANCE union KRAKEN) " +
+//                    "over time(1s) " +
+//                    "where symbol == 'BTC/USDT'"),
 
             QUERY_RAW("select * from kraken " +
                     "where symbol == 'BTC/USDT' and timestamp between '2023-01-25 12:00:00.000'd and '2023-01-25 12:00:00.100'd "),

@@ -455,7 +455,6 @@ class FilterGenerator {
             filterBody.add(outMsgInFilter.call("setTimeStampMs", inMsg.call("getTimeStampMs")));
             filterBody.add(outMsgInFilter.call("setNanoTime", inMsg.call("getNanoTime")));
             filterBody.add(outMsgInFilter.call("setSymbol", inMsg.call("getSymbol")));
-            filterBody.add(outMsgInFilter.call("setInstrumentType", inMsg.call("getInstrumentType")));
 
             JInitMemberVariable mdoVar = generateVar(stateClass, MemoryDataOutput.class, "out");
             JExpr outMsgInState = msgVar.access();

@@ -35,7 +35,7 @@ public class AvgDecimal extends DecimalToDecimalStatefulFunctionBase {
     @Compute
     @Override
     public void compute(@BuiltInTimestampMs long timestamp, @Decimal long v) {
-        if (TimebaseTypes.isNull(v)) {
+        if (Decimal64Utils.isNaN(v)) {
             return;
         }
         if (TimebaseTypes.isDecimalNull(value)) {

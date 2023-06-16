@@ -5,6 +5,8 @@ set db ${home}/testdata/tickdb/qqltest
 open
 set src ${home}/java/timebase/test/src/main/resources/com/epam/deltix/qqltest/1min-1h-1h-3.qsmsg.gz
 import 1min-1h-1h-3
+set src ${home}/java/timebase/test/src/main/resources/com/epam/deltix/qqltest/1min-1h-1h-3_v2.qsmsg.gz
+import 1min-1h-1h-3_v2
 set confirm off
 set exitOnError off
 set max 10

@@ -1,0 +1,215 @@
+testqql
+CREATE DURABLE STREAM S_UNIQUE_TRUE (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+) OPTIONS(unique=true)
+/
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream created,0
+!end
+
+testdesc S_UNIQUE_TRUE
+DURABLE STREAM "S_UNIQUE_TRUE" (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = TRUE; STORAGEVERSION = '5')
+!end
+
+test drop stream S_UNIQUE_TRUE
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream dropped,0
+!end
+
+testqql
+CREATE DURABLE STREAM S_UNIQUE_FALSE (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+) OPTIONS(unique=false)
+/
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream created,0
+!end
+
+testdesc S_UNIQUE_FALSE
+DURABLE STREAM "S_UNIQUE_FALSE" (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
+!end
+
+test drop stream S_UNIQUE_FALSE
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream dropped,0
+!end
+
+testqql
+CREATE TRANSIENT STREAM S_UNIQUE_TRANSIENT_TRUE (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+) OPTIONS (unique=true)
+/
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream created,0
+!end
+
+testdesc S_UNIQUE_TRANSIENT_TRUE
+TRANSIENT STREAM "S_UNIQUE_TRANSIENT_TRUE" (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; LOSSY; INITSIZE = 8192; MAXSIZE = 65536; UNIQUE = TRUE)
+!end
+
+test drop stream S_UNIQUE_TRANSIENT_TRUE
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream dropped,0
+!end
+
+testqql
+CREATE TRANSIENT STREAM S_UNIQUE_TRANSIENT_FALSE (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+) OPTIONS (unique=false)
+/
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream created,0
+!end
+
+testdesc S_UNIQUE_TRANSIENT_FALSE
+TRANSIENT STREAM "S_UNIQUE_TRANSIENT_FALSE" (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; LOSSY; INITSIZE = 8192; MAXSIZE = 65536; UNIQUE = FALSE)
+!end
+
+test drop stream S_UNIQUE_TRANSIENT_FALSE
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream dropped,0
+!end
+
+testqql
+CREATE DURABLE STREAM S_STORAGE_VERSION_5 (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+) OPTIONS(storageVersion='5')
+/
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream created,0
+!end
+
+testdesc S_STORAGE_VERSION_5
+DURABLE STREAM "S_STORAGE_VERSION_5" (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
+!end
+
+test drop stream S_STORAGE_VERSION_5
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream dropped,0
+!end
+
+testqql
+CREATE DURABLE STREAM S_STORAGE_VERSION_50 (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+) OPTIONS(storageVersion='5.0')
+/
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream created,0
+!end
+
+testdesc S_STORAGE_VERSION_50
+DURABLE STREAM "S_STORAGE_VERSION_50" (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
+!end
+
+test drop stream S_STORAGE_VERSION_50
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream dropped,0
+!end
+
+testqql
+CREATE DURABLE STREAM S_STORAGE_VERSION_4 (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+) OPTIONS(storageVersion='4')
+/
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream created,0
+!end
+
+testdesc S_STORAGE_VERSION_4
+DURABLE STREAM "S_STORAGE_VERSION_4" (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
+!end
+
+test drop stream S_STORAGE_VERSION_4
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream dropped,0
+!end
+
+testqql
+CREATE DURABLE STREAM S_STORAGE_VERSION_43 (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+) OPTIONS(storageVersion='4.3')
+/
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream created,0
+!end
+
+testdesc S_STORAGE_VERSION_43
+DURABLE STREAM "S_STORAGE_VERSION_43" (
+    CLASS A (
+        F FLOAT DECIMAL (10)
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
+!end
+
+test drop stream S_STORAGE_VERSION_43
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream dropped,0
+!end

@@ -35,7 +35,9 @@ public class TSNames {
     public static final String      SYM_REGISTRY_NAME = "symbols.dat";
     public static final String      ROOT_PROPS_NAME = "config.properties";
     
-    public static final String      INDEX_NAME = "index.dat";                   
+    public static final String      INDEX_NAME = "index.dat";
+
+    public static final String      LOCK_NAME = "lock";
     
     public static String            buildFileName (int id) {
         return (String.format ("%s%04x.dat", FILE_NAME_PREFIX, id));

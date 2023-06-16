@@ -74,5 +74,3 @@ public class Test_SocketLatency {
         Test_SocketLatency.main(new String[0]);
     }
 }
-
-

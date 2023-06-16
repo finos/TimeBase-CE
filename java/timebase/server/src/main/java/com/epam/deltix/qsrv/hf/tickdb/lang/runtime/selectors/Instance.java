@@ -66,9 +66,14 @@ public class Instance {
         return (length == NULL);
     }
 
-    public void adjustTypeId(int adjustTypeIndex) {
+    public void adjustTypeId(int[] adjustTypeIndex) {
         if (typeId != NULL_TYPE) {
-            this.typeId += adjustTypeIndex;
+            for (int i = 0; i < adjustTypeIndex.length; i += 2) {
+                if (this.typeId == adjustTypeIndex[i]) {
+                    this.typeId = adjustTypeIndex[i + 1];
+                    break;
+                }
+            }
         }
     }
 

@@ -17,9 +17,10 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers;
 
 import com.epam.deltix.qsrv.hf.codec.MessageSizeCodec;
+import com.epam.deltix.qsrv.hf.codec.cg.ObjectPool;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
 import com.epam.deltix.qsrv.hf.pub.TypeLoaderImpl;
-import com.epam.deltix.qsrv.hf.pub.codec.BoundDecoder;
+import com.epam.deltix.qsrv.hf.pub.codec.BoundExternalDecoder;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
 import com.epam.deltix.qsrv.hf.pub.codec.PolyBoundEncoder;
 import com.epam.deltix.qsrv.hf.pub.md.Introspector;
@@ -40,12 +41,31 @@ public class PolyArrayCodec {
     private final MemoryDataOutput temp = new MemoryDataOutput();
 
     private PolyBoundEncoder encoder;
-    private BoundDecoder decoder;
+    private final BoundExternalDecoder[] decoders;
 
-    public PolyArrayCodec(Class<?> ... classes) {
+    private final ObjectPool<?>[] pool;
+
+    private boolean isDescriptorsInitialized;
+
+    public PolyArrayCodec(RecordClassDescriptor[] descriptors, Class<?>[] classes) {
+        this.descriptors = descriptors;
         this.classes = classes;
         this.typeLoader = new TypeLoaderImpl(Thread.currentThread().getContextClassLoader());
-        this.descriptors = new RecordClassDescriptor[classes.length];
+        this.decoders = new BoundExternalDecoder[classes.length];
+        this.pool = new ObjectPool[classes.length];
+
+        for (int i = 0; i < classes.length; ++i) {
+            Class<?> cls = classes[i];
+            this.pool[i] = new ObjectPool<Object>() {
+                public Object newItem() {
+                    try {
+                        return cls.getDeclaredConstructor().newInstance();
+                    } catch (Throwable t) {
+                        throw new RuntimeException(t);
+                    }
+                }
+            };
+        }
     }
 
     public void encodeList(ObjectArrayList list, MemoryDataOutput out) {
@@ -62,9 +82,23 @@ public class PolyArrayCodec {
 
     public void decodeList(ObjectArrayList list, MemoryDataInput in) {
         list.clear();
+        resetPools();
+
+        if (in.getLength() == 0) {
+            return;
+        }
+
         int length = MessageSizeCodec.read(in);
         for (int i = 0; i < length; i++) {
-            list.add(decoder().decode(in));
+            int messageLength = MessageSizeCodec.read(in);
+            if (messageLength > 0) {
+                int typeId = in.readUnsignedByte();
+                Object obj = borrowObject(typeId, cls(typeId));
+                decoder(typeId).decode(in, obj);
+                list.add(obj);
+            } else {
+                list.add(null);
+            }
         }
     }
 
@@ -75,25 +109,64 @@ public class PolyArrayCodec {
         return encoder;
     }
 
-    private BoundDecoder decoder() {
-        if (decoder == null) {
-            decoder = COMPILED_FACTORY.createPolyBoundDecoder(typeLoader, descriptors());
+    private BoundExternalDecoder decoder(int typeId) {
+        if (decoders[typeId] == null) {
+            decoders[typeId] = COMPILED_FACTORY.createFixedBoundDecoder(typeLoader, descriptor(typeId));
         }
-        return decoder;
+        return decoders[typeId];
+    }
+
+    private RecordClassDescriptor descriptor(int typeId) {
+        RecordClassDescriptor[] descriptors = descriptors();
+        if (typeId < 0 || typeId >= descriptors.length) {
+            throw new RuntimeException("Unknown typeId: " + typeId);
+        }
+
+        return descriptors[typeId];
     }
 
     private RecordClassDescriptor[] descriptors() {
-        if (descriptors[0] == null) {
-            for (int i = 0; i < classes.length; i++) {
-                try {
-                    descriptors[i] = introspector.introspectMemberClass(PolyInstanceCodec.class.getSimpleName(), classes[i]);
-                } catch (Introspector.IntrospectionException e) {
-                    throw new RuntimeException(e);
+        if (!isDescriptorsInitialized) {
+            for (int i = 0; i < descriptors.length; i++) {
+                if (descriptors[i] == null) {
+                    try {
+                        descriptors[i] = introspector.introspectMemberClass(PolyInstanceCodec.class.getSimpleName(), classes[i]);
+                    } catch (Introspector.IntrospectionException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
+            isDescriptorsInitialized = true;
         }
 
         return descriptors;
+    }
+
+    private <T> T borrowObject(int typeId, Class<T> cls) {
+        ObjectPool<?> pool = pool(typeId);
+        return cls.cast(pool.borrow());
+    }
+
+    private Class<?> cls(int typeId) {
+        if (typeId < 0 || typeId >= pool.length) {
+            throw new RuntimeException("Unknown typeId: " + typeId);
+        }
+
+        return classes[typeId];
+    }
+
+    private ObjectPool<?> pool(int typeId) {
+        if (typeId < 0 || typeId >= pool.length) {
+            throw new RuntimeException("Unknown typeId: " + typeId);
+        }
+
+        return pool[typeId];
+    }
+
+    private void resetPools() {
+        for (int i = 0; i < pool.length; ++i) {
+            pool[i].reset();
+        }
     }
 
 }

@@ -16,40 +16,40 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers;
 
+import com.epam.deltix.qsrv.hf.codec.cg.StringBuilderPool;
 import com.epam.deltix.qsrv.hf.pub.codec.AlphanumericCodec;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.ARRT;
-import com.epam.deltix.util.collections.generated.LongArrayList;
+import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.memory.MemoryDataInput;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 
-public class AlphanumericInstanceArray extends BaseInstanceArray<Long, LongArrayList> {
+public class AlphanumericInstanceArray extends CharSequenceInstanceArray {
 
     private final AlphanumericCodec codec = new AlphanumericCodec(10);
 
-    public AlphanumericInstanceArray() {
-        super(LongArrayList::new);
+    public AlphanumericInstanceArray(StringBuilderPool pool) {
+        super(pool);
     }
 
     public void addFromInput(MemoryDataInput mdi) {
         setInstance();
         setChanged();
-        get().add(codec.readLong(mdi));
-    }
-
-    public void add(long value) {
-        setInstance();
-        setChanged();
-        get().add(value);
+        if (mdi != null) {
+            StringBuilder sb = pool.borrow();
+            sb.setLength(0);
+            sb.append(codec.readCharSequence(mdi));
+            get().add(sb);
+        }
     }
 
     @Override
-    protected int encode(LongArrayList array, MemoryDataOutput mdo) {
+    protected int encode(ObjectArrayList<CharSequence> array, MemoryDataOutput mdo) {
         return ARRT.encodeArrayWithoutSize(array, mdo, codec);
     }
 
     @Override
-    protected void decode(LongArrayList array, MemoryDataInput mdi) {
-        ARRT.decodeArray(array, mdi, codec);
+    protected void decode(ObjectArrayList<CharSequence> array, MemoryDataInput mdi) {
+        ARRT.decodeArray(array, mdi, codec, pool);
     }
 
 }

@@ -72,4 +72,3 @@ public class EMA extends DoubleQueue {
         throw new UnsupportedOperationException ();
     }    
 }
-

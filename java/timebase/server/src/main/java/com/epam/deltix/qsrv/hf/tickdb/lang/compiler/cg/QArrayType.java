@@ -41,10 +41,7 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers.Instance
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers.IntegerInstanceArray;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers.LongInstanceArray;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers.ShortInstanceArray;
-import com.epam.deltix.util.jcg.JCompoundStatement;
-import com.epam.deltix.util.jcg.JExpr;
-import com.epam.deltix.util.jcg.JStatement;
-import com.epam.deltix.util.jcg.JVariable;
+import com.epam.deltix.util.jcg.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,15 +58,24 @@ public class QArrayType extends QType<ArrayDataType> {
         INSTANCE
     }
 
+    private static class ClassInfo {
+        private final Class<?> cls;
+        private final RecordClassDescriptor descriptor;
+
+        public ClassInfo(Class<?> cls, RecordClassDescriptor descriptor) {
+            this.cls = cls;
+            this.descriptor = descriptor;
+        }
+    }
+
     public final QType elementType;
 
-    private final boolean alphanumeric;
     private final Class<?> type;
     private final String getMethod;
     private final boolean objectArray;
     private final PoolType poolType;
     private final boolean arrayOfPrimitives;
-    private final Class<?>[] classes;
+    private final ClassInfo[] classes;
 
     public QArrayType(ArrayDataType dt) {
         super(dt);
@@ -79,7 +85,6 @@ public class QArrayType extends QType<ArrayDataType> {
         this.poolType = getPoolType(type);
         this.arrayOfPrimitives = isArrayOfPrimitives(dt.getElementDataType());
         this.elementType = QType.forDataType(dt.getElementDataType());
-        this.alphanumeric = isAlphanumeric(this.elementType);
 
         this.objectArray = true;
         this.classes = extractClasses(dt);
@@ -93,27 +98,34 @@ public class QArrayType extends QType<ArrayDataType> {
         this.poolType = getPoolType(type);
         this.arrayOfPrimitives = isArrayOfPrimitives(elementType.dt);
         this.elementType = elementType instanceof QArrayType ? ((QArrayType) elementType).elementType : elementType;
-        this.alphanumeric = isAlphanumeric(this.elementType);
 
         this.objectArray = false;
         this.classes = extractClasses(dt);
     }
 
-    private static Class<?>[] extractClasses(ArrayDataType arrayDataType) {
+    private static ClassInfo[] extractClasses(ArrayDataType arrayDataType) {
         return arrayDataType.getElementDataType() instanceof ClassDataType ?
                 extractClasses(((ClassDataType) arrayDataType.getElementDataType()).getDescriptors()): null;
     }
 
-    private static Class<?>[] extractClasses(RecordClassDescriptor[] rcds) {
-        try {
-            Class<?>[] classes = new Class[rcds.length];
-            for (int i = 0; i < rcds.length; i++) {
-                classes[i] = Class.forName(rcds[i].getName());
+    private static ClassInfo[] extractClasses(RecordClassDescriptor[] rcds) {
+        List<ClassInfo> classes = new ArrayList<>();
+        for (int i = 0; i < rcds.length; i++) {
+            RecordClassDescriptor rcd = rcds[i];
+            while (rcd != null) {
+                try {
+                    classes.add(new ClassInfo(
+                            Class.forName(rcd.getName()),
+                            rcds[i]
+                    ));
+                    break;
+                } catch (ClassNotFoundException exc) {
+                    rcd = rcd.getParent();
+                }
             }
-            return classes;
-        } catch (ClassNotFoundException exc) {
-            return null;
         }
+
+        return classes.toArray(new ClassInfo[0]);
     }
 
     private static String getMethod(Class<?> clazz) {
@@ -129,8 +141,6 @@ public class QArrayType extends QType<ArrayDataType> {
             return "getFloat";
         } else if (clazz == DoubleInstanceArray.class) {
             return "getDouble";
-        } else if (clazz == AlphanumericInstanceArray.class) {
-            return "getLong";
         } else if (clazz == CharacterInstanceArray.class) {
             return "getCharacter";
         } else {
@@ -139,7 +149,7 @@ public class QArrayType extends QType<ArrayDataType> {
     }
 
     private PoolType getPoolType(Class<?> clazz) {
-        if (clazz == CharSequenceInstanceArray.class) {
+        if (clazz == CharSequenceInstanceArray.class || clazz == AlphanumericInstanceArray.class) {
             return PoolType.VARCHAR;
         }
 
@@ -148,14 +158,6 @@ public class QArrayType extends QType<ArrayDataType> {
         }
 
         return null;
-    }
-
-    private boolean isAlphanumeric(QType<?> type) {
-        if (type instanceof QVarcharType) {
-            return ((QVarcharType) this.elementType).isAlphanumeric();
-        } else {
-            return false;
-        }
     }
 
     private boolean isArrayOfPrimitives(DataType type) {
@@ -280,7 +282,7 @@ public class QArrayType extends QType<ArrayDataType> {
     @Override
     public Class<?> getJavaClass() {
         throw new UnsupportedOperationException(
-            "Not implemented for " + getClass().getSimpleName()
+                "Not implemented for " + getClass().getSimpleName()
         );
     }
 
@@ -301,12 +303,24 @@ public class QArrayType extends QType<ArrayDataType> {
             case VARCHAR:
                 return CTXT.newExpr(type, CTXT.staticVarRef("this", "varcharPool"));
             case INSTANCE: {
-                if (classes == null) {
+                if (classes == null || classes.length == 0) {
                     return CTXT.newExpr(type, CTXT.staticVarRef("this", "instancePool"));
                 } else {
                     List<JExpr> list = new ArrayList<>();
                     list.add(CTXT.staticVarRef("this", "instancePool"));
-                    list.addAll(Arrays.stream(classes).map(CTXT::classLiteral).collect(Collectors.toList()));
+
+                    JArrayInitializer rcdArray = CTXT.arrayInitializer(RecordClassDescriptor.class);
+                    for (ClassInfo classInfo : classes) {
+                        rcdArray.add(CTXT.call("getDescriptor", CTXT.stringLiteral(classInfo.descriptor.getName())));
+                    }
+                    list.add(CTXT.newArrayExpr(RecordClassDescriptor.class, rcdArray));
+
+                    JArrayInitializer classArray = CTXT.arrayInitializer(Class.class);
+                    for (ClassInfo classInfo : classes) {
+                        classArray.add(CTXT.classLiteral(classInfo.cls));
+                    }
+                    list.add(CTXT.newArrayExpr(Class.class, classArray));
+
                     return CTXT.newExpr(type, list.toArray(new JExpr[list.size()]));
                 }
             }
@@ -335,11 +349,7 @@ public class QArrayType extends QType<ArrayDataType> {
     }
 
     public JExpr getElementNullLiteral() {
-        if (alphanumeric) {
-            return CTXT.longLiteral(IntegerDataType.INT64_NULL);
-        } else {
-            return elementType.getNullLiteral();
-        }
+        return elementType.getNullLiteral();
     }
 
     @Override
@@ -355,7 +365,7 @@ public class QArrayType extends QType<ArrayDataType> {
             return arrayValue.variable().call("addAllFromInput", input).asStmt();
         }
 
-        if (poolType != null || alphanumeric) {
+        if (poolType != null) {
             return arrayValue.variable().call("addFromInput", input).asStmt();
         }
 
@@ -377,6 +387,6 @@ public class QArrayType extends QType<ArrayDataType> {
     }
 
     public boolean hasClasses() {
-        return classes != null;
+        return classes != null && classes.length > 0;
     }
 }

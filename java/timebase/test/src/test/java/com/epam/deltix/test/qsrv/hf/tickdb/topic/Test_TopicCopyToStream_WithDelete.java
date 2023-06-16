@@ -102,4 +102,3 @@ public class Test_TopicCopyToStream_WithDelete extends TDBTestBase {
         db.getStream(streamKey).delete();
     }
 }
-

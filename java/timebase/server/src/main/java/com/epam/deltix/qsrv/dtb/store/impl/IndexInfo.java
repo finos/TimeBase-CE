@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.dtb.store.impl;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 import com.epam.deltix.qsrv.dtb.store.codecs.TSFFormat;
 import com.epam.deltix.qsrv.dtb.store.codecs.TSNames;
+import com.epam.deltix.util.collections.generated.IntegerToObjectHashMap;
 import com.epam.deltix.util.lang.Util;
 
 import java.io.*;
@@ -55,6 +56,11 @@ public class IndexInfo {
             return (isFile == info.isFile && eid == info.eid && ts == info.ts);
         }
 
+        @Override
+        public int hashCode() {
+            return Objects.hash(isFile, eid, ts);
+        }
+
         public String       getName() {
             return isFile ? TSNames.buildFileName(eid) : TSNames.buildFolderName(eid);
         }
@@ -86,49 +92,50 @@ public class IndexInfo {
     private long version;
     private int nextChildId;
 
-    private ArrayList<ChildInfo> childrenInfo = new ArrayList<>();
-    private ArrayList<EntityInfo> entityInfo = new ArrayList<>();
+    private final ArrayList<ChildInfo>                  childrenInfo = new ArrayList<>();
+    private final IntegerToObjectHashMap<ChildInfo>     childrenMap = new IntegerToObjectHashMap<>();
+
+    private final ArrayList<EntityInfo> entityInfo = new ArrayList<>();
 
     public List<ChildInfo>      getChildrenInfo() {
         return childrenInfo;
     }
 
-    public void                 setChildrenInfo(ArrayList<ChildInfo> childrenInfo) {
-        this.childrenInfo = childrenInfo;
+    public void                 clearChildren() {
+        childrenInfo.clear();
+        childrenMap.clear();
     }
 
     public boolean              hasChildren() {
-        return childrenInfo != null && childrenInfo.size() > 0;
+        return childrenInfo.size() > 0;
     }
 
-    public ChildInfo        getChild(int eid) {
-        for (ChildInfo child : childrenInfo) {
-            if (child.eid == eid)
-                return child;
-        }
-
-        return null;
+    public ChildInfo            getChild(int eid) {
+        return childrenMap.get(eid, null);
     }
 
     public boolean        hasChild(int eid) {
-        for (ChildInfo child : childrenInfo) {
-            if (child.eid == eid)
-                return true;
-        }
+        return childrenMap.containsKey(eid);
 
-        return false;
+//        for (ChildInfo child : childrenInfo) {
+//            if (child.eid == eid)
+//                return true;
+//        }
+//
+//        return false;
     }
 
     public List<EntityInfo> getEntitiesInfo() {
         return entityInfo;
     }
 
-//    public void setChildrenInfo(ArrayList<ChildInfo> childrenInfo) {
-//        this.childrenInfo = childrenInfo;
-//    }
+    public void             clearEntities() {
+        entityInfo.clear();
+    }
 
-    public void setEntityInfo(ArrayList<EntityInfo> entityInfo) {
-        this.entityInfo = entityInfo;
+    public void             setEntityInfo(ArrayList<EntityInfo> entityInfo) {
+        this.entityInfo.clear();
+        this.entityInfo.addAll(entityInfo);
     }
 
     public void saveTo(AbstractPath path) throws IOException {
@@ -148,7 +155,7 @@ public class IndexInfo {
 
         //System.out.println("Set last child id: " + nextChildId);
 
-        //PDSImpl.LOGGER.warn("Saving index file to: " + tmpPath);
+        Restorer.LOGGER.debug("Saving index file to: " + tmpPath);
 
         try (OutputStream os = new BufferedOutputStream (tmpPath.openOutput (0))) {
             DataOutputStream        dos = new DataOutputStream (os);
@@ -185,6 +192,8 @@ public class IndexInfo {
 
     public static IndexInfo createFrom(AbstractPath path) {
 
+        Restorer.LOGGER.debug("Reading index file : " + path);
+
         if (path.exists()) {
             IndexInfo index = new IndexInfo();
 
@@ -195,11 +204,13 @@ public class IndexInfo {
                 int numChildren = dis.readUnsignedShort();
 
                 for (int i = 0; i < numChildren; ++i) {
-                    index.childrenInfo.add(new ChildInfo(
+                    ChildInfo info = new ChildInfo(
                             dis.readBoolean(),
                             dis.readUnsignedShort(),
                             dis.readLong(),
-                            index.formatVersion >= 2 ? dis.readLong() : 0));
+                            index.formatVersion >= 2 ? dis.readLong() : 0);
+
+                    index.addChild(info);
                 }
 
                 int numEntities = dis.readInt();
@@ -211,7 +222,7 @@ public class IndexInfo {
                     ));
                 }
             } catch (IOException e) {
-                PDSImpl.LOGGER.warn("Cannot read file %s: %s").with(path).with(e);
+                Restorer.LOGGER.warn("Cannot read file %s: %s").with(path).with(e);
                 return null;
             }
 
@@ -255,10 +266,12 @@ public class IndexInfo {
     public void removeAll(List<ChildInfo> childrenToRemove) throws IOException {
         List<EntityInfo> entitiesToRemove = new ArrayList<>();
 
-        for (ChildInfo curChild : childrenToRemove)
-            fixEntity(curChild, entitiesToRemove);
+        for (ChildInfo info : childrenToRemove) {
+            fixEntity(info, entitiesToRemove);
+            childrenInfo.remove(info);
+            childrenMap.remove(info.eid);
+        }
 
-        childrenInfo.removeAll(childrenToRemove);
         entityInfo.removeAll(entitiesToRemove);
     }
 
@@ -284,6 +297,8 @@ public class IndexInfo {
             childrenInfo.add(info);
         else
             childrenInfo.add(index, info);
+
+        childrenMap.put(info.eid, info);
 
         return true;
     }

@@ -137,4 +137,3 @@ public class Symbols {
   public static final int ValueId = 3;
   public static final int WRITE_SYNTAX = 116;
 }
-

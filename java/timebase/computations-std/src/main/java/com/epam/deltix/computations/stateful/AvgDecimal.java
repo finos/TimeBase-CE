@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.epam.deltix.computations.stateful;
+package com.epam.deltix.computations.stateful;
 
 import com.epam.deltix.computations.api.annotations.BuiltInTimestampMs;
 import com.epam.deltix.computations.api.annotations.Compute;
@@ -35,7 +35,7 @@ public class AvgDecimal extends DecimalToDecimalStatefulFunctionBase {
     @Compute
     @Override
     public void compute(@BuiltInTimestampMs long timestamp, @Decimal long v) {
-        if (TimebaseTypes.isNull(v)) {
+        if (Decimal64Utils.isNaN(v)) {
             return;
         }
         if (TimebaseTypes.isDecimalNull(value)) {

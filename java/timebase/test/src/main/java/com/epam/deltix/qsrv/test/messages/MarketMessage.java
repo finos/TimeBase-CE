@@ -50,7 +50,7 @@ public class MarketMessage extends InstrumentMessage {
      * {link #setCurrencyCode} and {link #getCurrencyCode} to
      * convert this value to a three-character code.
      */
-    protected short currencyCode = 999;
+    protected short currencyCode = TypeConstants.INT16_NULL;
 
     /**
      * Market specific identifier of the given event in a sequence of market events.

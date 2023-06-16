@@ -76,7 +76,7 @@ public class DownloadHandler {
 
             @Override
             public int version() {
-                return (clientVersion <= 99 || clientVersion >= 106) ? 0 : 1;
+                return clientVersion <= 130 ? 1 : 2;
             }
         };
     private final TypeSet                   typeSet = new TypeSet (typeSender);

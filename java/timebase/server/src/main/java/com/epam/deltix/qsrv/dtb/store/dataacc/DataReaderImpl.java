@@ -74,9 +74,9 @@ public final class DataReaderImpl
     //
     @Override
     public synchronized void    close () {
-        closeInternal();
+       closeInternal();
 
-        currentFilter = null;
+       currentFilter = null;
     }
 
     @Override
@@ -263,6 +263,11 @@ public final class DataReaderImpl
             AccessorBlockLink next = pq.poll();
 
             if (next != null) {
+
+                // TSFile already closed
+                if (!next.isActive())
+                    continue;
+
                 int state;
 
                 if (forward)

@@ -32,13 +32,17 @@ abstract class QQLPostProcessingPatterns {
     public static boolean       isConjunction (CompiledExpression e) {
         return e instanceof LogicalOperation && ((LogicalOperation) e).getOperation() == BinaryLogicalOperation.AND;
     }
-    
+
     public static boolean       isDisjunction(CompiledExpression e) {
         return e instanceof LogicalOperation && ((LogicalOperation) e).getOperation() == BinaryLogicalOperation.OR;
     }
-
+    
     public static boolean       isNull (CompiledExpression e) {
         return (e instanceof CompiledConstant && ((CompiledConstant) e).isNull ());
+    }
+
+    public static boolean isNan(CompiledExpression e) {
+        return e instanceof CompiledConstant && ((CompiledConstant) e).isNan();
     }
     
     public static boolean       isSimpleFunction (
@@ -117,23 +121,32 @@ abstract class QQLPostProcessingPatterns {
         for (int ii = 0; ii < condition.size(); ) {
             CompiledExpression<?> e = condition.get(ii);
             boolean matched = false;
+            CompiledExpression<?> left = null, right = null;
+            OrderRelation relation = null;
             if (e instanceof ComparisonOperation) {
                 ComparisonOperation operation = (ComparisonOperation) e;
-                CompiledExpression<?> left = operation.args[0];
-                CompiledExpression<?> right = operation.args[1];
-                if (left instanceof TimestampSelector && isStatic(right)) {
-                    if (range == null)
-                        range = new TimestampLimits();
+                left = operation.args[0];
+                right = operation.args[1];
+                relation = operation.getRelation();
+            } else if (e instanceof EqualityCheckOperation) {
+                EqualityCheckOperation operation = (EqualityCheckOperation) e;
+                left = operation.args[0];
+                right = operation.args[1];
+                relation = operation.getRelation();
+            }
 
-                    range.update(right, operation.getRelation(), false);
-                    matched = true;
-                } else if (right instanceof TimestampSelector && isStatic(left)) {
-                    if (range == null)
-                        range = new TimestampLimits();
+            if (left instanceof TimestampSelector && isStatic(right)) {
+                if (range == null)
+                    range = new TimestampLimits();
 
-                    range.update(left, operation.getRelation(), true);
-                    matched = true;
-                }
+                range.update(right, relation, false);
+                matched = true;
+            } else if (right instanceof TimestampSelector && isStatic(left)) {
+                if (range == null)
+                    range = new TimestampLimits();
+
+                range.update(left, relation, true);
+                matched = true;
             }
 
             if (matched)
@@ -200,7 +213,7 @@ abstract class QQLPostProcessingPatterns {
         }
 
         return new SymbolLimits(true);
-}
+    }
 
     private static List<String> symbolsUnion(List<String> s1, List<String> s2) {
         HashSet<String> symbols = new HashSet<>(s1);

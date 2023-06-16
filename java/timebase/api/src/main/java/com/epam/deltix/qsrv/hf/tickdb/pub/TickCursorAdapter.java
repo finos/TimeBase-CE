@@ -245,4 +245,3 @@ public class TickCursorAdapter extends MessageSourceAdapter<InstrumentMessage> i
         throw new UnsupportedOperationException(LIVE_SOURCE_UNSUPPORTED + delegate.getClass().getSimpleName());
     }
 }
-

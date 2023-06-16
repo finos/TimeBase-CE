@@ -251,8 +251,8 @@ public class Test_PDStreamSpaceIndexManager {
         }
 
         @Override
-        public void drop(TimeRange range) {
-
+        public boolean drop(TimeRange range) {
+            return false;
         }
 
         @Override

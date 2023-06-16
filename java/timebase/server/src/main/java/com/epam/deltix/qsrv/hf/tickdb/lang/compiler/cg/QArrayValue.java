@@ -78,6 +78,10 @@ public class QArrayValue extends QValue {
         return variable.call("setList", otherList);
     }
 
+    public JExpr setTypedList(JExpr otherList) {
+        return variable.call("setTypedList", otherList);
+    }
+
     // write same as add element
     @Override
     public JStatement writeNull() {
@@ -91,6 +95,10 @@ public class QArrayValue extends QValue {
     @Override
     public JStatement write(JExpr arg) {
         return variable.call("add", arg).asStmt();
+    }
+
+    public JStatement writeAll(JExpr arg) {
+        return variable.call("addAll", arg).asStmt();
     }
 
     public JStatement addNull() {
@@ -133,8 +141,8 @@ public class QArrayValue extends QValue {
         return read().call(arrayType.listGetMethod(), index);
     }
 
-    public JExpr adjustType(int adjustTypeIndex) {
-        return variable.call("adjustTypeId", CTXT.intLiteral(adjustTypeIndex));
+    public JExpr adjustTypes(JExpr value) {
+        return variable.call("adjustTypeId", value);
     }
 
     public boolean isObjectArray() {

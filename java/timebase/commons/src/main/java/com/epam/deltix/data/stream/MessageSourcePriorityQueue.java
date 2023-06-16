@@ -281,4 +281,3 @@ public final class MessageSourcePriorityQueue <T extends TimeStampedMessage> {
         return (min);
     }
 }
-

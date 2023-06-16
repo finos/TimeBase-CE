@@ -127,6 +127,25 @@ public final class QFloatType extends QNumericType <FloatDataType> {
     }
 
     @Override
+    public JExpr checkNan(JExpr e, boolean eq) {
+        JExpr isNan;
+
+        switch (dt.getScale()) {
+            case FloatDataType.FIXED_FLOAT:
+                isNan = CTXT.staticCall(Float.class, "isNaN", e);
+                break;
+            case FloatDataType.SCALE_DECIMAL64:
+                isNan = CTXT.staticCall(Decimal64Utils.class, "isNaN", e);
+                break;
+            default:
+                isNan = CTXT.staticCall(Double.class, "isNaN", e);
+                break;
+        }
+
+        return (eq ? isNan : isNan.not());
+    }
+
+    @Override
     public int                  getEncodedFixedSize () {
         switch (dt.getScale ()) {
             case FloatDataType.FIXED_FLOAT:

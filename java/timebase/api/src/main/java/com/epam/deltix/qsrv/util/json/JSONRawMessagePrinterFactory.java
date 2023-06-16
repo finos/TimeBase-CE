@@ -33,6 +33,13 @@ public class JSONRawMessagePrinterFactory {
 
     public static JSONRawMessagePrinter createForTickDBShell() {
         return new JSONRawMessagePrinter(false, true, DataEncoding.STANDARD, true,
-                false, PrintType.FULL, true, "$type");
+            false, PrintType.FULL, true, "$type") {
+            @Override
+            protected void appendType(StringBuilder sb, String fullType) {
+                if (fullType != null && fullType.startsWith("QUERY"))
+                    fullType = "";
+                super.appendType(sb, fullType);
+            }
+        };
     }
 }

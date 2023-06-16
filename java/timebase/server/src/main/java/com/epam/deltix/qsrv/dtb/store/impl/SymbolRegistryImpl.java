@@ -347,7 +347,7 @@ public class SymbolRegistryImpl implements SymbolRegistry {
                 TreeOps.finalize(tmpFile);
             } catch (IOException ex) {
                 format();
-                LOGGER.warn("Failed to load symbols from '" + tmpFile + "'.");
+                LOGGER.info("Skipping invalid temp file: %s").with(tmpFile);
             }
         }
 

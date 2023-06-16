@@ -91,6 +91,8 @@ public final class ClassMap {
     private final Map <ClassDescriptor, ClassInfo>    infoMap =
         new HashMap <ClassDescriptor, ClassInfo> ();
 
+    private final Map<String, RecordClassDescriptor> nameToDescriptor = new HashMap<>();
+
     private final EnvironmentFrame                    typeEnv;
 
     public ClassMap (Environment parent) {
@@ -112,6 +114,27 @@ public final class ClassMap {
             registerEnum ((EnumClassDescriptor) cd);
         else
             throw new IllegalArgumentException (cd.toString ());
+    }
+
+    public void registerNew(RecordClassDescriptor rcd) {
+        if (!nameToDescriptor.containsKey(rcd.getName())) {
+            register(inplaceDescriptor(rcd));
+        }
+    }
+
+    private RecordClassDescriptor inplaceDescriptor(RecordClassDescriptor rcd) {
+        RecordClassDescriptor foundRcd = nameToDescriptor.get(rcd.getName());
+        if (foundRcd != null) {
+            return foundRcd;
+        }
+
+        RecordClassDescriptor parent = rcd.getParent() == null ? null : inplaceDescriptor(rcd.getParent());
+        if (rcd.getParent() != parent) {
+            rcd = new RecordClassDescriptor(rcd, new String[0]);
+            rcd.setParent(parent);
+        }
+
+        return rcd;
     }
     
     public EnumClassInfo                        registerEnum (EnumClassDescriptor ecd) {
@@ -148,6 +171,7 @@ public final class ClassMap {
             typeEnv.bind(NamedObjectType.TYPE, shortName, ci);
         }
         infoMap.put(rcd, ci);
+        nameToDescriptor.put(rcd.getName(), rcd);
 
         for (DataField field : rcd.getFields()) {
             if (field.getType() instanceof ClassDataType) {
@@ -184,5 +208,9 @@ public final class ClassMap {
     
     public Set <ClassDescriptor>                getAllDescriptors () {
         return (infoMap.keySet ());
+    }
+
+    public ClassDescriptor getDescriptor(String name) {
+        return nameToDescriptor.get(name);
     }
 }

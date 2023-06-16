@@ -58,6 +58,11 @@ public final class DataBlock implements DataBlockInfo {
         return (length);
     }
 
+    @Override
+    public int                      getAllocatedLength () {
+        return data != null ? data.getLength() : 0;
+    }
+
     public void                     configure (MemoryDataInput mdi, int pos) {
         // block already destroyed
         if (data == null)
@@ -137,7 +142,9 @@ public final class DataBlock implements DataBlockInfo {
 
             try {
                 //data = PDSFactory.getAllocator().create(Util.doubleUntilAtLeast(oldCapacity, newLength));
-                data = new ByteArray(Util.doubleUntilAtLeast(oldCapacity, newLength)); // @ALLOCATION
+                int increment = Math.min(oldCapacity, 1024 * 1024); // 100% increment or 1 MB
+                int length = Math.max(newLength, oldCapacity + increment);
+                data = new ByteArray(length); // @ALLOCATION
 
                 if (dataOffset > 0)
                     ByteArray.arraycopy(old, 0, data, 0, dataOffset);
@@ -191,6 +198,10 @@ public final class DataBlock implements DataBlockInfo {
         length -= free;
 
         return setDirty ();
+    }
+
+    public boolean                  isActive() {
+        return length != -1;
     }
 
     public void                     clear () {

@@ -165,14 +165,14 @@ public class EnvironmentFrame implements Environment {
         
         Object      prev = local.put (key, value);
 
-        if (prev != null && prev != AMBIGUOUS)
+        if (prev != null)
             local.put (key, AMBIGUOUS);
 
         Key         ukey = new Key (type, id.toUpperCase ());
 
         prev = cilocal.put (ukey, value);
 
-        if (prev != null && prev != AMBIGUOUS)
+        if (prev != null)
             cilocal.put (ukey, AMBIGUOUS);
     }
 

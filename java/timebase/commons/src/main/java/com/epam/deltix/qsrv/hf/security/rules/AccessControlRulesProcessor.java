@@ -296,5 +296,3 @@ class AccessControlRulesProcessor {
         return sb.toString();
     }
 }
-
-

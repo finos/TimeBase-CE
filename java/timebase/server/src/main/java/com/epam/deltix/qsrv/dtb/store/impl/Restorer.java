@@ -14,35 +14,38 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.epam.deltix.qsrv.dtb.store.impl;
+package com.epam.deltix.qsrv.dtb.store.impl;
 
-import java.io.*;
-import java.nio.file.Files;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
+import com.epam.deltix.qsrv.dtb.fs.pub.FSUtils;
+import com.epam.deltix.qsrv.dtb.store.codecs.TSNames;
+import com.epam.deltix.qsrv.dtb.store.impl.IndexInfo.ChildInfo;
+import com.epam.deltix.qsrv.dtb.store.pub.TSRoot;
+import com.epam.deltix.qsrv.dtb.store.raw.DiagPrinter;
+import com.epam.deltix.qsrv.dtb.store.raw.MutableRawTSF;
+import com.epam.deltix.qsrv.dtb.store.raw.RawFolder;
+import com.epam.deltix.qsrv.dtb.store.raw.RawTSF;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
 
-import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
-import com.epam.deltix.qsrv.dtb.fs.pub.FSUtils;
-import com.epam.deltix.qsrv.dtb.store.codecs.TSNames;
-import com.epam.deltix.qsrv.dtb.store.impl.IndexInfo.ChildInfo;
-import com.epam.deltix.qsrv.dtb.store.pub.TSRoot;
-import com.epam.deltix.qsrv.dtb.store.raw.MutableRawTSF;
-import com.epam.deltix.qsrv.dtb.store.raw.DiagPrinter;
-import com.epam.deltix.qsrv.dtb.store.raw.RawFolder;
-import com.epam.deltix.qsrv.dtb.store.raw.RawTSF;
-
-import static com.epam.deltix.qsrv.dtb.store.impl.PDSImpl.LOGGER;
-
 public class Restorer {
+
+    public static final Log LOGGER = LogFactory.getLog("deltix.dtb.restorer");
+
+//    static {
+//        LOGGER.setLevel(LogLevel.DEBUG);
+//    }
 
     private final DiagPrinter printer = new DiagPrinter();
 
-    //static final Logger LOGGER = Logger.getLogger("deltix.qsrv.dtb.store.impl.Restorer");
-
-    private final AbstractPath          propertyFile;
+    private final AbstractPath  propertyFile;
     private final boolean       isReadOnly;
 
     private         Restorer(AbstractPath root, boolean isReadOnly) {
@@ -54,11 +57,18 @@ public class Restorer {
         Verify given root for the errors and restore consistency
      */
 
-    public static void restore(TSRoot root, boolean isReadOnly) throws IOException {
-        Restorer restorer = new Restorer(root.getPath(), isReadOnly);
-        restorer.restoreFolders(root.getPath(), true);
+    public static void restore(TSRoot root, boolean isReadOnly, boolean enforce) throws IOException {
+        AbstractPath lockPath = root.getPath().append(TSNames.LOCK_NAME);
+        if (lockPath.exists() || enforce) {
+            Restorer restorer = new Restorer(root.getPath(), isReadOnly);
+            restorer.restoreFolders(root.getPath(), true);
+        } else {
+            LOGGER.warn("Data wasn't modified since last restart. Skipping.");
+        }
 
-        // root MUST contains index file
+        lockPath.deleteIfExists();
+
+        // root MUST contain index file
         AbstractPath indexPath = root.getPath().append(TSNames.INDEX_NAME);
         if (!indexPath.exists())
             new IndexInfo().saveTo(indexPath);
@@ -125,9 +135,7 @@ public class Restorer {
         String[] items = entry.listFolder();
         boolean hasUnsaved = Stream.of(items).anyMatch(x -> x.startsWith(TSNames.TMP_PREFIX));
 
-        IndexInfo indexInfo = IndexInfo.createFrom(indexPath);
-
-        if (indexInfo != null && hasUnsaved) {
+        if (indexPath.exists() && hasUnsaved) {
             if (checkReadonly(entry))
                 return;
 
@@ -138,6 +146,8 @@ public class Restorer {
                 tmpIndexPath.deleteIfExists();
                 tmpIndexInfo = IndexInfo.createFrom(entry.append(TSNames.SAVE_PREFIX + TSNames.INDEX_NAME));
             }
+
+            IndexInfo indexInfo = IndexInfo.createFrom(indexPath);
 
             if (tmpIndexPath.exists() && tmpIndexInfo != null) {
                 restoreConsistency(indexInfo, tmpIndexInfo, entry, isFirst);
@@ -218,9 +228,11 @@ public class Restorer {
                     LOGGER.warn("index.dat for %s corrected.").with(entry.getPathString());
                 }
             } else {
-                restoreFolderConsistency(indexInfo, entry);
-                synchronizeIndexWithFolder(indexInfo, entry, isFirst);
-                indexInfo.saveTo(indexPath);
+                boolean changed1 = restoreFolderConsistency(indexInfo, entry);
+                boolean changed2 = synchronizeIndexWithFolder(indexInfo, entry, isFirst);
+
+                if (changed1 || changed2)
+                    indexInfo.saveTo(indexPath);
             }
         }
 
@@ -259,7 +271,7 @@ public class Restorer {
             }
 
             // re-add files to validate timestamps order
-            index.setChildrenInfo(new ArrayList<>());
+            index.clearChildren();
 
             for (ChildInfo c : toAdd) {
                 if (!index.addChild(c))
@@ -429,7 +441,7 @@ public class Restorer {
         }
     }
 
-    private void synchronizeIndexWithFolder(IndexInfo indexInfo, AbstractPath path, boolean isFirst) throws IOException {
+    private boolean synchronizeIndexWithFolder(IndexInfo indexInfo, AbstractPath path, boolean isFirst) throws IOException {
 
         List<IndexInfo.ChildInfo> children = indexInfo.getChildrenInfo();
         List<IndexInfo.ChildInfo> toRemove = new ArrayList<>();
@@ -477,6 +489,8 @@ public class Restorer {
             LOGGER.info(toRemove.size() + " children are removed.");
             indexInfo.removeAll(toRemove);
         }
+
+        return toRemove.size() > 0;
     }
 
     private boolean         verifyIndex(IndexInfo index, AbstractPath folder) throws IOException {
@@ -497,13 +511,26 @@ public class Restorer {
             }
         }
 
+        // verify entries
+        List<IndexInfo.EntityInfo> list = index.getEntitiesInfo();
+        for (IndexInfo.EntityInfo info : list) {
+            if (index.getChild(info.firstId) == null) {
+                LOGGER.warn("Bad entity index in " + folder + ": child = " + info.firstId + " was not found.");
+                return false;
+            }
+
+            if (index.getChild(info.lastId) == null) {
+                LOGGER.warn("Bad entity index in " + folder + ": child = " + info.lastId + " was not found.");
+                return false;
+            }
+        }
+
         int formatVersion = index.getFormatVersion();
 
         if (formatVersion < 2)
             LOGGER.warn("Index in %s has old format (version = %s). Rebuilding ...").with(folder).with(formatVersion);
 
         return formatVersion >= 2;
-
     }
 
     private String getRelativePath(AbstractPath path) {
@@ -539,7 +566,7 @@ public class Restorer {
 //        }
 //    }
 
-    private void restoreFolderConsistency(IndexInfo indexInfo, AbstractPath entry) throws IOException {
+    private boolean restoreFolderConsistency(IndexInfo indexInfo, AbstractPath entry) throws IOException {
         List<IndexInfo.ChildInfo> children = indexInfo.getChildrenInfo();
 
         List<AbstractPath> tmpFoldersList = getTmpFolders(children, entry);
@@ -584,6 +611,8 @@ public class Restorer {
             LOGGER.info(numMovedFiles + " entries are restored.");
 
         dropFiles(tmpFoldersList);
+
+        return tmpFoldersList.size() > 0 || numMovedFiles > 0;
     }
 
     private long    getStartTime(AbstractPath path, long indexTime) {

@@ -403,8 +403,8 @@ public class PrioritizedMessageSourceMultiplexer<T extends TimeStampedMessage>
 
     /**
      * Returns true, if feed is closed.
-     * @param feed
-     * @param rtx
+     * @param feed Feed which generated exception
+     * @param rtx Runtime exception to process
      * @return true, if feed is closed
      */
     protected final boolean                    handleException (

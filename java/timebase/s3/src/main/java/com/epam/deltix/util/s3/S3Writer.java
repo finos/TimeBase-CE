@@ -250,4 +250,3 @@ public abstract class S3Writer<T> implements Closeable, Flushable {
         }
     }
 }
-

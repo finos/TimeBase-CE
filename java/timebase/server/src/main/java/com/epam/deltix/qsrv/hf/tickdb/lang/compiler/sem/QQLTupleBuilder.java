@@ -224,7 +224,7 @@ public class QQLTupleBuilder {
                 compiledExpressions.add(compiledExpression);
 
                 DataType type = compiledExpression.type;
-                String name = compiledExpression.name;
+                String name = compiledExpression.getFieldName();
                 if (name == null || !namesInUse.add(name)) {
                     if (name == null) {
                         name = "$";
@@ -267,16 +267,14 @@ public class QQLTupleBuilder {
         return (
             new TupleConstructor(
                 new ClassDataType(false, newDescriptors.toArray(new RecordClassDescriptor[0])),
-                tsInit, symbolInit,
-                typeToInitializers,
-                nsInits.toArray(new CompiledExpression[nsInits.size()])
+                tsInit, symbolInit, typeToInitializers
             )
         );
     }
 
     private static CompiledExpression<DataType> findExpressionByName(Set<CompiledExpression<DataType>> compiledExpressions, String name) {
         for (CompiledExpression<DataType> compiledExpression : compiledExpressions) {
-            if (name.equalsIgnoreCase(compiledExpression.name)) {
+            if (name.equalsIgnoreCase(compiledExpression.getFieldName())) {
                 return compiledExpression;
             }
         }
@@ -310,8 +308,10 @@ public class QQLTupleBuilder {
 
         if (descriptorCache.isChanged) {
             RecordClassDescriptor descriptor = descriptorCache.descriptor;
+            String queryID = QQLExpressionCompiler.getQueryID(descriptorCache.fields);
+
             descriptorCache.outDescriptor = new RecordClassDescriptor(
-                descriptor.getName() + "$1", descriptor.getTitle(), descriptor.isAbstract(), parentDescriptor,
+                    queryID, descriptor.getTitle(), descriptor.isAbstract(), parentDescriptor,
                 descriptorCache.fields.toArray(new DataField[descriptorCache.fields.size()])
             );
         } else {

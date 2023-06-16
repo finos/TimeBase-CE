@@ -126,12 +126,70 @@ DURABLE STREAM TEST1 (
     )
         COMMENT 'This class tests the majority of field types';
 )
-OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
 !end
 #
 #   Drop stream via qql
 #
 test drop stream test1
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream dropped,0
+!end
+
+#
+#   Create stream
+#
+testqql
+CREATE DURABLE STREAM "test_guid" (
+    CLASS "deltix.timebase.api.messages.MarketMessage" 'Market Message' (
+        "originalTimestamp" 'Original Time' TIMESTAMP,
+        "currencyCode" 'Currency Code' INTEGER SIGNED (16)
+    ) AUXILIARY;
+    CLASS "deltix.timebase.api.messages.BarMessage" 'Bar Message' GUID 'TEST_GUID1' UNDER "deltix.timebase.api.messages.MarketMessage" (
+        "close" 'Close' FLOAT COMMENT 'Closing price for the bar interval.',
+        "open" 'Open' FLOAT RELATIVE TO "close" COMMENT 'Opening price for the bar interval.',
+        "high" 'High' FLOAT RELATIVE TO "close" COMMENT 'Highest price for the bar interval.',
+        "low" 'Low' FLOAT RELATIVE TO "close" COMMENT 'Lowest price for the bar interval.',
+        "volume" 'Volume' FLOAT COMMENT 'Trade volume.'
+    );
+    CLASS "com.epam.deltix.timebase.messages.service.ErrorMessage" 'Error Message' GUID 'TEST_GUID2' (
+    		"details" 'details' VARCHAR UTF8
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = '1I'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
+/
+>com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
+!shellmatch
+0,*,,_,SUCCESS,INFO,Stream created,0
+!end
+#
+#   Describe
+#
+testdesc test_guid
+DURABLE STREAM "test_guid" (
+    CLASS "com.epam.deltix.timebase.messages.service.ErrorMessage" 'Error Message' GUID 'TEST_GUID2' (
+        "details" VARCHAR
+    );
+    CLASS "deltix.timebase.api.messages.MarketMessage" 'Market Message' (
+        "originalTimestamp" 'Original Time' TIMESTAMP,
+        "currencyCode" 'Currency Code' INTEGER SIGNED (16)
+    )
+        AUXILIARY;
+    CLASS "deltix.timebase.api.messages.BarMessage" 'Bar Message' UNDER "deltix.timebase.api.messages.MarketMessage" (
+        "close" 'Close' FLOAT COMMENT 'Closing price for the bar interval.',
+        "open" 'Open' FLOAT RELATIVE TO "close" COMMENT 'Opening price for the bar interval.',
+        "high" 'High' FLOAT RELATIVE TO "close" COMMENT 'Highest price for the bar interval.',
+        "low" 'Low' FLOAT RELATIVE TO "close" COMMENT 'Lowest price for the bar interval.',
+        "volume" 'Volume' FLOAT COMMENT 'Trade volume.'
+    );
+)
+OPTIONS (POLYMORPHIC; PERIODICITY = '1I'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
+!end
+#
+#   Drop stream via qql
+#
+test drop stream test_guid
 >com.epam.deltix.timebase.messages.service.ErrorMessage,TIMESTAMP,SYMBOL,TYPE,details,errorType,level,messageText,seqNum
 !shellmatch
 0,*,,_,SUCCESS,INFO,Stream dropped,0

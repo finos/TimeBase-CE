@@ -28,4 +28,3 @@ public interface ConsumableMessageSource<T> extends MessageSource<T> {
      */
     public double       getProgress();
 }
-

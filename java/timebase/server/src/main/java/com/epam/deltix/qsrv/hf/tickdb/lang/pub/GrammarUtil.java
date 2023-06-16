@@ -20,6 +20,7 @@ import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 
+import com.epam.deltix.timebase.messages.SchemaGuid;
 import com.epam.deltix.util.io.UncheckedIOException;
 
 import java.io.*;
@@ -558,7 +559,7 @@ public class GrammarUtil {
     
     public static void      describe (
         String                  indent,
-        RecordClassDescriptor   rcd,   
+        RecordClassDescriptor   rcd,
         boolean                 auxiliary,
         Writer                  out
     ) 
@@ -569,7 +570,13 @@ public class GrammarUtil {
         out.write (indent);
         out.write ("CLASS ");
         printHeader (rcd, out);
-        
+
+        String guid = getGuid(rcd);
+        if (guid != null) {
+            out.write(" GUID ");
+            escapeStringLiteral(guid, out);
+        }
+
         if (parent != null) {
             out.write (" UNDER ");
             escapeIdentifier (NamedObjectType.TYPE, parent.getName (), out);
@@ -600,7 +607,7 @@ public class GrammarUtil {
         out.write (")");
         
         String      subindent = "\n" + indent + "    ";
-                
+
         if (auxiliary) {
             out.write (subindent);
             out.write ("AUXILIARY");
@@ -613,6 +620,18 @@ public class GrammarUtil {
         
         printComment (subindent, rcd, out);
         out.write (";\n");
+    }
+
+    private static String getGuid(RecordClassDescriptor descriptor) {
+        try {
+            if (Class.forName(descriptor.getName()).getAnnotation(SchemaGuid.class) != null) {
+                return descriptor.getGuid();
+            }
+        } catch (ClassNotFoundException e) {
+            // it's ok, will return null (empty guid)
+        }
+
+        return null;
     }
     
     public static String    describe (
@@ -633,7 +652,7 @@ public class GrammarUtil {
     
     public static void      describe (
         String                  indent,
-        ClassDescriptor         cd,   
+        ClassDescriptor         cd,
         boolean                 auxiliary,
         Writer                  out
     ) 
@@ -698,7 +717,7 @@ public class GrammarUtil {
         out.write (" (\n"); 
         
         String                  subindent = indent + "    ";
-        
+
         RecordClassSet recordClassSet = s.getStreamOptions().getMetaData();
         for (ClassDescriptor cd : ClassDescriptor.depSort (s.getAllDescriptors ())) {
             boolean auxiliary = recordClassSet.getContentClass(cd.getGuid()) == null;

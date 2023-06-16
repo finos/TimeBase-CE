@@ -27,6 +27,7 @@ import com.epam.deltix.util.lang.StringUtils;
 class TSFWriterThread extends Thread {
     private static final Log LOGGER = PDSImpl.LOGGER;
     private final PDSImpl       pds;
+    private final int           index;
 
     // compression related
     private BlockCompressor     compressor = null;
@@ -37,6 +38,7 @@ class TSFWriterThread extends Thread {
     TSFWriterThread (PDSImpl pds, int idx) {
         super ("TSF Writer Thread #" + idx);
         this.pds = pds;
+        this.index = idx;
 
         // Should not be a daemon thread because it executes IO operations
     }
@@ -48,7 +50,7 @@ class TSFWriterThread extends Thread {
             for (;;) {
                 boolean logThisOne = LOGGER.isDebugEnabled();
 
-                final TSFile          tsf = pds.getTSFToWrite ();
+                final TSFile          tsf = pds.getTSFToWrite (index);
                 final TSRootFolder    root = tsf.root;
 
                 if (!StringUtils.equals(root.getCompression(), compression)) {
@@ -75,14 +77,20 @@ class TSFWriterThread extends Thread {
                         continue;
                     }
 
+                    // if file was checked out again, it's fine to store it assuming we have locks on method
+                    // DataAccessorBase.getBlockLink(int, long) and data won't be corrupted
+
                     if (tsf.getState() == TSFState.DIRTY_CHECKED_OUT) {
-                        pds.fileWasStored(tsf);
-                        if (logThisOne)
-                            LOGGER.debug().append("Skip storing ").append(tsf).append(" ...").commit();
-                        continue;
-                    } else if (tsf.getState() != TSFState.DIRTY_QUEUED_FOR_WRITE) {
-                        LOGGER.warn().append("Storing ").append(tsf).append(" with wrong state: ").append(tsf.getState()).commit();
+                        LOGGER.info().append("Storing ").append(tsf).append(" with DIRTY_CHECKED_OUT state." ).commit();
                     }
+
+//                    if (tsf.getState() == TSFState.DIRTY_CHECKED_OUT) {
+//                        pds.fileWasStored(tsf);
+//                        LOGGER.warn().append("Skip storing ").append(tsf).append(" ...").commit();
+//                        continue;
+//                    } else if (tsf.getState() != TSFState.DIRTY_QUEUED_FOR_WRITE) {
+//                        LOGGER.warn().append("Storing ").append(tsf).append(" with wrong state: ").append(tsf.getState()).commit();
+//                    }
 
                     root.storeAdditionalDirtyData ();
                     TreeOps.storeIndexFile(tsf.getParent());

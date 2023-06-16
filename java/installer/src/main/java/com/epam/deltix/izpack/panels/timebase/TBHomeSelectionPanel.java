@@ -157,4 +157,3 @@ public class TBHomeSelectionPanel extends JPanel implements ActionListener, Layo
         return browseButton;
     }
 }
-

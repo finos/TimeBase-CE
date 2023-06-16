@@ -24,7 +24,7 @@ import com.epam.deltix.util.memory.MemoryDataOutput;
 
 public class CharSequenceInstanceArray extends BaseInstanceArray<CharSequence, ObjectArrayList<CharSequence>> {
 
-    private final StringBuilderPool pool;
+    protected final StringBuilderPool pool;
 
     public CharSequenceInstanceArray(StringBuilderPool pool) {
         super(ObjectArrayList::new);

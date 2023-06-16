@@ -94,10 +94,11 @@ public class SelectionOptions extends CommonOptions {
     public long         shiftOffset = 1;
 
     /**
+     * List of spaces to select data from.
      * If set to {@code null} then data from all spaces is loaded.
      *
-     * Any non-null value is permitted only for streams that supports "spaces".
-     * If set then data only from the specified space will be loaded.
+     * Any non-null values is permitted only for streams that supports "spaces".
+     * If set then data only from the specified spaces will be loaded.
      *
      * See also {@link LoadingOptions#space}
      */

@@ -29,4 +29,3 @@ public class ExitPreventingException extends SecurityException {
 		mStatus = status;
 	}
 }
-

@@ -18,8 +18,7 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx;
 
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.StatefulFunctionDescriptor;
 import org.apache.commons.lang3.ArrayUtils;
-
-import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.StatefulFunctionDescriptor.types;
+import com.epam.deltix.qsrv.hf.pub.md.DataType;
 
 public class PluginStatefulFunction extends CompiledComplexExpression {
 
@@ -27,8 +26,9 @@ public class PluginStatefulFunction extends CompiledComplexExpression {
     private final CompiledExpression<?>[] initArgs;
     private final CompiledExpression<?>[] otherArgs;
 
-    public PluginStatefulFunction(StatefulFunctionDescriptor descriptor, CompiledExpression<?>[] initArgs, CompiledExpression<?>[] otherArgs) {
-        super(descriptor.returnType(types(initArgs), types(otherArgs)), ArrayUtils.addAll(initArgs, otherArgs));
+    public PluginStatefulFunction(StatefulFunctionDescriptor descriptor, DataType returnType,
+                                  CompiledExpression<?>[] initArgs, CompiledExpression<?>[] otherArgs) {
+        super(returnType, ArrayUtils.addAll(initArgs, otherArgs));
         this.descriptor = descriptor;
         this.initArgs = initArgs;
         this.otherArgs = otherArgs;

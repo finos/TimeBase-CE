@@ -83,7 +83,7 @@ public class PolyObjectContainer extends Instance {
     public void decode() {
         if (!decoded) {
             decoded = true;
-            in.setBytes(bytes());
+            in.setBytes(bytes(), offset(), length());
             message = codec.decode(typeId(), in);
         }
     }

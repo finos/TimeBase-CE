@@ -61,10 +61,10 @@ public class FieldAccessor extends CompiledComplexExpression {
             out.append(fetchNulls ? ".?" : ".");
         }
 
-        out.append(getFieldName());
+        out.append(getSourceFieldName());
     }
 
-    public String getFieldName() {
+    public String getSourceFieldName() {
         return fieldRefs[0].field.getName();
     }
 
@@ -72,13 +72,16 @@ public class FieldAccessor extends CompiledComplexExpression {
     @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     public boolean equals(Object obj) {
         return super.equals(obj) &&
+            Objects.equals(parent, ((FieldAccessor) obj).parent) &&
             Arrays.equals(fieldRefs, ((FieldAccessor) obj).fieldRefs) &&
-            Objects.equals(slicedType, ((FieldAccessor) obj).slicedType) &&
             fetchNulls == ((FieldAccessor) obj).fetchNulls;
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode() + Arrays.hashCode(fieldRefs) * 31 * 31 + Objects.hashCode(slicedType) * 31 + Objects.hash(fetchNulls);
+        return super.hashCode() +
+            Objects.hashCode(parent) * 31 * 31 +
+            Arrays.hashCode(fieldRefs) * 31 +
+            Objects.hash(fetchNulls);
     }
 }

@@ -49,6 +49,12 @@ public final class AccessorBlockLink {
         this.nextTimestamp = block.getStartTime();
     }
 
+    public boolean                   isActive() {
+        synchronized (block) {
+            return block.isActive();
+        }
+    }
+
     private int                      getCurrentOffset(MemoryDataInput in) {
         return in.getCurrentOffset() - block.getStartOffset();
     }
@@ -372,10 +378,8 @@ public final class AccessorBlockLink {
         assert Thread.holdsLock (block);
 
         MemoryDataInput     mdi = accessor.mdi;
-
         //System.out.println(Thread.currentThread() + " reading " + input.hashCode());
         block.configure (mdi, offset);
-
         return (mdi);
     }
 
@@ -422,7 +426,7 @@ public final class AccessorBlockLink {
     }
 
     /**
-     * Returns true if block contains data having timstamps that more then given time
+     * Returns true if block contains data having timestamps that more then given time
      * @param nstime time to search
      * @return true, if block contains data with grater timestamps
      */
@@ -561,7 +565,7 @@ public final class AccessorBlockLink {
                         "[" + entity + "] Timestamp discrepancy (missed update?): expected=" +
                                 nextTimestamp + "; read " + check);
             else
-            nextTimestamp = check;
+                nextTimestamp = check;
         }
        
         int             type = mdi.readUnsignedByte ();

@@ -18,6 +18,8 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.runtime;
 
 import com.epam.deltix.qsrv.hf.codec.cg.StringBuilderPool;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.InstancePool;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 
@@ -36,7 +38,10 @@ public abstract class FilterState {
 
     String warningMessage;
 
+    private final FilterIMSImpl filter;
+
     public FilterState(FilterIMSImpl filter) {
+        this.filter = filter;
         if (filter != null) {
             this.varcharPool = filter.varcharPool;
             this.instancePool = filter.instancePool;
@@ -63,5 +68,14 @@ public abstract class FilterState {
     }
 
     protected void resetFunctions() {
+    }
+
+    protected RecordClassDescriptor getDescriptor(String descriptorName) {
+        ClassDescriptor cd = filter.inputClassSet.getClassDescriptor(descriptorName);
+        if (cd instanceof RecordClassDescriptor) {
+            return (RecordClassDescriptor) cd;
+        }
+
+        return null;
     }
 }

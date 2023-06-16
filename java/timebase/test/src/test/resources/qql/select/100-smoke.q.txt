@@ -69,8 +69,7 @@ test select null as nullcol, 38 as intcol
 #   Select from void message source
 #
 test select *
->VOID,TIMESTAMP,SYMBOL,TYPE
-0,_,
+>>> Error: CompilationException: 1.8..9: Can't use * without source
 !end
 #
 #   Select constant

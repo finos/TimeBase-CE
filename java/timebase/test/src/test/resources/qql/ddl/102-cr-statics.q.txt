@@ -19,7 +19,7 @@ CREATE DURABLE STREAM "custom" 'custom name' (
         "nonstatic_float_ieee32" FLOAT NOT NULL BINARY (32),
         "nonstatic_float_decimal" FLOAT DECIMAL,
         "nonstatic_float_decimal_10" FLOAT DECIMAL (10)
-    );
+    ) AUXILIARY;
     CLASS "class2" UNDER "class1" (
         STATIC "static_boolean_true" BOOLEAN = true,
         STATIC "static_boolean_false" BOOLEAN NOT NULL = false TAGS ("adjustmentType":"Size","displayIdentifier":"true"),
@@ -108,7 +108,8 @@ DURABLE STREAM "custom" 'custom name' (
         "nonstatic_float_ieee32" FLOAT NOT NULL BINARY (32),
         "nonstatic_float_decimal" FLOAT DECIMAL,
         "nonstatic_float_decimal_10" FLOAT DECIMAL (10)
-    );
+    )
+        AUXILIARY;
     CLASS "class2" UNDER "class1" (
         STATIC "static_boolean_true" BOOLEAN = true,
         STATIC "static_boolean_false" BOOLEAN NOT NULL = false,
@@ -173,7 +174,7 @@ DURABLE STREAM "custom" 'custom name' (
         "nonstatic_binary_notnullable" BINARY NOT NULL
     );
 )
-OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE)
+OPTIONS (POLYMORPHIC; PERIODICITY = 'IRREGULAR'; HIGHAVAILABILITY = FALSE; UNIQUE = FALSE; STORAGEVERSION = '5')
 COMMENT 'custom description'
 !end
 #

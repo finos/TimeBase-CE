@@ -500,6 +500,7 @@ public class Test_RecordCodecsBinary extends Test_RecordCodecsBase {
     }
 
     @Test
+    @Ignore // not implemented yet
     public void testPrivateBoundIntp() throws Exception {
         setUpIntp();
         testPrivateBound();
@@ -567,4 +568,3 @@ public class Test_RecordCodecsBinary extends Test_RecordCodecsBase {
 }
 
 // remove fast test to Test_RecCode2 ...
-

@@ -54,8 +54,8 @@ public class QObjectValue extends QValue {
         return variable.call("set", arg).asStmt();
     }
 
-    public JExpr adjustType(int adjustTypeIndex) {
-        return variable.call("adjustTypeId", CTXT.intLiteral(adjustTypeIndex));
+    public JExpr adjustTypes(JExpr value) {
+        return variable.call("adjustTypeId", value);
     }
 
     public JExpr copy(JExpr another) {

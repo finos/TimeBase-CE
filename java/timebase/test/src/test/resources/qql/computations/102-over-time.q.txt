@@ -348,3 +348,22 @@ test select max{}(decimalField), min{}(decimalField) from "1min-1h-1h-3" over ev
 !end
 test select * from "1min-1h-1h-3" over time(10s) where false
 !end
+test select decimalField from "1min-1h-1h-3" over every time(10m) where timestamp < '2021-04-19 01:13:00.000'd
+!end
+test select decimalField from "1min-1h-1h-3" over every time(10m) where timestamp < '2021-04-19 01:14:00.000'd
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:20:00.000Z","decimalField":"949.205300891957"}
+!end
+test select decimalField from "1min-1h-1h-3" over every time(10m) where timestamp > '2021-04-19 01:13:00.000'd and timestamp < '2021-04-19 01:14:00.000'd
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:20:00.000Z","decimalField":"949.205300891957"}
+!end
+test select decimalField from "1min-1h-1h-3" over every time(1m) where timestamp > '2021-04-19 12:10:00'd and timestamp < '2021-04-19 12:13:10'd
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:11:00.000Z","decimalField":"956.6530412237674"}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:12:00.000Z","decimalField":"522.0607784328132"}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:13:00.000Z","decimalField":"496.4862919484308"}
+!end
+test select decimalField from "1min-1h-1h-3" over every time(1m) where timestamp > '2021-04-19 12:10:00'd and timestamp < '2021-04-19 12:13:20'd
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:11:00.000Z","decimalField":"956.6530412237674"}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:12:00.000Z","decimalField":"522.0607784328132"}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:13:00.000Z","decimalField":"496.4862919484308"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:14:00.000Z","decimalField":"306.9859898859655"}
+!end

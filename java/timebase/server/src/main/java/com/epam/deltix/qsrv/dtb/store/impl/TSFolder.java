@@ -21,9 +21,7 @@ import com.epam.deltix.qsrv.dtb.store.codecs.TSFFormat;
 import com.epam.deltix.qsrv.dtb.store.codecs.TSNames;
 import com.epam.deltix.qsrv.dtb.store.pub.AbstractSingleEntityFilter;
 import com.epam.deltix.qsrv.dtb.store.pub.EntityFilter;
-import com.epam.deltix.util.collections.generated.IntegerArrayList;
-import com.epam.deltix.util.collections.generated.IntegerToObjectHashMap;
-import com.epam.deltix.util.collections.generated.ObjectArrayList;
+import com.epam.deltix.util.collections.generated.*;
 
 import java.io.*;
 import java.util.BitSet;
@@ -95,28 +93,28 @@ abstract class TSFolder extends TSFolderEntry {
     }
 
     protected void                  findActiveChildren (Collection <TSFolderEntry> out) {
-        synchronized (this) {
-            if (!isActive ())
-                return;
-            
-            out.add (this);
-            
-            if (children == null)
-                return;            
-        }
-        
-        for (TSFolderEntry e : children)
+
+        if (!isActive () || children == null)
+            return;
+
+        out.add (this);
+
+        ObjectArrayList<TSFolderEntry> list = children;
+
+        for (int i = 0, childrenSize = list.size(); i < childrenSize; i++) {
+            TSFolderEntry e = list.get(i);
             if (e instanceof TSFile)
-                out.add ((TSFile) e);
+                out.add(e);
             else
-                ((TSFolder) e).findActiveChildren (out);
+                ((TSFolder) e).findActiveChildren(out);
+        }
     }
 
     void                     buildCache() {
 
         synchronized (this) {
             if (cache == null)
-                cache = new HashMap<TSFolderEntry, IntegerArrayList>();
+                cache = new HashMap<>();
             else
                 return;
         }
@@ -178,7 +176,7 @@ abstract class TSFolder extends TSFolderEntry {
         // guarded by this
 
         boolean isEmpty;
-        IntegerArrayList removed = new IntegerArrayList();
+        IntegerHashSet removed = new IntegerHashSet();
 
         synchronized (this) {
             int index = child.getIdxInParent();
@@ -205,9 +203,9 @@ abstract class TSFolder extends TSFolderEntry {
             isEmpty = children.isEmpty();
         }
 
-        for (int i = 0; i < removed.size(); i++) {
-            TreeOps.propagateDataDeletion(this, removed.get(i));
-        }
+        final IntegerEnumeration e = removed.keys();
+        while (e.hasMoreElements ())
+            TreeOps.propagateDataDeletion(this, e.nextIntElement());
 
         if (isEmpty && getParent() != null)
             getParent().dropChild(this);
@@ -250,9 +248,8 @@ abstract class TSFolder extends TSFolderEntry {
      * 
      *  @throws IOException 
      */
-    TSFolderEntry                   getFirstEntry () throws IOException {        
+    TSFolderEntry                   getFirstEntry () throws IOException {
         ensureLoaded ();
-                
         return (children.isEmpty () ? null : children.get (0));      
     }           
             
@@ -410,18 +407,21 @@ abstract class TSFolder extends TSFolderEntry {
             return (getFirstChildWithDataFor (((AbstractSingleEntityFilter) filter).getSingleEntity ()));
         
         ensureLoaded ();
-        
-        TSFolderEntry           ret = null;
-        int                     numEntries = entityIndex.size ();
-        
-        for (int ii = 0; ii < numEntries; ii++) {
-            EntityIndexEntry    ee = entityIndex.getObjectNoRangeCheck (ii);
-            
-            if (!filter.accept (ee.entity))
-                continue;
-            
-            if (ret == null || earlier (ee.first, ret))
-                ret = ee.first;
+
+        TSFolderEntry ret = null;
+
+        synchronized (this) {
+            int numEntries = entityIndex.size();
+
+            for (int ii = 0; ii < numEntries; ii++) {
+                EntityIndexEntry ee = entityIndex.getObjectNoRangeCheck(ii);
+
+                if (!filter.accept(ee.entity))
+                    continue;
+
+                if (ret == null || earlier(ee.first, ret))
+                    ret = ee.first;
+            }
         }
         
         return (ret);
@@ -433,25 +433,28 @@ abstract class TSFolder extends TSFolderEntry {
         if (filter == null)
             return true;
 
-        if (filter instanceof AbstractSingleEntityFilter) {
-            int entity = ((AbstractSingleEntityFilter) filter).getSingleEntity();
-            EntityIndexEntry    ee = entityIndex.getObjectNoRangeCheck (entity);
-
-            return earlier (ee.first, entry);
-        }
-
         ensureLoaded ();
 
-        int                     numEntries = entityIndex.size ();
+        synchronized (this) {
 
-        for (int ii = 0; ii < numEntries; ii++) {
-            EntityIndexEntry    ee = entityIndex.getObjectNoRangeCheck (ii);
+            if (filter instanceof AbstractSingleEntityFilter) {
+                int entity = ((AbstractSingleEntityFilter) filter).getSingleEntity();
+                EntityIndexEntry ee = entityIndex.getObjectNoRangeCheck(entity);
 
-            if (!filter.accept (ee.entity))
-                continue;
+                return earlier(ee.first, entry);
+            }
 
-            if (ee.first.getIdxInParent() <= entry.getIdxInParent() && ee.last.getIdxInParent() >= entry.getIdxInParent())
-                return true;
+            int numEntries = entityIndex.size();
+
+            for (int ii = 0; ii < numEntries; ii++) {
+                EntityIndexEntry ee = entityIndex.getObjectNoRangeCheck(ii);
+
+                if (!filter.accept(ee.entity))
+                    continue;
+
+                if (ee.first.getIdxInParent() <= entry.getIdxInParent() && ee.last.getIdxInParent() >= entry.getIdxInParent())
+                    return true;
+            }
         }
 
         return false;
@@ -469,16 +472,19 @@ abstract class TSFolder extends TSFolderEntry {
         ensureLoaded ();
         
         TSFolderEntry           ret = null;
-        int                     numEntries = entityIndex.size ();
-        
-        for (int ii = 0; ii < numEntries; ii++) {
-            EntityIndexEntry    ee = entityIndex.getObjectNoRangeCheck (ii);
-            
-            if (!filter.accept (ee.entity))
-                continue;
-            
-            if (ret == null || later (ee.last, ret))
-                ret = ee.last;
+
+        synchronized (this) {
+            int numEntries = entityIndex.size();
+
+            for (int ii = 0; ii < numEntries; ii++) {
+                EntityIndexEntry ee = entityIndex.getObjectNoRangeCheck(ii);
+
+                if (!filter.accept(ee.entity))
+                    continue;
+
+                if (ret == null || later(ee.last, ret))
+                    ret = ee.last;
+            }
         }
         
         return (ret);
@@ -649,6 +655,8 @@ abstract class TSFolder extends TSFolderEntry {
 
             if (first == null) {
                 synchronized (this) {
+                    // check position again, collection may change out-of lock
+                    pos = findEntity(entity);
                     entityIndex.remove(pos);
                     setDirty();
                     return true;
@@ -667,6 +675,8 @@ abstract class TSFolder extends TSFolderEntry {
 
             if (last == null) {
                 synchronized (this) {
+                    // check position again, collection may change out-of lock
+                    pos = findEntity(entity);
                     entityIndex.remove(pos);
                     setDirty();
                     return true;
@@ -682,7 +692,7 @@ abstract class TSFolder extends TSFolderEntry {
         return false;
     }
 
-    void                removeFromIndex(TSFolderEntry child, IntegerArrayList removed) {
+    void                removeFromIndex(TSFolderEntry child, IntegerHashSet removed) {
         assert Thread.holdsLock(this);
 
         // guarded by this
@@ -966,13 +976,15 @@ abstract class TSFolder extends TSFolderEntry {
         throws IOException 
     {
         ensureLoaded();
-        
-        int     pos = findEntity (entity);
-        
-        if (pos < 0)
-            return (null);
-        
-        return (entityIndex.getObjectNoRangeCheck (pos));
+
+        synchronized (this) {
+            int pos = findEntity(entity);
+
+            if (pos < 0)
+                return (null);
+
+            return (entityIndex.getObjectNoRangeCheck(pos));
+        }
     }
     
     private int                     findEntity (int entity) {
@@ -1077,7 +1089,7 @@ abstract class TSFolder extends TSFolderEntry {
                     fp + ": Unrecognized format version " + formatVersion
                 );
             
-            version = formatVersion >= 2 ? dis.readLong () : dis.readInt();
+            setVersion(formatVersion >= 2 ? dis.readLong () : dis.readInt());
             nextChildId = dis.readUnsignedShort ();
             
             numChildren = dis.readUnsignedShort ();
@@ -1207,7 +1219,6 @@ abstract class TSFolder extends TSFolderEntry {
 
         if (LOGGER.isDebugEnabled())
             LOGGER.debug().append("Storing ").append(tmp.getPathString()).commit();
-
         int             numChildren = children.size ();
         int             numEntities = entityIndex.size ();
         final int       fileSize = 0;

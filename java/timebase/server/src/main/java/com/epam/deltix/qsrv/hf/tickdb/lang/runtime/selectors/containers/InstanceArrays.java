@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers;
 
 import com.epam.deltix.qsrv.hf.codec.MessageSizeCodec;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.Instance;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.InstancePool;
 import com.epam.deltix.util.memory.MemoryDataInput;
@@ -27,8 +28,8 @@ public class InstanceArrays extends InstanceArray {
         super(pool);
     }
 
-    public InstanceArrays(InstancePool pool, Class<?> ... classes) {
-        super(pool, classes);
+    public InstanceArrays(InstancePool pool, RecordClassDescriptor[] descriptors, Class<?>[] classes) {
+        super(pool, descriptors, classes);
     }
 
     @Override

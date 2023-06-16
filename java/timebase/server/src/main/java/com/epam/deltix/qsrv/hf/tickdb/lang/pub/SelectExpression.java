@@ -131,8 +131,10 @@ public final class SelectExpression extends ComplexExpression {
             typeId.print(s);
         }
 
-        s.append(" FROM ");
-        getSource().print(OpPriority.QUERY, s);
+        if (getSource() != null) {
+            s.append(" FROM ");
+            getSource().print(OpPriority.QUERY, s);
+        }
 
         if (getArrayJoin() != null) {
             getArrayJoin().print(OpPriority.QUERY, s);

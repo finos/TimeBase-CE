@@ -47,76 +47,9 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.StatefulFuncti
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.StatefulFunctionsSet;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.StatelessFunctionDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.DuplicateNameException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.IllegalDataTypeException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.IllegalMessageSourceException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.IllegalObjectException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.IllegalStreamSelectorException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.IllegalTypeCombinationException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.NonStaticExpressionException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.NumericTypeRequiredException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.PredicateCompilationException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.UnacceptableNullException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.UnexpectedTypeException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.UnknownIdentifierException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.WrongArgTypesException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.errors.WrongNumArgsException;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.AndExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.ArithmeticExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.ArrayJoin;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.ArraySlicingExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.AsExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.BetweenExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.BinaryLogicalOperation;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CallExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CallExpressionWithDict;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CallExpressionWithInit;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CastArrayTypeExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CastObjectTypeExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CastTypeIdExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.ComplexExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.EqualsExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.FieldAccessExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.FieldAccessorExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.FieldIdentifier;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Identifier;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.InExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.LikeExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.LimitExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.NamedExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.NamedObjectType;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.NotExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.NullCheckExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OptionElement;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OrExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OrderRelation;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.PredicateExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.RelationExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.SelectExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.ThisObject;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TypeCheckExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TypeIdentifier;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.UnaryMinusExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.UnionExpression;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.ArrayConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.BinConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.BooleanArrayConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.BooleanConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.CharArrayConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.CharConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.Constant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.DateArrayConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.DateConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.FloatConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.IntegerConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.LongConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.Null;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.NumericArrayConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.StringArrayConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.StringConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.TimeConstant;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.TimeIntervalConstant;
+import com.epam.deltix.qsrv.hf.tickdb.lang.errors.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.SelectionMode;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers.ByteInstanceArray;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickStream;
@@ -149,6 +82,7 @@ import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.KEYWO
 import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.isCompatibleWithoutConversion;
 import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.lookUpVariable;
 import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.setUpEnv;
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.StatefulFunctionDescriptor.types;
 
 /**
  *
@@ -252,6 +186,10 @@ public class QQLExpressionCompiler {
         if (e instanceof NamedExpression)
             return (compileNamedExpression((NamedExpression) e, expectedType));
 
+        if (e instanceof NamedFieldExpression) {
+            return compileNamedFieldExpression((NamedFieldExpression) e, expectedType);
+        }
+
         if (e instanceof CallExpression)
             return (compileCallExpression((CallExpression) e, expectedType));
 
@@ -271,6 +209,17 @@ public class QQLExpressionCompiler {
 
         if (e instanceof NullCheckExpression)
             return (compileNullCheckExpression((NullCheckExpression) e, expectedType));
+
+        if (e instanceof NanCheckExpression)
+            return compileNanCheckExpression((NanCheckExpression) e, expectedType);
+
+        if (e instanceof IfExpression) {
+            return compileIfExpression((IfExpression) e, expectedType);
+        }
+
+        if (e instanceof CaseExpression) {
+            return compileCaseExpression((CaseExpression) e, expectedType);
+        }
 
 //        if (e instanceof SelectorExpression)
 //            return (compileSelectorExpression ((SelectorExpression) e, expectedType));
@@ -368,6 +317,14 @@ public class QQLExpressionCompiler {
                 throw new UnacceptableNullException((Null) e);
 
             return (new CompiledConstant(expectedType, null));
+        }
+
+        if (e instanceof Nan) {
+            if (expectedType != null && !(expectedType instanceof FloatDataType)) {
+                throw new UnacceptableNanException((Nan) e);
+            }
+
+            return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, "NaN");
         }
 
         throw new UnsupportedOperationException(e.getClass().getName());
@@ -527,7 +484,7 @@ public class QQLExpressionCompiler {
             case KEYWORD_SYMBOL:
                 expectedType = intersectTypes(e, expectedType, StandardTypes.CLEAN_VARCHAR);
                 break;
-//
+
 //            case KEYWORD_TYPE:
 //                throw new UnsupportedOperationException("type initializer");
 //                //expectedType = intersectTypes (e, expectedType, ?);
@@ -545,6 +502,27 @@ public class QQLExpressionCompiler {
                 ((EnvironmentFrame) env).bindNoDup(NamedObjectType.VARIABLE, e.name, e.location, e);
             }
         }
+    }
+
+    private CompiledExpression compileNamedFieldExpression(NamedFieldExpression e, DataType expectedType) {
+        String fieldName = e.fieldName;
+
+        switch (fieldName) {
+            case KEYWORD_TIMESTAMP:
+                expectedType = intersectTypes(e, expectedType, StandardTypes.NULLABLE_TIMESTAMP);
+                break;
+
+            case KEYWORD_SYMBOL:
+                expectedType = intersectTypes(e, expectedType, StandardTypes.CLEAN_VARCHAR);
+                break;
+
+//            case KEYWORD_TYPE:
+//                throw new UnsupportedOperationException("type initializer");
+        }
+
+        CompiledExpression ret = compile(e.getArgument(), expectedType);
+        ret.fieldName = fieldName;
+        return ret;
     }
 
     private CompiledExpression compileBetweenExpression(BetweenExpression e, DataType expectedType) {
@@ -702,6 +680,10 @@ public class QQLExpressionCompiler {
             return (processNullCheckExpression(right, e.isEqual()));
         } else if (QQLPostProcessingPatterns.isNull(right)) {
             return (processNullCheckExpression(left, e.isEqual()));
+        } else if (QQLPostProcessingPatterns.isNan(left)) {
+            return processNanCheckExpression(right, e.isEqual());
+        } else if (QQLPostProcessingPatterns.isNan(right)) {
+            return processNanCheckExpression(left, e.isEqual());
         }
 
         return new StrictEqualityCheckOperation(e.isEqual(), left, right);
@@ -713,6 +695,10 @@ public class QQLExpressionCompiler {
             return processNullCheckExpression(right, positive);
         } else if (QQLPostProcessingPatterns.isNull(right)) {
             return processNullCheckExpression(left, positive);
+        } else if (QQLPostProcessingPatterns.isNan(left)) {
+            return processNanCheckExpression(right, positive);
+        } else if (QQLPostProcessingPatterns.isNan(right)) {
+            return processNanCheckExpression(left, positive);
         }
 
         EqualityCheckOperation.validate(e, left.type, right.type);
@@ -741,7 +727,15 @@ public class QQLExpressionCompiler {
                 ret = false;
         else if (right.isNull())
             ret = false;
-        else if (leftType instanceof IntegerDataType && rightType instanceof IntegerDataType ||
+        else if (left.isNan()) {
+            if (right.isNan()) {
+                ret = true;
+            } else {
+                ret = false;
+            }
+        } else if (right.isNan()) {
+            ret = false;
+        } else if (leftType instanceof IntegerDataType && rightType instanceof IntegerDataType ||
                 leftType instanceof DateTimeDataType && rightType instanceof DateTimeDataType ||
                 leftType instanceof TimeOfDayDataType && rightType instanceof TimeOfDayDataType)
             ret = positive == (left.getLong() == right.getLong());
@@ -777,10 +771,15 @@ public class QQLExpressionCompiler {
 
         if (left instanceof CompiledConstant && right instanceof CompiledConstant) {
             return (computeLikeExpression(e, (CompiledConstant) left, (CompiledConstant) right));
-        } else if (QQLPostProcessingPatterns.isNull(left))
+        } else if (QQLPostProcessingPatterns.isNull(left)) {
             return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, false));
-        else if (QQLPostProcessingPatterns.isNull(right))
+        } else if (QQLPostProcessingPatterns.isNull(right)) {
             return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, false));
+        } else if (QQLPostProcessingPatterns.isNan(left)) {
+            return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, false));
+        } else if (QQLPostProcessingPatterns.isNan(right)) {
+            return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, false));
+        }
 
         SimpleFunctionCode f = null;
         if (leftType instanceof VarcharDataType && rightType instanceof VarcharDataType)
@@ -950,6 +949,141 @@ public class QQLExpressionCompiler {
         return (new SimpleFunction(code, arg));
     }
 
+    private CompiledExpression compileNanCheckExpression(NanCheckExpression e, DataType expectedType) {
+        checkBooleanType(expectedType, e);
+        CompiledExpression arg = compile(e.getArgument(), null);
+        return processNanCheckExpression(arg, e.checkIsNan);
+    }
+
+    private CompiledExpression processNanCheckExpression(CompiledExpression arg, boolean positive) {
+        DataType argType = arg.type;
+        // only decimal type has separate value for NaN
+        // for float types (except decimals) NaN == NULL
+        if (argType instanceof FloatDataType) {
+            if (arg instanceof CompiledConstant) {
+                CompiledConstant carg = (CompiledConstant) arg;
+                return CompiledConstant.trueOrFalse(carg.isNan() == positive);
+            }
+
+            SimpleFunctionCode code =
+                    positive ?
+                            SimpleFunctionCode.IS_NAN :
+                            SimpleFunctionCode.IS_NOT_NAN;
+
+            return new SimpleFunction(code, arg);
+        } else {
+            return CompiledConstant.trueOrFalse(!positive);
+        }
+    }
+
+    private CompiledIfExpression compileIfExpression(IfExpression ifExpression, DataType expectedType) {
+        CompiledExpression<?> compiledCondition = compile(ifExpression.condition, StandardTypes.CLEAN_BOOLEAN);
+        CompiledExpression<?> compiledThen = compile(ifExpression.thenExpression, expectedType);
+        CompiledExpression<?> compiledElse = ifExpression.elseExpression != null ?
+                compile(ifExpression.elseExpression, expectedType) : new CompiledConstant(expectedType, null);
+
+        DataType outputType = getOutputTypeOfExpressions(Arrays.asList(compiledThen, compiledElse));
+        if (isNullLiteral(compiledThen)) {
+            compiledThen = new CompiledConstant(outputType, null);
+        }
+        if (isNullLiteral(compiledElse)) {
+            compiledElse = new CompiledConstant(outputType, null);
+        }
+
+        validateConditionTypes(ifExpression, compiledElse.type, compiledThen.type);
+
+        return new CompiledIfExpression(
+                outputType != null ? outputType.nullableInstance(true) : StandardTypes.NULLABLE_FLOAT,
+                compiledCondition, compiledThen, compiledElse
+        );
+    }
+
+    private CompiledCaseExpression compileCaseExpression(CaseExpression e, DataType expectedType) {
+        if (e.whenExpressions.size() < 1) {
+            throw new CompilationException("Empty WHEN condition", e);
+        }
+
+        CompiledExpression<?> compiledCase = e.caseExpression != null ?
+                compile(e.caseExpression, null) :
+                new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, true);
+
+        List<CompiledExpression<?>> compiledWhens = new ArrayList<>();
+        List<CompiledExpression<?>> compiledThens = new ArrayList<>();
+        for (int i = 0; i < e.whenExpressions.size(); ++i) {
+            WhenExpression whenExpression = e.whenExpressions.get(i);
+            compiledWhens.add(compile(whenExpression.whenExpression, compiledCase.type));
+            compiledThens.add(compile(whenExpression.thenExpression, expectedType));
+        }
+        CompiledExpression<?> compiledElse = e.elseExpression != null ?
+                compile(e.elseExpression, expectedType) : new CompiledConstant(expectedType, null);
+
+        // validate output types for all 'then' clauses
+        List<CompiledExpression<?>> outputExpressions = new ArrayList<>(compiledThens);
+        outputExpressions.add(compiledElse);
+        DataType outputType = getOutputTypeOfExpressions(outputExpressions);
+        if (isNullLiteral(compiledElse)) {
+            compiledElse = new CompiledConstant(outputType, null);
+        }
+        for (int i = 0; i < compiledThens.size(); ++i) {
+            if (isNullLiteral(compiledThens.get(i))) {
+                compiledThens.set(i, new CompiledConstant(outputType, null));
+            }
+
+            validateConditionTypes(e, compiledElse.type, compiledThens.get(i).type);
+        }
+
+        List<CompiledWhenExpression> compiledWhenExpressions = new ArrayList<>();
+        for (int i = 0; i < compiledWhens.size(); ++i) {
+            compiledWhenExpressions.add(
+                    new CompiledWhenExpression(compiledThens.get(i).type, compiledWhens.get(i), compiledThens.get(i))
+            );
+        }
+
+        return new CompiledCaseExpression(
+                outputType != null ? outputType.nullableInstance(true) : StandardTypes.NULLABLE_FLOAT,
+                compiledCase, compiledWhenExpressions, compiledElse
+        );
+    }
+
+
+
+    private DataType getOutputTypeOfExpressions(List<CompiledExpression<?>> expressions) {
+        for (int i = 0; i < expressions.size(); ++i) {
+            CompiledExpression<?> e = expressions.get(i);
+            if (!isNullLiteral(e)) {
+                return e.type;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isNullLiteral(CompiledExpression<?> e) {
+        return e instanceof CompiledConstant && ((CompiledConstant) e).value == null;
+    }
+
+    private void validateConditionTypes(Expression e, DataType actual, DataType required) {
+        if (actual != null && required != null) {
+            if (!isCompatibleWithoutConversion(actual, required)) {
+                throw new UnexpectedTypeException(e, actual, required);
+            } else if (actual instanceof ClassDataType && required instanceof ClassDataType) {
+                if (isCastRequired((ClassDataType) actual, (ClassDataType) required)) {
+                    throw new UnexpectedTypeException(e, actual, required);
+                }
+            } else if (actual instanceof ArrayDataType && required instanceof ArrayDataType) {
+                DataType actualArrayType = ((ArrayDataType) actual).getElementDataType();
+                DataType requiredArrayType = ((ArrayDataType) required).getElementDataType();
+                if (!isCompatibleWithoutConversion(actualArrayType, requiredArrayType)) {
+                    throw new UnexpectedTypeException(e, actualArrayType, requiredArrayType);
+                } else if (actualArrayType instanceof ClassDataType && requiredArrayType instanceof ClassDataType) {
+                    if (isCastRequired((ClassDataType) actualArrayType, (ClassDataType) requiredArrayType)) {
+                        throw new UnexpectedTypeException(e, actualArrayType, requiredArrayType);
+                    }
+                }
+            }
+        }
+    }
+
     //  SIDE EFFECT env=...
     private void setUpQueryEnv(CompiledQuery q) {
         Set<ClassDescriptor> cds = new HashSet<>();
@@ -987,7 +1121,7 @@ public class QQLExpressionCompiler {
             for (DataField f : QQLCompilerUtils.collectFields(descriptors[i], true)) {
                 if (!boundFields.contains((f.getName().toUpperCase()))) {
                     predicateEnv.bind(
-                        NamedObjectType.VARIABLE, f.getName(), new PredicateFieldRef(f)
+                            NamedObjectType.VARIABLE, f.getName(), new PredicateFieldRef(f)
                     );
                     boundFields.add(f.getName().toUpperCase());
                 }
@@ -1015,7 +1149,7 @@ public class QQLExpressionCompiler {
         NamedExpression namedExpression = getAlias(expression);
         if (namedExpression != null) {
             env.bindNoDup(
-                NamedObjectType.VARIABLE, namedExpression.name, namedExpression.location, namedExpression
+                    NamedObjectType.VARIABLE, namedExpression.name, namedExpression.location, namedExpression
             );
         }
     }
@@ -1059,7 +1193,7 @@ public class QQLExpressionCompiler {
         ArrayList<CompiledExpression<?>> nsInits = new ArrayList<>(n);
         CompiledExpression tsInit = null;
         CompiledExpression symbolInit = null;
-
+        //CompiledExpression typeInit = null;
         HashSet<String> namesInUse = new HashSet<>();
         Map<RecordClassDescriptor, List<CompiledExpression<?>>> typeToInitializers = new LinkedHashMap<>();
 
@@ -1067,7 +1201,7 @@ public class QQLExpressionCompiler {
             CompiledExpression e = args[ii];
             Expression oe = origExpressions[ii];
             DataType type = e.type;
-            String name = e.name;
+            String name = e.getFieldName();
 
             // no switch! - could be null
             if (KEYWORD_TIMESTAMP.equals(name)) {
@@ -1080,6 +1214,11 @@ public class QQLExpressionCompiler {
                     throw new DuplicateNameException(oe, name);
 
                 symbolInit = e;
+//            } else if (KEYWORD_TYPE.equals(name)) {
+//                if (typeInit != null)
+//                    throw new DuplicateNameException(oe, name);
+//
+//                typeInit = e;
             } else {
                 if (isNamedExpression(oe)) {
                     if (!namesInUse.add(name.toUpperCase()))
@@ -1130,24 +1269,77 @@ public class QQLExpressionCompiler {
         }
 
         String typeName = typeId != null ? typeId.typeName : null;
+        if (typeName == null)
+            typeName = getQueryID(fields);
+
         RecordClassDescriptor rcd = new RecordClassDescriptor(
-            typeName, null, false, null,
-            fields.toArray(new DataField[fields.size()])
+                typeName, null, false, null,
+                fields.toArray(new DataField[fields.size()])
         );
         typeToInitializers.put(rcd, new ArrayList<>(nsInits));
 
         ClassDataType type = new ClassDataType(false, rcd);
 
-        return new TupleConstructor(
-            type, tsInit, symbolInit,
-            typeToInitializers,
-            nsInits.toArray(new CompiledExpression[nsInits.size()])
-        );
+        return new TupleConstructor(type, tsInit, symbolInit, typeToInitializers);
+    }
+
+    public static String getQueryID(List<DataField> fields) {
+        String id = fields.stream().map(f -> (f.getName() + "-" + f.getType().getCode())).collect(Collectors.joining(";"));
+        long hash = hashCode(id.toUpperCase());
+        return "QUERY" + hash;
+    }
+
+    public static long hashCode(CharSequence value) {
+        if (value == null)
+            return (0);
+
+        int         len = value.length ();
+        long         hc = 0;
+
+        for (int i = 0; i < len; i++)
+            hc = 31 * hc + value.charAt (i);
+
+        return (hc);
     }
 
     private CompiledExpression<?> compileUnion(UnionExpression e) {
-        LimitExpression limitExpression = e.limit;
         Expression[] subSelects = QQLCompilerUtils.flattenUnion(e);
+
+        CompiledExpression<?> sourceUnion = tryCompileStreamUnion(subSelects);
+        if (sourceUnion != null) {
+            return sourceUnion;
+        }
+
+        return compileSelectUnion(e, subSelects);
+    }
+
+    private CompiledExpression<?> tryCompileStreamUnion(Expression[] subSelects) {
+        if (subSelects.length < 2) {
+            return null;
+        }
+
+        if (UnionHelper.isIdentifiers(subSelects)) {
+            List<StreamSelector> streamSelectors = new ArrayList<>();
+            for (Expression source : subSelects) {
+                if (source instanceof Identifier) {
+                    CompiledExpression<?> compiledSource = compileIdentifier((Identifier) source);
+                    if (compiledSource instanceof StreamSelector) {
+                        streamSelectors.add((StreamSelector) compiledSource);
+                    } else {
+                        throw new CompilationException("Union source must be stream", source);
+                    }
+                } else {
+                    throw new CompilationException("Union source must be identifier", source);
+                }
+            }
+
+            return UnionHelper.unionStreamSelectors(streamSelectors.toArray(new StreamSelector[0]));
+        }
+
+        return null;
+    }
+
+    private CompiledUnion compileSelectUnion(UnionExpression e, Expression[] subSelects) {
         CompiledQuery[] compiledQueries = new CompiledQuery[subSelects.length];
         for (int i = 0; i < subSelects.length; ++i) {
             if (subSelects[i] instanceof SelectExpression) {
@@ -1157,8 +1349,6 @@ public class QQLExpressionCompiler {
             }
         }
 
-        Map<String, RecordClassDescriptor> outputTypes = UnionTypesBuilder.buildType(compiledQueries);
-
         boolean forward = compiledQueries[0].isForward();
         for (int i = 1; i < compiledQueries.length; ++i) {
             if (compiledQueries[i].isForward() != forward) {
@@ -1166,14 +1356,9 @@ public class QQLExpressionCompiler {
             }
         }
 
-        SelectLimit limit = (limitExpression != null ? compileLimit(limitExpression) : null);
+        SelectLimit limit = (e.limit != null ? compileLimit(e.limit) : null);
 
-        return new CompiledUnion(
-            new QueryDataType(true, new ClassDataType(
-                true, outputTypes.values().toArray(new RecordClassDescriptor[0])
-            )),
-            forward, limit, compiledQueries
-        );
+        return UnionHelper.unionCompiledQueries(compiledQueries, limit);
     }
 
     private CompiledQuery compileSelect(SelectExpression e) {
@@ -1182,10 +1367,12 @@ public class QQLExpressionCompiler {
         Expression[] with = e.getWithExpressions();
         ArrayJoin arrayJoinExpression = e.getArrayJoin();
         Expression[] selectors = e.getSelectors();
+        LimitExpression limit = e.getLimit();
         boolean selectFirst = false;
         boolean selectLast = false;
         boolean selectCurrent = false;
         boolean someFormOfSelectStar = false;
+        boolean selectRecords = selectors.length > 0 && selectors[0] instanceof SelectRecordExpression;
 
         if (selectors.length == 1) {
             Expression se = selectors[0];
@@ -1204,13 +1391,26 @@ public class QQLExpressionCompiler {
 
         CompiledQuery q;
 
-        if (src == null)
+        if (src == null) {
             q = new SingleMessageSource();
-        else {
+            if (someFormOfSelectStar) {
+                throw new CompilationException("Can't use * without source", selectors[0]);
+            }
+        } else {
+            if (src instanceof SelectExpression) {
+                throw new IllegalMessageSourceException(src);
+            }
+
             CompiledExpression csrc = compile(src, null);
 
             if (csrc != null && !(csrc instanceof CompiledQuery))
                 throw new IllegalMessageSourceException(src);
+
+            if (src instanceof UnionExpression) {
+                if (((UnionExpression) src).limit != null && limit == null) {
+                    limit = ((UnionExpression) src).limit;
+                }
+            }
 
             q = (CompiledQuery) csrc;
         }
@@ -1224,11 +1424,11 @@ public class QQLExpressionCompiler {
             someFormOfSelectStar = false;
             long location = selectors[0].location;
             selectors = QQLCompilerUtils.collectFields(descriptors[0]).stream()
-                .map(f -> new Identifier(location, f.getName()))
-                .toArray(Expression[]::new);
+                    .map(f -> new Identifier(location, f.getName()))
+                    .toArray(Expression[]::new);
         }
 
-        if (!selectCurrent || fe != null || arrayJoinExpression != null || e.getOverExpression() != null || e.typeId != null || e.getLimit() != null || e.groupBy != null) {
+        if (!selectCurrent || fe != null || arrayJoinExpression != null || e.getOverExpression() != null || e.typeId != null || limit != null || e.groupBy != null) {
             Environment saveEnv = env;
 
             CompiledExpression cond = null;
@@ -1264,10 +1464,10 @@ public class QQLExpressionCompiler {
                     cond = compile(fe, StandardTypes.NULLABLE_BOOLEAN);
 
                     List<CompiledExpression> flatCond =
-                        QQLPostProcessingPatterns.flattenConjunction(cond);
+                            QQLPostProcessingPatterns.flattenConjunction(cond);
 
                     tslimits =
-                        QQLPostProcessingPatterns.adjustTimestampLimits(flatCond, e.getEndTime());
+                            QQLPostProcessingPatterns.adjustTimestampLimits(flatCond, e.getEndTime());
 
                     symbolLimits = QQLPostProcessingPatterns.symbolLimits(cond);
 
@@ -1278,20 +1478,24 @@ public class QQLExpressionCompiler {
 
                 // compile selectors
                 if (!someFormOfSelectStar) {
-                    List<Expression> outSelectors = buildSelectorsList(selectors);
-                    List<CompiledExpression> compiledSelectors = outSelectors.stream()
-                            .map(s -> compile(s, null))
-                            .collect(Collectors.toList());
-
-                    if (outSelectors.size() == 1 && (compiledSelectors.get(0) instanceof TupleConstructor)) {
-                        compiledSelector = (TupleConstructor) compiledSelectors.get(0);
+                    if (selectRecords) {
+                        compiledSelector = compileSelectRecords(selectors, e.typeId, e.isDistinct());
                     } else {
-                        compiledSelector = createAnonymousTuple(
-                                outSelectors.toArray(new Expression[0]),
-                                compiledSelectors.toArray(new CompiledExpression[0]),
-                                e.isDistinct(),
-                                e.typeId
-                        );
+                        List<Expression> outSelectors = buildSelectorsList(selectors);
+                        List<CompiledExpression> compiledSelectors = outSelectors.stream()
+                                .map(s -> compile(s, null))
+                                .collect(Collectors.toList());
+
+                        if (outSelectors.size() == 1 && (compiledSelectors.get(0) instanceof TupleConstructor)) {
+                            compiledSelector = (TupleConstructor) compiledSelectors.get(0);
+                        } else {
+                            compiledSelector = createAnonymousTuple(
+                                    outSelectors.toArray(new Expression[0]),
+                                    compiledSelectors.toArray(new CompiledExpression[0]),
+                                    e.isDistinct(),
+                                    e.typeId
+                            );
+                        }
                     }
                 } else if (arrayJoinExpression != null) {
                     compiledSelector = new QQLTupleBuilder(this)
@@ -1305,7 +1509,7 @@ public class QQLExpressionCompiler {
             }
 
             boolean aggregate = !e.isRunning() &&
-                ((compiledSelector != null && compiledSelector.impliesAggregation()) || groupBy != null);
+                    ((compiledSelector != null && compiledSelector.impliesAggregation()) || groupBy != null);
 
             CompiledFilter.RunningFilter runningFilter =
                     selectFirst ?
@@ -1314,30 +1518,71 @@ public class QQLExpressionCompiler {
                                     CompiledFilter.RunningFilter.DISTINCT :
                                     CompiledFilter.RunningFilter.NONE;
 
-            SelectLimit limit = e.getLimit() != null ? compileLimit(e.getLimit()) : null;
+            SelectLimit compiledLimit = limit != null ? compileLimit(limit) : null;
             q = new CompiledFilter(
-                q,
-                QQLCompilerUtils.addQueryStatusType(
-                    compiledSelector == null ?
-                        q.type :
-                        new QueryDataType(false, (ClassDataType) compiledSelector.type),
-                    groupBy
-                ),
-                cond,
-                runningFilter,
-                aggregate,
-                e.isRunning(),
-                groupBy,
-                compiledSelector,
-                tslimits,
-                symbolLimits,
-                limit,
-                e.getOverExpression()
+                    q,
+                    QQLCompilerUtils.addQueryStatusType(
+                            compiledSelector == null ?
+                                    q.type :
+                                    new QueryDataType(false, (ClassDataType) compiledSelector.type),
+                            groupBy
+                    ),
+                    cond,
+                    runningFilter,
+                    aggregate,
+                    e.isRunning(),
+                    groupBy,
+                    compiledSelector,
+                    tslimits,
+                    symbolLimits,
+                    compiledLimit,
+                    e.getOverExpression()
             );
             ((CompiledFilter) q).someFormOfSelectStar = someFormOfSelectStar;
         }
 
         return (q);
+    }
+
+    private TupleConstructor compileSelectRecords(Expression[] selectors, TypeIdentifier typeId, boolean isDistinct) {
+        if (typeId != null) {
+            throw new CompilationException("Illegal type clause", typeId);
+        }
+
+        TupleConstructor[] tuples = new TupleConstructor[selectors.length];
+        Map<String, CompiledExpression<?>> conditions = new HashMap<>();
+        for (int i = 0; i < selectors.length; ++i) {
+            SelectRecordExpression selector = (SelectRecordExpression) selectors[i];
+            List<Expression> outSelectors = Arrays.asList(selector.getSelectors());
+            if (outSelectors.size() == 0) {
+                throw new CompilationException("Selectors list is empty", selector);
+            }
+
+            if (QQLPreProcessingPatterns.isThis(outSelectors.get(0)) ||
+                    QQLPreProcessingPatterns.isFirstThis(outSelectors.get(0)) ||
+                    QQLPreProcessingPatterns.isLastThis(outSelectors.get(0))) {
+
+                throw new CompilationException("Illegal selector in record", outSelectors.get(0));
+            }
+
+            if (conditions.get(selector.getTypeId().typeName) != null) {
+                throw new CompilationException("Duplicate type", selector);
+            } else {
+                conditions.put(selector.getTypeId().typeName, compile(selector.getWhen(), StandardTypes.NULLABLE_BOOLEAN));
+            }
+
+            List<CompiledExpression> compiledSelectors = outSelectors.stream()
+                    .map(s -> compile(s, null))
+                    .collect(Collectors.toList());
+            tuples[i] = createAnonymousTuple(
+                    outSelectors.toArray(new Expression[0]),
+                    compiledSelectors.toArray(new CompiledExpression[0]),
+                    isDistinct,
+                    selector.getTypeId()
+            );
+        }
+
+        return TupleConstructor.polymorphicTuple(tuples, conditions);
     }
 
     private void validateArrayJoin(CompiledExpression compiledExpression, Expression expression) {
@@ -1425,13 +1670,13 @@ public class QQLExpressionCompiler {
             CompiledExpression<DataType> compiledArrayJoin = compile(arrayJoinExpression.args[i], null);
             if (compiledArrayJoin.type instanceof ArrayDataType) {
                 ArrayJoinElement arrayJoinElement = new ArrayJoinElement(
-                    compiledArrayJoin,
-                    compiledArrayJoin.name != null ? compiledArrayJoin.name : ("$arrayjoin$" + i),
-                    arrayJoinExpression.left
+                        compiledArrayJoin,
+                        compiledArrayJoin.name != null ? compiledArrayJoin.name : ("$arrayjoin$" + i),
+                        arrayJoinExpression.left
                 );
                 compiledArrayJoins.put(arrayJoinElement, arrayJoinExpression.args[i]);
                 ((EnvironmentFrame) env).bindNoDup(
-                    NamedObjectType.VARIABLE, arrayJoinElement.name, arrayJoinExpression.args[i].location, arrayJoinElement
+                        NamedObjectType.VARIABLE, arrayJoinElement.name, arrayJoinExpression.args[i].location, arrayJoinElement
                 );
             } else {
                 throw new IllegalDataTypeException(arrayJoinExpression, compiledArrayJoin.type, StandardTypes.ARR);
@@ -1466,27 +1711,27 @@ public class QQLExpressionCompiler {
 
             Expression makeExpression(ThisObject selector, String selectorName, boolean disambiguate, int i) {
                 return disambiguate ?
-                    new NamedExpression(
-                        selector.location,
-                        new FieldAccessorExpression(
-                            new AsExpression(
+                        new NamedExpression(
                                 selector.location,
-                                selector.parent,
-                                new CastObjectTypeExpression(
-                                    selector.location,
-                                    types.stream()
-                                        .map(t -> new CastTypeIdExpression(selector.location, t))
-                                        .collect(Collectors.toList()),
-                                    true
-                                )
-                            ),
-                            new FieldIdentifier(selector.location, field.getName())
-                        ),
-                        selectorName + "." + field.getName() + (i > 0 ? String.valueOf(i) : "")
-                    ) :
-                    new FieldAccessorExpression(
-                        selector.parent, new FieldIdentifier(selector.location, field.getName())
-                    );
+                                new FieldAccessorExpression(
+                                        new AsExpression(
+                                                selector.location,
+                                                selector.parent,
+                                                new CastObjectTypeExpression(
+                                                        selector.location,
+                                                        types.stream()
+                                                                .map(t -> new CastTypeIdExpression(selector.location, t))
+                                                                .collect(Collectors.toList()),
+                                                        true
+                                                )
+                                        ),
+                                        new FieldIdentifier(selector.location, field.getName())
+                                ),
+                                selectorName + "." + field.getName() + (i > 0 ? String.valueOf(i) : "")
+                        ) :
+                        new FieldAccessorExpression(
+                                selector.parent, new FieldIdentifier(selector.location, field.getName())
+                        );
             }
         }
 
@@ -1544,6 +1789,9 @@ public class QQLExpressionCompiler {
         if (text.equals(KEYWORD_TIMESTAMP))
             return (new TimestampSelector());
 
+//        if (text.equals(KEYWORD_TYPE))
+//            return (new InstrumentTypeSelector());
+
         Object obj = lookUpVariable(env, id);
 
         if (obj instanceof TickStream)
@@ -1554,9 +1802,9 @@ public class QQLExpressionCompiler {
 
         if (obj instanceof PredicateFieldRef) {
             return compileFieldAccessorExpression(
-                new FieldAccessorExpression(
-                    id.location, thisIdentifier(), new FieldIdentifier(id.location, ((PredicateFieldRef) obj).field.getName())
-                )
+                    new FieldAccessorExpression(
+                            id.location, thisIdentifier(), new FieldIdentifier(id.location, ((PredicateFieldRef) obj).field.getName())
+                    )
             );
         }
 
@@ -1580,6 +1828,10 @@ public class QQLExpressionCompiler {
 
         if (obj instanceof NamedExpression) {
             return compileNamedExpression((NamedExpression) obj, null);
+        }
+
+        if (obj instanceof NamedFieldExpression) {
+            return compileNamedFieldExpression((NamedFieldExpression) obj, null);
         }
 
         throw new IllegalObjectException(id, obj);
@@ -1632,7 +1884,7 @@ public class QQLExpressionCompiler {
         return (
                 new CompiledConstant(
                         new EnumDataType(false, evr.parent),
-                        new Long(evr.field.value),
+                        evr.field.value,
                         evr.field.symbol
                 )
         );
@@ -1746,6 +1998,10 @@ public class QQLExpressionCompiler {
     }
 
     private boolean isNamedExpression(Expression e) {
+        if (e instanceof NamedFieldExpression) {
+            return true;
+        }
+
         if (e instanceof NamedExpression) {
             return true;
         }
@@ -1769,6 +2025,7 @@ public class QQLExpressionCompiler {
         if (parent.type instanceof ArrayDataType && castDataType instanceof ArrayDataType) {
             DataType parentElementType = ((ArrayDataType) parent.type).getElementDataType();
             DataType castElementType = ((ArrayDataType) castDataType).getElementDataType();
+
             if (parentElementType instanceof ClassDataType && castElementType instanceof ClassDataType) {
                 if (isCastRequired((ClassDataType) parentElementType, (ClassDataType) castElementType)) {
                     return new CastArrayClassType(parent, (ArrayDataType) parent.type, castDataType);
@@ -1792,8 +2049,8 @@ public class QQLExpressionCompiler {
             }
         }
 
-        NumericType sourceNumeric = getNumericType(parent.type);
         NumericType numeric = getNumericType(castDataType);
+        NumericType sourceNumeric = getNumericType(parent.type);
         if (sourceNumeric != null && numeric != null) {
             return new CastPrimitiveType(parent, parent.type, castDataType, sourceNumeric, numeric, false);
         }
@@ -1826,6 +2083,8 @@ public class QQLExpressionCompiler {
             return NumericType.Int8;
         } else if (type instanceof CharDataType) {
             return NumericType.Char;
+        } else if (type instanceof DateTimeDataType) {
+            return NumericType.Timestamp;
         }
 
         return null;
@@ -1841,8 +2100,8 @@ public class QQLExpressionCompiler {
         } else if (e.castType instanceof CastObjectTypeExpression) {
             CastObjectTypeExpression castObjectType = (CastObjectTypeExpression) e.castType;
             return new ClassDataType(
-                true,
-                collectDescriptors(castObjectType.typeIdList)
+                    true,
+                    collectDescriptors(castObjectType.typeIdList)
             );
         } else if (e.castType instanceof CastArrayTypeExpression) {
             CastArrayTypeExpression castArrayType = (CastArrayTypeExpression) e.castType;
@@ -1850,13 +2109,13 @@ public class QQLExpressionCompiler {
 
             if (castTypeIds.size() > 1) {
                 return new ArrayDataType(
-                    parentType.isNullable(),
-                    new ClassDataType(true, collectDescriptors(castTypeIds))
+                        parentType.isNullable(),
+                        new ClassDataType(true, collectDescriptors(castTypeIds))
                 );
             } else {
                 return new ArrayDataType(
-                    parentType.isNullable(),
-                    compileCastTypeIdExpression(castTypeIds.get(0), parentType.isNullable())
+                        parentType.isNullable(),
+                        compileCastTypeIdExpression(castTypeIds.get(0), parentType.isNullable())
                 );
             }
         }
@@ -2235,10 +2494,24 @@ public class QQLExpressionCompiler {
             throw new WrongArgTypesException(e, argTypes);
 
         if (function.returnType() instanceof ClassDataType) {
-            classMap.register(((ClassDataType) function.returnType()).getFixedDescriptor());
+            RecordClassDescriptor[] descriptors = ((ClassDataType) function.returnType()).getDescriptors();
+            for (int i = 0; i < descriptors.length; ++i) {
+                classMap.registerNew(descriptors[i]);
+            }
+        }
+        if (function.returnType() instanceof ArrayDataType) {
+            DataType elementType = ((ArrayDataType) function.returnType()).getElementDataType();
+            if (elementType instanceof ClassDataType) {
+                RecordClassDescriptor[] descriptors = ((ClassDataType) elementType).getDescriptors();
+                for (int i = 0; i < descriptors.length; ++i) {
+                    classMap.registerNew(descriptors[i]);
+                }
+            }
         }
 
-        return new PluginStatefulFunction(function, initArgs, args);
+        return new PluginStatefulFunction(function,
+                captureClassTypes(function.returnType(types(initArgs), types(args))),
+                initArgs, args);
     }
 
     private StatefulFunctionsSet getContextSet(String name, long location) {
@@ -2285,7 +2558,19 @@ public class QQLExpressionCompiler {
             throw new WrongArgTypesException(e, argTypes);
 
         if (function.returnType() instanceof ClassDataType) {
-            classMap.register(((ClassDataType) function.returnType()).getFixedDescriptor());
+            RecordClassDescriptor[] descriptors = ((ClassDataType) function.returnType()).getDescriptors();
+            for (int i = 0; i < descriptors.length; ++i) {
+                classMap.registerNew(descriptors[i]);
+            }
+        }
+        if (function.returnType() instanceof ArrayDataType) {
+            DataType elementType = ((ArrayDataType) function.returnType()).getElementDataType();
+            if (elementType instanceof ClassDataType) {
+                RecordClassDescriptor[] descriptors = ((ClassDataType) elementType).getDescriptors();
+                for (int i = 0; i < descriptors.length; ++i) {
+                    classMap.registerNew(descriptors[i]);
+                }
+            }
         }
 
         CompiledExpression<?>[] actualInitArgs = new CompiledExpression[function.initArgs().size()];
@@ -2298,7 +2583,9 @@ public class QQLExpressionCompiler {
             actualInitArgs[i] = ce;
         }
 
-        return new PluginStatefulFunction(function, actualInitArgs, args);
+        return new PluginStatefulFunction(function,
+                captureClassTypes(function.returnType(types(actualInitArgs), types(args))),
+                actualInitArgs, args);
     }
 
     private static boolean areConstants(CompiledExpression<?>[] args) {
@@ -2332,7 +2619,11 @@ public class QQLExpressionCompiler {
             DataType expectedType
     ) {
         CompiledExpression<?> arg = compile(e.args[0], expectedType);
-        return new PluginStatefulFunction(new FirstFunctionDescriptor(arg.type), new CompiledExpression[0], new CompiledExpression[]{arg});
+        FirstFunctionDescriptor fd = new FirstFunctionDescriptor(arg.type);
+        DataType returnType = captureClassTypes(
+                fd.returnType(types(new CompiledExpression[0]), types(new CompiledExpression[]{arg}))
+        );
+        return new PluginStatefulFunction(fd, returnType, new CompiledExpression[0], new CompiledExpression[]{arg});
     }
 
     private CompiledExpression compileModalStreamSelector(
@@ -2482,5 +2773,42 @@ public class QQLExpressionCompiler {
 
             found.process(opt, value, target);
         }
+    }
+
+    private DataType captureClassTypes(DataType type) {
+        if (type instanceof ArrayDataType) {
+            ArrayDataType arrayDataType = (ArrayDataType) type;
+            DataType elementType = arrayDataType.getElementDataType();
+            if (elementType instanceof ClassDataType) {
+                ClassDataType classElementType = (ClassDataType) elementType;
+                ClassDataType capturedType = captureClassType(classElementType);
+                if (classElementType != capturedType) {
+                    return new ArrayDataType(type.isNullable(), capturedType);
+                }
+            }
+        }
+
+        return type;
+    }
+
+    private ClassDataType captureClassType(ClassDataType type) {
+        RecordClassDescriptor[] descriptors = type.getDescriptors();
+        RecordClassDescriptor[] capturedDescriptors = new RecordClassDescriptor[descriptors.length];
+        boolean changed = false;
+        for (int i = 0; i < descriptors.length; ++i) {
+            ClassDescriptor mappedDescriptor = classMap.getDescriptor(descriptors[i].getName());
+            if (mappedDescriptor instanceof RecordClassDescriptor) {
+                capturedDescriptors[i] = (RecordClassDescriptor) mappedDescriptor;
+                changed = true;
+            } else {
+                capturedDescriptors[i] = descriptors[i];
+            }
+        }
+
+        if (changed) {
+            return new ClassDataType(type.isNullable(), capturedDescriptors);
+        }
+
+        return type;
     }
 }

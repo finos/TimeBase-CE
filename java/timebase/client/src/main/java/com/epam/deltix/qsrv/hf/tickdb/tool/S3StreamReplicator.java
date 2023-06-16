@@ -298,4 +298,3 @@ public class S3StreamReplicator implements Runnable {
         }
     }
 }
-

@@ -174,7 +174,7 @@ abstract class BlockAccessorBase extends DataAccessorBase {
         clearBuffers();
 
         super.close();
-    }        
+    }
 
     void        clearBuffers() {
         mdi.setBytes(EMPTY);

@@ -1,0 +1,231 @@
+set printJson true
+#
+test select nan is nan
+0: {"$type":"","symbol":"","$1":true}
+!end
+#
+test select nan is not nan
+0: {"$type":"","symbol":"","$1":false}
+!end
+#
+test select 3 is nan
+0: {"$type":"","symbol":"","$1":false}
+!end
+#
+test select 3 is not nan
+0: {"$type":"","symbol":"","$1":true}
+!end
+#
+test select 0 is nan
+0: {"$type":"","symbol":"","$1":false}
+!end
+#
+test select nan == nan
+0: {"$type":"","symbol":"","$1":true}
+!end
+#
+test select nan != nan
+0: {"$type":"","symbol":"","$1":false}
+!end
+#
+test select 3 != nan
+0: {"$type":"","symbol":"","$1":true}
+!end
+#
+test select 3 == nan
+0: {"$type":"","symbol":"","$1":false}
+!end
+# Simple select 1
+test select decimalNullableField from "1min-1h-1h-3_v2"
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:16:43.169Z","decimalNullableField":"539.6911278675251"}
+1: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:17:43.169Z","decimalNullableField":"NaN"}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:18:43.169Z","decimalNullableField":"775.1355701113538"}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:19:43.169Z","decimalNullableField":"NaN"}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:20:43.169Z","decimalNullableField":"NaN"}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:21:43.169Z","decimalNullableField":"NaN"}
+6: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:22:43.169Z"}
+7: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:23:43.169Z","decimalNullableField":"NaN"}
+8: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:24:43.169Z","decimalNullableField":"494.8488394119109"}
+9: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:25:43.169Z","decimalNullableField":"180.6892962277482"}
+!end
+# Simple select 2
+test select decimalNullableField is nan from "1min-1h-1h-3_v2"
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:16:43.169Z","$1":false}
+1: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:17:43.169Z","$1":true}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:18:43.169Z","$1":false}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:19:43.169Z","$1":true}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:20:43.169Z","$1":true}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:21:43.169Z","$1":true}
+6: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:22:43.169Z","$1":true}
+7: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:23:43.169Z","$1":true}
+8: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:24:43.169Z","$1":false}
+9: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:25:43.169Z","$1":false}
+!end
+# Filter nulls
+test select decimalNullableField from "1min-1h-1h-3_v2" where decimalNullableField is not null
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:16:43.169Z","decimalNullableField":"539.6911278675251"}
+1: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:17:43.169Z","decimalNullableField":"NaN"}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:18:43.169Z","decimalNullableField":"775.1355701113538"}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:19:43.169Z","decimalNullableField":"NaN"}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:20:43.169Z","decimalNullableField":"NaN"}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:21:43.169Z","decimalNullableField":"NaN"}
+6: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:23:43.169Z","decimalNullableField":"NaN"}
+7: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:24:43.169Z","decimalNullableField":"494.8488394119109"}
+8: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:25:43.169Z","decimalNullableField":"180.6892962277482"}
+9: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:26:43.169Z","decimalNullableField":"196.3084959884107"}
+!end
+# Filter nans
+test select decimalNullableField from "1min-1h-1h-3_v2" where decimalNullableField is not nan
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:16:43.169Z","decimalNullableField":"539.6911278675251"}
+1: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:18:43.169Z","decimalNullableField":"775.1355701113538"}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:24:43.169Z","decimalNullableField":"494.8488394119109"}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:25:43.169Z","decimalNullableField":"180.6892962277482"}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:26:43.169Z","decimalNullableField":"196.3084959884107"}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:27:43.169Z","decimalNullableField":"513.9895348549857"}
+6: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:32:43.169Z","decimalNullableField":"591.8895429190489"}
+7: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:33:43.169Z","decimalNullableField":"212.3364418026738"}
+8: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:35:43.169Z","decimalNullableField":"549.8776696569424"}
+9: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:38:43.169Z","decimalNullableField":"486.7943311182209"}
+!end
+# Filter nans 2
+test select decimalNullableField from "1min-1h-1h-3_v2" where decimalNullableField is nan
+0: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:17:43.169Z","decimalNullableField":"NaN"}
+1: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:19:43.169Z","decimalNullableField":"NaN"}
+2: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:20:43.169Z","decimalNullableField":"NaN"}
+3: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:21:43.169Z","decimalNullableField":"NaN"}
+4: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:22:43.169Z"}
+5: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:23:43.169Z","decimalNullableField":"NaN"}
+6: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:28:43.169Z"}
+7: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:29:43.169Z","decimalNullableField":"NaN"}
+8: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:30:43.169Z","decimalNullableField":"NaN"}
+9: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:31:43.169Z"}
+!end
+# Filter nans 3
+test select decimalNullableField from "1min-1h-1h-3_v2" where decimalNullableField != nan
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:16:43.169Z","decimalNullableField":"539.6911278675251"}
+1: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:18:43.169Z","decimalNullableField":"775.1355701113538"}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:24:43.169Z","decimalNullableField":"494.8488394119109"}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:25:43.169Z","decimalNullableField":"180.6892962277482"}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:26:43.169Z","decimalNullableField":"196.3084959884107"}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:27:43.169Z","decimalNullableField":"513.9895348549857"}
+6: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:32:43.169Z","decimalNullableField":"591.8895429190489"}
+7: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:33:43.169Z","decimalNullableField":"212.3364418026738"}
+8: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:35:43.169Z","decimalNullableField":"549.8776696569424"}
+9: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:38:43.169Z","decimalNullableField":"486.7943311182209"}
+!end
+# Filter nans 4
+test select decimalNullableField from "1min-1h-1h-3_v2" where decimalNullableField == nan
+0: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:17:43.169Z","decimalNullableField":"NaN"}
+1: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:19:43.169Z","decimalNullableField":"NaN"}
+2: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:20:43.169Z","decimalNullableField":"NaN"}
+3: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:21:43.169Z","decimalNullableField":"NaN"}
+4: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:22:43.169Z"}
+5: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:23:43.169Z","decimalNullableField":"NaN"}
+6: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:28:43.169Z"}
+7: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:29:43.169Z","decimalNullableField":"NaN"}
+8: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:30:43.169Z","decimalNullableField":"NaN"}
+9: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:31:43.169Z"}
+!end
+# Filter nans 5
+test select decimalNullableField from "1min-1h-1h-3_v2" where nan == decimalNullableField
+0: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:17:43.169Z","decimalNullableField":"NaN"}
+1: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:19:43.169Z","decimalNullableField":"NaN"}
+2: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:20:43.169Z","decimalNullableField":"NaN"}
+3: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:21:43.169Z","decimalNullableField":"NaN"}
+4: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:22:43.169Z"}
+5: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:23:43.169Z","decimalNullableField":"NaN"}
+6: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:28:43.169Z"}
+7: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:29:43.169Z","decimalNullableField":"NaN"}
+8: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:30:43.169Z","decimalNullableField":"NaN"}
+9: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:31:43.169Z"}
+!end
+# Filter nans 6
+test select decimalNullableField from "1min-1h-1h-3_v2" where nan != decimalNullableField
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:16:43.169Z","decimalNullableField":"539.6911278675251"}
+1: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:18:43.169Z","decimalNullableField":"775.1355701113538"}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:24:43.169Z","decimalNullableField":"494.8488394119109"}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:25:43.169Z","decimalNullableField":"180.6892962277482"}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:26:43.169Z","decimalNullableField":"196.3084959884107"}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:27:43.169Z","decimalNullableField":"513.9895348549857"}
+6: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:32:43.169Z","decimalNullableField":"591.8895429190489"}
+7: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:33:43.169Z","decimalNullableField":"212.3364418026738"}
+8: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:35:43.169Z","decimalNullableField":"549.8776696569424"}
+9: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:38:43.169Z","decimalNullableField":"486.7943311182209"}
+!end
+# Filter array nans 1
+test select decimalListOfNullable from "1min-1h-1h-3_v2"
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:16:43.169Z","decimalListOfNullable":["298.4353794383875","641.2218163508583","NaN","NaN","393.6997409908818","NaN","707.6448854336663",null,"NaN","206.2631195217777"]}
+1: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:17:43.169Z","decimalListOfNullable":["NaN","NaN","260.7168711955512","NaN","79.63375300527619","784.579151035816","272.1967060015023",null,null,"NaN"]}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:18:43.169Z","decimalListOfNullable":["340.5956155331456","NaN",null,"NaN","221.2686983162249","705.899299582959","437.2192266288737","172.5596843983976",null,"NaN"]}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:19:43.169Z","decimalListOfNullable":["66.00375031522165",null,"502.1822687336232","846.107728851544",null,null,"723.3677716082843",null,null,"279.9537423433222"]}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:20:43.169Z","decimalListOfNullable":["NaN",null,"20.24255201944003","524.1140097395536","924.1145855000785",null,"NaN",null,"727.6204943189804","201.6354920184525"]}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:21:43.169Z","decimalListOfNullable":["NaN","180.6194969488364","612.6273931689285","NaN","NaN",null,"NaN","219.6718571921679",null,null]}
+6: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:22:43.169Z","decimalListOfNullable":["NaN","527.8786760087473","NaN","296.1981985254956","857.0186046722275","26.98828456550395","704.3940544472744","NaN","463.1929853819885","30.237907975046"]}
+7: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:23:43.169Z","decimalListOfNullable":[null,"430.4694266157202","223.6729832743831","NaN","416.1262030218346","706.7735470538161","NaN",null,"555.0489071415384","505.0803162974783"]}
+8: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:24:43.169Z","decimalListOfNullable":["NaN","729.5955126909846",null,null,"81.54467060596448","NaN",null,"854.7653937498458","514.1944843209152","49.05161149795389"]}
+9: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:25:43.169Z","decimalListOfNullable":[null,"6.359996233003318",null,"NaN",null,"NaN","880.4301886530379",null,"111.0146133149452",null]}
+!end
+# Filter array nans 2
+test select decimalListOfNullable[this is not null] from "1min-1h-1h-3_v2"
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:16:43.169Z","$1":["298.4353794383875","641.2218163508583","NaN","NaN","393.6997409908818","NaN","707.6448854336663","NaN","206.2631195217777"]}
+1: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:17:43.169Z","$1":["NaN","NaN","260.7168711955512","NaN","79.63375300527619","784.579151035816","272.1967060015023","NaN"]}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:18:43.169Z","$1":["340.5956155331456","NaN","NaN","221.2686983162249","705.899299582959","437.2192266288737","172.5596843983976","NaN"]}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:19:43.169Z","$1":["66.00375031522165","502.1822687336232","846.107728851544","723.3677716082843","279.9537423433222"]}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:20:43.169Z","$1":["NaN","20.24255201944003","524.1140097395536","924.1145855000785","NaN","727.6204943189804","201.6354920184525"]}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:21:43.169Z","$1":["NaN","180.6194969488364","612.6273931689285","NaN","NaN","NaN","219.6718571921679"]}
+6: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:22:43.169Z","$1":["NaN","527.8786760087473","NaN","296.1981985254956","857.0186046722275","26.98828456550395","704.3940544472744","NaN","463.1929853819885","30.237907975046"]}
+7: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:23:43.169Z","$1":["430.4694266157202","223.6729832743831","NaN","416.1262030218346","706.7735470538161","NaN","555.0489071415384","505.0803162974783"]}
+8: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:24:43.169Z","$1":["NaN","729.5955126909846","81.54467060596448","NaN","854.7653937498458","514.1944843209152","49.05161149795389"]}
+9: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:25:43.169Z","$1":["6.359996233003318","NaN","NaN","880.4301886530379","111.0146133149452"]}
+!end
+# Filter array nans 3
+test select decimalListOfNullable[this is not nan] from "1min-1h-1h-3_v2"
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:16:43.169Z","$1":["298.4353794383875","641.2218163508583","393.6997409908818","707.6448854336663","206.2631195217777"]}
+1: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:17:43.169Z","$1":["260.7168711955512","79.63375300527619","784.579151035816","272.1967060015023"]}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:18:43.169Z","$1":["340.5956155331456","221.2686983162249","705.899299582959","437.2192266288737","172.5596843983976"]}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:19:43.169Z","$1":["66.00375031522165","502.1822687336232","846.107728851544","723.3677716082843","279.9537423433222"]}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:20:43.169Z","$1":["20.24255201944003","524.1140097395536","924.1145855000785","727.6204943189804","201.6354920184525"]}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:21:43.169Z","$1":["180.6194969488364","612.6273931689285","219.6718571921679"]}
+6: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:22:43.169Z","$1":["527.8786760087473","296.1981985254956","857.0186046722275","26.98828456550395","704.3940544472744","463.1929853819885","30.237907975046"]}
+7: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:23:43.169Z","$1":["430.4694266157202","223.6729832743831","416.1262030218346","706.7735470538161","555.0489071415384","505.0803162974783"]}
+8: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:24:43.169Z","$1":["729.5955126909846","81.54467060596448","854.7653937498458","514.1944843209152","49.05161149795389"]}
+9: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:25:43.169Z","$1":["6.359996233003318","880.4301886530379","111.0146133149452"]}
+!end
+# Aggregated functions 1
+test select avg{}(decimalNullableField) from "1min-1h-1h-3_v2"
+0: {"$type":"","symbol":"S3","timestamp":"2022-09-13T12:16:43.169Z","AVG{}(decimalNullableField)":"499.2138288680054"}
+!end
+# Aggregated functions 2
+test select avg{}(decimalNullableField) from "1min-1h-1h-3_v2" where decimalNullableField is not nan
+0: {"$type":"","symbol":"S3","timestamp":"2022-09-13T12:13:43.169Z","AVG{}(decimalNullableField)":"499.2138288680054"}
+!end
+# over time 1
+test select avg{}(decimalNullableField) from "1min-1h-1h-3_v2" over time(10m)
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:20:00.000Z","AVG{}(decimalNullableField)":"657.4133489894395"}
+1: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:30:00.000Z","AVG{}(decimalNullableField)":"346.4590416207638"}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:40:00.000Z","AVG{}(decimalNullableField)":"460.2244963742214"}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:50:00.000Z","AVG{}(decimalNullableField)":"505.3067107973377"}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T02:00:00.000Z","AVG{}(decimalNullableField)":"494.1270891592284"}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T02:10:00.000Z","AVG{}(decimalNullableField)":"282.0945447120773"}
+6: {"$type":"","symbol":"S1","timestamp":"2022-09-13T02:20:00.000Z","AVG{}(decimalNullableField)":"359.3758590471286"}
+7: {"$type":"","symbol":"S2","timestamp":"2022-09-13T03:20:00.000Z","AVG{}(decimalNullableField)":"342.7682995891461"}
+8: {"$type":"","symbol":"S3","timestamp":"2022-09-13T03:30:00.000Z","AVG{}(decimalNullableField)":"628.559651405152"}
+9: {"$type":"","symbol":"S1","timestamp":"2022-09-13T03:40:00.000Z","AVG{}(decimalNullableField)":"745.7189517917305"}
+!end
+# over time 2
+test select avg{}(decimalNullableField) from "1min-1h-1h-3_v2" over time(1m) where decimalNullableField is not nan
+0: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:17:00.000Z","AVG{}(decimalNullableField)":"539.6911278675251"}
+1: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:19:00.000Z","AVG{}(decimalNullableField)":"775.1355701113538"}
+2: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:25:00.000Z","AVG{}(decimalNullableField)":"494.8488394119109"}
+3: {"$type":"","symbol":"S1","timestamp":"2022-09-13T01:26:00.000Z","AVG{}(decimalNullableField)":"180.6892962277482"}
+4: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:27:00.000Z","AVG{}(decimalNullableField)":"196.3084959884107"}
+5: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:28:00.000Z","AVG{}(decimalNullableField)":"513.9895348549857"}
+6: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:33:00.000Z","AVG{}(decimalNullableField)":"591.8895429190489"}
+7: {"$type":"","symbol":"S3","timestamp":"2022-09-13T01:34:00.000Z","AVG{}(decimalNullableField)":"212.3364418026738"}
+8: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:36:00.000Z","AVG{}(decimalNullableField)":"549.8776696569424"}
+9: {"$type":"","symbol":"S2","timestamp":"2022-09-13T01:39:00.000Z","AVG{}(decimalNullableField)":"486.7943311182209"}
+!end
+
+
+
+

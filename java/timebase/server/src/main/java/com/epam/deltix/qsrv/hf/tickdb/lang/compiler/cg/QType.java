@@ -201,6 +201,10 @@ public abstract class QType <T extends DataType> {
     public JExpr                checkNull (JExpr e, boolean eq) {
         return (CTXT.binExpr (e, eq ? "==" : "!=", getNullLiteral ()));
     }
+
+    public JExpr                checkNan(JExpr e, boolean eq) {
+        throw new UnsupportedOperationException("NaN values are not supported");
+    }
     
     /**
      *  Declares a variable in the supplied container.

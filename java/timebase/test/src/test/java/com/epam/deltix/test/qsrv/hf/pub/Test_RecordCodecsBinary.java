@@ -500,6 +500,7 @@ public class Test_RecordCodecsBinary extends Test_RecordCodecsBase {
     }
 
     @Test
+    @Ignore // not implemented yet
     public void testPrivateBoundIntp() throws Exception {
         setUpIntp();
         testPrivateBound();

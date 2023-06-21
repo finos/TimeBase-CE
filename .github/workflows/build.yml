@@ -18,8 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ '11' ]
-        os: [ 'ubuntu-20.04']
+        java: [ '11', '17']
+        os: [ 'ubuntu-20.04', 'ubuntu-22.04' ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2

@@ -6,3 +6,5 @@ dependencies {
     implementation ('com.epam.deltix:dfp')
     implementation ('com.epam.deltix:timebase-collections')
 }
+
+description = "Timebase Computations API Library"

@@ -151,7 +151,7 @@ jobs:
       - name: Publish jars
         run: >
           ./gradlew :java:timebase:aerondirect:publish :java:timebase:commons:publish :java:timebase:s3:publish
-          :java:timebase:pub:publish :java:timebase:api:publish :java:timebase:client:publish
+          :java:timebase:pub:publish :java:timebase:api:publish :java:timebase:client:publish :java:timebase:computations-api:publish
         env:
           SONATYPE_REPOSITORY:      ${{ secrets.SONATYPE_REPOSITORY }}
           SONATYPE_NEXUS_USERNAME:  ${{ secrets.SONATYPE_NEXUS_USERNAME }}

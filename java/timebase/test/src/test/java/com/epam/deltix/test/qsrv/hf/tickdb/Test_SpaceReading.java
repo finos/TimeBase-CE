@@ -161,7 +161,7 @@ public class Test_SpaceReading {
 
     private int countMessages(DXTickStream stream, String space) {
         SelectionOptions opts = new SelectionOptions();
-        opts.withSpaces(space);
+        opts.withSpace(space);
 
         int count = 0;
         try (TickCursor cursor = stream.select(Long.MIN_VALUE, opts)) {

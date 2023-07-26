@@ -1,8 +1,6 @@
-FROM alpine:3.16.1
+FROM amazoncorretto:11-alpine3.17
 
-RUN apk add --no-cache openjdk11-jdk && \
-    apk add --no-cache zlib=1.2.12-r3 && \
-    addgroup -S deltix --gid 1666 && adduser -S deltix -G deltix -u 1666 && \
+RUN addgroup -S deltix --gid 1666 && adduser -S deltix -G deltix -u 1666 && \
     mkdir -p /timebase-home && \
     chown deltix:deltix -R /timebase-home
 

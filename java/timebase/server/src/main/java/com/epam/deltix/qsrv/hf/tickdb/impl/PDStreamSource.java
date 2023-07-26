@@ -478,7 +478,7 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
                 new SourceSubscription(timestamp) : new SourceSubscription(subscription.keyIterator());
         long limit = options.reversed ? Long.MIN_VALUE : Long.MAX_VALUE;
 
-        TSRoot[] roots = stream.getRoots(sub, nstime, options.live, space);
+        TSRoot[] roots = stream.getRoots(sub, nstime, options.live, new String[] {space});
         addSources(timestamp,nstime, sub, limit, roots);
 
         return true;

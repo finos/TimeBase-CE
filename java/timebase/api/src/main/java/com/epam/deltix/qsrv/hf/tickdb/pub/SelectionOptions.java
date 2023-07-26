@@ -212,7 +212,12 @@ public class SelectionOptions extends CommonOptions {
         this.includeSchemaChangeMessages = includeSchemaChangeMessages;
     }
 
-    public void withSpaces(String ... spaces) {
+    public void withSpace(String space) {
+        if (space != null)
+            spaces = new String[] {space};
+    }
+
+    public void withSpaces(String[] spaces) {
         this.spaces = spaces;
     }
 }

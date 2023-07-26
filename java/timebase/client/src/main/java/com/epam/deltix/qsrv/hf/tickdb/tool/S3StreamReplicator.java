@@ -176,7 +176,7 @@ public class S3StreamReplicator implements Runnable {
         private void replicate() throws IOException {
             long lastMessageTimestamp = writer.getLastStoredTime();
             SelectionOptions options = new SelectionOptions(true, false);
-            options.withSpaces(spaceId);
+            options.withSpace(spaceId);
 
             try (TickCursor cursor = msgStream.select(lastMessageTimestamp + 1, options)) {
                 List<String> records = new ArrayList<>();

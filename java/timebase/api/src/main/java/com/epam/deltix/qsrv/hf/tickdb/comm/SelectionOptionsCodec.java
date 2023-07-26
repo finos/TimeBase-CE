@@ -99,7 +99,9 @@ public abstract class SelectionOptionsCodec {
         if (clientVersion >= VERSION_WITH_SPACES_SUPPORT) {
             if (clientVersion >= 132) {
                 int size = in.readInt();
-                if (size >= 0) {
+                if (size == 1) {
+                    options.withSpace(SerializationUtils.readNullableString(in));
+                } else if (size >= 1) {
                     options.spaces = new String[size];
                     for (int i = 0; i < size; i++)
                         options.spaces[i] = SerializationUtils.readNullableString(in);

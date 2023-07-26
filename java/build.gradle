@@ -276,8 +276,8 @@ configure(leafProjects) {
             dependencySet(group: 'com.fasterxml.jackson.core', version: '2.13.4') {
                 entry 'jackson-core'
                 entry 'jackson-annotations'
+                entry 'jackson-databind'
             }
-            dependency 'com.fasterxml.jackson.core:jackson-databind:2.13.4'
             dependency 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.4'
 
             dependencySet(group: 'com.squareup.okhttp3', version: '3.3.1') {

@@ -367,3 +367,33 @@ test select decimalField from "1min-1h-1h-3" over every time(1m) where timestamp
 2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:13:00.000Z","decimalField":"496.4862919484308"}
 3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:14:00.000Z","decimalField":"306.9859898859655"}
 !end
+test select decimalField from reverse("1min-1h-1h-3") over time(1m)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:00.000Z","decimalField":"306.9859898859655"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:12:00.000Z","decimalField":"496.4862919484308"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:11:00.000Z","decimalField":"522.0607784328132"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:10:00.000Z","decimalField":"956.6530412237674"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:09:00.000Z","decimalField":"976.9052542630014"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:08:00.000Z","decimalField":"610.3717500245243"}
+6: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:07:00.000Z","decimalField":"238.0592173257039"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:06:00.000Z","decimalField":"907.5292499807659"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:05:00.000Z","decimalField":"424.3861483265291"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:04:00.000Z","decimalField":"806.5283987923112"}
+!end
+test select decimalField from reverse("1min-1h-1h-3") over every time(1m) where timestamp > '2021-04-19 12:10:00'd and timestamp < '2021-04-19 12:13:20'd
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:00.000Z","decimalField":"306.9859898859655"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:12:00.000Z","decimalField":"496.4862919484308"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:11:00.000Z","decimalField":"522.0607784328132"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:10:00.000Z","decimalField":"956.6530412237674"}
+!end
+test select max{}(decimalField), min{}(decimalField) from reverse("1min-1h-1h-3") over time(30m) group by symbol
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:00:00.000Z","MAX{}(decimalField)":"956.6530412237674","MIN{}(decimalField)":"238.0592173257039"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:00:00.000Z","MAX{}(decimalField)":"987.0609798947334","MIN{}(decimalField)":"162.7649374331955"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:00:00.000Z","MAX{}(decimalField)":"763.2725182203341","MIN{}(decimalField)":"424.3861483265291"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:30:00.000Z","MAX{}(decimalField)":"946.8850875632301","MIN{}(decimalField)":"70.66617060884506"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:30:00.000Z","MAX{}(decimalField)":"877.5632829314844","MIN{}(decimalField)":"56.98886716609009"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:30:00.000Z","MAX{}(decimalField)":"996.1203449959969","MIN{}(decimalField)":"137.4389622615901"}
+6: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:00:00.000Z","MAX{}(decimalField)":"946.7382536312271","MIN{}(decimalField)":"4.117077651298096"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:00:00.000Z","MAX{}(decimalField)":"828.5239154701713","MIN{}(decimalField)":"266.6909797261371"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:00:00.000Z","MAX{}(decimalField)":"771.1522197868567","MIN{}(decimalField)":"67.87790057744914"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T10:00:00.000Z","MAX{}(decimalField)":"789.0105353473393","MIN{}(decimalField)":"104.3192243457408"}
+!end

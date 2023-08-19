@@ -14,14 +14,16 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.epam.deltix.qsrv.hf.tickdb.ui.tbshell;
+
+package com.epam.deltix.qsrv.hf.tickdb.ui.tbshell;
 
 import com.epam.deltix.qsrv.hf.pub.ExchangeCodec;
 import com.epam.deltix.timebase.messages.*;
 
 /**
- * Created by Alex Karpovich on 08/10/2021.
+ * Basic information about a bar - contains open, high, low, close and volume attributes
  */
+@SchemaElement(name = "com.epam.deltix.timebase.messages.BarMessage")
 public class SimpleBarMessage extends InstrumentMessage {
 
     @SchemaElement(title = "Exchange Code")

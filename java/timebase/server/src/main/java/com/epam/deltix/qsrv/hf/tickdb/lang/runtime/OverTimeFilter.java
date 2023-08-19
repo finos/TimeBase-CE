@@ -16,7 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime;
 
-import com.epam.deltix.computations.api.PrettyTimeSaver;
+import com.epam.deltix.computations.api.*;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.ReadableValue;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
@@ -29,7 +29,7 @@ import java.util.Enumeration;
 
 public abstract class OverTimeFilter extends FilterIMSImpl {
 
-    private final PrettyTimeSaver timeSaver = PrettyTimeSaver.create();
+    private final TimeSaver timeSaver;
     private final long timeInterval;
     protected final boolean reset;
     protected final boolean trigger;
@@ -45,13 +45,15 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
 
     public OverTimeFilter(InstrumentMessageSource source, RecordClassDescriptor[] inputTypes,
                           RecordClassDescriptor[] outputTypes, ReadableValue[] params, DXTickDB db,
-                          long timeInterval, boolean reset, boolean trigger, boolean every, boolean running) {
+                          long timeInterval, boolean reset, boolean trigger, boolean every, boolean running,
+                          boolean forward) {
         super(source, inputTypes, outputTypes, params, db);
         this.timeInterval = timeInterval;
         this.reset = reset;
         this.trigger = trigger;
         this.every = every;
         this.running = running;
+        this.timeSaver = forward ? PrettyTimeSaver.create() : ReversePrettyTimeSaver.create();
     }
 
     @Override

@@ -470,7 +470,7 @@ public class DBMgr {
                 new NonStaticDataField("low", "Low", new FloatDataType(priceEncoding, true), "close"),
                 new NonStaticDataField("volume", "Volume", new FloatDataType(priceEncoding, true))
         };
-        options.setFixedType(new RecordClassDescriptor(SimpleBarMessage.class.getName(), "Sample Bar Message", false, null, fields));
+        options.setFixedType(new RecordClassDescriptor("com.epam.deltix.timebase.messages.BarMessage", "Sample Bar Message", false, null, fields));
 
         DXTickStream stream = tdb.createStream(name, options);
 

@@ -186,7 +186,7 @@ class FilterGenerator {
             OverTimeExpression over = (OverTimeExpression) f.getOver();
             msic.callParent(src, inTypesArg, outTypesArg, paramsArg, dbArg, CTXT.longLiteral(over.getTimeInterval().getNanoTime()),
                     CTXT.booleanLiteral(over.isReset()), CTXT.booleanLiteral(over.isTrigger()),
-                    CTXT.booleanLiteral(over.isEvery()), CTXT.booleanLiteral(f.isRunning()));
+                    CTXT.booleanLiteral(over.isEvery()), CTXT.booleanLiteral(f.isRunning()), CTXT.booleanLiteral(f.isForward()));
         } else if (f.isOverCount()) {
             OverCountExpression over = (OverCountExpression) f.getOver();
             msic.callParent(src, inTypesArg, outTypesArg, paramsArg, dbArg, CTXT.intLiteral(over.getCount()),

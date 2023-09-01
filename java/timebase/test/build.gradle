@@ -16,7 +16,7 @@ dependencies {
     implementation 'io.github.resilience4j:resilience4j-ratelimiter:1.3.1' // for TestLoader
     implementation 'junit:junit'
 
-    implementation 'commons-net:commons-net:3.0.1'
+    implementation 'commons-net:commons-net'
     implementation 'commons-io:commons-io'
     implementation 'org.apache.commons:commons-lang3'
 

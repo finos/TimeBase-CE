@@ -1,5 +1,6 @@
+<!--
 /*
- * Copyright 2021 EPAM Systems, Inc
+ * Copyright 2023 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -14,7 +15,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+-->
+
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@include file="/WEB-INF/jsp/common/taglibs.jsp"%>
 
 <nav class="navbar navbar-inverse navbar-fixed-top">

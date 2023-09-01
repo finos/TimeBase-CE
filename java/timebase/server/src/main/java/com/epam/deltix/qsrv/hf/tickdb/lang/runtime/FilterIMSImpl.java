@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems, Inc
+ * Copyright 2023 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -78,7 +78,7 @@ public abstract class FilterIMSImpl
     private boolean groupByWarningSent;
     private long firstMessageTimestamp = Long.MIN_VALUE;
 
-    protected long processedMessages;
+    protected long aggregatedMessages;
     
     protected FilterIMSImpl (
         InstrumentMessageSource             source,
@@ -281,7 +281,7 @@ public abstract class FilterIMSImpl
             return true;
         }
 
-        processedMessages = 0;
+        aggregatedMessages = 0;
         for (;;) {
             if ((lastState == null || !lastState.waitingByTime) && !hasWaitingMessages()) {
                 if (!source.next()) {
@@ -292,11 +292,6 @@ public abstract class FilterIMSImpl
 
             int s = getStateAndProcess();
             s = applyLimit(s);
-
-            if (s != ABORT) {
-                processedMessages++;
-            }
-            
             switch (s) {
                 case ABORT:     return (false);
                 case ACCEPT:    return (true);

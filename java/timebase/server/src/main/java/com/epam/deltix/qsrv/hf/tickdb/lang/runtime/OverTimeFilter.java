@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems, Inc
+ * Copyright 2023 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -91,7 +91,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
             lastStates = getStates();
         }
         //
-        if (processedMessages > 0) {
+        if (aggregatedMessages > 0) {
             while (lastStates != null && nextLast()) {
                 switch (applyLimit(ACCEPT)) {
                     case ABORT:
@@ -116,6 +116,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
             initialized = true;
             state.initializedOnInterval = true;
             state.initialized = true;
+            aggregatedMessages++;
             return running ? result: REJECT;
         }
     }
@@ -161,6 +162,9 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
             if (!state.initialized) {
                 state.initialized = true;
             }
+        }
+        if (result == ACCEPT) {
+            aggregatedMessages++;
         }
         if (result == ABORT) {
             return ABORT;

@@ -397,3 +397,42 @@ test select max{}(decimalField), min{}(decimalField) from reverse("1min-1h-1h-3"
 8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:00:00.000Z","MAX{}(decimalField)":"771.1522197868567","MIN{}(decimalField)":"67.87790057744914"}
 9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T10:00:00.000Z","MAX{}(decimalField)":"789.0105353473393","MIN{}(decimalField)":"104.3192243457408"}
 !end
+test select boolField, byteField from "1min-1h-1h-3" over time(10m) where byteField > 110
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:30:00.000Z","boolField":true,"byteField":115}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:50:00.000Z","boolField":false,"byteField":126}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T03:20:00.000Z","boolField":true,"byteField":125}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T03:30:00.000Z","boolField":false,"byteField":117}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T03:50:00.000Z","boolField":true,"byteField":114}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T05:20:00.000Z","boolField":true,"byteField":122}
+6: {"$type":"","symbol":"S3","timestamp":"2021-04-19T05:40:00.000Z","boolField":true,"byteField":116}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T07:50:00.000Z","boolField":false,"byteField":125}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T08:10:00.000Z","boolField":false,"byteField":111}
+9: {"$type":"","symbol":"S2","timestamp":"2021-04-19T09:30:00.000Z","boolField":true,"byteField":125}
+!end
+test select boolField, byteField from "1min-1h-1h-3" over time(10m) where timestamp > '2021-04-19 10:00:00.000'd and byteField > 110
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:20:00.000Z","boolField":true,"byteField":127}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:30:00.000Z","boolField":true,"byteField":125}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:00:00.000Z","boolField":false,"byteField":117}
+3: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:10:00.000Z","boolField":true,"byteField":123}
+!end
+test select boolField, byteField from reverse("1min-1h-1h-3") over time(10m) where byteField > 110
+0: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:00:00.000Z","boolField":true,"byteField":123}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:50:00.000Z","boolField":false,"byteField":117}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:20:00.000Z","boolField":true,"byteField":125}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:10:00.000Z","boolField":true,"byteField":127}
+4: {"$type":"","symbol":"S3","timestamp":"2021-04-19T09:50:00.000Z","boolField":false,"byteField":113}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T09:40:00.000Z","boolField":false,"byteField":115}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T09:20:00.000Z","boolField":true,"byteField":127}
+7: {"$type":"","symbol":"S3","timestamp":"2021-04-19T08:00:00.000Z","boolField":false,"byteField":111}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T07:40:00.000Z","boolField":false,"byteField":123}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T05:30:00.000Z","boolField":false,"byteField":116}
+!end
+test select boolField, byteField from reverse("1min-1h-1h-3") over time(10m) where timestamp < '2021-04-19 05:10:00.000'd and byteField > 110
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T03:40:00.000Z","boolField":false,"byteField":118}
+1: {"$type":"","symbol":"S3","timestamp":"2021-04-19T03:20:00.000Z","boolField":true,"byteField":116}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T03:10:00.000Z","boolField":true,"byteField":125}
+3: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:40:00.000Z","boolField":false,"byteField":115}
+4: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:20:00.000Z","boolField":true,"byteField":115}
+!end
+test select boolField, byteField from reverse("1min-1h-1h-3") over time(10m) where timestamp > '2021-04-10 05:10:00.000'd and timestamp < '2021-04-12 05:10:00.000'd
+!end

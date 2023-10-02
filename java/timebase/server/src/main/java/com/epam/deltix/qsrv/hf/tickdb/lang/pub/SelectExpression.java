@@ -27,6 +27,8 @@ public final class SelectExpression extends ComplexExpression {
     public static final int MODE_RUNNING = 1 << 1;
     public static final int MODE_TOTAL = 1 << 2;
 
+    private static final int EXPRESSIONS_COUNT = 4;
+
     private final int mode;
     public final TypeIdentifier typeId;
     public final Expression[] groupBy;
@@ -35,23 +37,24 @@ public final class SelectExpression extends ComplexExpression {
     private LimitExpression limit;
     private long endTime = Long.MIN_VALUE;
 
-    private static Expression[] cat(Expression source, Expression filter, ArrayJoin arrayJoin, Expression... selectors) {
+    private static Expression[] cat(Expression source, Expression filter, Expression having, ArrayJoin arrayJoin, Expression... selectors) {
         int n = selectors == null ? 0 : selectors.length;
-        Expression[] a = new Expression[n + 3];
+        Expression[] a = new Expression[n + EXPRESSIONS_COUNT];
 
         a[0] = source;
         a[1] = filter;
-        a[2] = arrayJoin;
+        a[2] = having;
+        a[3] = arrayJoin;
 
         if (n != 0)
-            System.arraycopy(selectors, 0, a, 3, n);
+            System.arraycopy(selectors, 0, a, EXPRESSIONS_COUNT, n);
 
         return (a);
     }
 
-    public SelectExpression(long location, Expression source, ArrayJoin arrayJoin, Expression filter, TypeIdentifier typeId, int mode,
+    public SelectExpression(long location, Expression source, ArrayJoin arrayJoin, Expression filter, Expression having, TypeIdentifier typeId, int mode,
                             Expression[] groupBy, OverExpression overExpression, LimitExpression limit, Expression... selectors) {
-        super(location, cat(source, filter, arrayJoin, selectors));
+        super(location, cat(source, filter, having, arrayJoin, selectors));
         this.mode = mode;
         this.typeId = typeId;
         this.groupBy = groupBy;
@@ -59,10 +62,10 @@ public final class SelectExpression extends ComplexExpression {
         this.limit = limit;
     }
 
-    public SelectExpression(Expression source, ArrayJoin arrayJoin, Expression filter, TypeIdentifier typeId, int mode, Expression[] groupBy,
+    public SelectExpression(Expression source, ArrayJoin arrayJoin, Expression filter, Expression having, TypeIdentifier typeId, int mode, Expression[] groupBy,
                             OverExpression overExpression, LimitExpression limit, Expression... selectors
     ) {
-        this(NO_LOCATION, source, arrayJoin, filter, typeId, mode, groupBy, overExpression, limit, selectors);
+        this(NO_LOCATION, source, arrayJoin, filter, having, typeId, mode, groupBy, overExpression, limit, selectors);
     }
 
     public boolean isDistinct() {
@@ -77,16 +80,12 @@ public final class SelectExpression extends ComplexExpression {
         return ((mode & MODE_TOTAL) != 0);
     }
 
-    public boolean isSelectAll() {
-        return (args.length == 3);
-    }
-
     public Expression[] getSelectors() {
-        int n = args.length - 3;
+        int n = args.length - EXPRESSIONS_COUNT;
 
         Expression[] a = new Expression[n];
 
-        System.arraycopy(args, 3, a, 0, n);
+        System.arraycopy(args, EXPRESSIONS_COUNT, a, 0, n);
 
         return (a);
     }
@@ -99,8 +98,12 @@ public final class SelectExpression extends ComplexExpression {
         return (args[1]);
     }
 
+    public Expression getHaving() {
+        return (args[2]);
+    }
+
     public ArrayJoin getArrayJoin() {
-        return (ArrayJoin) (args[2]);
+        return (ArrayJoin) (args[3]);
     }
 
     @Override
@@ -124,7 +127,7 @@ public final class SelectExpression extends ComplexExpression {
         if (isRunning())
             s.append("RUNNING ");
 
-        printCommaSepArgs(3, args.length, s);
+        printCommaSepArgs(EXPRESSIONS_COUNT, args.length, s);
 
         if (typeId != null) {
             s.append(" TYPE ");
@@ -153,6 +156,11 @@ public final class SelectExpression extends ComplexExpression {
                 s.append(", ");
                 groupBy[ii].print(s);
             }
+        }
+
+        if (getHaving() != null) {
+            s.append(" HAVING ");
+            getHaving().print(OpPriority.QUERY, s);
         }
 
         if (limit != null) {

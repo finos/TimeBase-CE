@@ -23,7 +23,6 @@ import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.messages.QueryStatus;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.InstancePool;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
@@ -67,15 +66,14 @@ public abstract class FilterIMSImpl
     protected final StringBuilderPool varcharPool = new StringBuilderPool();
     protected final InstancePool instancePool = new InstancePool();
 
-    private FilterState lastState;
+    protected FilterState lastState;
     private int waitingMessagesCount;
     private int currentWaitingMessage;
     private long offset = Long.MIN_VALUE;
     private long limit = Long.MIN_VALUE;
 
     private final QueryStatusMessageProvider queryStatusMessageProvider;
-    private RawMessage queryStatusMessage;
-    private boolean groupByWarningSent;
+    private RawMessage statusMessage;
     private long firstMessageTimestamp = Long.MIN_VALUE;
 
     protected long aggregatedMessages;
@@ -220,12 +218,12 @@ public abstract class FilterIMSImpl
      */
     protected boolean                   nextAggregated () {
         try {
+            if (nextStatusMessage()) {
+                return true;
+            }
+
             if (aggregateEnum == null) {
                 for (;;) {
-                    if (hasPendingQueryStatus()) {
-                        return true;
-                    }
-
                     if (!hasWaitingMessages()) {
                         if (!source.next()) {
                             break;
@@ -257,7 +255,7 @@ public abstract class FilterIMSImpl
 
                 FilterState state = aggregateEnum.nextElement();
 
-                if (state.accepted) {
+                if (state.accepted && state.havingAccepted) {
                     int status = applyLimit(ACCEPT);
                     if (status == REJECT) {
                         continue;
@@ -277,7 +275,7 @@ public abstract class FilterIMSImpl
 
     @Override
     public boolean                      next () {
-        if (hasPendingQueryStatus()) {
+        if (nextStatusMessage()) {
             return true;
         }
 
@@ -302,11 +300,15 @@ public abstract class FilterIMSImpl
     protected int getStateAndProcess() {
         final RawMessage inMsg = (RawMessage) source.getMessage();
         final FilterState state = lastState = getState(inMsg);
-        prepareGroupByWarning(state);
+        prepareStatusMessage(inMsg, state);
         final int status = accept(inMsg, state);
 
+        if (!lastState.havingAccepted) {
+            return REJECT;
+        }
+
         if (status == ACCEPT) {
-            state.accepted = true;
+            lastState.accepted = true;
         }
 
         return (status);
@@ -371,19 +373,22 @@ public abstract class FilterIMSImpl
         return state;
     }
 
-    protected void prepareGroupByWarning(FilterState state) {
-        if (!groupByWarningSent && state != null && state.warningMessage != null) {
-            groupByWarningSent = true;
-            queryStatusMessage = queryStatusMessageProvider.prepareQueryStatusMessage(
-                QueryStatus.WARNING, lastState.warningMessage
+    protected void prepareStatusMessage(RawMessage inMsg, FilterState state) {
+        if (state != null && state.hasStatusMessage()) {
+            statusMessage = queryStatusMessageProvider.prepareQueryStatusMessage(
+                inMsg.getTimeStampMs(), state.getStatus(), state.getStatusMessage()
             );
+            state.clearStatusMessage();
         }
     }
 
-    protected boolean hasPendingQueryStatus() {
-        if (queryStatusMessage != null) {
-            outMsg = queryStatusMessage;
-            queryStatusMessage = null;
+    protected boolean nextStatusMessage() {
+        if (statusMessage != null) {
+            if (outMsg != null) {
+                statusMessage.setNanoTime(outMsg.getNanoTime());
+            }
+            outMsg = statusMessage;
+            statusMessage = null;
             return true;
         }
 

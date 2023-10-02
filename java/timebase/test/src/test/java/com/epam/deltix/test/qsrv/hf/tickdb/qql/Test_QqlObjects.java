@@ -408,6 +408,9 @@ public class Test_QqlObjects extends TDBRunnerBase {
             QUERY("select running entry, num, count{}() from packages " +
                     "array join entries as entry, enumerate(entries) as num"),
 
+            QUERY_RAW("select count{}() from packages array join entries"),
+            QUERY_RAW("select count{}() from packages array join [1, 2, 3, 4, 5]"),
+            QUERY_RAW("select running count{}() from packages array join entries")
     };
 
     private static Pair<String, MappingInfo>[] QQL_ALL_GROUP_BY = new Pair[] {
@@ -433,6 +436,7 @@ public class Test_QqlObjects extends TDBRunnerBase {
             QUERY("select max{}(decimalField), min{}(decimalField), count{}() from alltypesrand over time(5m) group by symbol"),
             QUERY("select max{}(decimalField), min{}(decimalField), boolNullableField, count{}() from alltypesrand over every time(20m) group by boolNullableField, symbol"),
             QUERY("select max{}(decimalField), min{}(decimalField), boolNullableField, byteField, count{}() from alltypesrand over time(20m) group by boolNullableField, byteField"),
+            QUERY_RAW("select count{}() from kraken group by timestamp")
     };
 
     private static Pair<String, MappingInfo>[] QQL_ALL_MISC = new Pair[] {
@@ -829,6 +833,19 @@ public class Test_QqlObjects extends TDBRunnerBase {
                     "limit 10 offset 30")
     };
 
+    private static Pair<String, MappingInfo>[] QQL_ALL_DASHBOARD = new Pair[] {
+//        QUERY_RAW("select s.key as 'key', s.description as 'description',  s.topTypes.name as 'topTypes' array join streams() as 's'"),
+            QUERY_RAW("select size(streams())"),
+//        QUERY_RAW("select f.id as 'function', " +
+//            "f.initArguments.name as 'initArgs', f.initArguments.dataType.baseName as 'initArgTypes', " +
+//            "f.arguments.dataType.baseName as 'argTypes'" +
+//            "array join stateful_functions() as f"),
+//        QUERY_RAW("select f.id as 'function', f.arguments.dataType.baseName as 'argTypes' array join stateless_functions() as f"),
+            QUERY_RAW("select t.name as 'typeName' array join streams()[this.key == 'KRAKEN'].topTypes as 't'"),
+            QUERY_RAW("select \"field\".name, \"field\".\"type\".baseName as 'fieldType', \"field\".\"type\".encoding as 'encoding' " +
+                    "array join streams()[this.key == 'KRAKEN'].topTypes.fields as 'field'"),
+    };
+
 
     public static Pair<String, MappingInfo> QUERY(String qql) {
         return QUERY(qql, null);
@@ -1008,6 +1025,21 @@ public class Test_QqlObjects extends TDBRunnerBase {
         } else {
             Assert.assertTrue(
                     qql(db, QQL_ALL_UNIONS, readExpectedResults(Home.getPath(EXPECTED_PATH + "unions.txt")))
+            );
+        }
+    }
+
+    @Test
+    public void Test_Dashboard() throws Exception {
+        if (!remote) {
+            throw new RuntimeException("Test is available only in remote mode: use -Drunner.remote=true");
+        }
+
+        if (GENERATE_EXPECTED) {
+            qqlWriteExpected(db, QQL_ALL_DASHBOARD, Home.getPath(EXPECTED_GENERATE_PATH + "dashboards.txt"));
+        } else {
+            Assert.assertTrue(
+                    qql(db, QQL_ALL_DASHBOARD, readExpectedResults(Home.getPath(EXPECTED_PATH + "dashboards.txt")))
             );
         }
     }
@@ -1430,7 +1462,6 @@ public class Test_QqlObjects extends TDBRunnerBase {
                 ExecutedLimitOrderInfoA infoA = new ExecutedLimitOrderInfoA();
                 infoA.setTimeStampMs(dateTime.toEpochSecond(ZoneOffset.UTC));
                 infoA.setSymbol("AAAA");
-                //infoA.setInstrumentType(InstrumentType.FX);
                 infoA.setAvgPrice(1.111f * i);
                 infoA.setTotalQuantity(2.222f * i);
                 infoA.setCustomInfo(3.333f * i);
@@ -1571,7 +1602,7 @@ public class Test_QqlObjects extends TDBRunnerBase {
                     "    )\n" +
                     "        AUXILIARY\n" +
                     "        NOT INSTANTIABLE;\n" +
-                    "    CLASS \"BarMessageExtended\" UNDER \"deltix.timebase.api.messages.MarketMessage\" (\n" +
+                    "    CLASS \"com.epam.deltix.test.qsrv.hf.tickdb.qql.messages.BarMessageExtended\" UNDER \"deltix.timebase.api.messages.MarketMessage\" (\n" +
                     "        \"exchangeId\" 'Exchange Code' VARCHAR ALPHANUMERIC (10),\n" +
                     "        \"close\" 'Close' FLOAT DECIMAL,\n" +
                     "        \"open\" 'Open' FLOAT DECIMAL RELATIVE TO \"close\",\n" +
@@ -1591,7 +1622,7 @@ public class Test_QqlObjects extends TDBRunnerBase {
         stream.truncate(Long.MIN_VALUE);
 
         LoadingOptions options = new LoadingOptions();
-        options.typeLoader = TypeLoader.TYPE_LOADER;
+        options.typeLoader = QQLTypeLoader.createTypeLoader();
         try (TickLoader loader = stream.createLoader(options)) {
             LocalDateTime dateTime = LocalDateTime.of(2021, 1, 1, 9, 0);
             for (int i = 0; i < 20; ++i) {
@@ -2056,7 +2087,7 @@ public class Test_QqlObjects extends TDBRunnerBase {
         else
             sb.append (msg.getTimeString());
 
-        MemoryDataInput in = new MemoryDataInput(msg.data, msg.offset, msg.length);
+        MemoryDataInput in = new MemoryDataInput (msg.data, msg.offset, msg.length);
         UnboundDecoder decoder =
                 InterpretingCodecMetaFactory.INSTANCE.createFixedUnboundDecoderFactory (msg.type).create ();
 

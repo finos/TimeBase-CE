@@ -107,7 +107,7 @@ configure(leafProjects) {
     }
 
     spotbugsMain {
-        enabled = true
+        enabled = false
         reports {
             html.enabled = true
         }

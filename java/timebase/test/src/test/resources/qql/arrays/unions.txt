@@ -81,10 +81,10 @@ Running QQL: select BinancePackageHeader:entries as e1, KrakenPackageHeader:entr
 {"$type":"QUERY57889666744382022","symbol":"ETH/USDT","timestamp":"2023-01-25T12:00:00.016Z","E1":[{"$type":"deltix.qsrv.hf.plugins.data.binance.types.BinanceTradeEntry","exchangeId":"BINANCE","buyerOrderId":"12277448534","matchId":"1063700763","price":"1545.49","sellerOrderId":"12277447881","size":"0.0308","isMarketMaker":false}]}
 !END
 Running QQL: select l2.level, count{}() from (binance union bitfinex union kraken) array join this.entries[this is L2EntryNew] as l2 where symbol == 'BTC/USD' and l2.level < 5 group by l2.level
-{"$type":"QUERY-447417430019097113","symbol":"BTC/USD","timestamp":"2023-01-25T12:00:27.359Z","L2.level":3,"COUNT{}()":17}
-{"$type":"QUERY-447417430019097113","symbol":"BTC/USD","timestamp":"2023-01-25T12:00:29.836Z","L2.level":2,"COUNT{}()":25}
-{"$type":"QUERY-447417430019097113","symbol":"BTC/USD","timestamp":"2023-01-25T12:00:27.359Z","L2.level":1,"COUNT{}()":27}
 {"$type":"QUERY-447417430019097113","symbol":"BTC/USD","timestamp":"2023-01-25T12:00:27.359Z","L2.level":0,"COUNT{}()":13}
+{"$type":"QUERY-447417430019097113","symbol":"BTC/USD","timestamp":"2023-01-25T12:00:27.359Z","L2.level":1,"COUNT{}()":27}
+{"$type":"QUERY-447417430019097113","symbol":"BTC/USD","timestamp":"2023-01-25T12:00:29.836Z","L2.level":2,"COUNT{}()":25}
+{"$type":"QUERY-447417430019097113","symbol":"BTC/USD","timestamp":"2023-01-25T12:00:27.359Z","L2.level":3,"COUNT{}()":17}
 {"$type":"QUERY-447417430019097113","symbol":"BTC/USD","timestamp":"2023-01-25T12:00:27.359Z","L2.level":4,"COUNT{}()":15}
 !END
 Running QQL: with this.entries[this is L1Entry] as array(L1Entry) as bbo select bbo_entry type t from (binance union bitfinex) array join bbo as bbo_entry limit 10 offset 20 union with this.entries[this is L1Entry] as array(L1Entry) as bbo select bbo[0] as bbo_entry type t from kraken where size(bbo) > 0 limit 10 offset 30

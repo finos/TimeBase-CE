@@ -111,6 +111,7 @@ CharLiteral =                       \'(([^\n\r\'\\]) | (\\\') | (\\\") | (\\\\) 
     "select"                        { return symbol (Symbols.SELECT); }
     "record"                        { return symbol (Symbols.RECORD); }
     "where"                         { return symbol (Symbols.WHERE); }
+    "having"                        { return symbol (Symbols.HAVING); }
     "from"                          { return symbol (Symbols.FROM); }
     "and"                           { return symbol (Symbols.AND); }
     "or"                            { return symbol (Symbols.OR); }

@@ -280,3 +280,31 @@ DLTX,2021-01-01 09:00:00.000,ENTRY:OBJECT,NUM:5,COUNT{}():18
 DLTX,2021-01-01 09:00:00.000,ENTRY:OBJECT,NUM:6,COUNT{}():19
 DLTX,2021-01-01 09:00:00.000,ENTRY:OBJECT,NUM:7,COUNT{}():20
 !END
+Running QQL: select count{}() from packages array join entries
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":90}
+!END
+Running QQL: select count{}() from packages array join [1, 2, 3, 4, 5]
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":50}
+!END
+Running QQL: select running count{}() from packages array join entries
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":2}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":3}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":4}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":5}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":6}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":7}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":8}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":9}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":10}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":11}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":12}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":13}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":14}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":15}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":16}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":17}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":18}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":19}
+{"$type":"QUERY57078545288857212","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","COUNT{}()":20}
+!END

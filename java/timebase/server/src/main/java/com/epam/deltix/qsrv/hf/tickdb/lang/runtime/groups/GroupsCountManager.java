@@ -24,7 +24,16 @@ public class GroupsCountManager {
     private static final Log LOGGER = LogFactory.getLog(GroupsCountManager.class);
 
     static final int QQL_MAX_GROUPS_COUNT = Integer.getInteger("TimeBase.qql.maxGroupsCount", 1_000_000);
-    static final int MAX_GROUPS_CHECK_STEP = (int) (0.05f * (float) QQL_MAX_GROUPS_COUNT);
+    static final int MAX_GROUPS_CHECK_STEP = getFractionFromMaxGroupsCount(0.05f);
+
+    static int getFractionFromMaxGroupsCount(float fraction) {
+        int result = (int) (fraction * (float) QQL_MAX_GROUPS_COUNT);
+        if (result <= 0) {
+            return QQL_MAX_GROUPS_COUNT;
+        }
+
+        return result;
+    }
 
     private boolean groupsCountExceeds;
     private boolean freeMemoryExceeds;

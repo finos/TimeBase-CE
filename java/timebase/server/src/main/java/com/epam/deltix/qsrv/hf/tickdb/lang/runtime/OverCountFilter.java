@@ -44,7 +44,7 @@ public abstract class OverCountFilter extends FilterIMSImpl {
 
     @Override
     public boolean next() {
-        if (hasPendingQueryStatus()) {
+        if (nextStatusMessage()) {
             return true;
         }
 
@@ -55,7 +55,7 @@ public abstract class OverCountFilter extends FilterIMSImpl {
         if (lastStates != null) {
             while (lastStates.hasMoreElements()) {
                 FilterState state = lastStates.nextElement();
-                if (state.messagesCount > 0) {
+                if (state.messagesCount > 0 && state.havingAccepted) {
                     outMsg = state.getLastMessage();
                     switch (applyLimit(ACCEPT)) {
                         case ACCEPT:
@@ -77,8 +77,9 @@ public abstract class OverCountFilter extends FilterIMSImpl {
             return status;
         }
 
-        if (status == ACCEPT)
+        if (status == ACCEPT) {
             state.messagesCount++;
+        }
         if (state.messagesCount == countInterval) {
             state.messagesCount = 0;
             outMsg = state.getLastMessage();

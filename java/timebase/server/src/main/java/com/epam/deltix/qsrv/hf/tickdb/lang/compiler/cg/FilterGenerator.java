@@ -113,6 +113,7 @@ class FilterGenerator {
     private JMethodArgument             startTime;
     private JMethodArgument             startNanoTime;
     private QValue                      conditionValue;
+    private QValue                      havingValue;
 
     public FilterGenerator (CompiledFilter f) {
         this.compFilter = f;
@@ -148,6 +149,7 @@ class FilterGenerator {
 
         // collect expressions
         CompiledExpression              condition = compFilter.condition;
+        CompiledExpression              having = compFilter.having;
         TupleConstructor                selector = compFilter.selector;
         boolean                         aggregate = compFilter.aggregate;
 
@@ -155,13 +157,19 @@ class FilterGenerator {
         if (condition != null) {
             allExpressions.add(condition);
         }
+        if (having != null) {
+            allExpressions.add(having);
+        }
         if (selector != null) {
             allExpressions.addAll(Arrays.asList(selector.getNonStaticInitializers()));
             allExpressions.addAll(selector.typeToCondition.values().stream()
-                    .filter(Objects::nonNull).collect(Collectors.toList()));
+                .filter(Objects::nonNull).collect(Collectors.toList()));
         }
         if (groupByExpressions != null) {
             allExpressions.addAll(Arrays.asList(groupByExpressions));
+        }
+        if (compFilter.compiledArrayJoins != null) {
+            allExpressions.addAll(compFilter.compiledArrayJoins);
         }
 
         outputTypes = compFilter.getConcreteOutputTypes ();
@@ -186,7 +194,8 @@ class FilterGenerator {
             OverTimeExpression over = (OverTimeExpression) f.getOver();
             msic.callParent(src, inTypesArg, outTypesArg, paramsArg, dbArg, CTXT.longLiteral(over.getTimeInterval().getNanoTime()),
                     CTXT.booleanLiteral(over.isReset()), CTXT.booleanLiteral(over.isTrigger()),
-                    CTXT.booleanLiteral(over.isEvery()), CTXT.booleanLiteral(f.isRunning()), CTXT.booleanLiteral(f.isForward()));
+                    CTXT.booleanLiteral(over.isEvery()), CTXT.booleanLiteral(f.isRunning()),
+                    CTXT.booleanLiteral(f.isForward()));
         } else if (f.isOverCount()) {
             OverCountExpression over = (OverCountExpression) f.getOver();
             msic.callParent(src, inTypesArg, outTypesArg, paramsArg, dbArg, CTXT.intLiteral(over.getCount()),
@@ -211,19 +220,19 @@ class FilterGenerator {
 
         // override executeQuery()
         JMethod executeQueryMethod =
-                filterClass.addMethod (PUBLIC, InstrumentMessageSource.class, EXECUTEQUERY);
+            filterClass.addMethod (PUBLIC, InstrumentMessageSource.class, EXECUTEQUERY);
         JMethodArgument options =
-                executeQueryMethod.addArg (Modifier.FINAL, SelectionOptions.class, "options");
+            executeQueryMethod.addArg (Modifier.FINAL, SelectionOptions.class, "options");
         JMethodArgument params =
-                executeQueryMethod.addArg (Modifier.FINAL, ReadableValue [].class, "params");
+            executeQueryMethod.addArg (Modifier.FINAL, ReadableValue [].class, "params");
         executeQueryMethod.body ().add (
-                msiClass.newExpr (
-                        filterClass.inheritedVar (SOURCEQUERY).access ().call (EXECUTEQUERY, options, params),
-                        filterClass.inheritedVar (INTYPES).access (),
-                        filterClass.inheritedVar (OUTTYPES).access (),
-                        params,
-                        filterClass.inheritedVar(DB).access()
-                ).returnStmt ()
+            msiClass.newExpr (
+                filterClass.inheritedVar (SOURCEQUERY).access ().call (EXECUTEQUERY, options, params),
+                filterClass.inheritedVar (INTYPES).access (),
+                filterClass.inheritedVar (OUTTYPES).access (),
+                params,
+                filterClass.inheritedVar(DB).access()
+            ).returnStmt ()
         );
 
         // filter state provider implementation
@@ -249,8 +258,8 @@ class FilterGenerator {
 
         // InterimFilterState implementation class
         interimStateClass = filterClass.innerClass(
-                PUBLIC | FINAL | STATIC, "InterimState",
-                baseStateProviderClass == GroupByFilterStateProvider.class ? GroupByFilterState.class : FilterState.class
+            PUBLIC | FINAL | STATIC, "InterimState",
+            baseStateProviderClass == GroupByFilterStateProvider.class ? GroupByFilterState.class : FilterState.class
         );
         JConstructor interimStateConstructor = interimStateClass.addConstructor(PUBLIC);
         JMethodArgument interimStateConstructorArg = interimStateConstructor.addArg(0, FilterIMSImpl.class, "filter");
@@ -260,7 +269,7 @@ class FilterGenerator {
         interimStateConstructorClassLoader.body().add(CTXT.call("super", CTXT.nullLiteral()));
         JMethod getInterimStateMethod = msiClass.addMethod(PUBLIC, interimStateClass, "getInterimState");
         getInterimStateMethod.body().add(
-                CTXT.staticVarRef("this", "interimState").returnStmt()
+            CTXT.staticVarRef("this", "interimState").returnStmt()
         );
         if (baseStateProviderClass == GroupByFilterStateProvider.class) {
             JMethod newGroupByStateMethod = stateProviderClass.addMethod(PUBLIC, GroupByFilterState.class, "newGroupByState");
@@ -272,7 +281,7 @@ class FilterGenerator {
 
         // state variables
         JLocalVariable typedState = filterBody.addVar(
-                FINAL, stateClass, "state", inState.cast(stateClass)
+            FINAL, stateClass, "state", inState.cast(stateClass)
         );
         JExpr interimTypedState = CTXT.staticVarRef("this", "interimState");
 
@@ -281,7 +290,7 @@ class FilterGenerator {
         final JExpr outMsgInFilter;
         if (selector != null) {
             msgVar = generateVar(
-                    stateClass, RawMessage.class, "outMsg", classRegistry.getTypeRef(selector.getClassDescriptors()[0])
+                stateClass, RawMessage.class, "outMsg", classRegistry.getTypeRef(selector.getClassDescriptors()[0])
             );
             outMsgInFilter = msgVar.access(typedState);
         } else if (OverTimeFilter.class.isAssignableFrom(baseClass) || OverCountFilter.class.isAssignableFrom(baseClass)) {
@@ -321,16 +330,16 @@ class FilterGenerator {
 
         // call init method
         filterBody.add(
-                CTXT.ifStmt(
-                        CTXT.binExpr(
-                                CTXT.binExpr(typedState, "!=", CTXT.nullLiteral()),
-                                "&&",
-                                typedState.call(isInitialized.name()).not()
-                        ),
-                        CTXT.call(initMethod.name(),
-                                inMsg.call("getTimeStampMs"), inMsg.call("getNanoTime"), typedState
-                        ).asStmt()
-                )
+            CTXT.ifStmt(
+                CTXT.binExpr(
+                    CTXT.binExpr(typedState, "!=", CTXT.nullLiteral()),
+                    "&&",
+                    typedState.call(isInitialized.name()).not()
+                ),
+                CTXT.call(initMethod.name(),
+                    inMsg.call("getTimeStampMs"), inMsg.call("getNanoTime"), typedState
+                ).asStmt()
+            )
         );
 
         // recalculate join expressions flag
@@ -338,8 +347,8 @@ class FilterGenerator {
         // todo: support group by
         if (baseStateProviderClass != GroupByFilterStateProvider.class && hasArrayJoins(allExpressions)) {
             recalculateJoinCachesVar = filterBody.addVar(
-                    FINAL, boolean.class, "recalculateJoinCaches",
-                    CTXT.staticVarRef("this", "hasWaitingMessages()").not()
+                FINAL, boolean.class, "recalculateJoinCaches",
+                CTXT.staticVarRef("this", "hasWaitingMessages()").not()
             );
         }
 
@@ -375,6 +384,7 @@ class FilterGenerator {
         generateGroupBy(compFilter.groupBy, typedState, interimTypedState);
         generateJoinCachedValues(recalculateJoinCachesVar, condition, allExpressions);
         generateCondition(condition, filterBody);
+        generateArrayJoins(compFilter.compiledArrayJoins);
         generateEncodeNull(baseClass);
 
         // generate encoder code
@@ -448,7 +458,9 @@ class FilterGenerator {
             //  Override getLastMessage
             //
             JMethod         getLastMessage =
-                    stateClass.addMethod (Modifier.PROTECTED, RawMessage.class, "getLastMessage");
+                stateClass.addMethod (Modifier.PROTECTED, RawMessage.class, "getLastMessage");
+
+            generateHaving(having, filterBody);
 
             getLastMessage.body ().add (outMsgInState.returnStmt ());
         } else if (OverTimeFilter.class.isAssignableFrom(baseClass) || OverCountFilter.class.isAssignableFrom(baseClass)) {
@@ -464,6 +476,9 @@ class FilterGenerator {
             JExpr mdoAccess = mdoVar.access(typedState);
             JMethod getOut = stateClass.addMethod(PROTECTED, MemoryDataOutput.class, "getOut");
             getOut.addAnnotation(CTXT.annotation(Override.class));
+
+            generateHaving(having, filterBody);
+
             getOut.body().add(mdoVar.access().returnStmt());
             filterBody.add(mdoAccess.call("reset", CTXT.intLiteral(0)));
             filterBody.add(mdoAccess.call("write", inMsg.field("data"), inMsg.field("offset"), inMsg.field("length")));
@@ -472,6 +487,9 @@ class FilterGenerator {
             filterBody.add(outMsgInFilter.call("copyFrom", inMsg));
             JMethod getLastMessage = stateClass.addMethod(Modifier.PROTECTED, RawMessage.class, "getLastMessage");
             getLastMessage.addAnnotation(CTXT.annotation(Override.class));
+
+            generateHaving(having, filterBody);
+
             getLastMessage.body().add(msgVar.access().returnStmt());
         }
 
@@ -479,18 +497,18 @@ class FilterGenerator {
             // if (rms.alreadyContains (outmsg))
             //     return (false);
             JMemberVariable       rms =
-                    msiClass.addVar (
-                            PRIVATE | FINAL,
-                            RawMessageSet.class,
-                            "rms",
-                            CTXT.newExpr (RawMessageSet.class)
-                    );
+                msiClass.addVar (
+                    PRIVATE | FINAL,
+                    RawMessageSet.class,
+                    "rms",
+                    CTXT.newExpr (RawMessageSet.class)
+                );
 
             filterBody.add (
-                    CTXT.ifStmt (
-                            rms.access ().call ("alreadyContains", outMsgInFilter),
-                            returnReject
-                    )
+                CTXT.ifStmt (
+                    rms.access ().call ("alreadyContains", outMsgInFilter),
+                    returnReject
+                )
             );
         }
 
@@ -507,11 +525,11 @@ class FilterGenerator {
     private void initializeSelectLimits(SelectLimit limit) {
         if (limit != null) {
             filterBody.add(
-                    CTXT.call(
-                            "setLimit",
-                            CTXT.longLiteral(limit.getLimit()),
-                            CTXT.longLiteral(limit.getOffset())
-                    )
+                CTXT.call(
+                    "setLimit",
+                    CTXT.longLiteral(limit.getLimit()),
+                    CTXT.longLiteral(limit.getOffset())
+                )
             );
         }
     }
@@ -519,7 +537,7 @@ class FilterGenerator {
     private void clearPools(JLocalVariable recalculateCachesVar) {
         if (recalculateCachesVar != null) {
             filterBody.add(
-                    CTXT.ifStmt(recalculateCachesVar, CTXT.call("clearPools").asStmt())
+                CTXT.ifStmt(recalculateCachesVar, CTXT.call("clearPools").asStmt())
             );
         } else {
             filterBody.add(CTXT.call("clearPools"));
@@ -528,9 +546,9 @@ class FilterGenerator {
 
     private JInitMemberVariable generateVar(JClass jClass, Class<?> type, String name, JExpr... args) {
         return jClass.addVar(
-                Modifier.PRIVATE | Modifier.FINAL,
-                type, name,
-                CTXT.newExpr(type, args)
+            Modifier.PRIVATE | Modifier.FINAL,
+            type, name,
+            CTXT.newExpr(type, args)
         );
     }
 
@@ -552,13 +570,13 @@ class FilterGenerator {
     private void generateGroupBy(GroupBySpec groupBySpec, JLocalVariable typedState, JExpr interimTypedState) {
         if (groupBySpec instanceof GroupByExpressions) {
             new GroupByStateGenerator(classRegistry, evalGenerator)
-                    .generate((GroupByExpressions) groupBySpec, interimStateClass, interimTypedState);
+                .generate((GroupByExpressions) groupBySpec, interimStateClass, interimTypedState);
 
             evalGenerator.addTo.add(
-                    CTXT.ifStmt(
-                            CTXT.binExpr(typedState, "==", CTXT.nullLiteral()),
-                            CTXT.intLiteral(0).returnStmt()
-                    )
+                CTXT.ifStmt(
+                    CTXT.binExpr(typedState, "==", CTXT.nullLiteral()),
+                    CTXT.intLiteral(0).returnStmt()
+                )
             );
         }
     }
@@ -567,11 +585,31 @@ class FilterGenerator {
         if (condition != null && conditionValue == null) {
             conditionValue = evalGenerator.genEval(condition);
             addTo.add(
-                    CTXT.ifStmt(
-                            QBooleanType.nullableToClean(conditionValue.read()).not(),
-                            returnReject
-                    )
+                CTXT.ifStmt(
+                    QBooleanType.nullableToClean(conditionValue.read()).not(),
+                    returnReject
+                )
             );
+        }
+    }
+
+    private void generateHaving(CompiledExpression having, JCompoundStatement addTo) {
+        if (having != null && havingValue == null) {
+            havingValue = evalGenerator.genEval(having);
+            addTo.add(
+                inState.call(
+                    "setHavingAccepted",
+                    QBooleanType.nullableToClean(havingValue.read())
+                )
+            );
+        }
+    }
+
+    private void generateArrayJoins(List<CompiledExpression> arrayJoins) {
+        if (arrayJoins != null) {
+            for (CompiledExpression arrayJoin : arrayJoins) {
+                evalGenerator.genEval(arrayJoin);
+            }
         }
     }
 
@@ -634,25 +672,25 @@ class FilterGenerator {
 
         // outputTypeId for non-record selectors
         JLocalVariable outputTypeId = selector.typeToCondition.size() > 0 ? null :
-                addTo.addVar(0, int.class, "outputTypeId", filterClass.callSuperMethod("getInputTypeIndex"));
+            addTo.addVar(0, int.class, "outputTypeId", filterClass.callSuperMethod("getInputTypeIndex"));
         typeToQValue.forEach((type, values) -> {
             if (outputTypeId != null) {
                 cond.add(
-                        CTXT.binExpr(
-                                outputTypeId,
-                                "==",
-                                CTXT.intLiteral(classRegistry.typeIndex(type))
-                        )
+                    CTXT.binExpr(
+                        outputTypeId,
+                        "==",
+                        CTXT.intLiteral(classRegistry.typeIndex(type))
+                    )
                 );
             } else {
                 CompiledExpression<?> condition = selector.typeToCondition.get(type);
                 if (condition != null) {
                     cond.add(
-                            CTXT.binExpr(
-                                    evalGenerator.genEval(condition).read(),
-                                    "==",
-                                    CTXT.intLiteral(1).cast(byte.class)
-                            )
+                        CTXT.binExpr(
+                            evalGenerator.genEval(condition).read(),
+                            "==",
+                            CTXT.intLiteral(1).cast(byte.class)
+                        )
                     );
                 } else {
                     return;
@@ -758,10 +796,10 @@ class FilterGenerator {
         //  across new groups. Otherwise, we can simply abort after first.
         //
         JStatement      actionAfterFirst =
-                compFilter.groupBy == null ? returnAbort : returnReject;
+            compFilter.groupBy == null ? returnAbort : returnReject;
 
         filterBody.add (
-                CTXT.ifStmt (inState.call ("isAccepted"), actionAfterFirst)
+            CTXT.ifStmt (inState.call ("isAccepted"), actionAfterFirst)
         );
     }
 
@@ -791,25 +829,25 @@ class FilterGenerator {
 
         if (startLimit != null) {
             JMethod         adj =
-                    msiClass.addMethod (Modifier.PROTECTED, long.class, "adjustResetPoint");
+                msiClass.addMethod (Modifier.PROTECTED, long.class, "adjustResetPoint");
 
             JMethodArgument timeArg =
-                    adj.addArg (Modifier.FINAL, long.class, "time");
+                adj.addArg (Modifier.FINAL, long.class, "time");
 
             JExpr           inRange =
-                    CTXT.binExpr (timeArg, op, startLimit);
+                CTXT.binExpr (timeArg, op, startLimit);
 
             adj.body ().add (
-                    CTXT.condExpr (inRange, timeArg, startLimit).returnStmt ()
+                CTXT.condExpr (inRange, timeArg, startLimit).returnStmt ()
             );
         }
 
         if (endLimit != null)
             filterBody.add (
-                    CTXT.ifStmt (
-                            CTXT.binExpr (inMsg.call ("getTimeStampMs"), op, endLimit),
-                            returnAbort
-                    )
+                CTXT.ifStmt (
+                        CTXT.binExpr (inMsg.call ("getTimeStampMs"), op, endLimit),
+                        returnAbort
+                )
             );
     }
 
@@ -821,11 +859,11 @@ class FilterGenerator {
 
         JMethod adj = msiClass.addMethod(Modifier.PROTECTED, String[].class, "symbolsToAdjust");
         adj.body().add(
-                CTXT.newArrayExpr(
-                        String.class,
-                        symbolLimits.symbols().stream().map(CTXT::stringLiteral)
-                                .toArray(JExpr[]::new)
-                ).returnStmt ()
+            CTXT.newArrayExpr(
+                String.class,
+                symbolLimits.symbols().stream().map(CTXT::stringLiteral)
+                    .toArray(JExpr[]::new)
+            ).returnStmt ()
         );
     }
 

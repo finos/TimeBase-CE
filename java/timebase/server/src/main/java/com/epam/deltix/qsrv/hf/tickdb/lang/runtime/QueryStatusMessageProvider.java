@@ -49,7 +49,7 @@ class QueryStatusMessageProvider {
         queryStatusMessageEncoder = null;
     }
 
-    RawMessage prepareQueryStatusMessage(QueryStatus status, String cause) {
+    RawMessage prepareQueryStatusMessage(long timestamp, QueryStatus status, String cause) {
         if (queryStatusMessage == null) {
             return null;
         }
@@ -60,6 +60,7 @@ class QueryStatusMessageProvider {
         mdo.reset();
         queryStatusMessageEncoder.encode(object, mdo);
         queryStatusMessage.copyBytes(mdo, 0);
+        queryStatusMessage.setTimeStampMs(timestamp);
 
         return queryStatusMessage;
     }

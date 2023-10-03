@@ -637,10 +637,10 @@ Running QQL: select case when n < 3 then 'few' else 'many' end array join [0, 1,
 {"$type":"QUERY1121011","symbol":"","$1":"many"}
 !END
 Running QQL: with (case size(entries) when 1 then 'one' when 2 then 'two' when 3 then 'three' else 'many' end) as t select t, count{}() from kraken group by t
-{"$type":"QUERY-5817832059506016933","symbol":"ETH/USD","timestamp":"2023-01-25T12:00:30.914Z","T":"three","COUNT{}()":414}
-{"$type":"QUERY-5817832059506016933","symbol":"BTC/EUR","timestamp":"2023-01-25T12:00:30.851Z","T":"many","COUNT{}()":763}
-{"$type":"QUERY-5817832059506016933","symbol":"LTC/BTC","timestamp":"2023-01-25T12:00:30.984Z","T":"one","COUNT{}()":5248}
 {"$type":"QUERY-5817832059506016933","symbol":"TRX/EUR","timestamp":"2023-01-25T12:00:30.989Z","T":"two","COUNT{}()":5563}
+{"$type":"QUERY-5817832059506016933","symbol":"LTC/BTC","timestamp":"2023-01-25T12:00:30.984Z","T":"one","COUNT{}()":5248}
+{"$type":"QUERY-5817832059506016933","symbol":"BTC/EUR","timestamp":"2023-01-25T12:00:30.851Z","T":"many","COUNT{}()":763}
+{"$type":"QUERY-5817832059506016933","symbol":"ETH/USD","timestamp":"2023-01-25T12:00:30.914Z","T":"three","COUNT{}()":414}
 !END
 Running QQL: select case size(entries) when 1 then entries[this is L1Entry] when 2 then entries[this is L2EntryUpdate] when 3 then entries[this is L2EntryNew] else entries end, size(entries), entries from kraken
 {"$type":"QUERY9134612142841621553","symbol":"BAT/USD","timestamp":"2023-01-25T12:00:00.000Z","$1":[{"$type":"deltix.timebase.api.messages.universal.L2EntryUpdate","exchangeId":"KRAKEN","price":"0.24012","size":"10411.20078625","action":"DELETE","level":0,"side":"BID"}],"SIZE (entries)":2,"entries":[{"$type":"deltix.timebase.api.messages.universal.L2EntryUpdate","exchangeId":"KRAKEN","price":"0.24012","size":"10411.20078625","action":"DELETE","level":0,"side":"BID"},{"$type":"deltix.timebase.api.messages.universal.L2EntryNew","exchangeId":"KRAKEN","price":"0.182","size":"600","level":49,"side":"BID"}]}
@@ -893,8 +893,8 @@ Running QQL: select record doubleField type t1 when boolField record doubleField
 {"$type":"T1","symbol":"S1","timestamp":"2021-01-01T00:09:00.000Z","doubleField":"456.5423307944798"}
 !END
 Running QQL: select record boolField, byteField type t1 when boolField record boolField, doubleField type t2 when not boolField from alltypesrand group by boolField
-{"$type":"T2","symbol":"S3","timestamp":"2021-01-01T23:59:00.000Z","boolField":false,"doubleField":"747.5284781564726"}
 {"$type":"T1","symbol":"S1","timestamp":"2021-01-02T00:00:00.000Z","boolField":true,"byteField":103}
+{"$type":"T2","symbol":"S3","timestamp":"2021-01-01T23:59:00.000Z","boolField":false,"doubleField":"747.5284781564726"}
 !END
 Running QQL: with entry as TradeEntry as trade, entry as L1Entry as bbo select record trade.price field "price", trade.size field "size" type "deltix.timebase.api.messages.TradeMessage" when entry is TradeEntry record bbo[side == "deltix.entries.QuoteSide":BUY].price as "offerPrice", bbo[side == "deltix.entries.QuoteSide":BUY].size as "offerSize", bbo[side == "deltix.entries.QuoteSide":SELL].price as "bidPrice", bbo[side == "deltix.entries.QuoteSide":SELL].size as "bidSize" type "deltix.timebase.api.messages.BestBidOfferMessage" when entry is L1Entry from packages array join entries as entry limit 20
 {"$type":"deltix.timebase.api.messages.TradeMessage","symbol":"DLTX","timestamp":"2021-01-01T09:00:00.000Z","price":"2010.0","size":"20010.0"}

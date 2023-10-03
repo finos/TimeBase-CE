@@ -16,8 +16,8 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.errors;
 
+import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.util.parsers.CompilationException;
-import com.epam.deltix.qsrv.hf.pub.md.DataType;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
 
 import java.util.Arrays;
@@ -35,4 +35,42 @@ public class UnexpectedTypeException extends CompilationException {
             e
         );
     }
+
+    private static String fullTypeName(DataType type) {
+        if (type instanceof ArrayDataType) {
+            return type.getBaseName() + "[" + fullTypeName(((ArrayDataType) type).getElementDataType()) + "]";
+        } else if (type instanceof ClassDataType) {
+            return type.getBaseName() + "{" +
+                Arrays.stream(((ClassDataType) type).getDescriptors())
+                    .map(NamedDescriptor::getName)
+                    .map(n -> n.substring(Math.max(n.lastIndexOf('.') + 1, 0)))
+                    .collect(Collectors.joining(","))
+                + "}";
+        } if (type instanceof IntegerDataType) {
+            int size = ((IntegerDataType) type).getNativeTypeSize();
+            switch (size) {
+                case 1: return "INT8";
+                case 2: return "INT16";
+                case 4: return "INT32";
+                case 8: return "INT64";
+            }
+        } else if (type instanceof FloatDataType) {
+            if (((FloatDataType) type).isDecimal64()) {
+                return "DECIMAL";
+            } else if (((FloatDataType) type).isFloat()) {
+                return "FLOAT32";
+            } else {
+                return "FLOAT64";
+            }
+        } else if (type instanceof BooleanDataType) {
+            return "BOOL";
+        } else if (type instanceof CharDataType) {
+            return "CHAR";
+        } else if (type instanceof DateTimeDataType) {
+            return "TIMESTAMP";
+        }
+
+        return type.getBaseName();
+    }
+
 }

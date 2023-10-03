@@ -73,7 +73,7 @@ public class ProcessedStatesStorage {
             .withCache("GroupsCache",
                 CacheConfigurationBuilder.newCacheConfigurationBuilder(GroupByFilterState.class, Boolean.class,
                     ResourcePoolsBuilder.newResourcePoolsBuilder()
-                        .heap((int) ((float) GroupsCountManager.QQL_MAX_GROUPS_COUNT * 0.02f), EntryUnit.ENTRIES)
+                        .heap(GroupsCountManager.getFractionFromMaxGroupsCount(0.02f), EntryUnit.ENTRIES)
                         .disk(128, MemoryUnit.GB)
                 ).withKeySerializer(state.getClass())
             ).build(true);

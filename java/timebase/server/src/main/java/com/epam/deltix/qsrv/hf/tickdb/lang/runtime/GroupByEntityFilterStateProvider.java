@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime;
 
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.messages.QueryStatus;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.groups.GroupsCountManager;
 import com.epam.deltix.util.collections.ArrayEnumeration;
 import com.epam.deltix.util.lang.Util;
@@ -42,7 +43,7 @@ public abstract class GroupByEntityFilterStateProvider extends FilterStateProvid
     public void startAggregate() {
         processedUntil = numStates;
         numStates = 0;
-        tempState.warningMessage = null;
+        tempState.clearStatusMessage();
         hasUnprocessedGroups = false;
     }
 
@@ -62,8 +63,10 @@ public abstract class GroupByEntityFilterStateProvider extends FilterStateProvid
 
         if (currentEntityIdx >= curLength) {
             if (!countManager.canCreateNew(numStates)) {
-                hasUnprocessedGroups = true;
-                tempState.warningMessage = countManager.warningCause();
+                if (!hasUnprocessedGroups) {
+                    hasUnprocessedGroups = true;
+                    tempState.setStatusMessage(countManager.warningCause(), QueryStatus.WARNING);
+                }
                 return tempState;
             }
 

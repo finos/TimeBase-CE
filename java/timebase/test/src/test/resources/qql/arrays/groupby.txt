@@ -1,62 +1,62 @@
 Running QQL: select packageType, count{}() from packages group by packageType
-DLTX,2021-01-01 09:00:00.000,packageType:VENDOR_SNAPSHOT,COUNT{}():2
 DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,COUNT{}():8
+DLTX,2021-01-01 09:00:00.000,packageType:VENDOR_SNAPSHOT,COUNT{}():2
 !END
 Running QQL: select * from packages group by packageType
-deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
 deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:INCREMENTAL_UPDATE
+deltix.entries.Package,DLTX,2021-01-01 09:00:00.000,entries:ARRAY,packageType:VENDOR_SNAPSHOT
 !END
 Running QQL: select infoIdA, avg{}(totalQuantity) from infoA group by (infoIdA % 3)
-AAAA,1970-01-19 15:04:51.618,infoIdA:68,AVG{}(totalQuantity):21.109
-AAAA,1970-01-19 15:04:51.620,infoIdA:76,AVG{}(totalQuantity):22.22
 AAAA,1970-01-19 15:04:51.619,infoIdA:72,AVG{}(totalQuantity):19.998
+AAAA,1970-01-19 15:04:51.620,infoIdA:76,AVG{}(totalQuantity):22.22
+AAAA,1970-01-19 15:04:51.618,infoIdA:68,AVG{}(totalQuantity):21.109
 !END
 Running QQL: select * from infoA group by (infoIdA % 3)
-deltix.orders.ExecutedLimitOrderInfoA,AAAA,1970-01-19 15:04:51.618,avgPrice:18.887,totalQuantity:37.774,customInfo:56.661,infoIdA:68
-deltix.orders.ExecutedLimitOrderInfoA,AAAA,1970-01-19 15:04:51.620,avgPrice:21.109,totalQuantity:42.218,customInfo:63.327,infoIdA:76
 deltix.orders.ExecutedLimitOrderInfoA,AAAA,1970-01-19 15:04:51.619,avgPrice:19.998,totalQuantity:39.996,customInfo:59.994,infoIdA:72
+deltix.orders.ExecutedLimitOrderInfoA,AAAA,1970-01-19 15:04:51.620,avgPrice:21.109,totalQuantity:42.218,customInfo:63.327,infoIdA:76
+deltix.orders.ExecutedLimitOrderInfoA,AAAA,1970-01-19 15:04:51.618,avgPrice:18.887,totalQuantity:37.774,customInfo:56.661,infoIdA:68
 !END
 Running QQL: select infoIdA, avg{}(totalQuantity) from infoA where totalQuantity > 2 and customInfo < 20 group by (infoIdA % 3)
-AAAA,1970-01-19 15:04:51.606,infoIdA:20,AVG{}(totalQuantity):7.7769995
-AAAA,1970-01-19 15:04:51.605,infoIdA:16,AVG{}(totalQuantity):5.5549994
 AAAA,1970-01-19 15:04:51.607,infoIdA:24,AVG{}(totalQuantity):9.998999
+AAAA,1970-01-19 15:04:51.605,infoIdA:16,AVG{}(totalQuantity):5.5549994
+AAAA,1970-01-19 15:04:51.606,infoIdA:20,AVG{}(totalQuantity):7.7769995
 !END
 Running QQL: select packageType, entries[this is L2Entry].level[0] as s from packages group by s
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:9
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:<null>
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:6
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:5
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:0
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:3
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:2
 DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:1
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:2
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:3
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:0
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:5
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:6
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:<null>
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:9
 !END
 Running QQL: select packageType, s from packages group by entries[this is L2Entry].level[0] as s
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:9
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:<null>
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:6
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:5
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:0
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:3
-DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:2
 DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:1
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:2
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:3
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:0
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:5
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:6
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:<null>
+DLTX,2021-01-01 09:00:00.000,packageType:INCREMENTAL_UPDATE,S:9
 !END
 Running QQL: select entry.level, count{}() from packages array join entries as entry group by entry.level
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:9,COUNT{}():5
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:8,COUNT{}():5
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:7,COUNT{}():5
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:6,COUNT{}():6
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:0,COUNT{}():6
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:5,COUNT{}():6
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:4,COUNT{}():5
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:3,COUNT{}():6
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:2,COUNT{}():6
-DLTX,2021-01-01 09:00:00.000,ENTRY.level:1,COUNT{}():7
 DLTX,2021-01-01 09:00:00.000,ENTRY.level:<null>,COUNT{}():33
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:1,COUNT{}():7
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:2,COUNT{}():6
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:3,COUNT{}():6
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:4,COUNT{}():5
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:5,COUNT{}():6
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:0,COUNT{}():6
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:6,COUNT{}():6
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:7,COUNT{}():5
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:8,COUNT{}():5
+DLTX,2021-01-01 09:00:00.000,ENTRY.level:9,COUNT{}():5
 !END
 Running QQL: select entry.exchange, count{}() from packages array join entries as entry group by entry.exchange
-DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,COUNT{}():57
 DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:BINANCE,COUNT{}():33
+DLTX,2021-01-01 09:00:00.000,ENTRY.exchange:GDAX,COUNT{}():57
 !END
 Running QQL: select running entry.level, count{}() from packages array join entries as entry group by entry.level
 DLTX,2021-01-01 09:00:00.000,ENTRY.level:<null>,COUNT{}():1
@@ -81,10 +81,10 @@ DLTX,2021-01-01 09:00:00.000,ENTRY.level:4,COUNT{}():1
 DLTX,2021-01-01 09:00:00.000,ENTRY.level:5,COUNT{}():1
 !END
 Running QQL: select entry.level as level, count{}() from packages array join entries as entry where level > 5 group by level
-DLTX,2021-01-01 09:00:00.000,LEVEL:9,COUNT{}():5
-DLTX,2021-01-01 09:00:00.000,LEVEL:8,COUNT{}():5
-DLTX,2021-01-01 09:00:00.000,LEVEL:7,COUNT{}():5
 DLTX,2021-01-01 09:00:00.000,LEVEL:6,COUNT{}():6
+DLTX,2021-01-01 09:00:00.000,LEVEL:7,COUNT{}():5
+DLTX,2021-01-01 09:00:00.000,LEVEL:8,COUNT{}():5
+DLTX,2021-01-01 09:00:00.000,LEVEL:9,COUNT{}():5
 !END
 Running QQL: select running entry.level as level, count{}() from packages array join entries as entry where level > 5 group by level
 DLTX,2021-01-01 09:00:00.000,LEVEL:6,COUNT{}():1
@@ -109,97 +109,97 @@ DLTX,2021-01-01 09:00:00.000,LEVEL:8,COUNT{}():5
 DLTX,2021-01-01 09:00:00.000,LEVEL:9,COUNT{}():4
 !END
 Running QQL: select boolField, byteField, count{}() from alltypesrand group by boolField, byteField
-S2,2021-01-01 23:43:00.000,boolField:false,byteField:-33,COUNT{}():1
-S3,2021-01-01 23:32:00.000,boolField:false,byteField:-16,COUNT{}():1
-S3,2021-01-01 23:17:00.000,boolField:true,byteField:-87,COUNT{}():1
-S2,2021-01-01 22:58:00.000,boolField:true,byteField:76,COUNT{}():1
-S3,2021-01-01 22:56:00.000,boolField:false,byteField:-115,COUNT{}():1
-S2,2021-01-01 22:55:00.000,boolField:false,byteField:-30,COUNT{}():1
-S3,2021-01-01 22:38:00.000,boolField:false,byteField:40,COUNT{}():1
-S1,2021-01-01 22:24:00.000,boolField:true,byteField:51,COUNT{}():1
-S1,2021-01-01 22:15:00.000,boolField:false,byteField:44,COUNT{}():1
-S2,2021-01-01 22:01:00.000,boolField:false,byteField:123,COUNT{}():1
-S2,2021-01-01 21:25:00.000,boolField:true,byteField:-58,COUNT{}():1
-S3,2021-01-01 21:17:00.000,boolField:false,byteField:52,COUNT{}():1
-S2,2021-01-01 21:16:00.000,boolField:true,byteField:92,COUNT{}():1
-S2,2021-01-01 20:55:00.000,boolField:true,byteField:8,COUNT{}():1
-S2,2021-01-01 21:07:00.000,boolField:false,byteField:-111,COUNT{}():2
-S3,2021-01-01 20:26:00.000,boolField:true,byteField:-111,COUNT{}():1
-S1,2021-01-01 22:27:00.000,boolField:false,byteField:70,COUNT{}():2
-S2,2021-01-01 19:58:00.000,boolField:false,byteField:39,COUNT{}():1
-S1,2021-01-01 21:24:00.000,boolField:true,byteField:-69,COUNT{}():2
-S3,2021-01-01 23:50:00.000,boolField:false,byteField:-12,COUNT{}():2
+S3,2021-01-01 02:53:00.000,boolField:true,byteField:31,COUNT{}():2
+S1,2021-01-01 15:15:00.000,boolField:true,byteField:70,COUNT{}():5
+S1,2021-01-01 21:39:00.000,boolField:true,byteField:100,COUNT{}():4
+S3,2021-01-01 22:59:00.000,boolField:true,byteField:108,COUNT{}():6
+S1,2021-01-01 23:42:00.000,boolField:false,byteField:14,COUNT{}():7
+S3,2021-01-01 20:29:00.000,boolField:true,byteField:-25,COUNT{}():3
+S1,2021-01-01 10:09:00.000,boolField:false,byteField:120,COUNT{}():3
+S3,2021-01-01 19:50:00.000,boolField:true,byteField:-10,COUNT{}():2
+S3,2021-01-01 18:56:00.000,boolField:true,byteField:41,COUNT{}():4
+S2,2021-01-01 16:55:00.000,boolField:true,byteField:-39,COUNT{}():2
+S3,2021-01-01 15:53:00.000,boolField:true,byteField:-23,COUNT{}():4
+S3,2021-01-01 21:56:00.000,boolField:false,byteField:-57,COUNT{}():7
+S1,2021-01-01 21:33:00.000,boolField:true,byteField:-34,COUNT{}():2
+S3,2021-01-01 17:44:00.000,boolField:true,byteField:-83,COUNT{}():6
+S3,2021-01-01 00:14:00.000,boolField:true,byteField:-19,COUNT{}():1
+S1,2021-01-01 15:21:00.000,boolField:false,byteField:56,COUNT{}():4
+S2,2021-01-01 21:10:00.000,boolField:true,byteField:68,COUNT{}():5
+S2,2021-01-01 20:01:00.000,boolField:false,byteField:9,COUNT{}():7
+S1,2021-01-01 18:33:00.000,boolField:true,byteField:88,COUNT{}():4
+S3,2021-01-01 22:32:00.000,boolField:true,byteField:-124,COUNT{}():3
 !END
 Running QQL: select intField, count{}() from alltypesrand group by intField, symbol, byteField
-S1,2021-01-02 00:00:00.000,intField:-574815695,COUNT{}():1
-S3,2021-01-01 23:59:00.000,intField:878022551,COUNT{}():1
-S2,2021-01-01 23:58:00.000,intField:28510434,COUNT{}():1
-S1,2021-01-01 23:57:00.000,intField:320204627,COUNT{}():1
-S3,2021-01-01 23:56:00.000,intField:1380508232,COUNT{}():1
-S2,2021-01-01 23:55:00.000,intField:-1447130763,COUNT{}():1
-S1,2021-01-01 23:54:00.000,intField:-1399198091,COUNT{}():1
-S3,2021-01-01 23:53:00.000,intField:547391941,COUNT{}():1
-S2,2021-01-01 23:52:00.000,intField:-285157424,COUNT{}():1
-S1,2021-01-01 23:51:00.000,intField:-486446968,COUNT{}():1
-S3,2021-01-01 23:50:00.000,intField:209616350,COUNT{}():1
-S2,2021-01-01 23:49:00.000,intField:743292941,COUNT{}():1
-S1,2021-01-01 23:48:00.000,intField:1351456528,COUNT{}():1
-S3,2021-01-01 23:47:00.000,intField:1049748190,COUNT{}():1
-S2,2021-01-01 23:46:00.000,intField:-1244805244,COUNT{}():1
-S1,2021-01-01 23:45:00.000,intField:-2136536087,COUNT{}():1
-S3,2021-01-01 23:44:00.000,intField:1160792223,COUNT{}():1
-S2,2021-01-01 23:43:00.000,intField:1495257458,COUNT{}():1
-S1,2021-01-01 23:42:00.000,intField:647600322,COUNT{}():1
-S3,2021-01-01 23:41:00.000,intField:-1438676348,COUNT{}():1
+S1,2021-01-01 00:00:00.000,intField:-1517918040,COUNT{}():1
+S2,2021-01-01 00:01:00.000,intField:-814398462,COUNT{}():1
+S3,2021-01-01 00:02:00.000,intField:-998021352,COUNT{}():1
+S1,2021-01-01 00:03:00.000,intField:-678576715,COUNT{}():1
+S2,2021-01-01 00:04:00.000,intField:1312796383,COUNT{}():1
+S3,2021-01-01 00:05:00.000,intField:-1008486802,COUNT{}():1
+S1,2021-01-01 00:06:00.000,intField:55297754,COUNT{}():1
+S2,2021-01-01 00:07:00.000,intField:-994216461,COUNT{}():1
+S3,2021-01-01 00:08:00.000,intField:-1558970980,COUNT{}():1
+S1,2021-01-01 00:09:00.000,intField:-461098730,COUNT{}():1
+S2,2021-01-01 00:10:00.000,intField:-1887894077,COUNT{}():1
+S3,2021-01-01 00:11:00.000,intField:1917230,COUNT{}():1
+S1,2021-01-01 00:12:00.000,intField:-921166150,COUNT{}():1
+S2,2021-01-01 00:13:00.000,intField:-1034427558,COUNT{}():1
+S3,2021-01-01 00:14:00.000,intField:-1156305700,COUNT{}():1
+S1,2021-01-01 00:15:00.000,intField:189869797,COUNT{}():1
+S2,2021-01-01 00:16:00.000,intField:-1145108986,COUNT{}():1
+S3,2021-01-01 00:17:00.000,intField:1987861442,COUNT{}():1
+S1,2021-01-01 00:18:00.000,intField:-1586454276,COUNT{}():1
+S2,2021-01-01 00:19:00.000,intField:-617905540,COUNT{}():1
 !END
 Running QQL: select asciiTextField, count{}() from alltypesrand group by asciiTextField
-S1,2021-01-02 00:00:00.000,asciiTextField:/*9G*_[744,COUNT{}():1
-S3,2021-01-01 23:59:00.000,asciiTextField::2*%+i-[Gb,COUNT{}():1
-S2,2021-01-01 23:58:00.000,asciiTextField:DuQW3I/^V{,COUNT{}():1
-S1,2021-01-01 23:57:00.000,asciiTextField:'^{GZSUG 3,COUNT{}():1
-S3,2021-01-01 23:56:00.000,asciiTextField:On&ZKzc:I,COUNT{}():1
-S2,2021-01-01 23:55:00.000,asciiTextField:'f]2@z@\ ,COUNT{}():1
-S1,2021-01-01 23:54:00.000,asciiTextField:;;E#9(']0,COUNT{}():1
-S3,2021-01-01 23:53:00.000,asciiTextField:k"$*0VUPD,COUNT{}():1
-S2,2021-01-01 23:52:00.000,asciiTextField:KHp.)vA|[Q,COUNT{}():1
-S1,2021-01-01 23:51:00.000,asciiTextField:$O'OF%zU,COUNT{}():1
-S3,2021-01-01 23:50:00.000,asciiTextField:F=1I\6|<t5,COUNT{}():1
-S2,2021-01-01 23:49:00.000,asciiTextField:diA>;::,COUNT{}():1
-S1,2021-01-01 23:48:00.000,asciiTextField:KJ:0J=-H/Y,COUNT{}():1
-S3,2021-01-01 23:47:00.000,asciiTextField:?7Z&#'+E,COUNT{}():1
-S2,2021-01-01 23:46:00.000,asciiTextField:9q]>|mKM,COUNT{}():1
-S1,2021-01-01 23:45:00.000,asciiTextField:JJ4Td=2!,COUNT{}():1
-S3,2021-01-01 23:44:00.000,asciiTextField:+O',>U@bd,COUNT{}():1
-S2,2021-01-01 23:43:00.000,asciiTextField:3%VgG6(AXJ,COUNT{}():1
-S1,2021-01-01 23:42:00.000,asciiTextField:@GV{.yCGg,COUNT{}():1
-S3,2021-01-01 23:41:00.000,asciiTextField:D!=#c?)*w9,COUNT{}():1
+S1,2021-01-01 00:00:00.000,asciiTextField:/ 4u0n^..,COUNT{}():1
+S2,2021-01-01 00:01:00.000,asciiTextField:TXr6.>+A@,COUNT{}():1
+S3,2021-01-01 00:02:00.000,asciiTextField:[MF[4iT\K,COUNT{}():1
+S1,2021-01-01 00:03:00.000,asciiTextField:P6z \4m%H4,COUNT{}():1
+S2,2021-01-01 00:04:00.000,asciiTextField:0}/,3F;83,COUNT{}():1
+S3,2021-01-01 00:05:00.000,asciiTextField:/]YHE[>>(,COUNT{}():1
+S1,2021-01-01 00:06:00.000,asciiTextField:BKm0F!>L7,COUNT{}():1
+S2,2021-01-01 00:07:00.000,asciiTextField:y$:j67?U0,COUNT{}():1
+S3,2021-01-01 00:08:00.000,asciiTextField:5bDOOPm}F,COUNT{}():1
+S1,2021-01-01 00:09:00.000,asciiTextField:IGI/@fY4E,COUNT{}():1
+S2,2021-01-01 00:10:00.000,asciiTextField:/Cfw*bgIO,COUNT{}():1
+S3,2021-01-01 00:11:00.000,asciiTextField:KDK2sK,,COUNT{}():1
+S1,2021-01-01 00:12:00.000,asciiTextField:8Zf4p9B,COUNT{}():1
+S2,2021-01-01 00:13:00.000,asciiTextField:RI",!$Ge-|,COUNT{}():1
+S3,2021-01-01 00:14:00.000,asciiTextField:I&.xm9GI'0,COUNT{}():1
+S1,2021-01-01 00:15:00.000,asciiTextField:YG"J[7Q,COUNT{}():1
+S2,2021-01-01 00:16:00.000,asciiTextField:<?%0J3#N<,COUNT{}():1
+S3,2021-01-01 00:17:00.000,asciiTextField:N{&?$?h:C,COUNT{}():1
+S1,2021-01-01 00:18:00.000,asciiTextField:a:aP&<*oD,COUNT{}():1
+S2,2021-01-01 00:19:00.000,asciiTextField:=BRXK&H,COUNT{}():1
 !END
 Running QQL: select boolNullableField, count{}() from alltypesrand group by boolNullableField
-S1,2021-01-01 23:54:00.000,boolNullableField:false,COUNT{}():348
-S1,2021-01-01 23:57:00.000,boolNullableField:true,COUNT{}():356
 S1,2021-01-02 00:00:00.000,boolNullableField:<null>,COUNT{}():737
+S1,2021-01-01 23:57:00.000,boolNullableField:true,COUNT{}():356
+S1,2021-01-01 23:54:00.000,boolNullableField:false,COUNT{}():348
 !END
 Running QQL: select textAlphanumericField, count{}() from alltypesrand group by textAlphanumericField
-S1,2021-01-02 00:00:00.000,textAlphaNumericField:*5%7T=P*13,COUNT{}():1
-S3,2021-01-01 23:59:00.000,textAlphaNumericField:WF^G\@P9X!,COUNT{}():1
-S2,2021-01-01 23:58:00.000,textAlphaNumericField:S%\,G9G6@F,COUNT{}():1
-S1,2021-01-01 23:57:00.000,textAlphaNumericField:H#Q>?T/S62,COUNT{}():1
-S3,2021-01-01 23:56:00.000,textAlphaNumericField:Z6L1)!5ZT7,COUNT{}():1
-S2,2021-01-01 23:55:00.000,textAlphaNumericField:CC)4G/67NV,COUNT{}():1
-S1,2021-01-01 23:54:00.000,textAlphaNumericField:]U+E4:LF,),COUNT{}():1
-S3,2021-01-01 23:53:00.000,textAlphaNumericField:Y!-"P(6Y-W,COUNT{}():1
-S2,2021-01-01 23:52:00.000,textAlphaNumericField:\"#Q%I_ AZ,COUNT{}():1
-S1,2021-01-01 23:51:00.000,textAlphaNumericField:SF'JG^0$-0,COUNT{}():1
-S3,2021-01-01 23:50:00.000,textAlphaNumericField:SO[R[V!86/,COUNT{}():1
-S2,2021-01-01 23:49:00.000,textAlphaNumericField:-?.[:UBY\K,COUNT{}():1
-S1,2021-01-01 23:48:00.000,textAlphaNumericField:ERH)(34H77,COUNT{}():1
-S3,2021-01-01 23:47:00.000,textAlphaNumericField:/ !)+O8[B(,COUNT{}():1
-S2,2021-01-01 23:46:00.000,textAlphaNumericField:!;3D%F,@ >,COUNT{}():1
-S1,2021-01-01 23:45:00.000,textAlphaNumericField:G+3!]_=KIO,COUNT{}():1
-S3,2021-01-01 23:44:00.000,textAlphaNumericField:_(PYXO!XP",COUNT{}():1
-S2,2021-01-01 23:43:00.000,textAlphaNumericField: JOK?U32)/,COUNT{}():1
-S1,2021-01-01 23:42:00.000,textAlphaNumericField::+7$WL* M@,COUNT{}():1
-S3,2021-01-01 23:41:00.000,textAlphaNumericField:>90[]20QX-,COUNT{}():1
+S1,2021-01-01 00:00:00.000,textAlphaNumericField:I0\/V4=C5%,COUNT{}():1
+S2,2021-01-01 00:01:00.000,textAlphaNumericField:$!K^"X$#KJ,COUNT{}():1
+S3,2021-01-01 00:02:00.000,textAlphaNumericField:Z0.U[-%X(J,COUNT{}():1
+S1,2021-01-01 00:03:00.000,textAlphaNumericField:@W5ED-P_>_,COUNT{}():1
+S2,2021-01-01 00:04:00.000,textAlphaNumericField:LSX4#\,V0W,COUNT{}():1
+S3,2021-01-01 00:05:00.000,textAlphaNumericField:U+P,,O:Q'Y,COUNT{}():1
+S1,2021-01-01 00:06:00.000,textAlphaNumericField:=;[7!_'F=;,COUNT{}():1
+S2,2021-01-01 00:07:00.000,textAlphaNumericField:Z)S5(OD# [,COUNT{}():1
+S3,2021-01-01 00:08:00.000,textAlphaNumericField:B.,?7?1;MZ,COUNT{}():1
+S1,2021-01-01 00:09:00.000,textAlphaNumericField:S1#HA+=;"U,COUNT{}():1
+S2,2021-01-01 00:10:00.000,textAlphaNumericField:V_T,U1#MLV,COUNT{}():1
+S3,2021-01-01 00:11:00.000,textAlphaNumericField:WVYQN2,7B#,COUNT{}():1
+S1,2021-01-01 00:12:00.000,textAlphaNumericField:)XA)FH]1_*,COUNT{}():1
+S2,2021-01-01 00:13:00.000,textAlphaNumericField:LBQR=]GKMR,COUNT{}():1
+S3,2021-01-01 00:14:00.000,textAlphaNumericField:G*OCKWQV@1,COUNT{}():1
+S1,2021-01-01 00:15:00.000,textAlphaNumericField:,S6NVIUR0),COUNT{}():1
+S2,2021-01-01 00:16:00.000,textAlphaNumericField:^6&##1"\65,COUNT{}():1
+S3,2021-01-01 00:17:00.000,textAlphaNumericField:CRI4>&WKWG,COUNT{}():1
+S1,2021-01-01 00:18:00.000,textAlphaNumericField:__0[%X:A4%,COUNT{}():1
+S2,2021-01-01 00:19:00.000,textAlphaNumericField:<G5.!^6HAT,COUNT{}():1
 !END
 Running QQL: select max{}(decimalField), min{}(decimalField), count{}() from alltypesrand over time(5m) group by symbol
 S1,2021-01-01 00:00:00.000,MAX{}(decimalField):646.5821602909257,MIN{}(decimalField):646.5821602909257,COUNT{}():1
@@ -225,33 +225,28 @@ S1,2021-01-01 00:35:00.000,MAX{}(decimalField):112.7905403311936,MIN{}(decimalFi
 !END
 Running QQL: select max{}(decimalField), min{}(decimalField), boolNullableField, count{}() from alltypesrand over every time(20m) group by boolNullableField, symbol
 S1,2021-01-01 00:00:00.000,MAX{}(decimalField):646.5821602909257,MIN{}(decimalField):646.5821602909257,boolNullableField:<null>,COUNT{}():1
-S3,2021-01-01 00:20:00.000,MAX{}(decimalField):738.7723236645114,MIN{}(decimalField):397.1851113219806,boolNullableField:<null>,COUNT{}():4
-S2,2021-01-01 00:20:00.000,MAX{}(decimalField):831.6400200641632,MIN{}(decimalField):425.7134488966793,boolNullableField:true,COUNT{}():3
-S1,2021-01-01 00:20:00.000,MAX{}(decimalField):456.5423307944798,MIN{}(decimalField):8.234378819736987,boolNullableField:true,COUNT{}():2
-S3,2021-01-01 00:20:00.000,MAX{}(decimalField):343.9688382546394,MIN{}(decimalField):343.9688382546394,boolNullableField:false,COUNT{}():1
-S2,2021-01-01 00:20:00.000,MAX{}(decimalField):501.1160384749738,MIN{}(decimalField):501.1160384749738,boolNullableField:false,COUNT{}():1
-S3,2021-01-01 00:20:00.000,MAX{}(decimalField):911.7943323245134,MIN{}(decimalField):319.7657750164665,boolNullableField:true,COUNT{}():2
-S2,2021-01-01 00:20:00.000,MAX{}(decimalField):767.6300491820534,MIN{}(decimalField):252.1768596247153,boolNullableField:<null>,COUNT{}():3
 S1,2021-01-01 00:20:00.000,MAX{}(decimalField):948.021332075975,MIN{}(decimalField):520.423229959222,boolNullableField:<null>,COUNT{}():4
-S1,2021-01-01 00:40:00.000,MAX{}(decimalField):741.3865043976816,MIN{}(decimalField):497.8684058864259,boolNullableField:false,COUNT{}():2
-S3,2021-01-01 00:40:00.000,MAX{}(decimalField):562.704699808036,MIN{}(decimalField):291.956259396989,boolNullableField:<null>,COUNT{}():2
-S2,2021-01-01 00:40:00.000,MAX{}(decimalField):804.6770643861355,MIN{}(decimalField):360.8690950990155,boolNullableField:true,COUNT{}():4
-S1,2021-01-01 00:40:00.000,MAX{}(decimalField):241.4179911060765,MIN{}(decimalField):17.25071185625415,boolNullableField:true,COUNT{}():2
-S3,2021-01-01 00:40:00.000,MAX{}(decimalField):793.2051053518926,MIN{}(decimalField):793.2051053518926,boolNullableField:false,COUNT{}():1
-S2,2021-01-01 00:40:00.000,MAX{}(decimalField):335.8553561368137,MIN{}(decimalField):335.8553561368137,boolNullableField:false,COUNT{}():1
-S3,2021-01-01 00:40:00.000,MAX{}(decimalField):649.3058947474012,MIN{}(decimalField):115.2635430470685,boolNullableField:true,COUNT{}():3
-S2,2021-01-01 00:40:00.000,MAX{}(decimalField):718.40865895764,MIN{}(decimalField):456.9280203166679,boolNullableField:<null>,COUNT{}():2
+S2,2021-01-01 00:20:00.000,MAX{}(decimalField):767.6300491820534,MIN{}(decimalField):252.1768596247153,boolNullableField:<null>,COUNT{}():3
+S3,2021-01-01 00:20:00.000,MAX{}(decimalField):911.7943323245134,MIN{}(decimalField):319.7657750164665,boolNullableField:true,COUNT{}():2
+S2,2021-01-01 00:20:00.000,MAX{}(decimalField):501.1160384749738,MIN{}(decimalField):501.1160384749738,boolNullableField:false,COUNT{}():1
+S3,2021-01-01 00:20:00.000,MAX{}(decimalField):343.9688382546394,MIN{}(decimalField):343.9688382546394,boolNullableField:false,COUNT{}():1
+S1,2021-01-01 00:20:00.000,MAX{}(decimalField):456.5423307944798,MIN{}(decimalField):8.234378819736987,boolNullableField:true,COUNT{}():2
+S2,2021-01-01 00:20:00.000,MAX{}(decimalField):831.6400200641632,MIN{}(decimalField):425.7134488966793,boolNullableField:true,COUNT{}():3
+S3,2021-01-01 00:20:00.000,MAX{}(decimalField):738.7723236645114,MIN{}(decimalField):397.1851113219806,boolNullableField:<null>,COUNT{}():4
 S1,2021-01-01 00:40:00.000,MAX{}(decimalField):445.2504032816171,MIN{}(decimalField):112.7905403311936,boolNullableField:<null>,COUNT{}():3
-S1,2021-01-01 01:00:00.000,MAX{}(decimalField):956.913649420205,MIN{}(decimalField):22.25019024296582,boolNullableField:false,COUNT{}():2
-S3,2021-01-01 01:00:00.000,MAX{}(decimalField):497.0601445723671,MIN{}(decimalField):231.4359341127363,boolNullableField:<null>,COUNT{}():4
+S2,2021-01-01 00:40:00.000,MAX{}(decimalField):718.40865895764,MIN{}(decimalField):456.9280203166679,boolNullableField:<null>,COUNT{}():2
+S3,2021-01-01 00:40:00.000,MAX{}(decimalField):649.3058947474012,MIN{}(decimalField):115.2635430470685,boolNullableField:true,COUNT{}():3
+S2,2021-01-01 00:40:00.000,MAX{}(decimalField):335.8553561368137,MIN{}(decimalField):335.8553561368137,boolNullableField:false,COUNT{}():1
+S3,2021-01-01 00:40:00.000,MAX{}(decimalField):793.2051053518926,MIN{}(decimalField):793.2051053518926,boolNullableField:false,COUNT{}():1
+S1,2021-01-01 00:40:00.000,MAX{}(decimalField):241.4179911060765,MIN{}(decimalField):17.25071185625415,boolNullableField:true,COUNT{}():2
+S2,2021-01-01 00:40:00.000,MAX{}(decimalField):804.6770643861355,MIN{}(decimalField):360.8690950990155,boolNullableField:true,COUNT{}():4
+S3,2021-01-01 00:40:00.000,MAX{}(decimalField):562.704699808036,MIN{}(decimalField):291.956259396989,boolNullableField:<null>,COUNT{}():2
+S1,2021-01-01 00:40:00.000,MAX{}(decimalField):741.3865043976816,MIN{}(decimalField):497.8684058864259,boolNullableField:false,COUNT{}():2
+S1,2021-01-01 01:00:00.000,MAX{}(decimalField):971.5995378038101,MIN{}(decimalField):342.7541397100326,boolNullableField:<null>,COUNT{}():5
+S2,2021-01-01 01:00:00.000,MAX{}(decimalField):895.2682718941305,MIN{}(decimalField):296.9045088299014,boolNullableField:<null>,COUNT{}():4
 !END
 Running QQL: select max{}(decimalField), min{}(decimalField), boolNullableField, byteField, count{}() from alltypesrand over time(20m) group by boolNullableField, byteField
 S1,2021-01-01 00:00:00.000,MAX{}(decimalField):646.5821602909257,MIN{}(decimalField):646.5821602909257,boolNullableField:<null>,byteField:31,COUNT{}():1
-S3,2021-01-01 00:20:00.000,MAX{}(decimalField):417.1523420220401,MIN{}(decimalField):417.1523420220401,boolNullableField:<null>,byteField:71,COUNT{}():1
-S2,2021-01-01 00:20:00.000,MAX{}(decimalField):553.1067384241978,MIN{}(decimalField):553.1067384241978,boolNullableField:<null>,byteField:-124,COUNT{}():1
-S1,2021-01-01 00:20:00.000,MAX{}(decimalField):736.7358353734899,MIN{}(decimalField):736.7358353734899,boolNullableField:<null>,byteField:88,COUNT{}():1
-S3,2021-01-01 00:20:00.000,MAX{}(decimalField):911.7943323245134,MIN{}(decimalField):911.7943323245134,boolNullableField:true,byteField:9,COUNT{}():1
-S2,2021-01-01 00:20:00.000,MAX{}(decimalField):252.1768596247153,MIN{}(decimalField):252.1768596247153,boolNullableField:<null>,byteField:68,COUNT{}():1
 S2,2021-01-01 00:20:00.000,MAX{}(decimalField):767.6300491820534,MIN{}(decimalField):767.6300491820534,boolNullableField:<null>,byteField:70,COUNT{}():1
 S3,2021-01-01 00:20:00.000,MAX{}(decimalField):319.7657750164665,MIN{}(decimalField):319.7657750164665,boolNullableField:true,byteField:100,COUNT{}():1
 S1,2021-01-01 00:20:00.000,MAX{}(decimalField):520.423229959222,MIN{}(decimalField):520.423229959222,boolNullableField:<null>,byteField:108,COUNT{}():1
@@ -266,4 +261,31 @@ S3,2021-01-01 00:20:00.000,MAX{}(decimalField):397.1851113219806,MIN{}(decimalFi
 S1,2021-01-01 00:20:00.000,MAX{}(decimalField):576.7089492853373,MIN{}(decimalField):576.7089492853373,boolNullableField:<null>,byteField:-34,COUNT{}():1
 S2,2021-01-01 00:20:00.000,MAX{}(decimalField):609.4110070991624,MIN{}(decimalField):609.4110070991624,boolNullableField:true,byteField:-83,COUNT{}():1
 S3,2021-01-01 00:20:00.000,MAX{}(decimalField):478.2340438009515,MIN{}(decimalField):478.2340438009515,boolNullableField:<null>,byteField:-19,COUNT{}():1
+S1,2021-01-01 00:20:00.000,MAX{}(decimalField):948.021332075975,MIN{}(decimalField):948.021332075975,boolNullableField:<null>,byteField:56,COUNT{}():1
+S2,2021-01-01 00:20:00.000,MAX{}(decimalField):252.1768596247153,MIN{}(decimalField):252.1768596247153,boolNullableField:<null>,byteField:68,COUNT{}():1
+S3,2021-01-01 00:20:00.000,MAX{}(decimalField):911.7943323245134,MIN{}(decimalField):911.7943323245134,boolNullableField:true,byteField:9,COUNT{}():1
+S1,2021-01-01 00:20:00.000,MAX{}(decimalField):736.7358353734899,MIN{}(decimalField):736.7358353734899,boolNullableField:<null>,byteField:88,COUNT{}():1
+S2,2021-01-01 00:20:00.000,MAX{}(decimalField):553.1067384241978,MIN{}(decimalField):553.1067384241978,boolNullableField:<null>,byteField:-124,COUNT{}():1
+!END
+Running QQL: select count{}() from kraken group by timestamp
+{"$type":"QUERY57078545288857212","symbol":"BAT/USD","timestamp":"2023-01-25T12:00:00.000Z","COUNT{}()":4}
+{"$type":"QUERY57078545288857212","symbol":"BAT/USD","timestamp":"2023-01-25T12:00:00.004Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"LTC/USD","timestamp":"2023-01-25T12:00:00.006Z","COUNT{}()":5}
+{"$type":"QUERY57078545288857212","symbol":"BTC/EUR","timestamp":"2023-01-25T12:00:00.010Z","COUNT{}()":4}
+{"$type":"QUERY57078545288857212","symbol":"BAT/USD","timestamp":"2023-01-25T12:00:00.027Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"BAT/USD","timestamp":"2023-01-25T12:00:00.028Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"ETH/GBP","timestamp":"2023-01-25T12:00:00.033Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"ADA/USDT","timestamp":"2023-01-25T12:00:00.034Z","COUNT{}()":2}
+{"$type":"QUERY57078545288857212","symbol":"DOGE/USDT","timestamp":"2023-01-25T12:00:00.041Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"BAT/USD","timestamp":"2023-01-25T12:00:00.045Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"ADA/USDT","timestamp":"2023-01-25T12:00:00.053Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"BTC/USDT","timestamp":"2023-01-25T12:00:00.063Z","COUNT{}()":6}
+{"$type":"QUERY57078545288857212","symbol":"BAT/USD","timestamp":"2023-01-25T12:00:00.068Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"BTC/EUR","timestamp":"2023-01-25T12:00:00.070Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"BTC/EUR","timestamp":"2023-01-25T12:00:00.071Z","COUNT{}()":1}
+{"$type":"QUERY57078545288857212","symbol":"BTC/USD","timestamp":"2023-01-25T12:00:00.072Z","COUNT{}()":2}
+{"$type":"QUERY57078545288857212","symbol":"BTC/USDT","timestamp":"2023-01-25T12:00:00.073Z","COUNT{}()":2}
+{"$type":"QUERY57078545288857212","symbol":"BTC/USDT","timestamp":"2023-01-25T12:00:00.076Z","COUNT{}()":2}
+{"$type":"QUERY57078545288857212","symbol":"BTC/EUR","timestamp":"2023-01-25T12:00:00.078Z","COUNT{}()":4}
+{"$type":"QUERY57078545288857212","symbol":"BTC/GBP","timestamp":"2023-01-25T12:00:00.083Z","COUNT{}()":2}
 !END

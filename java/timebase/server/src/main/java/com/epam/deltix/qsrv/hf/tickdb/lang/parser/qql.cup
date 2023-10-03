@@ -35,7 +35,7 @@ terminal            QUESTION;
 
 /* Keywords. Please keep UNION first, it is used for range checks... */
 
-terminal            UNION,      SELECT,     RECORD,     WHERE,      FROM;
+terminal            UNION,      SELECT,     RECORD,     WHERE,      HAVING,     FROM;
 terminal            IS,         NOT,        NULL,       NAN,        AND;
 terminal            OR,         NEW,        FALSE,      TRUE;
 terminal            DISTINCT,   CAST,       IN,         GROUP;
@@ -155,7 +155,7 @@ non terminal Expression[]           Selector;
 
 /* Precedences */
 precedence left UNION;
-precedence left DISTINCT, SELECT, RECORD, FROM, WHERE, GROUP, ARRAY, JOIN, LEFT, TYPE, WITH;
+precedence left DISTINCT, SELECT, RECORD, FROM, WHERE, HAVING, GROUP, ARRAY, JOIN, LEFT, TYPE, WITH;
 precedence left TRIGGER, RESET, OVER, EVERY, OFFSET, LIMIT;
 precedence left COMMA;
 precedence left IF, CASE, WHEN, THEN, ELSE, END;
@@ -596,6 +596,7 @@ Select_Expression ::=
         [ Over_Expression:o {: RESULT = o; :} ]:over
         [ WHERE Expression:e  {: RESULT = e; :} ]:filter
         [ GROUP BY Expression_List:gby {: RESULT = gby; :} ]:gby
+        [ HAVING Expression:e  {: RESULT = e; :} ]:having
         [ Select_Limit:l {: RESULT = l; :} ]:limit
         {:
             RESULT =
@@ -604,6 +605,7 @@ Select_Expression ::=
                     (Expression) src,
                     (ArrayJoin) arrayJoin,
                     (Expression) filter,
+                    (Expression) having,
                     (TypeIdentifier) t,
                     m,
                     (Expression[]) gby,

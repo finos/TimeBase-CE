@@ -20,6 +20,7 @@ package com.epam.deltix.test.qsrv.hf.tickdb.qql.messages;
 import com.epam.deltix.qsrv.test.messages.BarMessage;
 import com.epam.deltix.timebase.messages.SchemaElement;
 
+@SchemaElement(name = "BarMessageExtended")
 public class BarMessageExtended extends BarMessage {
 
     private float customValue;

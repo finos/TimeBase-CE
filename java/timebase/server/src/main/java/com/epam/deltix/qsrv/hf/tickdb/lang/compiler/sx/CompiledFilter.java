@@ -23,6 +23,7 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OverCountExpression;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OverExpression;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OverTimeExpression;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -39,6 +40,9 @@ public class CompiledFilter extends CompiledQuery {
     public final CompiledQuery                  source;
 
     public final CompiledExpression             condition;
+
+    public final CompiledExpression             having;
+
     public final RunningFilter                  runningFilter;
     public final boolean                        aggregate;
     private final boolean                       running;
@@ -47,6 +51,7 @@ public class CompiledFilter extends CompiledQuery {
     public final SymbolLimits                   symbolLimits;
     public final SelectLimit limit;
     private final OverExpression over;
+    public final List<CompiledExpression> compiledArrayJoins;
     public TupleConstructor                     selector;  // selector can be changed during union merge
     public boolean                              someFormOfSelectStar;
 
@@ -54,6 +59,7 @@ public class CompiledFilter extends CompiledQuery {
             CompiledQuery                   source,
             QueryDataType                   type,
             CompiledExpression              condition,
+            CompiledExpression              having,
             RunningFilter                   runningFilter,
             boolean                         aggregate,
             boolean                         running,
@@ -61,14 +67,16 @@ public class CompiledFilter extends CompiledQuery {
             TupleConstructor                selector,
             TimestampLimits                 tslimits,
             SymbolLimits                    symbolLimits,
-            SelectLimit limit,
-            OverExpression over
+            SelectLimit                     limit,
+            OverExpression                  over,
+            List<CompiledExpression> compiledArrayJoins
     )
     {
         super(type);
 
         this.source = source;
         this.condition = condition;
+        this.having = having;
         this.runningFilter = runningFilter;
         this.aggregate = aggregate;
         this.running = running;
@@ -78,6 +86,7 @@ public class CompiledFilter extends CompiledQuery {
         this.symbolLimits = symbolLimits;
         this.limit = limit;
         this.over = over;
+        this.compiledArrayJoins = compiledArrayJoins;
     }
 
     @Override
@@ -130,6 +139,11 @@ public class CompiledFilter extends CompiledQuery {
         if (groupBy != null) {
             out.append (" ");
             out.append (groupBy);
+        }
+
+        if (having != null) {
+            out.append(" ");
+            out.append(having);
         }
 
         if (limit != null) {

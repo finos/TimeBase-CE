@@ -58,7 +58,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
 
     @Override
     public boolean next() {
-        if (hasPendingQueryStatus()) {
+        if (nextStatusMessage()) {
             return true;
         }
 
@@ -77,11 +77,18 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
             }
         }
         if (lastStates != null) {
-            if (lastStates.hasMoreElements()) {
-                writeLast(lastStates.nextElement());
-                switch (applyLimit(ACCEPT)) {
-                    case ABORT:     return false;
-                    case ACCEPT:    return true;
+            while (lastStates.hasMoreElements()) {
+                FilterState state = lastStates.nextElement();
+                if (!state.havingAccepted) {
+                    continue;
+                }
+                writeLast(state);
+                if (outMsg.data != null) {
+                    lastState = state;
+                    switch (applyLimit(ACCEPT)) {
+                        case ABORT:     return false;
+                        case ACCEPT:    return true;
+                    }
                 }
             }
             return false;
@@ -166,6 +173,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
         if (result == ACCEPT) {
             aggregatedMessages++;
         }
+
         if (result == ABORT) {
             return ABORT;
         } else if (running) {
@@ -195,6 +203,10 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
                 state.resetFunctions();
             }
             state.initializedOnInterval = false;
+            lastState = state;
+            if (!state.havingAccepted) {
+                continue;
+            }
             return true;
         }
         intervalStates = null;
@@ -226,6 +238,10 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
                 }
                 outMsg.setNanoTime(nanoTime);
                 outMsg = state.getLastMessage();
+                lastState = state;
+                if (!state.havingAccepted) {
+                    continue;
+                }
                 return true;
             }
             emptyMessages--;
@@ -243,9 +259,15 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
             return false;
         }
         while (lastStates.hasMoreElements()) {
-            writeLast(lastStates.nextElement());
-            if (outMsg.data != null)
+            FilterState state = lastStates.nextElement();
+            if (!state.havingAccepted) {
+                continue;
+            }
+            writeLast(state);
+            if (outMsg.data != null) {
+                lastState = state;
                 return true;
+            }
         }
         lastStates = null;
         return false;

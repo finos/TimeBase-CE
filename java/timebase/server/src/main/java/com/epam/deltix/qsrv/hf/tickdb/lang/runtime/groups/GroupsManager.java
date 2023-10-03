@@ -16,16 +16,18 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime.groups;
 
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.messages.QueryStatus;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.FilterState;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.GroupByFilterState;
 import com.epam.deltix.util.collections.ArrayEnumeration;
-import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class GroupsManager {
 
-    private final ObjectToObjectHashMap<GroupByFilterState, FilterState> states = new ObjectToObjectHashMap<>();
+    private final Map<GroupByFilterState, FilterState> states = new LinkedHashMap<>();
     private final ProcessedStatesStorage processedStatesStorage = new ProcessedStatesStorage();
     private final FilterState tempState;
     private boolean hasUnprocessedGroups;
@@ -38,10 +40,10 @@ public class GroupsManager {
 
     public void startProcess() {
         countManager.startProcess();
-        states.keyIterator().forEachRemaining(processedStatesStorage::add);
+        states.forEach((k, v) -> processedStatesStorage.add(k));
         states.clear();
         hasUnprocessedGroups = false;
-        tempState.setWarningMessage(null);
+        tempState.clearStatusMessage();
     }
 
     public void stopProcess() {
@@ -57,11 +59,13 @@ public class GroupsManager {
             return tempState;
         }
 
-        FilterState state = states.get(orderByState, null);
+        FilterState state = states.get(orderByState);
         if (state == null) {
             if (!countManager.canCreateNew(states.size())) {
-                hasUnprocessedGroups = true;
-                tempState.setWarningMessage(countManager.warningCause());
+                if (!hasUnprocessedGroups) {
+                    hasUnprocessedGroups = true;
+                    tempState.setStatusMessage(countManager.warningCause(), QueryStatus.WARNING);
+                }
                 return tempState;
             }
         }
@@ -74,7 +78,7 @@ public class GroupsManager {
     }
 
     public Enumeration<FilterState> getStates() {
-        return new ArrayEnumeration<>((FilterState[]) states.valuesToArray(new FilterState[states.size()]));
+        return new ArrayEnumeration<>(states.values().toArray(new FilterState[0]));
     }
 
 }

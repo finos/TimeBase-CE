@@ -1,0 +1,20 @@
+Running QQL: select size(streams())
+{"$type":"QUERY-6828743210003016644","symbol":"","SIZE (STREAMS ())":14}
+!END
+Running QQL: select t.name as 'typeName' array join streams()[this.key == 'KRAKEN'].topTypes as 't'
+{"$type":"QUERY2299100106175787","symbol":"","typeName":"deltix.qsrv.hf.plugins.data.kraken.types.KrakenPackageHeader"}
+{"$type":"QUERY2299100106175787","symbol":"","typeName":"deltix.qsrv.hf.plugins.data.kraken.types.KrakenSystemStatusMessage"}
+{"$type":"QUERY2299100106175787","symbol":"","typeName":"deltix.timebase.api.messages.service.ConnectionStatusChangeMessage"}
+{"$type":"QUERY2299100106175787","symbol":"","typeName":"deltix.timebase.api.messages.status.SecurityStatusMessage"}
+!END
+Running QQL: select "field".name, "field"."type".baseName as 'fieldType', "field"."type".encoding as 'encoding' array join streams()[this.key == 'KRAKEN'].topTypes.fields as 'field'
+{"$type":"QUERY7806381371293046800","symbol":"","field.name":"entries","fieldType":"ARRAY"}
+{"$type":"QUERY7806381371293046800","symbol":"","field.name":"originalStatus","fieldType":"VARCHAR","encoding":"UTF8"}
+{"$type":"QUERY7806381371293046800","symbol":"","field.name":"status","fieldType":"ENUM"}
+{"$type":"QUERY7806381371293046800","symbol":"","field.name":"cause","fieldType":"VARCHAR","encoding":"UTF8"}
+{"$type":"QUERY7806381371293046800","symbol":"","field.name":"status","fieldType":"ENUM"}
+{"$type":"QUERY7806381371293046800","symbol":"","field.name":"cause","fieldType":"VARCHAR","encoding":"UTF8"}
+{"$type":"QUERY7806381371293046800","symbol":"","field.name":"exchangeId","fieldType":"VARCHAR","encoding":"ALPHANUMERIC(10)"}
+{"$type":"QUERY7806381371293046800","symbol":"","field.name":"originalStatus","fieldType":"VARCHAR","encoding":"UTF8"}
+{"$type":"QUERY7806381371293046800","symbol":"","field.name":"status","fieldType":"ENUM"}
+!END

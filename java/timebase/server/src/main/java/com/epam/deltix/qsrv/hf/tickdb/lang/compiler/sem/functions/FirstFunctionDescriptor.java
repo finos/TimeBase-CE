@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions;
 
+import com.google.common.base.Objects;
 import com.epam.deltix.qsrv.hf.pub.md.DataType;
 
 import java.util.Collections;
@@ -29,11 +30,14 @@ public class FirstFunctionDescriptor implements StatefulFunctionDescriptor {
     private final DataType[] argTypes;
     private final Argument returnValue;
 
-    public FirstFunctionDescriptor(DataType dataType) {
+    private final Object argument; // for equals and hashCode
+
+    public FirstFunctionDescriptor(DataType dataType, Object argument) {
         this.dataType = dataType;
         this.arguments = Collections.singletonList(new Argument("value", dataType, null, null));
         this.argTypes = new DataType[]{dataType};
         this.returnValue = new Argument("first", dataType, null, null);
+        this.argument = argument;
     }
 
     @Override
@@ -124,5 +128,18 @@ public class FirstFunctionDescriptor implements StatefulFunctionDescriptor {
     @Override
     public int startNanoTimeIndex() {
         return -1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FirstFunctionDescriptor that = (FirstFunctionDescriptor) o;
+        return Objects.equal(argument, that.argument);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(argument);
     }
 }

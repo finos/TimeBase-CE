@@ -202,7 +202,8 @@ public class UnionHelper {
         } else {
             NonStaticDataField f = (NonStaticDataField) field;
             newField = new NonStaticDataField(
-                f.getName(), f.getTitle(), type, f.isPk(), f.getRelativeTo());
+                f.getName(), f.getTitle(), type, f.isPk(), f.getRelativeTo(), false //f.isDisplayIdentifier()
+            );
             newField.setAttributes(f.getAttributes());
         }
         newField.setDescription(field.getDescription());

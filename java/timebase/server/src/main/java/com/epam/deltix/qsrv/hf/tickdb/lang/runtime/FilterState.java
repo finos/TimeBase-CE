@@ -20,6 +20,7 @@ import com.epam.deltix.qsrv.hf.codec.cg.StringBuilderPool;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.messages.QueryStatus;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.InstancePool;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 
@@ -29,6 +30,7 @@ import com.epam.deltix.util.memory.MemoryDataOutput;
 public abstract class FilterState {
 
     boolean accepted = false;
+    boolean havingAccepted = true;
     boolean waitingByTime = false;
     int messagesCount = 0;
     boolean initializedOnInterval = false;
@@ -36,7 +38,9 @@ public abstract class FilterState {
     protected final StringBuilderPool varcharPool;
     protected final InstancePool instancePool;
 
-    String warningMessage;
+    private String statusMessage;
+
+    private QueryStatus status;
 
     private final FilterIMSImpl filter;
 
@@ -55,8 +59,25 @@ public abstract class FilterState {
         return (accepted);
     }
 
-    public void setWarningMessage(String message) {
-        this.warningMessage = message;
+    public void clearStatusMessage() {
+        setStatusMessage(null, null);
+    }
+
+    public boolean hasStatusMessage() {
+        return statusMessage != null;
+    }
+
+    public void setStatusMessage(String message, QueryStatus status) {
+        this.statusMessage = message;
+        this.status = status;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    public QueryStatus getStatus() {
+        return status;
     }
 
     protected RawMessage getLastMessage() {
@@ -71,11 +92,17 @@ public abstract class FilterState {
     }
 
     protected RecordClassDescriptor getDescriptor(String descriptorName) {
-        ClassDescriptor cd = filter.inputClassSet.getClassDescriptor(descriptorName);
-        if (cd instanceof RecordClassDescriptor) {
-            return (RecordClassDescriptor) cd;
+        if (filter != null) {
+            ClassDescriptor cd = filter.inputClassSet.getClassDescriptor(descriptorName);
+            if (cd instanceof RecordClassDescriptor) {
+                return (RecordClassDescriptor) cd;
+            }
         }
 
         return null;
+    }
+
+    public void setHavingAccepted(boolean havingAccepted) {
+        this.havingAccepted = havingAccepted;
     }
 }

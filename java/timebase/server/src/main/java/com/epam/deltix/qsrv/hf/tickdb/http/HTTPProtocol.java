@@ -35,7 +35,7 @@ public abstract class HTTPProtocol {
 
     public static final Logger LOGGER = Logger.getLogger(HTTPProtocol.class.getPackage().getName());
 
-    public static final short VERSION = 31;
+    public static final short VERSION = 32;
     public static final short MIN_CLIENT_VERSION = 31;
     public static final short CLIENT_ENTITYID32_SUPPORT_VERSION = 31;
 

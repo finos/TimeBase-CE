@@ -54,4 +54,9 @@ public class SelectRequest extends DownloadRequest {
 
     @XmlElement()
     public boolean              realTimeNotification = false;
+
+    @XmlElementWrapper
+    @XmlElement(name = "item")
+    public String[]             spaces;
+
 }

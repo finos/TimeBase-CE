@@ -100,7 +100,7 @@ _Need an ICLA? Unsure if you are covered under an existing CCLA? Email [help@fin
 ## Development Team
 
 - [Stuart Farr](https://github.com/stuartfarr) - Business
-- Matthew Gorelik - Product Manager
+- [Matthew Gorelik](https://github.com/mattgor123) - Product Manager
 - [Aliaksei Vavilov](https://github.com/avavilau) - Delivery Manager
 - [Alex Karpovich](https://github.com/alex-karpovich) - Chief Solution Architect / Main Developer / Maintainer
 - [Alexei Osipov](https://github.com/alexei-osipov) - Solution Architect / Main Developer

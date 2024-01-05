@@ -621,6 +621,7 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
             final SelectionOptions so = new SelectionOptions(true, request.live, request.reverse);
             so.allowLateOutOfOrder = request.allowLateOutOfOrder;
             so.realTimeNotification = request.realTimeNotification;
+            so.withSpaces(request.spaces);
 
             InstrumentMessageSource cursor = db.select(request.reverse ? request.to : request.from, so, request.types, request.symbols, streams);
 
@@ -656,10 +657,14 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
         protected InstrumentMessageSource createSource() {
             InstrumentMessageSource source = null;
 
+            final SelectionOptions so = new SelectionOptions(true, request.live, request.reverse);
+            so.allowLateOutOfOrder = request.allowLateOutOfOrder;
+            so.realTimeNotification = request.realTimeNotification;
+            so.withSpaces(request.spaces);
             if (params != null)
-                source = db.executeQuery(request.qql, new SelectionOptions(), null, request.symbols, request.from, params);
+                source = db.executeQuery(request.qql, so, null, request.symbols, request.from, params);
             else
-                source = db.executeQuery(request.qql, new SelectionOptions(), null, request.symbols, request.from);
+                source = db.executeQuery(request.qql, so, null, request.symbols, request.from);
 
             source.setAvailabilityListener(new Runnable() {
                 @Override

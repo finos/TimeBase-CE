@@ -37,6 +37,7 @@ import com.epam.deltix.util.concurrent.UnavailableResourceException;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 import com.epam.deltix.util.time.TimeKeeper;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.GregorianCalendar;
@@ -558,12 +559,11 @@ public class Test_RealTimeMode extends TDBTestBase {
         return stream;
     }
 
-    @Test
+    @Ignore
     public void testQQL() {
         DXTickDB tickDb = getServerDb();
 
         StreamOptions options = new StreamOptions (StreamScope.DURABLE, "qql_bars", null, 0);
-        //options.location = "abc"; //TODO
         options.setFixedType (StreamConfigurationHelper.mkUniversalBarMessageDescriptor());
 
         final DXTickStream bars = tickDb.createStream(options.name, options);

@@ -18,6 +18,7 @@ package com.epam.deltix.test.qsrv.hf.tickdb;
 
 import com.epam.deltix.containers.CharSequenceUtils;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
+import com.epam.deltix.qsrv.hf.tickdb.pub.query.InstrumentMessageSource;
 import com.epam.deltix.qsrv.test.messages.BarMessage;
 import com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
@@ -302,11 +303,50 @@ public class Test_SpaceReading {
         String streamKey = "testSpacesStream4";
         DXTickStream stream = db.createStream(streamKey, options);
 
-
         generateMessagesForSpaces(stream, 8);
 
         ensureStrictMessageOrder(stream, false);
         ensureStrictMessageOrder(stream, true);
+    }
+
+    @Test
+    public void testQueries() {
+        DXTickDB db = runner.getTickDb();
+
+        StreamOptions options = new StreamOptions(StreamScope.DURABLE, null, null, 0);
+        options.setFixedType(StreamConfigurationHelper.mkUniversalBarMessageDescriptor());
+
+        String streamKey = "testQueries";
+        DXTickStream stream = db.createStream(streamKey, options);
+
+        generateMessagesForSpaces(stream, 4);
+
+        int count = 0;
+
+        SelectionOptions so = new SelectionOptions();
+        so.withSpace("a");
+
+        try (InstrumentMessageSource source =
+                     runner.getTickDb().executeQuery("select * from testQueries where symbol == 'a'", so)) {
+
+            while (source.next()) {
+                count++;
+            }
+
+            assertEquals(10_000, count);
+        }
+
+        count = 0;
+        try (InstrumentMessageSource source =
+                     runner.getTickDb().executeQuery("select * from testQueries where symbol == 'b'", so)) {
+
+            while (source.next()) {
+                count++;
+            }
+
+            assertEquals(0, count);
+        }
+
     }
 
     /**

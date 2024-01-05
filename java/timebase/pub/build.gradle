@@ -14,9 +14,6 @@ dependencies {
     implementation 'com.epam.deltix:gflog-api',
                    'com.epam.deltix:gflog-jul'
 
-    implementation 'com.sun.codemodel:codemodel:2.6'
-    implementation 'com.sun.codemodel:codemodel-project:2.6'
-
     implementation 'com.sun.activation:javax.activation:1.2.0'
     implementation 'javax.activation:javax.activation-api:1.2.0'
 

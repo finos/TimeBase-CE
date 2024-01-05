@@ -57,7 +57,7 @@ licenseReport {
 //    }
 
     excludeGroups = ['javax.servlet.*']
-    excludes = ['asm:asm', 'com.sun.codemodel:codemodel-project', 'net.jcip:jcip-annotations', 'com.fasterxml.jackson:jackson-bom']
+    excludes = ['asm:asm', 'net.jcip:jcip-annotations', 'com.fasterxml.jackson:jackson-bom']
 
     configurations = ['runtimeClasspath']
     allowedLicensesFile = new File("$rootDir/allowed-lic.json")
@@ -167,9 +167,6 @@ configure(leafProjects) {
 //            dependency 'java:tools:1.8.0_121'
             dependency 'com.sun.activation:javax.activation:1.2.0'
             dependency 'javax.activation:javax.activation-api:1.2.0'
-
-            dependency 'com.sun.codemodel:codemodel:2.6'
-            dependency 'com.sun.codemodel:codemodel-project:2.6'
 
             dependency 'com.google.guava:guava:32.0.1-jre'
             dependency 'com.google.code.gson:gson:2.8.9'

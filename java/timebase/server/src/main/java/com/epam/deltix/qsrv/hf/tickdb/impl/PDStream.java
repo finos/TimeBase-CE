@@ -430,8 +430,8 @@ public class PDStream extends TickStreamImpl {
                 }
             }
 
-//            // lock order: this->roots
-//            if (changed) {
+            // lock order: this->roots
+            if (changed) {
 //                SpaceCreatedMessage msg = new SpaceCreatedMessage();
 //                msg.setSymbol(""); // @SYSTEM
 //                msg.setTimeStampMs(TimeKeeper.currentTime);
@@ -439,16 +439,16 @@ public class PDStream extends TickStreamImpl {
 //                msg.setName(spot);
 //
 //                addSystemMessage(msg);
-//
-//                setDirty(true);
-//
-//                TickCursor[] cursors = getSnapshotOfOpenCursors();
-//                for (int i = 0; i < cursors.length; i++) {
-//                    TickCursor cursor = cursors[i];
-//                    if (cursor instanceof TickCursorImpl)
-//                        ((TickCursorImpl) cursor).notifySpaceCreated(this, spot);
-//                }
-//            }
+
+                setDirty(true);
+
+                TickCursor[] cursors = getSnapshotOfOpenCursors();
+                for (int i = 0; i < cursors.length; i++) {
+                    TickCursor cursor = cursors[i];
+                    if (cursor instanceof TickCursorImpl)
+                        ((TickCursorImpl) cursor).notifySpaceCreated(this, spot);
+                }
+            }
 
             return selected;
         } catch (IOException e) {

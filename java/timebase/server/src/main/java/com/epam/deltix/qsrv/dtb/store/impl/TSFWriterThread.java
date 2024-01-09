@@ -70,7 +70,7 @@ class TSFWriterThread extends Thread {
                 try {
                     // should be under try/catch to not crash WriterThread
                     try {
-                        lockAcquired = root.acquireWriteLock();
+                        lockAcquired = root.acquireSharedLock();
                     } catch (IllegalStateException ex) {
                         // root is invalid
                         LOGGER.warn().append("Cannot get lock on ").append(root).commit();
@@ -127,7 +127,7 @@ class TSFWriterThread extends Thread {
                     pds.fileHasFailed (tsf, x);
                 } finally {
                     if (lockAcquired)
-                        root.releaseWriteLock ();
+                        root.releaseSharedLock ();
                 }
             }
         } catch (InterruptedException x) {

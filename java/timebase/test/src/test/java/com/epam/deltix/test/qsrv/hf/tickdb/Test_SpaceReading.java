@@ -18,6 +18,7 @@ package com.epam.deltix.test.qsrv.hf.tickdb;
 
 import com.epam.deltix.containers.CharSequenceUtils;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
+import com.epam.deltix.qsrv.hf.tickdb.pub.query.InstrumentMessageSource;
 import com.epam.deltix.qsrv.test.messages.BarMessage;
 import com.epam.deltix.test.qsrv.hf.tickdb.server.ServerRunner;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
@@ -302,11 +303,231 @@ public class Test_SpaceReading {
         String streamKey = "testSpacesStream4";
         DXTickStream stream = db.createStream(streamKey, options);
 
-
         generateMessagesForSpaces(stream, 8);
 
         ensureStrictMessageOrder(stream, false);
         ensureStrictMessageOrder(stream, true);
+    }
+
+    @Test
+    public void testLive() throws InterruptedException {
+        DXTickDB db = runner.getTickDb();
+
+        StreamOptions options = new StreamOptions(StreamScope.DURABLE, null, null, 0);
+        options.version = "5.0";
+        options.setFixedType(StreamConfigurationHelper.mkUniversalBarMessageDescriptor());
+
+        String streamKey = "liveSpace";
+        DXTickStream stream = db.createStream(streamKey, options);
+
+        generateSpace(stream, 1_000_000, "z1");
+        generateSpace(stream, 1_000_000, "z2");
+
+        final long lastTime = stream.getTimeRange()[1];
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try (TickCursor cursor = stream.select(lastTime, new SelectionOptions(true,true))) {
+                    int count = 0;
+                    while (cursor.next() && count < 2_000_000) {
+                        InstrumentMessage message = cursor.getMessage();
+                        count++;
+                    }
+                    System.out.println("read messages: " + count);
+                }
+            }
+        };
+
+        Thread reader = new Thread(runnable);
+        reader.start();
+        Thread.sleep(1000);
+
+        generateSpace(stream, 1_000_000, "z1", "z2");
+
+        reader.join();
+    }
+
+    @Test
+    public void testLiveReading() throws InterruptedException {
+        DXTickDB db = runner.getTickDb();
+
+        StreamOptions options = new StreamOptions(StreamScope.DURABLE, null, null, 0);
+        options.setFixedType(StreamConfigurationHelper.mkUniversalBarMessageDescriptor());
+
+        String streamKey = "liveTest";
+        DXTickStream stream = db.createStream(streamKey, options);
+
+        generateSpace(stream, 1_000_000, "z1");
+
+        final long lastTime = stream.getTimeRange()[1];
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try (TickCursor cursor = stream.select(lastTime, new SelectionOptions(true,true))) {
+                    int count = 0;
+                    while (cursor.next() && count < 2_000_000) {
+                        InstrumentMessage message = cursor.getMessage();
+                        count++;
+
+                        if (count % 100_000 == 0)
+                            System.out.println("read messages: " + count);
+                    }
+                    System.out.println("Completed. read messages: " + count);
+                }
+            }
+        };
+
+        Thread reader = new Thread(runnable);
+        reader.start();
+        Thread.sleep(1000);
+
+        generateSpace(stream, 1_000_000, "z1");
+        generateSpace(stream, 1_000_000, "z2");
+
+        reader.join();
+    }
+
+    @Test
+    public void testLiveReading1() throws InterruptedException {
+        DXTickDB db = runner.getTickDb();
+
+        StreamOptions options = new StreamOptions(StreamScope.DURABLE, null, null, 0);
+        options.setFixedType(StreamConfigurationHelper.mkUniversalBarMessageDescriptor());
+
+        String streamKey = "liveTest1";
+        DXTickStream stream = db.createStream(streamKey, options);
+
+        generateSpace(stream, 1_000_000, "z1");
+
+        final long lastTime = stream.getTimeRange()[1];
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                SelectionOptions so = new SelectionOptions(true, true);
+                so.withSpace("z1");
+                try (TickCursor cursor = stream.select(lastTime, so)) {
+                    int count = 0;
+                    while (cursor.next() && count < 1_000_000) {
+                        InstrumentMessage message = cursor.getMessage();
+                        count++;
+
+                        if (count % 100_000 == 0)
+                            System.out.println("read messages: " + count);
+                    }
+                    System.out.println("Completed. read messages: " + count);
+                }
+            }
+        };
+
+        Thread reader = new Thread(runnable);
+        reader.start();
+        Thread.sleep(1000);
+
+        generateSpace(stream, 1_000_000, "z1");
+        generateSpace(stream, 1_000_000, "z2");
+
+        reader.join();
+    }
+
+    @Test
+    public void testQueries() {
+        DXTickDB db = runner.getTickDb();
+
+        StreamOptions options = new StreamOptions(StreamScope.DURABLE, null, null, 0);
+        options.setFixedType(StreamConfigurationHelper.mkUniversalBarMessageDescriptor());
+
+        String streamKey = "testQueries";
+        DXTickStream stream = db.createStream(streamKey, options);
+
+        generateMessagesForSpaces(stream, 4);
+
+        int count = 0;
+
+        SelectionOptions so = new SelectionOptions();
+        so.withSpace("a");
+
+        try (InstrumentMessageSource source =
+                     runner.getTickDb().executeQuery("select * from testQueries where symbol == 'a'", so)) {
+
+            while (source.next()) {
+                count++;
+            }
+
+            assertEquals(10_000, count);
+        }
+
+        count = 0;
+        try (InstrumentMessageSource source =
+                     runner.getTickDb().executeQuery("select * from testQueries where symbol == 'b'", so)) {
+
+            while (source.next()) {
+                count++;
+            }
+
+            assertEquals(0, count);
+        }
+    }
+
+    private void generateSpaces(DXTickStream stream, int spaceCount) {
+
+        BarMessage message = new BarMessage();
+        message.setHigh(1);
+        message.setOpen(1);
+        message.setClose(1);
+        message.setLow(1);
+        message.setVolume(1);
+        //message.setCurrencyCode((short)840);
+
+        long timestamp = 0;
+
+        for (int i = 0; i < spaceCount; i++) {
+            String space = ("a-" + i);
+
+            LoadingOptions lo = new LoadingOptions();
+            lo.space = space;
+            lo.writeMode = LoadingOptions.WriteMode.APPEND;
+            try (TickLoader loader = stream.createLoader(lo)) {
+
+                for (int j = 0; j < 1_000_000; j++) {
+                    timestamp += 1;
+
+                    message.setTimeStampMs(timestamp);
+                    message.setSymbol(space);
+
+                    loader.send(message);
+                }
+            }
+        }
+    }
+
+    private void generateSpace(DXTickStream stream, int count, String ... spaces) {
+
+        BarMessage message = new BarMessage();
+        message.setHigh(1);
+        message.setOpen(1);
+        message.setClose(1);
+        message.setLow(1);
+        message.setVolume(1);
+
+        for (int i = 0; i < spaces.length; i++) {
+            LoadingOptions lo = new LoadingOptions();
+            lo.space = spaces[i];
+            lo.writeMode = LoadingOptions.WriteMode.APPEND;
+            try (TickLoader loader = stream.createLoader(lo)) {
+
+                for (int j = 0; j < count; j++) {
+                    //timestamp += 1;
+
+                    //message.setTimeStampMs(timestamp);
+                    message.setSymbol(lo.space);
+
+                    loader.send(message);
+                }
+            }
+        }
     }
 
     /**

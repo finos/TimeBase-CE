@@ -1193,12 +1193,14 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     }
 
     private void                    close(FileInput in) {
-        if (in != null && in.close()) {
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug().append("closing ").append(getPathString()).commit();
+        if (in != null) {
+            if (in.close()) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug().append("closing ").append(getPathString()).commit();
+                root.releaseSharedLock();
+            }
 
             inputs.release(in);
-            root.releaseSharedLock();
         }
     }
     

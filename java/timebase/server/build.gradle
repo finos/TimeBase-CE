@@ -54,40 +54,12 @@ dependencies {
 
     implementation group: 'org.ehcache', name: 'ehcache', version: '3.9.3'
 
-//    implementation 'org.apache.hadoop:hadoop-hdfs:3.3.1'
-//    implementation 'org.apache.hadoop:hadoop-common:3.3.1'
-
-    // Hadoop API
-//    implementation('org.apache.hadoop:hadoop-annotations'){ transitive = false}
-//    implementation('org.apache.hadoop:hadoop-auth'){ transitive = false }
-//    compile('org.apache.hadoop:hadoop-common'){ transitive = false } // TODO: Should be "implementation"
-//    implementation('org.apache.hadoop:hadoop-mapreduce-client-common'){ transitive = false } // TODO: Should be "implementation"
-//    compile('org.apache.hadoop:hadoop-mapreduce-client-core'){ transitive = false }   //have hadoop-yarn-common.jar v in dependency // TODO: Should be "implementation"
-//    implementation('org.apache.hadoop:hadoop-yarn-api'){ transitive = false }
-//    implementation('org.apache.hadoop:hadoop-yarn-client'){ transitive = false }
-//    implementation('org.apache.hadoop:hadoop-yarn-common'){ transitive = false }
-
-    // JMS Api
-    // compile('org.apache.qpid:qpid-jms-client:0.11.1') { transitive = false } // TODO: Should be "implementation"
-    // compile 'org.glassfish.main.javaee-api:javax.jms:3.1.2.2' // TODO: Should be "implementation"
-
-    // AMQP API
-    // compile('org.apache.qpid:qpid-amqp-1-0-client:0.32') // TODO: Should be "implementation"
-
-//    implementation('org.apache.qpid:proton-j:0.15.0') { transitive = false }
-//    implementation('org.bouncycastle:bcpkix-jdk15on') { transitive = false } //using proton-j for read cert
-
-    implementation('net.jpountz.lz4:lz4:1.3.0') { transitive = false }
-    implementation('org.xerial.snappy:snappy-java')
+    implementation 'org.lz4:lz4-java:1.8.0' // LZH codec
+    implementation 'org.xerial.snappy:snappy-java'
 
     //implementation('org.glassfish:javax.json')
 
     implementation 'com.google.guava:guava'
-
-//    implementation group: 'com.microsoft.azure', name: 'azure-data-lake-store-sdk', version: '2.1.5'
-//    implementation group: 'com.microsoft.azure', name: 'azure-mgmt-datalake-store', version: '1.0.0-beta1.2'
-//    implementation group: 'com.microsoft.azure', name: 'azure-mgmt-datalake-store-uploader', version: '1.0.0-beta1.2'
-//    implementation group: 'com.microsoft.azure', name: 'azure-client-authentication', version: '1.0.0-beta2'
 
     implementation group: 'com.microsoft.azure', name: 'azure-data-lake-store-sdk', version: '2.3.9'
 

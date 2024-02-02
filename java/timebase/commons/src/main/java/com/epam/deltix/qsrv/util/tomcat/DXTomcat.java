@@ -308,6 +308,13 @@ public class DXTomcat extends Tomcat {
         ctx.setConfigFile(getWebappConfigFile(path, url));
         ctx.setUnpackWAR(false);
 
+        // By default, Tomcat tries to fix a memory leak in Java implementation:
+        // https://bugs.openjdk.org/browse/JDK-8277072
+        // However Tomcat's implementation (Tomcat 8.0.x) is not compatible with Java 11+.
+        // Also, this clean up it not really needed for TimeBase because we don't reload web applications.
+        // So we disable this feature to avoid unnecessary warning messages in the log.
+        ctx.setClearReferencesObjectStreamClassCaches(false);
+
         ContextConfig ctxCfg = new ContextConfig();
         ctx.addLifecycleListener(ctxCfg);
 

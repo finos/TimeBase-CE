@@ -335,6 +335,27 @@ public class TickCursorImpl implements
             lnr.run ();
     }
 
+    public void                        notifySpaceCreated (DXTickStream stream, String space) {
+        Runnable lnr;
+
+        synchronized (mx) {
+            // is mx closed?
+            if (mx.syncIsClosed ())
+                return;
+
+            assert delayedListenerToCall == null : dlnrDiag ();
+
+            StreamSource source = subscribedStreams.get((ServerStreamImpl) stream, null);
+            if (source != null)
+                source.spaceCreated(space);
+
+            lnr = lnrTriggered ();
+        }
+
+        if (lnr != null)
+            lnr.run ();
+    }
+
     protected boolean                      isSubscribed(IdentityKey iid) {
         // no allocations
         return subscribedEntities.containsKey(iid);

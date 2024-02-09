@@ -158,33 +158,42 @@ abstract class QQLPostProcessingPatterns {
         return (range);
     }
 
-    public static SymbolLimits symbolLimits(CompiledExpression<?> e) {
+    public static SymbolLimits symbolLimits(CompiledExpression<?> e, List<CompiledExpression> matched) {
         boolean conj = isConjunction(e);
         boolean disj = isDisjunction(e);
         if (conj || disj) {
             LogicalOperation ae = (LogicalOperation) e;
 
-            SymbolLimits s1 = symbolLimits(ae.args[0]);
-            SymbolLimits s2 = symbolLimits(ae.args[1]);
+            SymbolLimits s1 = symbolLimits(ae.args[0], matched);
+            SymbolLimits s2 = symbolLimits(ae.args[1], matched);
             if (s1.isSubscribeAll() && s2.isSubscribeAll()) {
                 return new SymbolLimits(true);
             } else if (s1.isSubscribeAll() && !s2.isSubscribeAll()) {
+                matched.add(e);
                 if (disj) {
                     return new SymbolLimits(true);
                 } else {
-                    return new SymbolLimits(false, s2.symbols());
+                    return new SymbolLimits(false, s2.symbols(), s2.parameterRefs());
                 }
             } else if (!s1.isSubscribeAll() && s2.isSubscribeAll()) {
+                matched.add(e);
                 if (disj) {
                     return new SymbolLimits(true);
                 } else {
-                    return new SymbolLimits(false, s1.symbols());
+                    return new SymbolLimits(false, s1.symbols(), s1.parameterRefs());
                 }
             } else if (!s1.isSubscribeAll() && !s2.isSubscribeAll()) {
+                matched.add(e);
                 if (disj) {
-                    return new SymbolLimits(false, symbolsUnion(s1.symbols(), s2.symbols()));
+                    return new SymbolLimits(false,
+                        union(s1.symbols(), s2.symbols()),
+                        union(s1.parameterRefs(), s2.parameterRefs())
+                    );
                 } else {
-                    return new SymbolLimits(false, symbolsIntersection(s1.symbols(), s2.symbols()));
+                    return new SymbolLimits(false,
+                        intersection(s1.symbols(), s2.symbols()),
+                        intersection(s1.parameterRefs(), s2.parameterRefs())
+                    );
                 }
             }
         } else {
@@ -193,9 +202,17 @@ abstract class QQLPostProcessingPatterns {
                 CompiledExpression<?> left = operation.args[0];
                 CompiledExpression<?> right = operation.args[1];
                 if (left instanceof SymbolSelector && right instanceof CompiledConstant) {
+                    matched.add(e);
                     return new SymbolLimits(false, ((CompiledConstant) right).value.toString());
                 } else if (right instanceof SymbolSelector && left instanceof CompiledConstant) {
+                    matched.add(e);
                     return new SymbolLimits(false, ((CompiledConstant) left).value.toString());
+                } else if (left instanceof SymbolSelector && right instanceof ParamAccess) {
+                    matched.add(e);
+                    return new SymbolLimits(false, ((ParamAccess) right).ref.index);
+                } else if (right instanceof SymbolSelector && left instanceof ParamAccess) {
+                    matched.add(e);
+                    return new SymbolLimits(false, ((ParamAccess) left).ref.index);
                 }
             } else if (e instanceof ConnectiveExpression) {
                 ConnectiveExpression operation = (ConnectiveExpression) e;
@@ -207,7 +224,8 @@ abstract class QQLPostProcessingPatterns {
                         }
                     }
 
-                    return new SymbolLimits(false, symbols);
+                    matched.add(e);
+                    return new SymbolLimits(false, symbols, new ArrayList<>());
                 }
             }
         }
@@ -215,20 +233,20 @@ abstract class QQLPostProcessingPatterns {
         return new SymbolLimits(true);
     }
 
-    private static List<String> symbolsUnion(List<String> s1, List<String> s2) {
-        HashSet<String> symbols = new HashSet<>(s1);
-        symbols.addAll(s2);
-        return new ArrayList<>(symbols);
+    private static <T> List<T> union(List<T> s1, List<T> s2) {
+        HashSet<T> values = new HashSet<>(s1);
+        values.addAll(s2);
+        return new ArrayList<>(values);
     }
 
-    private static List<String> symbolsIntersection(List<String> s1, List<String> s2) {
-        HashSet<String> s1Symbols = new HashSet<>(s1);
-        ArrayList<String> symbols = new ArrayList<>();
+    private static <T> List<T> intersection(List<T> s1, List<T> s2) {
+        HashSet<T> values1 = new HashSet<>(s1);
+        ArrayList<T> values = new ArrayList<>();
         s2.forEach(s -> {
-            if (s1Symbols.contains(s)) {
-                symbols.add(s);
+            if (values1.contains(s)) {
+                values.add(s);
             }
         });
-        return symbols;
+        return values;
     }
 }

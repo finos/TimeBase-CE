@@ -1472,7 +1472,11 @@ public class QQLExpressionCompiler {
                     tslimits =
                         QQLPostProcessingPatterns.adjustTimestampLimits(flatCond, e.getEndTime());
 
-                    symbolLimits = QQLPostProcessingPatterns.symbolLimits(cond);
+                    List<CompiledExpression> matchedConditions = new ArrayList<>();
+                    symbolLimits = QQLPostProcessingPatterns.symbolLimits(cond, matchedConditions);
+                    if (!symbolLimits.isSubscribeAll()) {
+                        matchedConditions.forEach(flatCond::remove);
+                    }
 
                     cond = QQLPostProcessingPatterns.reconstructConjunction(flatCond);
                 } else {
@@ -2702,6 +2706,7 @@ public class QQLExpressionCompiler {
         }
 
         // adding argument into constants
+        int constantsCount = constants.size();
         constants.add(0, carg);
 
         ConnectiveExpression expr = new ConnectiveExpression(!e.positive,
@@ -2709,7 +2714,7 @@ public class QQLExpressionCompiler {
 
         if (ret == null) {
             ret = expr;
-        } else if (constants.size() > 0) {
+        } else if (constantsCount > 0) {
             ret = e.positive ? processOr(ret, expr) : processAnd(ret, expr);
         }
 

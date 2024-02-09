@@ -22,6 +22,10 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 
+import java.util.Arrays;
+import java.util.Objects;
+
+
 /**
  *  Implements the InstrumentMessageSource interface by delegation.
  */
@@ -80,7 +84,11 @@ public class DelegatingInstrumentMessageSource
         if (symbolsToAdjust == null) {
             return false;
         } else {
-            addSymbols(symbolsToAdjust);
+            addSymbols(
+                Arrays.stream(symbolsToAdjust)
+                    .filter(Objects::nonNull)
+                    .toArray(String[]::new)
+            );
             return true;
         }
     }

@@ -24,7 +24,8 @@ import java.util.List;
  *
  */
 public class SymbolLimits {
-    private List<String> symbols = new ArrayList<>();
+    private final List<String> symbols = new ArrayList<>();
+    private final List<Integer> parameterRefs = new ArrayList<>();
     private boolean subscribeAll;
 
     public SymbolLimits() {
@@ -40,9 +41,15 @@ public class SymbolLimits {
         this.symbols.add(symbol);
     }
 
-    public SymbolLimits(boolean subscribeAll, List<String> symbols) {
+    public SymbolLimits(boolean subscribeAll, int paramNum) {
+        this.subscribeAll = subscribeAll;
+        this.parameterRefs.add(paramNum);
+    }
+
+    public SymbolLimits(boolean subscribeAll, List<String> symbols, List<Integer> parameterRefs) {
         this.subscribeAll = subscribeAll;
         this.symbols.addAll(symbols);
+        this.parameterRefs.addAll(parameterRefs);
     }
 
     public void addSymbol(String symbol) {
@@ -51,6 +58,18 @@ public class SymbolLimits {
 
     public List<String> symbols() {
         return symbols;
+    }
+
+    public void addParameter(Integer paramNum) {
+        parameterRefs.add(paramNum);
+    }
+
+    public List<Integer> parameterRefs() {
+        return parameterRefs;
+    }
+
+    public boolean hasSymbols() {
+        return !symbols.isEmpty() || !parameterRefs.isEmpty();
     }
 
     public boolean isSubscribeAll() {

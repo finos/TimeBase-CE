@@ -23,6 +23,9 @@ import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
+import com.epam.deltix.qsrv.hf.pub.values.IntegerValueBean;
+import com.epam.deltix.qsrv.hf.pub.values.StringValueBean;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.TimestampLimits;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.InstancePool;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
@@ -77,6 +80,8 @@ public abstract class FilterIMSImpl
     private long firstMessageTimestamp = Long.MIN_VALUE;
 
     protected long aggregatedMessages;
+
+    protected final long stopPoint;
     
     protected FilterIMSImpl (
         InstrumentMessageSource             source,
@@ -100,6 +105,7 @@ public abstract class FilterIMSImpl
         stateProvider = newStateProvider(this);
 
         queryStatusMessageProvider = new QueryStatusMessageProvider(outputTypes);
+        stopPoint = getStopPoint();
     }
 
     protected abstract FilterStateProvider newStateProvider(FilterIMSImpl filter);
@@ -400,4 +406,127 @@ public abstract class FilterIMSImpl
             firstMessageTimestamp = source.getMessage().getTimeStampMs();
         }
     }
+
+
+    // calls from generated code
+    protected long adjustForwardResetPoint(long time, long paramTime, int[] paramNums) {
+        return Math.max(time, getMaxTime(paramTime, paramNums));
+    }
+
+    // calls from generated code
+    protected long adjustBackwardResetPoint(long time, long paramTime, int[] paramNums) {
+        return Math.min(time, getMinTime(paramTime, paramNums));
+    }
+
+    // calls from generated code
+    protected long getStopPoint() {
+        return 0;
+    }
+
+    // calls from generated code
+    protected String getVarcharParam(int num) {
+        if (num < 0 || num >= params.length) {
+            return null;
+        }
+
+        ReadableValue param = params[num];
+        if (param instanceof StringValueBean) {
+            return ((StringValueBean) param).getString();
+        }
+
+        return null;
+    }
+
+    protected long getMaxTime(long filterTime, int[] paramNums) {
+        if (isEmpty(paramNums)) {
+            return filterTime;
+        }
+
+        return Math.max(filterTime, findMaxParamValue(paramNums));
+    }
+
+    protected long getMinTime(long filterTime, int[] paramNums) {
+        if (isEmpty(paramNums)) {
+            return filterTime;
+        }
+
+        return Math.min(filterTime, findMinParamValue(paramNums));
+    }
+
+    private boolean isEmpty(int[] paramNums) {
+        return paramNums == null || paramNums.length == 0;
+    }
+
+    private long findMaxParamValue(int[] paramNums) {
+        long maxValue = getMaxTimestamp(paramNums, 0);
+        for (int i = 1; i < paramNums.length; ++i) {
+            long currentValue = getMaxTimestamp(paramNums, i);
+            if (currentValue > maxValue) {
+                maxValue = currentValue;
+            }
+        }
+
+        return maxValue;
+    }
+
+    private long findMinParamValue(int[] paramNums) {
+        long minValue = getMinTimestamp(paramNums, 0);
+        for (int i = 1; i < paramNums.length; ++i) {
+            long currentValue = getMinTimestamp(paramNums, i);
+            if (currentValue < minValue) {
+                minValue = currentValue;
+            }
+        }
+
+        return minValue;
+    }
+
+    private long getMaxTimestamp(int[] paramNums, int i) {
+        long value = getLongParam(paramNums[i], Long.MIN_VALUE);
+        if (value == Long.MIN_VALUE) {
+            return value;
+        }
+
+        if (isNotStrictCondition(paramNums[i])) {
+            return value + 1;
+        }
+
+        return value;
+    }
+
+    private long getMinTimestamp(int[] paramNums, int i) {
+        long value = getLongParam(paramNums[i], Long.MAX_VALUE);
+        if (value == Long.MAX_VALUE) {
+            return value;
+        }
+
+        if (isNotStrictCondition(paramNums[i])) {
+            return value - 1;
+        }
+
+        return value;
+    }
+
+    private long getLongParam(int n, long def) {
+        int i = getParamIndex(n);
+        if (i < 0 || i >= params.length) {
+            return def;
+        }
+
+        ReadableValue value = params[i];
+        if (value instanceof IntegerValueBean) {
+            return value.getLong();
+        }
+
+        return def;
+    }
+
+    private boolean isNotStrictCondition(int n) {
+        return (n & TimestampLimits.EXCLUSIVE_BIT) != 0;
+    }
+
+    private int getParamIndex(int n) {
+        return n & ~TimestampLimits.EXCLUSIVE_BIT;
+    }
+
 }

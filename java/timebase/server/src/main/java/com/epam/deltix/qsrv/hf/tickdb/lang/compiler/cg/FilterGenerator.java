@@ -38,6 +38,7 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.SelectionOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.InstrumentMessageSource;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.PreparedQuery;
+import com.epam.deltix.util.collections.generated.IntegerArrayList;
 import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.io.UncheckedIOException;
 import com.epam.deltix.util.jcg.JClass;
@@ -788,6 +789,14 @@ class FilterGenerator {
         return (limit == Long.MIN_VALUE ? null : CTXT.longLiteral (limit));
     }
 
+    private IntegerArrayList getMinParams() {
+        return compFilter.tslimits.minParameters();
+    }
+
+    private IntegerArrayList getMaxParams() {
+        return compFilter.tslimits.maxParameters();
+    }
+
     private void                generateFirstOnlyCheck () {
         if (compFilter.runningFilter != CompiledFilter.RunningFilter.FIRST_ONLY)
             return;
@@ -803,68 +812,96 @@ class FilterGenerator {
         );
     }
 
-    private void                generateLimitCheck () {
-        TimestampLimits             tslimits = compFilter.tslimits;
+    private void generateLimitCheck() {
+        TimestampLimits tslimits = compFilter.tslimits;
 
         if (tslimits == null)
             return;
 
-        boolean     forward = compFilter.isForward ();
-        JExpr       startLimit;
-        JExpr       endLimit;
-        String      op;
-
+        boolean forward = compFilter.isForward();
+        JExpr startLimit;
+        IntegerArrayList startParams;
+        JExpr endLimit;
+        IntegerArrayList endParams;
         if (forward) {
-            startLimit = getMinLimit ();
-            endLimit = getMaxLimit ();
-            op = ">";
+            startLimit = getMinLimit();
+            startParams = getMinParams();
+            endLimit = getMaxLimit();
+            endParams = getMaxParams();
+        } else {
+            startLimit = getMaxLimit();
+            startParams = getMaxParams();
+            endLimit = getMinLimit();
+            endParams = getMinParams();
         }
-        else {
-            startLimit = getMaxLimit ();
-            endLimit = getMinLimit ();
-            op = "<";
-        }
 
-        //TODO - support parameters
+        if (startLimit != null || startParams != null) {
+            JMethod adj = msiClass.addMethod(Modifier.PROTECTED, long.class, "adjustResetPoint");
+            JMethodArgument timeArg = adj.addArg(Modifier.FINAL, long.class, "time");
 
-        if (startLimit != null) {
-            JMethod         adj =
-                msiClass.addMethod (Modifier.PROTECTED, long.class, "adjustResetPoint");
-
-            JMethodArgument timeArg =
-                adj.addArg (Modifier.FINAL, long.class, "time");
-
-            JExpr           inRange =
-                CTXT.binExpr (timeArg, op, startLimit);
-
-            adj.body ().add (
-                CTXT.condExpr (inRange, timeArg, startLimit).returnStmt ()
+            adj.body().add(
+                CTXT.call(forward ? "adjustForwardResetPoint" : "adjustBackwardResetPoint",
+                        timeArg,
+                        startLimit != null ? startLimit : CTXT.staticVarRef("Long", forward ? "MIN_VALUE" : "MAX_VALUE"),
+                        generateParamsList(startParams))
+                    .returnStmt()
             );
         }
 
-        if (endLimit != null)
-            filterBody.add (
-                CTXT.ifStmt (
-                        CTXT.binExpr (inMsg.call ("getTimeStampMs"), op, endLimit),
-                        returnAbort
+        if (endLimit != null || endParams != null) {
+            JMethod adj = msiClass.addMethod(Modifier.PROTECTED, long.class, "getStopPoint");
+            adj.body().add(
+                CTXT.call(forward ? "getMinTime" : "getMaxTime",
+                    endLimit != null ? endLimit : CTXT.staticVarRef("Long", forward ? "MAX_VALUE" : "MIN_VALUE"),
+                    generateParamsList(endParams)
+                ).returnStmt()
+            );
+
+            filterBody.add(
+                CTXT.ifStmt(
+                    CTXT.binExpr(inMsg.call("getTimeStampMs"), forward ? ">" : "<", CTXT.localVarRef("stopPoint")),
+                    returnAbort
                 )
             );
+        }
+    }
+
+    private JExpr generateParamsList(IntegerArrayList params) {
+        if (params == null) {
+            return CTXT.nullLiteral();
+        }
+
+        JExpr[] paramExprs = new JExpr[params.size()];
+        for (int i = 0; i < params.size(); ++i) {
+            paramExprs[i] = CTXT.intLiteral(params.get(i));
+        }
+        return CTXT.newArrayExpr(int.class, paramExprs);
     }
 
     private void generateSymbolSubscription() {
         SymbolLimits symbolLimits = compFilter.symbolLimits;
-        if (symbolLimits == null || symbolLimits.symbols().size() == 0) {
-            return;
+        if (symbolLimits != null && symbolLimits.hasSymbols()) {
+            JMethod adj = msiClass.addMethod(Modifier.PROTECTED, String[].class, "symbolsToAdjust");
+            adj.body().add(
+                CTXT.newArrayExpr(
+                    String.class,
+                    getSymbolLimitsExpressions(symbolLimits)
+                ).returnStmt()
+            );
         }
+    }
 
-        JMethod adj = msiClass.addMethod(Modifier.PROTECTED, String[].class, "symbolsToAdjust");
-        adj.body().add(
-            CTXT.newArrayExpr(
-                String.class,
-                symbolLimits.symbols().stream().map(CTXT::stringLiteral)
-                    .toArray(JExpr[]::new)
-            ).returnStmt ()
+    private JExpr[] getSymbolLimitsExpressions(SymbolLimits symbolLimits) {
+        List<JExpr> result = symbolLimits.symbols().stream().map(CTXT::stringLiteral)
+            .collect(Collectors.toList());
+        result.addAll(
+            symbolLimits.parameterRefs().stream()
+                .map(CTXT::intLiteral)
+                .map(i -> CTXT.call("getVarcharParam", i))
+                .collect(Collectors.toList())
         );
+
+        return result.toArray(new JExpr[0]);
     }
 
     private void                overrideNext (String delegateTo) {

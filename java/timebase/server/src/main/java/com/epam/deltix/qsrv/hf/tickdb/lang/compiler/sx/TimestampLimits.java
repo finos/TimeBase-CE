@@ -23,7 +23,7 @@ import com.epam.deltix.util.collections.generated.IntegerArrayList;
  *
  */
 public class TimestampLimits {
-    private static final int    EXCLUSIVE_BIT = 0x80000000;
+    public static final int    EXCLUSIVE_BIT = 0x80000000;
     
     private long                inclusiveMinimum = Long.MIN_VALUE;
     private IntegerArrayList    minParameters = null;
@@ -125,4 +125,13 @@ public class TimestampLimits {
     public long         getInclusiveMinimum () {
         return (inclusiveMinimum);
     }
+
+    public IntegerArrayList minParameters() {
+        return minParameters;
+    }
+
+    public IntegerArrayList maxParameters() {
+        return maxParameters;
+    }
+
 }

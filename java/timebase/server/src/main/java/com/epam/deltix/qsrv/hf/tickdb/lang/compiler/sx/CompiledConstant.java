@@ -91,7 +91,7 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
         if (type == StandardTypes.CLEAN_DECIMAL || type == StandardTypes.NULLABLE_DECIMAL) {
             return Decimal64Utils.parse((String) value);
         }
-        return ((Number) value).longValue ();
+        return value == null ? TimebaseTypes.INT64_NULL : ((Number) value).longValue ();
     }
 
     @Decimal
@@ -108,15 +108,15 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
     }
 
     public byte getByte() {
-        return ((Number) value).byteValue();
+        return value == null ? TimebaseTypes.INT8_NULL : ((Number) value).byteValue();
     }
 
     public short getShort() {
-        return ((Number) value).shortValue();
+        return value == null ? TimebaseTypes.INT16_NULL : ((Number) value).shortValue();
     }
 
     public int getInteger() {
-        return ((Number) value).intValue();
+        return value == null ? TimebaseTypes.INT32_NULL : ((Number) value).intValue();
     }
 
     public double                   getDouble () {
@@ -125,7 +125,7 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
         } else if (value instanceof Long && decimalLong) {
             return Decimal64Utils.toDouble((Long) value);
         } else {
-            return ((Number) value).doubleValue();
+            return value == null ? Double.NaN : ((Number) value).doubleValue();
         }
     }
 
@@ -133,7 +133,7 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
         if (value instanceof String) {
             return Float.parseFloat((String) value);
         }
-        return ((Number) value).floatValue ();
+        return value == null ? Float.NaN : ((Number) value).floatValue ();
     }
 
     public boolean                  getBoolean () {
@@ -141,11 +141,11 @@ public final class CompiledConstant extends CompiledExpression <DataType> {
     }
 
     public char                     getChar () {
-        return ((Character) value);
+        return value == null ? TimebaseTypes.CHAR_NULL : ((Character) value);
     }
 
     public String                   getString () {
-        return (value.toString ());
+        return (value == null ? null : value.toString ());
     }
 
     public Object getValue() {

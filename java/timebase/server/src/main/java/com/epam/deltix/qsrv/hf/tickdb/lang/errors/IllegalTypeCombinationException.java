@@ -27,8 +27,8 @@ public class IllegalTypeCombinationException extends CompilationException {
     public IllegalTypeCombinationException (Expression e, DataType t1, DataType t2) {
         super (
             "Illegal combination of types in " + e +
-                ": " + t1.getBaseName () + " is not compatible with " +
-                t2.getBaseName (),
+                ": " + (t1 == null ? "null" : t1.getBaseName ()) + " is not compatible with " +
+                (t2 == null ? "null" : t2.getBaseName ()),
             e
         );
     }

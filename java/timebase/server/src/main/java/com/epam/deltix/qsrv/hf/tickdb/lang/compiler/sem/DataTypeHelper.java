@@ -43,6 +43,10 @@ public class DataTypeHelper {
     }
 
     public static int hashcode(DataType dataType) {
+        if (dataType == null) {
+            return 0;
+        }
+
         int result = dataType.getClass().hashCode();
         if (dataType instanceof ArrayDataType) {
             result = 31 * result + hashcode(((ArrayDataType) dataType).getElementDataType());

@@ -407,21 +407,28 @@ public class TickDBShell extends AbstractShell {
                 return false;
             }
 
+            DXTickStream stream = null;
+
             if (args == null) {
                 if (!dbmgr.checkSingleStream ())
                     return (true);
+                stream = dbmgr.getStreams()[0];
 
-                ImportExportHelper.filterMessageFile(srcMsgFile, dbmgr.getStreams()[0], selector, writeMode);
             } else if (args.length() > 0) {
-                DXTickStream stream = dbmgr.getStream(args);
+                stream = dbmgr.getStream(args);
                 if (stream == null)
                     stream = ImportExportHelper.createStream(dbmgr.getDB(), args, srcMsgFile);
+            }
 
-                if (srcMsgFile.getName().endsWith(".zip")) {
-                    ImportExportHelper.filterArchiveFile(srcMsgFile, stream, selector, writeMode);
-                } else {
-                    ImportExportHelper.filterMessageFile(srcMsgFile, stream, selector, writeMode);
-                }
+            if (stream == null) {
+                System.out.println("Source stream is not selected. Use `set stream <stream>` or 'import <stream>' ");
+                return false;
+            }
+
+            if (srcMsgFile.getName().endsWith(".zip")) {
+                ImportExportHelper.filterArchiveFile(srcMsgFile, stream, selector, writeMode);
+            } else {
+                ImportExportHelper.filterMessageFile(srcMsgFile, stream, selector, writeMode);
             }
 
             return (true);

@@ -72,7 +72,7 @@ public class DXTomcat extends Tomcat {
 
     private SSLProperties       sslConfig = null;
 
-    private Signal              stopSignal = new Signal();
+    private final Signal        stopSignal = new Signal();
 
     public DXTomcat() {
         this ((String) null);

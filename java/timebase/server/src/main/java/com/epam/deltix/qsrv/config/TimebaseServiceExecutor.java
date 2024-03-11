@@ -46,12 +46,7 @@ import com.epam.deltix.util.net.SSLContextProvider;
 import com.epam.deltix.util.security.TimebaseAccessController;
 import com.epam.deltix.util.time.Interval;
 import com.epam.deltix.util.time.TimeKeeper;
-import com.epam.deltix.util.vsocket.TLSContext;
-import com.epam.deltix.util.vsocket.TransportProperties;
-import com.epam.deltix.util.vsocket.TransportType;
-import com.epam.deltix.util.vsocket.VSCompression;
-import com.epam.deltix.util.vsocket.VSProtocol;
-import com.epam.deltix.util.vsocket.VSServerFramework;
+import com.epam.deltix.util.vsocket.*;
 import org.apache.catalina.Context;
 
 import javax.annotation.Nonnull;
@@ -66,8 +61,8 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
     protected static Logger LOGGER = Logger.getLogger ("deltix.config");
 
     private DXTickDB                        TDB;
-    //private Driver                          amqpDriver;
-    private TimebaseAccessController MAC;
+
+    private TimebaseAccessController        MAC;
     private DXServerAeronContext            aeronContext;
     @SuppressWarnings("FieldCanBeLocal")
     private DirectTopicRegistry             topicRegistry;
@@ -89,7 +84,16 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         if (publicAddressForAeron != null)
             LOGGER.log(Level.INFO, "External Address: " + publicAddressForAeron);
 
-        aeronContext = DXServerAeronContext.createDefault(port, contextContainer.getAffinityConfig(), publicAddressForAeron);
+        boolean aeronEnabled = config.getBoolean("aeron.enabled", DXServerAeronContext.ENABLED_BY_DEFAULT);
+        if (!aeronEnabled)
+            LOGGER.warning("Disabled aeron");
+
+        boolean topicsIpcBypassRemoteCheck = config.getBoolean("topics.ipc.bypassRemoteCheck", false);
+        if (topicsIpcBypassRemoteCheck) {
+            LOGGER.info("Topics: Will skip remote address check for clients attempting to access IPC topics");
+        }
+
+        aeronContext = DXServerAeronContext.createDefault(aeronEnabled, port, contextContainer.getAffinityConfig(), publicAddressForAeron, topicsIpcBypassRemoteCheck);
         aeronContext.start();
 
         long cacheSize = getCacheSize(config);
@@ -115,8 +119,6 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         if (safeMode)
             LOGGER.warning("Timebase running using \"SAVE MODE\"");
 
-        // TODO: We should pass contextContainer to TickDBImpl somehow. Shouldn't we?
-        // TODO: MODULARIZATION
         String uid = config.getString("uid");
         TDB = new TickDBImpl(uid, cacheOptions, tbFolder);
 
@@ -128,13 +130,6 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         this.topicRegistry = TopicRegistryFactory.initRegistryAtQSHome(aeronContext);
         LOGGER.info("Opening and warming up " + TDB.getId() + " ...");
 
-        // TODO: MODULARIZATION - SNMP
-/*
-        if (QSMIB != null && TDB instanceof TBMonitor) {
-            ((TBMonitor)TDB).addObjectMonitor((TBObjectMonitor) QSMIB.getTimeBase());
-            ((TBMonitor)TDB).addPropertyMonitor("RAMDisk", (PropertyMonitor) QSMIB.getTimeBase().getDataCache());
-        }
-*/
         boolean readOnly = config.getBoolean("readOnly", false);
         TDB.open(readOnly);
         if (readOnly)
@@ -173,7 +168,7 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
                 (int) interval.toMilliseconds(),
                 Enum.valueOf(VSCompression.class, compression),
                 maxConnections,
-                maxSocketsPerConnection, contextContainer);
+                maxSocketsPerConnection, contextContainer, DefaultConnectionAcceptor.INSTANCE);
 
         if (framework.getCompression() == VSCompression.OFF)
             LOGGER.info("Timebase communication compression disabled.");
@@ -201,17 +196,6 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         QuantServerExecutor.HANDLER.addHandler((byte)0, framework);
         QuantServerExecutor.HANDLER.addHandler((byte)24, new RESTHandshakeHandler(TDB, QuantServerExecutor.SC, contextContainer, tlsContext));
 
-/*        ConnectionHandshakeHandler snmpConnectionHandler = null;
-        QuantServerExecutor.HANDLER.addHandler(
-                (byte)48, // BER.SEQUENCE
-                snmpConnectionHandler);*/
-
-//        /// AMQP initialization
-//        if (config.getBoolean("AMQP", false)) {
-//            int amqpPort = config.getInt("AMQPInfo.AMQPPort", 8012);
-//            int max = config.getInt("AMQPInfo.maxConnections", 100);
-//            initAMQPDriver(amqpPort, max, config.getSSLConfig());
-//        }
 
         // Register server - it's ready to use
         TimeBaseServerRegistry.registerServer(port, wrapper);
@@ -230,16 +214,6 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
             publicAddressForAeron = NetworkInterfaceUtil.getOwnPublicAddressAsText();
         }
         return publicAddressForAeron;
-    }
-
-    @Override
-    public void registerSnmpObjects(QuantServerSnmpObjectContainer snmpContextHolder) {
-        if (TDB instanceof TBMonitor) {
-            TimeBase snmpObject = new TimeBaseImpl();
-            ((TBMonitor)TDB).addObjectMonitor((TBObjectMonitor) snmpObject);
-            ((TBMonitor)TDB).addPropertyMonitor("RAMDisk", (PropertyMonitor) snmpObject.getDataCache());
-            snmpContextHolder.setTimeBaseSnmpInfo(snmpObject);
-        }
     }
 
     @Nonnull
@@ -276,19 +250,6 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         return new TransportProperties(transportType, transportDir);
     }
 
-
-//    private void initAMQPDriver(int port, int maxConnections, SSLProperties sslProperties){
-//        try{
-//            amqpDriver = new Driver(TDB, port, maxConnections, QuantServerExecutor.SC, sslProperties);
-////            amqpDriver.listen(port);
-//            LOGGER.info ("Begins accepting AMQP connections on port "+port+".");
-//        }
-//        catch (Exception e) {
-//            LOGGER.warning("Cannot start AMQP server!");
-//            LOGGER.warning(e.getMessage());
-//        }
-//    }
-
     private static FSType getFSType(QuantServiceConfig config) {
         try {
             return Enum.valueOf(FSType.class, config.getString("fileSystem"));
@@ -302,41 +263,6 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
                 config.getLong("memorySize.1", DataCacheOptions.DEFAULT_CACHE_SIZE) :
                 config.getLong("ramCacheSize", DataCacheOptions.DEFAULT_CACHE_SIZE);
     }
-
-//    private Object[]         initPlugins() throws IOException, InterruptedException {
-//
-//        //PlugInRepository repository = PlugInRepository.getInstance();
-//        Collection<PlugInDescriptor> items = PlugInRepository.getInstance().getItems(new RepositoryItemFilter<PlugInDescriptor>() {
-//            @Override
-//            public boolean accepted(PlugInDescriptor item) {
-//                return item.type == PlugInType.TIMEBASE_ACCESS_CONTROLLER;
-//            }
-//        });
-//
-//        ArrayList<Object> plugins = new ArrayList<>(items.size());
-//
-//        for (PlugInDescriptor entry : items) {
-//
-//            Object instance = null;
-//
-//            try {
-//                plugins.add(instance = PlugInInstance.create(entry).getInstance());
-//            } catch (Exception e) {
-//                LOGGER.log(Level.SEVERE, "Error while initializing " + entry.getKey() + " plugin: ", e);
-//            }
-//
-//            if (instance instanceof TimebaseAccessController) {
-//                if (MAC == null) {
-//                    MAC = (TimebaseAccessController) instance;
-//                    LOGGER.log(Level.INFO, "Found message access control plugin [" + entry.getKey() + "," + entry.mainClass + "]");
-//                } else {
-//                    LOGGER.log(Level.WARNING, "Message access control plugin " + entry.getKey() + " skipped. Only one (first) plugin can be used.");
-//                }
-//            }
-//        }
-//
-//        return plugins.size() > 0 ? plugins.toArray() : null;
-//    }
 
     @Override
     public void close() throws IOException {

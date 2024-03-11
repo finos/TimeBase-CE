@@ -26,7 +26,7 @@ import static com.epam.deltix.qsrv.config.QuantServiceConfig.Type;
 
 public class StartConfiguration {
 
-    private static ObjectToObjectHashMap<Type, String> DEFAULTS = new ObjectToObjectHashMap<>();
+    private static final ObjectToObjectHashMap<Type, String> DEFAULTS = new ObjectToObjectHashMap<>();
     static {
         DEFAULTS.put(Type.TimeBase, "com.epam.deltix.qsrv.config.TimebaseServiceExecutor");
         DEFAULTS.put(Type.QuantServer, QuantServerExecutor.class.getName());
@@ -37,7 +37,9 @@ public class StartConfiguration {
 
     public int                  port;
 
-    private ObjectToObjectHashMap<Type, ServiceExecutor> executors = new ObjectToObjectHashMap<>();
+    public int                  webPort;
+
+    private final ObjectToObjectHashMap<Type, ServiceExecutor> executors = new ObjectToObjectHashMap<>();
 
     public static StartConfiguration create(boolean timebase, boolean aggregator, boolean uhf) throws IOException {
         return create(timebase, aggregator, uhf, false, false, -1);

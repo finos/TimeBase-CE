@@ -44,7 +44,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
     public final static short      MAX_SOCKETS_PER_CONNECTION      = 8;
 
     private final Map <String, Connector>        dispatchers =
-        new HashMap <> ();
+            new HashMap <> ();
 
     private final QuickExecutor                 executor;
     private final ContextContainer contextContainer;
@@ -60,6 +60,8 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
     private TransportType                       transportType = TransportType.SOCKET_TCP;
 
+    private final DBConnectionAcceptor          connectionAcceptor;
+
     public static final Comparator <VSDispatcher> comparator = new Comparator <VSDispatcher>() {
 
         @Override
@@ -68,8 +70,14 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         }
     };
 
-    public VSServerFramework(QuickExecutor executor, int reconnectInterval,
-                             VSCompression compression, int connectionsLimit, short socketsPerConnection, ContextContainer contextContainer) {
+    public VSServerFramework(QuickExecutor executor,
+                             int reconnectInterval,
+                             VSCompression compression,
+                             int connectionsLimit,
+                             short socketsPerConnection,
+                             ContextContainer contextContainer,
+                             DBConnectionAcceptor connectionAcceptor) {
+        this.connectionAcceptor = connectionAcceptor;
         this.executor = executor;
         this.reconnectInterval = reconnectInterval;
         this.time = System.currentTimeMillis();
@@ -81,7 +89,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
     }
 
     public VSServerFramework(QuickExecutor executor, int reconnectInterval, VSCompression compression, ContextContainer contextContainer) {
-        this(executor, reconnectInterval, compression, MAX_CONNECTIONS, MAX_SOCKETS_PER_CONNECTION, contextContainer);
+        this(executor, reconnectInterval, compression, MAX_CONNECTIONS, MAX_SOCKETS_PER_CONNECTION, contextContainer, DefaultConnectionAcceptor.INSTANCE);
     }
 
     public QuickExecutor getExecutor () {
@@ -100,6 +108,12 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
         Arrays.sort (ret, comparator);
         return (ret);
+    }
+
+    public int                  getDispatchersCount() {
+        synchronized (dispatchers) {
+            return dispatchers.size();
+        }
     }
 
     public VSDispatcher         getDispatcher(String id) {
@@ -148,8 +162,8 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         s.setKeepAlive(true);
 
         return handleHandshake(
-            SocketConnectionFactory.createConnection(
-                s, new BufferedInputStream(s.getInputStream()), s.getOutputStream())
+                SocketConnectionFactory.createConnection(
+                        s, new BufferedInputStream(s.getInputStream()), s.getOutputStream())
         );
     }
 
@@ -161,7 +175,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         s.setKeepAlive(true);
 
         return handleHandshake(
-            SocketConnectionFactory.createConnection(s, is, os)
+                SocketConnectionFactory.createConnection(s, is, os)
         );
     }
 
@@ -210,15 +224,21 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
         if (!isCompatible) {
             VSProtocol.LOGGER.severe (
-                "Connection from " + clientId + " rejected due to incompatible protocol version #" +
-                clientVersion + " (accepted: " +
-                MIN_COMPATIBLE_CLIENT_VERSION + " .. " +
-                MAX_COMPATIBLE_CLIENT_VERSION + ")"
+                    "Connection from " + clientId + " rejected due to incompatible protocol version #" +
+                            clientVersion + " (accepted: " +
+                            MIN_COMPATIBLE_CLIENT_VERSION + " .. " +
+                            MAX_COMPATIBLE_CLIENT_VERSION + ")"
             );
 
             dout.writeByte (VSProtocol.CONN_RESP_INCOMPATIBLE_CLIENT);
             dout.flush ();
             return (false);
+        }
+
+        if (!connectionAcceptor.accept(clientId)) {
+            dout.writeByte(VSProtocol.CONN_RESP_CONNECTION_REJECTED);
+            dout.flush();
+            return false;
         }
 
         dout.writeInt(tlsContext == null ? 0 : tlsContext.port);

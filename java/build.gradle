@@ -208,11 +208,12 @@ configure(leafProjects) {
 //                entry 'hadoop-yarn-common'
 //            }
 
-            dependencySet(group: 'org.apache.tomcat.embed', version: '8.0.53') {
+            dependencySet(group: 'org.apache.tomcat.embed', version: '8.5.90') {
                 entry 'tomcat-embed-core' // Tomcat core
                 entry 'tomcat-embed-jasper' // Tomcat JSP support
-                entry 'tomcat-embed-logging-juli' // Tomcat Logging
             }
+
+            dependency 'org.apache.tomcat.embed:tomcat-embed-logging-juli:8.5.2'
 
             dependencySet(group: 'io.aeron', version: '1.38.1') {
                 entry 'aeron-client'
@@ -245,7 +246,7 @@ configure(leafProjects) {
             dependency 'commons-codec:commons-codec:1.13'
             dependency 'commons-net:commons-net:3.9.0'
 
-            dependency 'org.apache.commons:commons-compress:1.21'
+            dependency 'org.apache.commons:commons-compress:1.26.0'
             dependency 'org.apache.commons:commons-lang3:3.7'
             dependency 'org.apache.commons:commons-math3:3.6'
             dependency 'org.apache.commons:commons-text:1.10.0'

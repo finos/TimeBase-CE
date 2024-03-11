@@ -54,7 +54,8 @@ public class TopicSupportWrapper extends BaseDXTickDBWrapper {
      */
     @SuppressWarnings("unused")
     public static DXTickDB wrapStandalone(DXTickDB delegate) {
-        DXServerAeronContext aeronContext = DXServerAeronContext.createDefault(STUB_PORT_NUMBER, null, null);
+        boolean aeronEnabled = true; // Always enabled when this wrapper is used
+        DXServerAeronContext aeronContext = DXServerAeronContext.createDefault(aeronEnabled, STUB_PORT_NUMBER, null, null, false);
         DirectTopicRegistry topicRegistry = TopicRegistryFactory.initRegistryAtQSHome(aeronContext);
         // TODO: Design a way to use shared QuickExecutor
         QuickExecutor qeForTopics = QuickExecutor.createNewInstance("TopicSupportWrapper-Topics", null);

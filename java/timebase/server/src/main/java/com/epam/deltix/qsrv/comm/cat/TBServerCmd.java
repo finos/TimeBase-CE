@@ -55,6 +55,10 @@ public class TBServerCmd extends DefaultApplication {
         else
             config.port = getPort(config);
 
+        int webPort = getIntArgValue("-web-port", 0);
+        if (webPort > 0)
+            config.tb.setWebPort(webPort);
+
         // configure logging and memory monitoring
         configure(config);
 

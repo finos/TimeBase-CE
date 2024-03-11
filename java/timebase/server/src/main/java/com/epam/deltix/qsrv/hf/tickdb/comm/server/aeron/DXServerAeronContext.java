@@ -49,6 +49,8 @@ import java.util.logging.Level;
  */
 @ParametersAreNonnullByDefault
 public class DXServerAeronContext {
+    public static final boolean ENABLED_BY_DEFAULT = false;
+
     // Aeron driver communication timeout, in seconds
     // This timeout defines how fast we detect that driver is unavailable
     // Too low value may break service operation after GC or a pause caused by debug
@@ -95,10 +97,21 @@ public class DXServerAeronContext {
     private static final String RANGE_PROP_NAME = "TimeBase.transport.aeron.id.range";
     public static final String ID_RANGE = System.getProperty(RANGE_PROP_NAME, null);
 
+    private final boolean enabled; // If false, then any Aeron support should be disabled.
     private final String aeronDir;
     private final boolean startDriver;
 
     private final String publicAddress;
+    /**
+     * Normally remote clients are forbidden to access IPC topics because IPC topic data are available only for
+     * local processes that run on same physical machine and share a memory mapped file.
+     * However, if such processes are executed in Docker containers then TimeBase may incorrectly consider them
+     * as "remote" and deny access to IPC topics.
+     *
+     * <p>This flag disables checks for non-local clients when they access IPC topics. So local clients that have
+     * non-local IP address still can access IPC.
+     */
+    private final boolean bypassRemoteCheckForIpcTopics;
 
     private State state;
     private MediaDriver driver;
@@ -125,20 +138,26 @@ public class DXServerAeronContext {
         }
     }
 
-    public DXServerAeronContext(String aeronDir, boolean startEmbeddedDriver, @Nullable AffinityConfig affinityConfig, @Nullable String publicAddress) {
+    public DXServerAeronContext(boolean enabled, String aeronDir, boolean startEmbeddedDriver, @Nullable AffinityConfig affinityConfig, @Nullable String publicAddress, boolean bypassRemoteCheckForIpcTopics) {
+        this.enabled = enabled;
         this.aeronDir = aeronDir;
         this.startDriver = startEmbeddedDriver;
         this.affinityConfig = affinityConfig;
+        this.bypassRemoteCheckForIpcTopics = bypassRemoteCheckForIpcTopics;
         this.state = State.NOT_STARTED;
         this.publicAddress = publicAddress;
     }
 
-    public static DXServerAeronContext createDefault(int tickDbPort, @Nullable AffinityConfig affinityConfig, @Nullable String publicAddress) {
+    public static DXServerAeronContext createDefault(boolean enabled, int tickDbPort, @Nullable AffinityConfig affinityConfig, @Nullable String publicAddress, boolean bypassRemoteCheckForIpcTopics) {
         String aeronDir = AeronWorkDirManager.setupWorkingDirectory(tickDbPort, System.currentTimeMillis());
-        return new DXServerAeronContext(aeronDir, AeronWorkDirManager.useEmbeddedDriver(), affinityConfig, publicAddress);
+        return new DXServerAeronContext(enabled, aeronDir, AeronWorkDirManager.useEmbeddedDriver(), affinityConfig, publicAddress, bypassRemoteCheckForIpcTopics);
     }
 
     public synchronized void start() {
+        if (!enabled) {
+            return;
+        }
+
         if (state != State.NOT_STARTED) {
             throw new IllegalStateException("Wrong state: " + state);
         }
@@ -152,6 +171,9 @@ public class DXServerAeronContext {
 
     @Nonnull
     public synchronized Aeron getAeron() {
+        if (!enabled) {
+            throw new IllegalStateException("Aeron support is not enabled in TimeBase");
+        }
         if (state != State.STARTED) {
             throw new IllegalStateException("Wrong state: " + state);
         }
@@ -162,6 +184,10 @@ public class DXServerAeronContext {
     }
 
     public synchronized void stop() {
+        if (!enabled) {
+            return;
+        }
+
         if (state != State.STARTED) {
             throw new IllegalStateException("Wrong state: " + state);
         }
@@ -333,6 +359,18 @@ public class DXServerAeronContext {
     @Nullable
     public String getPublicAddress() {
         return publicAddress;
+    }
+
+    public boolean isAeronEnabled() {
+        return enabled;
+    }
+
+    public static boolean isAeronEnabledInJvmOpts() {
+        return Boolean.parseBoolean(System.getProperty("TimeBase.aeron.enabled", Boolean.toString(DXServerAeronContext.ENABLED_BY_DEFAULT)));
+    }
+
+    public boolean isBypassRemoteCheckForIpcTopics() {
+        return bypassRemoteCheckForIpcTopics;
     }
 
     private enum State {

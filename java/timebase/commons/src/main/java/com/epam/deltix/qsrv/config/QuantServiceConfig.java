@@ -51,6 +51,7 @@ public class QuantServiceConfig {
 
     public static final String HOST_PROP                   = "host";
     public static final String PORT_PROP                   = "port";
+    public static final String WEB_PORT_PROP               = "webPort";
     public static final String TB_LOGIN_USER               = "security.tbLogin.user";
     public static final String TB_LOGIN_PASS               = "security.tbLogin.password";
     public static final String ENABLE_SSL                  = "enableSSL";
@@ -64,6 +65,7 @@ public class QuantServiceConfig {
 
     public static final String ADMIN_PROPS                 = "config/admin.properties";
     public static final String TICK_DB_FOLDER              = "timebase";
+    public static final String OLD_TICK_DB_FOLDER          = "tickdb";
 
     public static final String  QSRV_TYPE_SYS_PROP         = "deltix.qsrv.type";
 
@@ -71,9 +73,18 @@ public class QuantServiceConfig {
 
     public static final String WEBAPP_PATH                 = "webapp.path";
 
+    public static final String ENABLE_METRICS              = "enableMetrics";
+    public static final String DISABLE_JVM_METRICS          = "metricsService.disableJvmMetrics";
+
+    private static final String ENABLE_SSL_SYS_PROP        = "TimeBase.enableSSL";
+
     public enum Type {
         TimeBase,
-        QuantServer
+        UHF,
+        Aggregator,
+        QuantServer,
+        ExecutionServer,
+        StrategyServer
     }
 
     private final Type              myType;
@@ -97,7 +108,7 @@ public class QuantServiceConfig {
     }
 
     public static QuantServiceConfig    forService (Type type)
-        throws IOException
+            throws IOException
     {
         CommonSysProps.mergePropsOnceIfFileExists();
 
@@ -105,7 +116,7 @@ public class QuantServiceConfig {
     }
 
     public static QuantServiceConfig    forApp (DefaultApplication app, Type type)
-        throws IOException
+            throws IOException
     {
         CommonSysProps.mergePropsOnceIfFileExists();
 
@@ -141,24 +152,24 @@ public class QuantServiceConfig {
     }
 
     public void                         setStringFromCmdLine (
-        DefaultApplication                  app,
-        String                              arg,
-        String                              key,
-        Object                              defaultValue
+            DefaultApplication                  app,
+            String                              arg,
+            String                              key,
+            Object                              defaultValue
     )
-        throws IOException
+            throws IOException
     {
         setStringFromCmdLine(app, arg, myType, key, defaultValue);
     }
 
     public void                         setStringFromCmdLine (
-        DefaultApplication                  app,
-        String                              arg,
-        Type                                type,
-        String                              key,
-        Object                              defaultValue
+            DefaultApplication                  app,
+            String                              arg,
+            Type                                type,
+            String                              key,
+            Object                              defaultValue
     )
-        throws IOException
+            throws IOException
     {
         setPropertySoft (type, key, defaultValue);
         setProperty(type, key, app.getArgValue(arg));
@@ -215,8 +226,16 @@ public class QuantServiceConfig {
         return (getPort (myType, defPort));
     }
 
+    public int                  getWebPort (int defPort) {
+        return (getWebPort (myType, defPort));
+    }
+
     public void                 setPort (int port) {
         setProperty (myType, PORT_PROP, port);
+    }
+
+    public void                 setWebPort(int port) {
+        setProperty (myType, WEB_PORT_PROP, port);
     }
 
     public String               getTBLogin(){
@@ -238,13 +257,13 @@ public class QuantServiceConfig {
     public SSLProperties getSSLConfig() {
         boolean enabled = getBoolean(ENABLE_SSL, false);
 
-        if (enabled) {
+        if (enabled || Boolean.getBoolean(ENABLE_SSL_SYS_PROP)) {
             SSLProperties ssl = new SSLProperties(true);
 
             ssl.sslPort = getInt(SSL_PORT, getSSLPort(getPort()));
             ssl.sslForLoopback = getBoolean(SSL_FOR_LOOPBACK, false);
-            ssl.keystoreFile = getString(SSL_KEYSTORE_FILE_PROPNAME);
-            ssl.keystorePass = Mangle.split(getString(SSL_KEYSTORE_PASS_PROPNAME));
+            ssl.keystoreFile = getString(SSL_KEYSTORE_FILE_PROPNAME, ssl.keystoreFile);
+            ssl.keystorePass = Mangle.split(getString(SSL_KEYSTORE_PASS_PROPNAME, ssl.keystorePass));
 
             return ssl;
         }
@@ -254,6 +273,10 @@ public class QuantServiceConfig {
 
     // TODO: MODULARIZATION
     static int                   getSSLPort(int port) {
+        if (port == 0) {
+            return 8022;
+        }
+
         int sum = 0;
         int n = port;
         while (n > 0) {
@@ -296,7 +319,7 @@ public class QuantServiceConfig {
     }
 
     public void                 clearProperty (Type type, String key) {
-            props.remove(prefix (type) + key);
+        props.remove(prefix (type) + key);
     }
 
     public void                 setPropertySoft (Type type, String key, Object value) {
@@ -319,19 +342,19 @@ public class QuantServiceConfig {
 
     public int                  getInt (Type type, String key, int defaultValue) {
         String  s = getString (type, key, String.valueOf (defaultValue));
-        
+
         return (s == null ? defaultValue : Integer.parseInt (s));
     }
 
     public boolean              getBoolean (Type type, String key, boolean defaultValue) {
         String  s = getString (type, key, String.valueOf (defaultValue));
-        
+
         return (s == null ? defaultValue : Boolean.parseBoolean (s));
     }
 
     public long                 getLong (Type type, String key, long defaultValue) {
         String  s = getString (type, key, String.valueOf (defaultValue));
-        
+
         return (s == null ? defaultValue : Long.parseLong(s));
     }
 
@@ -351,6 +374,10 @@ public class QuantServiceConfig {
 
     public int                  getPort (Type type, int defPort) {
         return (getInt (type, PORT_PROP, defPort));
+    }
+
+    public int                  getWebPort (Type type, int defPort) {
+        return (getInt (type, WEB_PORT_PROP, defPort));
     }
 
     public Properties           getProps () {
@@ -403,7 +430,8 @@ public class QuantServiceConfig {
                 return getQSHome();
             if (token.equalsIgnoreCase("deltix_home"))
                 return getHome();
-            return token;
+
+            return System.getenv(token);
         }
 
         private String getQSHome() {

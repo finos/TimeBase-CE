@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.util.tomcat;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -31,18 +32,16 @@ import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.SSLProperties;
 import com.epam.deltix.util.concurrent.Signal;
 import com.epam.deltix.util.io.IOUtil;
-import com.epam.deltix.util.tomcat.ConnectionHandler;
 import org.apache.catalina.*;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.startup.*;
 
 import com.epam.deltix.util.io.Home;
-import org.apache.coyote.http11.Http11DXProtocol;
-
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
+
 
 /**
  *
@@ -52,15 +51,13 @@ public class DXTomcat extends Tomcat {
 
     private static final String ENGINE_NAME = "deltix-engine";
     private static final String DEFAULT_HOST_ID = "deltix-host";
-    private static final String DX_CONNECTOR_CLASSNAME = "org.apache.coyote.http11.Http11DXProtocol";
-    private static final int    TOMCAT_DEFAULT_PORT = 8011;
+
+    public static final int    TOMCAT_DEFAULT_PORT = 8021;
 
     private static final String CATALINA_PROPERTIES_FILE = "config/tomcat/catalina.properties";
     private static final String WEB_PROPERTIES_FILE = "config/tomcat/web.xml";
 
     private String              mHostName = null;
-
-    private ConnectionHandler connectionHandler = null;
 
     private final String        webSubDir;
     private final File          webappFile;
@@ -100,14 +97,6 @@ public class DXTomcat extends Tomcat {
         this.webappFile = webappFile;
         this.engineHost = engineHost;
         parentClassLoader = null;
-    }
-
-    public ConnectionHandler    getConnectionHandler () {
-        return connectionHandler;
-    }
-
-    public void                 setConnectionHandler (ConnectionHandler connectionHandler) {
-        this.connectionHandler = connectionHandler;
     }
 
     protected void              configureContext (Context context) {
@@ -162,11 +151,17 @@ public class DXTomcat extends Tomcat {
         if (parentClassLoader != null)
             defaultContext.setLoader(new WebappLoader(parentClassLoader));
 
-        //http connector
-        connector = createConnector(mHostName, port);
-        service.addConnector(connector);
+        Host host = getHost();
+        if (host instanceof StandardHost) {
+            ((StandardHost) host).setErrorReportValveClass(DxErrorReportValve.class.getName());
+        }
 
-        if(tomcatConfigs != null && !tomcatConfigs.isEmpty()) {
+        //http connector
+        Connector connector = createConnector(mHostName, port);
+        getService().addConnector(connector);
+        LOGGER.info("Start Tomcat http connector on port: " + port);
+
+        if (tomcatConfigs != null && !tomcatConfigs.isEmpty()) {
             final Iterator<String> it = tomcatConfigs.keySet().iterator();
             while (it.hasNext()) {
                 final String propertyName = it.next();
@@ -178,10 +173,9 @@ public class DXTomcat extends Tomcat {
         }
 
         if (sslConfig != null && sslConfig.enableSSL) {
-            // additional SSL connector
             Connector sslConnector = createConnector(mHostName, sslConfig.sslPort);
             setupSSL(sslConnector, sslConfig);
-            service.addConnector(sslConnector);
+            getService().addConnector(sslConnector);
 
             LOGGER.info("Created SSL connector on port: " + sslConfig.sslPort);
             connector.setRedirectPort(sslConfig.sslPort);
@@ -248,17 +242,17 @@ public class DXTomcat extends Tomcat {
     }
 
     private Connector           createConnector(String host, int port) {
-        DXConnector connector = new DXConnector();
+        Connector connector = new Connector();
 
         if (host != null)
             connector.setAttribute ("address", host);
 
         connector.setAttribute ("compression", "on");
         connector.setAttribute ("compressableMimeType", "text/xml,application/deltix-quantserver");
+        connector.setXpoweredBy(false);
+        connector.setAttribute("server", "TimeBase");
 
         connector.setPort(port);
-
-        connector.setConnectionHandler(connectionHandler);
 
         return connector;
     }
@@ -283,14 +277,9 @@ public class DXTomcat extends Tomcat {
         if ( ! docBase.exists())
             LOGGER.severe("Web app doesn't exist: " + docBase);
 
-        Context context = null;
-        try {
-            context = addWebapp("/" + webApp, docBase.getAbsolutePath());
-            if (parentClassLoader != null)
-                context.setLoader(new WebappLoader(parentClassLoader));
-        } catch (ServletException e) {
-            e.printStackTrace();
-        }
+        Context context = addWebapp("/" + webApp, docBase.getAbsolutePath());
+        if (parentClassLoader != null)
+            context.setLoader(new WebappLoader(parentClassLoader));
 
         configureContext(context);
         return context;
@@ -300,31 +289,28 @@ public class DXTomcat extends Tomcat {
      * This method was copied from base Tomcat class and extended to load conf/web.xml.
      */
     @Override
-    public Context addWebapp(Host host, String url, String path) {
-        //silence(host, url);
-        StandardContext ctx = new StandardContext();
-        ctx.setPath(url);
-        ctx.setDocBase(path);
-        ctx.setConfigFile(getWebappConfigFile(path, url));
-        ctx.setUnpackWAR(false);
+    public Context addWebapp(Host host, String contextPath, String docBase, LifecycleListener config) {
+        //silence(host, contextPath);
 
-        // By default, Tomcat tries to fix a memory leak in Java implementation:
-        // https://bugs.openjdk.org/browse/JDK-8277072
-        // However Tomcat's implementation (Tomcat 8.0.x) is not compatible with Java 11+.
-        // Also, this clean up it not really needed for TimeBase because we don't reload web applications.
-        // So we disable this feature to avoid unnecessary warning messages in the log.
-        ctx.setClearReferencesObjectStreamClassCaches(false);
+        Context ctx = createContext(host, contextPath);
+        ctx.setPath(contextPath);
+        ctx.setDocBase(docBase);
+        ctx.setConfigFile(getWebappConfigFile(docBase, contextPath));
 
-        ContextConfig ctxCfg = new ContextConfig();
-        ctx.addLifecycleListener(ctxCfg);
+        ctx.addLifecycleListener(config);
 
-        File confWebXml = getPropertiesFile(WEB_PROPERTIES_FILE);
-        if (confWebXml.exists() && confWebXml.isFile()) {
-            ctxCfg.setDefaultWebXml(confWebXml.getAbsolutePath());
-        } else {
-            //load defaults programmatically
-            ctxCfg.setDefaultWebXml(Constants.NoDefaultWebXml);
-            ctx.addLifecycleListener(new DefaultWebXmlListener());
+        if (config instanceof ContextConfig) {
+            ContextConfig ctxCfg = (ContextConfig) config;
+
+            File confWebXml = new File(
+                    System.getProperty(Globals.CATALINA_HOME_PROP) + "/" + Constants.DefaultWebXml);
+            if (confWebXml.exists() && confWebXml.isFile()) {
+                ctxCfg.setDefaultWebXml(confWebXml.getAbsolutePath());
+            } else {
+                //load defaults programmatically
+                ctxCfg.setDefaultWebXml(noDefaultWebXmlPath());
+                ctx.addLifecycleListener(getDefaultWebXmlListener());
+            }
         }
 
         if (host == null) {
@@ -334,6 +320,28 @@ public class DXTomcat extends Tomcat {
         }
 
         return ctx;
+    }
+
+    private Context createContext(Host host, String url) {
+        String contextClass = StandardContext.class.getName();
+        if (host == null) {
+            host = this.getHost();
+        }
+        if (host instanceof StandardHost) {
+            contextClass = ((StandardHost) host).getContextClass();
+        }
+        try {
+            return (Context) Class.forName(contextClass).getConstructor()
+                    .newInstance();
+        } catch (InstantiationException | IllegalAccessException
+                 | IllegalArgumentException | InvocationTargetException
+                 | NoSuchMethodException | SecurityException
+                 | ClassNotFoundException e) {
+            throw new IllegalArgumentException(
+                    "Can't instantiate context-class " + contextClass
+                            + " for host " + host + " and url "
+                            + url, e);
+        }
     }
 
     public static void          addServlet(Context context, String name, String mapping, Class<? extends Servlet> cls) {
@@ -353,7 +361,8 @@ public class DXTomcat extends Tomcat {
         if (workDir == null)
             workDir = QSHome.getFile("work/tomcat");
 
-        workDir.mkdirs();
+        // create all dirs for Tomcat to prevent ExpandWar exceptions
+        new File(workDir, "webapps").mkdirs();
         if ( ! workDir.exists())
             throw new com.epam.deltix.util.io.UncheckedIOException("Error creating Tomcat work directory \"" + workDir.getAbsolutePath()+'"');
 
@@ -394,15 +403,4 @@ public class DXTomcat extends Tomcat {
             LOGGER.log(Level.WARNING, "Awaiting has been interrupted.", e);
         }
     }
-
-    public class DXConnector extends Connector {
-        public DXConnector() {
-            super(DX_CONNECTOR_CLASSNAME);
-        }
-
-        public void setConnectionHandler(ConnectionHandler handler) {
-            ((Http11DXProtocol) protocolHandler).setConnectionHandler(handler);
-        }
-    }
-
 }

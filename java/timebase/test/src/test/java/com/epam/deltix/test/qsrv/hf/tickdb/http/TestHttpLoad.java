@@ -131,8 +131,12 @@ public class TestHttpLoad  extends BaseTest {
     }
 
     private static void loadOutOfOrder(boolean useCompression, boolean isBigEndian, String user, String password) throws Exception {
-        String streamName = "1min";
+        String streamName = "1min_out";
+        StreamOptions options = StreamOptions.fixedType(StreamScope.DURABLE, streamName, null, 0, StreamConfigurationHelper.mkUniversalBarMessageDescriptor());
+        createStream(streamName, options);
+
         final RecordClassSet rcs = requestSchema(streamName, user, password);
+
         final BarMessage bar = new BarMessage();
         bar.setSymbol(SYMBOLS[0]);
         bar.setTimeStampMs(GMT.parseDateTime("2013-10-08 09:00:00").getTime());

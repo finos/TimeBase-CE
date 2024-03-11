@@ -230,6 +230,10 @@ public class TDBRunner {
         return this.port;
     }
 
+    public int                  getWebPort() {
+        return server.getWebPort();
+    }
+
     public DXTickStream     createStream(DXTickDB db, String key, StreamOptions so) {
         DXTickStream stream = db.getStream(key);
         if (stream != null)

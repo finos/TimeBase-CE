@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
                       http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-  version="3.1"
-  metadata-complete="true">
+         version="3.1"
+         metadata-complete="true">
 
     <filter>
         <filter-name>AccessFilter</filter-name>
@@ -17,6 +17,12 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
+    <servlet>
+        <servlet-name>ping</servlet-name>
+        <servlet-class>com.epam.deltix.qsrv.hf.tickdb.web.controller.PingServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
     <servlet-mapping>
         <servlet-name>api</servlet-name>
         <url-pattern>/xml/*</url-pattern>
@@ -25,6 +31,11 @@
     <servlet-mapping>
         <servlet-name>api</servlet-name>
         <url-pattern>/bin/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ping</servlet-name>
+        <url-pattern>/ping</url-pattern>
     </servlet-mapping>
 
     <mime-mapping>
@@ -47,16 +58,17 @@
         </taglib>
     </jsp-config>
 
-    <servlet>
-        <servlet-name>tbmon</servlet-name>
-        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
+    <!-- webmvc removed (temparary?)-->
+    <!--    <servlet>-->
+    <!--        <servlet-name>tbmon</servlet-name>-->
+    <!--        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>-->
+    <!--        <load-on-startup>1</load-on-startup>-->
+    <!--    </servlet>-->
 
-    <servlet-mapping>
-        <servlet-name>tbmon</servlet-name>
-        <url-pattern>/</url-pattern>
-    </servlet-mapping>
+    <!--    <servlet-mapping>-->
+    <!--        <servlet-name>tbmon</servlet-name>-->
+    <!--        <url-pattern>/</url-pattern>-->
+    <!--    </servlet-mapping>-->
 
     <filter-mapping>
         <filter-name>AccessFilter</filter-name>
@@ -64,28 +76,28 @@
     </filter-mapping>
 
     <deny-uncovered-http-methods/>
-	
-<!--
- <servlet>
-  <servlet-name>webdav</servlet-name>
-  <servlet-class>org.apache.catalina.servlets.DeltixWebDavServlet</servlet-class>
-    <init-param>
-      <param-name>debug</param-name>
-      <param-value>0</param-value>
-    </init-param>
-    <init-param>
-  <param-name>listings</param-name>
-  <param-value>true</param-value>
-    </init-param>
- <init-param>
-  <param-name>readonly</param-name>
-  <param-value>false</param-value>
- </init-param>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>webdav</servlet-name>
-    <url-pattern>/webdav/*</url-pattern>
-  </servlet-mapping>
-  -->
+
+    <!--
+     <servlet>
+      <servlet-name>webdav</servlet-name>
+      <servlet-class>org.apache.catalina.servlets.DeltixWebDavServlet</servlet-class>
+        <init-param>
+          <param-name>debug</param-name>
+          <param-value>0</param-value>
+        </init-param>
+        <init-param>
+      <param-name>listings</param-name>
+      <param-value>true</param-value>
+        </init-param>
+     <init-param>
+      <param-name>readonly</param-name>
+      <param-value>false</param-value>
+     </init-param>
+      </servlet>
+      <servlet-mapping>
+        <servlet-name>webdav</servlet-name>
+        <url-pattern>/webdav/*</url-pattern>
+      </servlet-mapping>
+      -->
 
 </web-app>

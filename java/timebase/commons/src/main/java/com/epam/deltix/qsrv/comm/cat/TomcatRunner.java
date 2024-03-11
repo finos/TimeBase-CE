@@ -32,24 +32,31 @@ import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.epam.deltix.qsrv.config.QuantServiceConfig.ENABLE_REMOTE_ACCESS;
 
 public final class TomcatRunner {
-    protected static final Logger LOGGER = Logger.getLogger (TomcatRunner.class.getName());
+    static final Logger LOGGER = Logger.getLogger (TomcatRunner.class.getName());
+
+    private static final String WEB_PORT_PROP = "TimeBase.webPort";
 
     public static final String  DEFAULT_WEB_APP_DIR = "default"; //QuantServer/web/default
     public static final String  DEFAULT_WEB_APP_NAME = ""; // must be empty string
-    public static final String  TIME_BASE_WEB_APP_NAME    = "tb";
 
-    // UHF and derived web apps use the same webapp name (which allows RPC/HTTP clients to use single dispatch servlet path)
-    public static final String  UHF_WEB_APP_NAME          = "uhf";
+    public static final String  TIME_BASE_WEB_APP_NAME    = "tb";
 
     private DXTomcat                    mCat;
     private final StartConfiguration    config;
     private final ObjectArrayList<ServiceExecutor> executors = new ObjectArrayList<ServiceExecutor>();
+
+    private SocketServer socketServer;
+
+    private int port;
+
+    //private BaseSpringContext           commonContext;
 
     public TomcatRunner(StartConfiguration config) {
         this.config = config;
@@ -59,35 +66,9 @@ public final class TomcatRunner {
         return config;
     }
 
-//    private ApplicationContext getCommonContext() throws IOException {
-//        if (commonContext != null)
-//            return commonContext.getSpringContext();
-//
-//        Properties properties = new Properties();
-//        Collection<String> resources = new LinkedHashSet<>(5);
-//
-//        if (config.agg != null) {
-//            properties.putAll(config.agg.getProps());
-//        }
-//
-//        if (config.es != null) {
-//            properties.putAll(config.es.getProps());
-//            resources.add(UHF_TRADE_CTX);
-//        }
-//
-//        if (config.sts != null) {
-//            properties.putAll(config.sts.getProps());
-//        }
-//
-//        if (config.uhf != null) {
-//            properties.putAll(config.uhf.getProps()); // UHF properties have priority
-//            resources.add(UHF_TRADE_CTX);
-//        }
-//
-//        commonContext = new BaseSpringContext(null, "QuantServer", TomcatRunner.class, QSHome.getFile(),
-//                                              properties, false, resources.toArray(new String[resources.size()]));
-//        return commonContext.getSpringContext();
-//    }
+    public int getPort() {
+        return port;
+    }
 
     private void             setSSLConfig(QuantServiceConfig qsConfig) {
         if (qsConfig != null)
@@ -105,30 +86,23 @@ public final class TomcatRunner {
             throw new IllegalStateException("Tomcat already initialized");
 
         mCat = new DXTomcat(DEFAULT_WEB_APP_DIR, getWebappFile(config.quantServer, null), DEFAULT_WEB_APP_NAME);
-        mCat.setPort(config.port);
+        mCat.setPort(port = getWebPort(config));
 
         QuantServerExecutor executor = (QuantServerExecutor) config.getExecutor(Type.QuantServer);
         executor.run(config.quantServer);
         executors.add(0, executor);
 
-        mCat.setConnectionHandler(QuantServerExecutor.HANDLER);
-
         if (config.tb != null) {
             ServiceExecutor tb = config.getExecutor(Type.TimeBase);
             tb.run(config.tb);
             executors.add(0, tb);
-        }
 
-        if (config.quantServer.getFlag("SNMP")) {
-            QuantServerSnmpObjectContainer snmpObjectContainer = new QuantServerSnmpObjectContainer();
-            for (ServiceExecutor serviceExecutor : executors) {
-                serviceExecutor.registerSnmpObjects(snmpObjectContainer);
+            try {
+                socketServer = new SocketServer(config.port, QuantServerExecutor.HANDLER);
+                socketServer.start();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            ConnectionHandshakeHandler connectionHandshakeHandler = SNMPTransportFactory.initializeSNMP(config.port, snmpObjectContainer);
-            QuantServerExecutor.HANDLER.addHandler(
-                    (byte)48, // BER.SEQUENCE
-                    connectionHandshakeHandler);
         }
 
         mCat.setTomcatConfigs(TomcatConfig.getTomcatConfig(config));
@@ -139,7 +113,6 @@ public final class TomcatRunner {
             tbCtx = mCat.addModule(TIME_BASE_WEB_APP_NAME, getWebappFile(config.tb, Home.getFile ("web/" + TIME_BASE_WEB_APP_NAME)));
         }
         boolean useSSL = isSSLEnabled();
-
 
         boolean tbUAC = QuantServerExecutor.SC != null;
 
@@ -202,6 +175,7 @@ public final class TomcatRunner {
         Stops and destroy server
     */
     public void             close() {
+        Util.close(socketServer);
         // let's stop servicing incoming requests as a first step
         try {
             stop();
@@ -280,12 +254,41 @@ public final class TomcatRunner {
     }
 
     private void            setRemoteAccess() {
-        if (System.getProperty(AccessFilter.ENABLE_REMOTE_ACCESS_PROP) == null) {
-            QuantServiceConfig qsConfig = getQSConfig();
-            if (qsConfig != null) {
-                boolean enable = qsConfig.getBoolean(ENABLE_REMOTE_ACCESS, true);
+        QuantServiceConfig qsConfig = getQSConfig();
+        if (qsConfig != null) {
+            boolean enable = qsConfig.getBoolean(ENABLE_REMOTE_ACCESS, false);
+            if (enable)
                 System.setProperty(AccessFilter.ENABLE_REMOTE_ACCESS_PROP, String.valueOf(enable));
-            }
         }
     }
+
+    private int getWebPort(StartConfiguration config) {
+        if (config.tb != null) {
+            if (config.webPort != 0) {
+                return config.webPort;
+            }
+
+            int webPort = Integer.getInteger(WEB_PORT_PROP, 0);
+            if (webPort != 0) {
+                return webPort;
+            }
+
+            return config.tb.getWebPort(DXTomcat.TOMCAT_DEFAULT_PORT);
+        }
+
+        // for services, that doesn't use separate web port
+        return config.port;
+    }
+
+    private boolean isMetricsServiceEnabled(QuantServiceConfig config, boolean enabled) {
+        return enabled || (config != null && config.getBoolean(QuantServiceConfig.ENABLE_METRICS, false));
+    }
+
+    private boolean isJvmMetricsDisabled(QuantServiceConfig config, boolean disabled) {
+        return disabled ||
+                (config != null &&
+                        config.getBoolean(QuantServiceConfig.ENABLE_METRICS, false) &&
+                        config.getBoolean(QuantServiceConfig.DISABLE_JVM_METRICS, false));
+    }
+
 }

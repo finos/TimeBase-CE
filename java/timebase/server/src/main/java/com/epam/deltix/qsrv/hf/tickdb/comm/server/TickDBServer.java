@@ -59,7 +59,9 @@ public class TickDBServer {
         this.port = port;
         this.ssl = ssl;
         this.transportProperties = transportProperties;
-        this.aeronContext = DXServerAeronContext.createDefault(port, null, null);
+
+        boolean aeronEnabled = DXServerAeronContext.isAeronEnabledInJvmOpts();
+        this.aeronContext = DXServerAeronContext.createDefault(aeronEnabled, port, null, null, false);
 
         this.topicRegistry = TopicRegistryFactory.initRegistryAtQSHome(aeronContext);
 
@@ -70,8 +72,10 @@ public class TickDBServer {
         // Wrap the DB to provide topics support for local instances
         this.db = TopicSupportWrapper.wrap(db, this.aeronContext, this.topicRegistry, qeForTopics, aeronThreadTracker);
 
-        CopyTopicToStreamTaskManager copyTopicToStreamManager = new CopyTopicToStreamTaskManager(db, aeronContext, aeronThreadTracker, topicRegistry);
-        copyTopicToStreamManager.startCopyToStreamThreadsForAllTopics();
+        if (this.aeronContext.isAeronEnabled()) {
+            CopyTopicToStreamTaskManager copyTopicToStreamManager = new CopyTopicToStreamTaskManager(db, aeronContext, aeronThreadTracker, topicRegistry);
+            copyTopicToStreamManager.startCopyToStreamThreadsForAllTopics();
+        }
     }
 
     public int                  getPort () {

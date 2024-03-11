@@ -53,12 +53,12 @@ public class BaseTest {
 
         marshaller = TBJAXBContext.createMarshaller();
         global = UHFJAXBContext.createMarshaller();
-        URL = new URL("http://" + TB_HOST + ":" + runner.getPort() + "/tb/xml");
+        URL = new URL("http://" + TB_HOST + ":" + runner.getWebPort() + "/tb/xml");
         //URL = new URL("http://localhost:8011/tb/xml");
     }
 
     public static URL   getPath(String path) throws MalformedURLException {
-        return new URL("http://localhost:" + runner.getPort() + "/" + path);
+        return new URL("http://localhost:" + runner.getWebPort() + "/" + path);
     }
 
     public static void         createStream(String key, StreamOptions options) throws JAXBException, IOException {

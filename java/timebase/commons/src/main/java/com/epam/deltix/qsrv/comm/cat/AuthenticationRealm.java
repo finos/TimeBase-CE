@@ -88,6 +88,16 @@ public class AuthenticationRealm implements Realm {
     }
 
     @Override
+    public String[] getRoles(Principal principal) {
+        return new String[0];
+    }
+
+    @Override
+    public boolean isAvailable() {
+        return true;
+    }
+
+    @Override
     public Principal authenticate(String username, String credentials) {
         try {
             // null password is not allowed
@@ -103,6 +113,11 @@ public class AuthenticationRealm implements Realm {
 
     @Override
     public Principal authenticate(String s, String s1, String s2, String s3, String s4, String s5, String s6, String s7) {
+        return null;
+    }
+
+    @Override
+    public Principal authenticate(String username, String digest, String nonce, String nc, String cnonce, String qop, String realm, String digestA2, String algorithm) {
         return null;
     }
 

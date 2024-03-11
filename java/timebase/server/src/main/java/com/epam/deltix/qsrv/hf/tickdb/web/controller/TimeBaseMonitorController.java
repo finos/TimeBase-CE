@@ -1,38 +1,33 @@
-/*
- * Copyright 2023 EPAM Systems, Inc
- *
- * See the NOTICE file distributed with this work for additional information
- * regarding copyright ownership. Licensed under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
 package com.epam.deltix.qsrv.hf.tickdb.web.controller;
 
-import com.epam.deltix.gflog.api.*;
-import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBMonitor;
-import com.epam.deltix.qsrv.hf.tickdb.web.model.pub.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+// webmvc removed (temparary?)
 
-import javax.servlet.http.HttpServletRequest;
+//import com.epam.deltix.gflog.api.*;
+//import deltix.qsrv.hf.tickdb.pub.mon.TBMonitor;
+//import deltix.qsrv.hf.tickdb.web.model.pub.*;
+//import deltix.util.Version;
+//import deltix.util.io.Installation;
+//import deltix.util.license.LicenseController;
+//import deltix.util.license.LicenseException;
+//import deltix.util.license.LicenseValidator;
+//import deltix.util.license.xml.XLicense;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.stereotype.Controller;
+//import org.springframework.ui.ModelMap;
+//import org.springframework.web.bind.annotation.ModelAttribute;
+//import org.springframework.web.bind.annotation.PathVariable;
+//import org.springframework.web.bind.annotation.RequestMapping;
+//import org.springframework.web.bind.annotation.RequestMethod;
+//import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+//
+//import javax.servlet.http.HttpServletRequest;
+//import javax.xml.bind.JAXBException;
+//import java.io.IOException;
 
 /**
  *
  */
+/*
 @Controller
 @RequestMapping(value = "/")
 public class TimeBaseMonitorController {
@@ -59,12 +54,12 @@ public class TimeBaseMonitorController {
         return "redirect:/cursors";
     }
 
-//    @RequestMapping(value = "/license", method = RequestMethod.GET)
-//    public String license(ModelMap modelMap) {
-//        setModel(modelMap, modelFactory.getLicenseModel(checkLicense(modelMap)));
-//
-//        return "license";
-//    }
+    @RequestMapping(value = "/license", method = RequestMethod.GET)
+    public String license(ModelMap modelMap) {
+        setModel(modelMap, modelFactory.getLicenseModel(checkLicense(modelMap)));
+
+        return "license";
+    }
 
     @RequestMapping(value = "/loaders", method = RequestMethod.GET)
     public String loaders(ModelMap modelMap) {
@@ -135,9 +130,66 @@ public class TimeBaseMonitorController {
 
     @RequestMapping(value = "/track/{on}", method = RequestMethod.GET)
     public String track(HttpServletRequest request, @PathVariable("on") boolean on) {
-        ((TBMonitor) com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler.TDB).setTrackMessages(on);
+        ((TBMonitor) deltix.qsrv.hf.tickdb.http.AbstractHandler.TDB).setTrackMessages(on);
         String referer = request.getHeader("Referer");
         return "redirect:" + referer;
+    }
+
+    @RequestMapping(value = "/license/revalidate", method = RequestMethod.GET)
+    public String revalidate(ModelMap modelMap) {
+        if (revalidateLicense(modelMap))
+            setModel(modelMap, modelFactory.getLicenseModel(checkLicense(modelMap)));
+        else
+            setModel(modelMap, modelFactory.getLicenseModel(null));
+
+        return "license";
+    }
+
+    private XLicense checkLicense(final ModelMap modelMap) {
+        Throwable error = null;
+        XLicense license = null;
+        try {
+            license = LicenseController.qs().readLicense();
+        } catch (JAXBException e) {
+            if (e.getLinkedException() == null)
+                error = e;
+            else
+                error = e.getLinkedException();
+        } catch (IOException e) {
+            error = e;
+        } catch (Throwable t) {
+            error = t;
+        }
+
+        if (error != null)
+            addAlertAttribute(modelMap, ALERT_TYPE_DANGER, "Error while read saved license: " + error);
+
+        return license;
+    }
+
+    private boolean revalidateLicense(final ModelMap modelMap) {
+        LicenseValidator validator = new LicenseValidator(
+            Installation.getSerial(),
+            LicenseController.QS_PRODUCT_NAME,
+            Version.VERSION_STRING,
+            Installation.getInstallationDate()
+        );
+
+        Throwable error = null;
+        try {
+            validator.checkLicense();
+        } catch (LicenseException e) {
+            error = e;
+        } catch (Throwable t) {
+            error = t;
+        }
+
+        if (error != null) {
+            addAlertAttribute(modelMap, ALERT_TYPE_DANGER, "Error while read saved license: " + error);
+            return false;
+        }
+
+        return true;
     }
 
     private void addAlertAttribute(final ModelMap modelMap, final String type, final String message) {
@@ -158,3 +210,4 @@ public class TimeBaseMonitorController {
         modelMap.addAttribute(MENU_MODEL_ARG, model);
     }
 }
+*/

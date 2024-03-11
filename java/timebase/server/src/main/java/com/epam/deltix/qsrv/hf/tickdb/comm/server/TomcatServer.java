@@ -32,19 +32,22 @@ public class TomcatServer implements EmbeddedServer {
     private TomcatRunner        runner;
     private StartConfiguration  config;
     private int                 port;
+    private int                 webPort;
 
     public TomcatServer() {
-        this(null, 0);
+        this(null, 0, 0);
     }
 
     public TomcatServer(StartConfiguration config) {
         this.config = config;
         this.port = config != null ? config.port : 0;
+        this.webPort = config != null ? config.webPort : 0;
     }
 
-    public TomcatServer (StartConfiguration config, int port) {
+    public TomcatServer (StartConfiguration config, int port, int webPort) {
         this.config = config;
         this.port = port;
+        this.webPort = webPort;
     }
 
     @Override
@@ -60,6 +63,14 @@ public class TomcatServer implements EmbeddedServer {
             socket.bind(null);
             config.port = socket.getLocalPort();
             config.tb.setPort(config.port);
+            socket.close();
+        }
+
+        if (webPort == 0) {
+            ServerSocket socket = new ServerSocket();
+            socket.bind(null);
+            config.webPort = socket.getLocalPort();
+            config.tb.setWebPort(config.webPort);
             socket.close();
         }
 
@@ -84,5 +95,10 @@ public class TomcatServer implements EmbeddedServer {
     @Override
     public int getPort() {
         return config.port;
+    }
+
+    @Override
+    public int getWebPort() {
+        return config.webPort;
     }
 }

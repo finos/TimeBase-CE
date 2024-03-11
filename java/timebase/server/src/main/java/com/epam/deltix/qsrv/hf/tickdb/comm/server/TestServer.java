@@ -82,7 +82,12 @@ public class TestServer implements EmbeddedServer {
     }
 
     @Override
-    public int getPort() {
+    public int              getPort() {
+        return server.getPort();
+    }
+
+    @Override
+    public int              getWebPort() {
         return server.getPort();
     }
 }

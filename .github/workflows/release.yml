@@ -11,7 +11,7 @@ jobs:
   prepare:
     name: Prepare
     if: ${{ !contains(github.event.head_commit.message, '[skip-ci]') }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -53,7 +53,7 @@ jobs:
           git fetch
           git checkout -b workflow-$env:GITHUB_RUN_ID origin/workflow-$env:GITHUB_RUN_ID~1
       - name: Checkout branch (Linux)
-        if: matrix.os == 'ubuntu-18.04'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
@@ -110,7 +110,7 @@ jobs:
     needs: [build, build-installer]
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -132,7 +132,7 @@ jobs:
     name: Publish Maven
     if: ${{ !contains(github.event.head_commit.message, '[skip-ci]') }}
     needs: release
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -163,7 +163,7 @@ jobs:
     name: Publish Dockers
     if: ${{ !contains(github.event.head_commit.message, '[skip-ci]') }}
     needs: release
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -212,7 +212,7 @@ jobs:
     name: Cleanup
     if: ${{ always() && !contains(github.event.head_commit.message, '[skip-ci]') }}
     needs: publish
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2

@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         java: ['11']
-        os: [ 'ubuntu-20.04', 'ubuntu-22.04' ]
+        os: [ 'ubuntu-20.04']
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -49,6 +49,19 @@ jobs:
           DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
           DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_HUB_USER }}
           DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: Reading docker image version
+        run: |
+          versionSnapshot=`grep 'version=' gradle.properties | sed 's/version=\([^-]*\)/\1/'`
+          echo "version_snapshot=$versionSnapshot" >> $GITHUB_ENV
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'epam/timebase-ws-server:${{ env.version_snapshot }}'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH,MEDIUM'    
       - name: Run tests
         run: ./gradlew junitTest
       - name: Upload test results

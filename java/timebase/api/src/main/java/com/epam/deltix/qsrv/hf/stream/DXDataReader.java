@@ -33,7 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 
-public class DXDataReader implements Disposable{
+public class DXDataReader implements Disposable {
 
     private final DXDataInputStream     in;
     private ClassSet                    classes;

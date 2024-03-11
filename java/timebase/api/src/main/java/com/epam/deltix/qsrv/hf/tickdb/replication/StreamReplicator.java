@@ -852,12 +852,12 @@ public class StreamReplicator {
             byte[] content = IOUtil.readBytes(file);
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(content));
 
-            if (content[0] < 4) // it was StreamScope before version 76
-                return TDBProtocol.readStreamOptions76(in);
-
             int version = in.readInt();
-            if (version == TDBProtocol.VERSION)
+            if (version == TDBProtocol.VERSION) {
                 return TDBProtocol.readStreamOptions(in, version);
+            } else {
+                TDBProtocol.readStreamOptions76(new DataInputStream(new ByteArrayInputStream(content)));
+            }
 
             throw new ReplicationException("Unsupported version: " + version);
 

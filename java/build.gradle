@@ -154,7 +154,7 @@ configure(leafProjects) {
             dependency 'com.epam.deltix:hd-date-time:0.2.11'
             dependency 'com.epam.deltix:containers:3.1.2'
 
-            dependencySet(group: 'com.epam.deltix', version: '6.0.65') {
+            dependencySet(group: 'com.epam.deltix', version: '6.0.66') {
                 entry 'timebase-collections'
                 entry 'timebase-messages'
                 entry 'timebase-lang'
@@ -242,11 +242,11 @@ configure(leafProjects) {
             dependency 'commons-lang:commons-lang:2.6'
             dependency 'commons-logging:commons-logging:1.1.1'
             dependency 'commons-collections:commons-collections:3.2.2'
-            dependency 'commons-io:commons-io:2.7'
+            dependency 'commons-io:commons-io:2.15.1'
             dependency 'commons-codec:commons-codec:1.13'
             dependency 'commons-net:commons-net:3.9.0'
 
-            dependency 'org.apache.commons:commons-compress:1.26.0'
+            dependency 'org.apache.commons:commons-compress:1.26.1'
             dependency 'org.apache.commons:commons-lang3:3.7'
             dependency 'org.apache.commons:commons-math3:3.6'
             dependency 'org.apache.commons:commons-text:1.10.0'

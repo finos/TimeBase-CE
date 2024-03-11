@@ -10,5 +10,5 @@ dependencies {
     api ('org.snmp4j:snmp4j:2.8.4')
     api ('org.snmp4j:snmp4j-agent:2.7.4')
 
-    implementation 'org.apache.commons:commons-compress:1.19'
+    implementation 'org.apache.commons:commons-compress'
 }

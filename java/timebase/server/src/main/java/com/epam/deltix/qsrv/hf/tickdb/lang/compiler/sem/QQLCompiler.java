@@ -130,7 +130,28 @@ public class QQLCompiler implements QuantQueryCompiler {
             DataType e2 = ((ArrayDataType) to).getElementDataType();
             return e1.getClass() == e2.getClass() && Objects.equals(e1.getEncoding(), e2.getEncoding());
         }
+
+        if (from == null || to == null) {
+            return true;
+        }
+
         return (to.getClass () == from.getClass ());
+    }
+
+    public static boolean isStrictCompatibleWithoutConversion(DataType actual, DataType required) {
+        if (!isCompatibleWithoutConversion(actual, required)) {
+            return false;
+        }
+
+        if (actual instanceof IntegerDataType && required instanceof IntegerDataType) {
+            return ((IntegerDataType) actual).getSize() == ((IntegerDataType) required).getSize();
+        }
+
+        if (actual instanceof FloatDataType && required instanceof FloatDataType) {
+            return ((FloatDataType) actual).getScale() == ((FloatDataType) required).getScale();
+        }
+
+        return true;
     }
 
     private static boolean          isDecimal64(FloatDataType floatDataType) {

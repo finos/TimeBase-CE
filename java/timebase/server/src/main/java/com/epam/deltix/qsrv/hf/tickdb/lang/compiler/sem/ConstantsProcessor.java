@@ -219,24 +219,44 @@ class ConstantsProcessor {
         if (leftType.getNativeTypeSize() == 8 || rightType.getNativeTypeSize() == 8) {
             long a = left.getLong();
             long b = right.getLong();
-            return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(false), compute(function, a, b));
+            long res = compute(function, a, b);
+            return new CompiledConstant(
+                StandardTypes.INT64_CONTAINER.getType(true),
+                TimebaseTypes.isNull(res) ? null : res
+            );
         } else {
             int a = left.getInteger();
             int b = right.getInteger();
-            return new CompiledConstant(StandardTypes.INT32_CONTAINER.getType(false), compute(function, a, b));
+            int res = compute(function, a, b);
+            return new CompiledConstant(
+                StandardTypes.INT32_CONTAINER.getType(true),
+                TimebaseTypes.isNull(res) ? null : res
+            );
         }
     }
 
     static CompiledConstant computeDateTimeAndInteger(ArithmeticFunction function, CompiledConstant left, CompiledConstant right) {
         long a = left.getLong();
         long b = right.getLong();
-        return new CompiledConstant(StandardTypes.DATE_TIME_CONTAINER.getType(false), compute(function, a, b));
+        long res = compute(function, a, b);
+        return new CompiledConstant(StandardTypes.DATE_TIME_CONTAINER.getType(true), TimebaseTypes.isNull(res) ? null : res);
     }
 
     static CompiledConstant computeDateTimeAndDateTime(ArithmeticFunction function, CompiledConstant left, CompiledConstant right) {
         long a = left.getLong();
         long b = right.getLong();
-        return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(false), compute(function, a, b));
+        long res = compute(function, a, b);
+        return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(true), TimebaseTypes.isNull(res) ? null : res);
+    }
+
+    static CompiledConstant computeVarcharAndVarchar(ArithmeticFunction function, CompiledConstant left, CompiledConstant right) {
+        String a = left.getString();
+        String b = right.getString();
+        if (function == ArithmeticFunction.ADD) {
+            return new CompiledConstant(StandardTypes.UTF8_CONTAINER.getType(true), a + b);
+        }
+
+        throw new IllegalStateException("Invalid function for varchar and varchar arguments: " + function);
     }
 
     static CompiledConstant compute(ArithmeticFunction function, CompiledConstant left, CompiledConstant right,
@@ -244,15 +264,21 @@ class ConstantsProcessor {
         if (leftType.isDecimal64() || rightType.isDecimal64()) {
             @Decimal long a = left.getDecimalLong();
             @Decimal long b = right.getDecimalLong();
-            return new CompiledConstant(StandardTypes.DECIMAL64_CONTAINER.getType(false), computeDecimal(function, a, b), true);
+            long res = computeDecimal(function, a, b);
+            return new CompiledConstant(StandardTypes.DECIMAL64_CONTAINER.getType(true), TimebaseTypes.isDecimalNull(res) ? null : res, true);
         } else {
             double a = left.getDouble();
             double b = right.getDouble();
-            return new CompiledConstant(StandardTypes.FLOAT64_CONTAINER.getType(false), compute(function, a, b));
+            double res = compute(function, a, b);
+            return new CompiledConstant(StandardTypes.FLOAT64_CONTAINER.getType(true), TimebaseTypes.isNull(res) ? null : res);
         }
     }
 
     static int compute(ArithmeticFunction function, int a, int b, boolean swap) {
+        if (TimebaseTypes.isNull(a) || TimebaseTypes.isNull(b)) {
+            return TimebaseTypes.INT32_NULL;
+        }
+
         switch (function) {
             case ADD:
                 return a + b;
@@ -274,6 +300,10 @@ class ConstantsProcessor {
     }
 
     static long compute(ArithmeticFunction function, long a, long b, boolean swap) {
+        if (TimebaseTypes.isNull(a) || TimebaseTypes.isNull(b)) {
+            return TimebaseTypes.INT64_NULL;
+        }
+
         switch (function) {
             case ADD:
                 return a + b;
@@ -295,6 +325,10 @@ class ConstantsProcessor {
     }
 
     static double compute(ArithmeticFunction function, double a, double b, boolean swap) {
+        if (TimebaseTypes.isNull(a) || TimebaseTypes.isNull(b)) {
+            return Double.NaN;
+        }
+
         switch (function) {
             case ADD:
                 return a + b;
@@ -315,6 +349,10 @@ class ConstantsProcessor {
 
     @Decimal
     static long computeDecimal(ArithmeticFunction function, @Decimal long a, @Decimal long b, boolean swap) {
+        if (TimebaseTypes.isDecimalNull(a) || TimebaseTypes.isDecimalNull(b)) {
+            return TimebaseTypes.DECIMAL64_NULL;
+        }
+
         switch (function) {
             case ADD:
                 return add(a, b);

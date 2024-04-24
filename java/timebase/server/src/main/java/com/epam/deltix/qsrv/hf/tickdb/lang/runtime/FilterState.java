@@ -31,6 +31,7 @@ public abstract class FilterState {
 
     boolean accepted = false;
     boolean havingAccepted = true;
+    boolean changed = false;
     boolean waitingByTime = false;
     int messagesCount = 0;
     boolean initializedOnInterval = false;

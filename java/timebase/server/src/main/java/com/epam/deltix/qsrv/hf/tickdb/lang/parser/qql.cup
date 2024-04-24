@@ -78,7 +78,6 @@ non terminal SelectExpression       Select_With_Expression;
 non terminal TupleExpression        New_Expression;
 non terminal Expression []          Expression_List;
 non terminal ArrayList              Non_Empty_Expression_List;
-non terminal ArrayList              Non_Empty_Arithmetic_Expression_List;
 non terminal Expression[]           Selector_Expression_List;
 non terminal ArrayList              Non_Empty_Selector_Expression_List;
 non terminal Expression             Selector_Expression;
@@ -117,6 +116,8 @@ non terminal EncodingInfo           Encoding_Info;
 non terminal Expression []          Limits;
 non terminal ArraySlicingExpression Array_Slicing_Expression;
 non terminal ArrayJoin              Array_Join_Expression;
+non terminal ArrayList              Non_Empty_Array_Join_Arithmetic_Expression_List;
+non terminal Expression             Array_Join_Arithmetic_Expression;
 non terminal Expression             Int_Literal;
 non terminal Expression             Float_Literal;
 non terminal Expression             Int_Constant;
@@ -199,6 +200,13 @@ Expression ::=
         {: RESULT = s; :} |
     Select_With_Expression:ws
         {: RESULT = ws; :} |
+
+    // cast and named expressions
+    Expression:e1 AS Cast_Type_Expression:ct
+        {: RESULT = new AsExpression(lx(e1left, ctleft), e1, ct); :} |
+    Expression:e AS STRING:s
+        {: RESULT = new NamedExpression(lx (eleft, sright), e, s); :} |
+
     Expression:e1 OR Expression:e2
         {: RESULT = new OrExpression (lx (e1left, e2right), e1, e2); :} |
     Expression:e1 AND Expression:e2
@@ -271,12 +279,6 @@ Arithmetic_Expression ::=
         {: RESULT = new PredicateExpression(lx(e1left, e2right + 1), e1, e2); :} |
     Arithmetic_Expression:e1 LBRACKET Array_Slicing_Expression:e2 RBRACKET
         {: RESULT = new PredicateExpression(lx(e1left, e2right + 1), e1, e2); :} |
-
-    // cast and named expressions
-    Arithmetic_Expression:e1 AS Cast_Type_Expression:ct
-        {: RESULT = new AsExpression(lx(e1left, ctleft), e1, ct); :} |
-    Arithmetic_Expression:e AS STRING:s
-        {: RESULT = new NamedExpression(lx (eleft, sright), e, s); :} |
 
     Arithmetic_Expression:e1 PLUS Arithmetic_Expression:e2
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
@@ -450,6 +452,8 @@ Numeric_List ::=
         {: list.add(i); RESULT = list; :};
 
 Numeric_Array ::=
+    LBRACKET:lb RBRACKET:rb
+        {: RESULT = new NumericArrayConstant(lx(lbleft, rbright), new ArrayList<>()); :} |
     LBRACKET:lb Numeric_List:list RBRACKET:rb
         {: RESULT = new NumericArrayConstant(lx(lbleft, rbright), list); :};
 
@@ -511,10 +515,17 @@ Non_Empty_Expression_List ::=
     Non_Empty_Expression_List:list COMMA Expression:e
         {: list.add (e); RESULT = list; :};
 
-Non_Empty_Arithmetic_Expression_List ::=
-    Arithmetic_Expression:e
+Array_Join_Arithmetic_Expression ::=
+    Arithmetic_Expression:e {: RESULT = e; :} |
+    Arithmetic_Expression:e AS Cast_Type_Expression:ct
+        {: RESULT = new AsExpression(lx(eleft, ctleft), e, ct); :} |
+    Arithmetic_Expression:e AS STRING:s
+        {: RESULT = new NamedExpression(lx (eleft, sright), e, s); :};
+
+Non_Empty_Array_Join_Arithmetic_Expression_List ::=
+    Array_Join_Arithmetic_Expression:e
         {: RESULT = new ArrayList(); RESULT.add(e); :} |
-    Non_Empty_Arithmetic_Expression_List:list COMMA Arithmetic_Expression:e
+    Non_Empty_Array_Join_Arithmetic_Expression_List:list COMMA Array_Join_Arithmetic_Expression:e
         {: list.add(e); RESULT = list; :};
 
 Selector_Expression_List ::=
@@ -646,9 +657,9 @@ Type_Identifier ::=
     :};
 
 Array_Join_Expression ::=
-    ARRAY JOIN Non_Empty_Arithmetic_Expression_List:joins
+    ARRAY JOIN Non_Empty_Array_Join_Arithmetic_Expression_List:joins
         {: RESULT = new ArrayJoin(lx(joinsleft - 2, joinsright), (Expression[]) joins.toArray(new Expression[0]), false); :} |
-    LEFT ARRAY JOIN Non_Empty_Arithmetic_Expression_List:joins
+    LEFT ARRAY JOIN Non_Empty_Array_Join_Arithmetic_Expression_List:joins
         {: RESULT = new ArrayJoin(lx(joinsleft - 3, joinsright), (Expression[]) joins.toArray(new Expression[0]), true); :};
 
 Select_Mode ::=

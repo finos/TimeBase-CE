@@ -258,64 +258,64 @@ public class CompiledArrayConstant<V, L extends List<V>, T extends BaseInstanceA
     public static CompiledArrayConstant<Byte, ByteArrayList, ByteInstanceArray> createBooleanArrayConstant(
             CompiledConstant[] constants, boolean isElementNullable
     ) {
-        return new CompiledArrayConstant<>(TimebaseTypes.BOOLEAN_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.BOOLEAN_CONTAINER.getArrayType(true, isElementNullable),
                 ByteInstanceArray.class, byte.class, createBoolean(constants), createBooleanArray(constants));
     }
 
     public static CompiledArrayConstant<Byte, ByteArrayList, ByteInstanceArray> createByteArrayConstant(CompiledConstant[] constants,
                                                                                                         boolean isElementNullable) {
-        return new CompiledArrayConstant<>(TimebaseTypes.INT8_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.INT8_CONTAINER.getArrayType(true, isElementNullable),
                 ByteInstanceArray.class, byte.class, createByte(constants), createByteArray(constants));
     }
 
     public static CompiledArrayConstant<Short, ShortArrayList, ShortInstanceArray> createShortArrayConstant(CompiledConstant[] constants,
                                                                                                             boolean isElementNullable) {
-        return new CompiledArrayConstant<>(TimebaseTypes.INT16_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.INT16_CONTAINER.getArrayType(true, isElementNullable),
                 ShortInstanceArray.class, short.class, createShort(constants), createShortArray(constants));
     }
 
     public static CompiledArrayConstant<Integer, IntegerArrayList, IntegerInstanceArray> createIntegerArrayConstant(CompiledConstant[] constants,
                                                                                                                     boolean isElementNullable) {
-        return new CompiledArrayConstant<>(TimebaseTypes.INT32_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.INT32_CONTAINER.getArrayType(true, isElementNullable),
                 IntegerInstanceArray.class, int.class, createInteger(constants), createIntegerArray(constants));
     }
 
     public static CompiledArrayConstant<Integer, IntegerArrayList, IntegerInstanceArray> createIntegerArrayConstant(IntegerArrayList list) {
-        return new CompiledArrayConstant<>(TimebaseTypes.INT32_CONTAINER.getArrayType(false, false),
+        return new CompiledArrayConstant<>(TimebaseTypes.INT32_CONTAINER.getArrayType(true, true),
                 IntegerInstanceArray.class, int.class, toExpressions(list), list);
     }
 
     public static CompiledArrayConstant<Long, LongArrayList, LongInstanceArray> createLongArrayConstant(CompiledConstant[] constants,
                                                                                                         boolean isElementNullable) {
-        return new CompiledArrayConstant<>(TimebaseTypes.INT64_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.INT64_CONTAINER.getArrayType(true, isElementNullable),
                 LongInstanceArray.class, long.class, createLong(constants), createLongArray(constants));
     }
 
     public static CompiledArrayConstant<Long, LongArrayList, LongInstanceArray> createLongArrayConstant(LongArrayList list) {
-        return new CompiledArrayConstant<>(TimebaseTypes.INT64_CONTAINER.getArrayType(false, false),
+        return new CompiledArrayConstant<>(TimebaseTypes.INT64_CONTAINER.getArrayType(true, true),
                 LongInstanceArray.class, long.class, toExpressions(list), list);
     }
 
     public static CompiledArrayConstant<Long, LongArrayList, LongInstanceArray> createDecimalArrayConstant(CompiledConstant[] constants,
                                                                                                            boolean isElementNullable) {
-        return new CompiledArrayConstant<>(TimebaseTypes.DECIMAL64_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.DECIMAL64_CONTAINER.getArrayType(true, isElementNullable),
                 LongInstanceArray.class, long.class, createDecimal(constants), createDecimalLongArray(constants),
                 Decimal64Utils::toString);
     }
 
     public static CompiledArrayConstant<Long, LongArrayList, LongInstanceArray> createDecimalArrayConstant(@Decimal LongArrayList list) {
-        return new CompiledArrayConstant<>(TimebaseTypes.DECIMAL64_CONTAINER.getArrayType(false, false),
+        return new CompiledArrayConstant<>(TimebaseTypes.DECIMAL64_CONTAINER.getArrayType(true, true),
                 LongInstanceArray.class, long.class, toExpressions(list), list, Decimal64Utils::toString);
     }
 
     public static CompiledArrayConstant<Double, DoubleArrayList, DoubleInstanceArray> createDoubleArrayConstant(CompiledConstant[] constants,
                                                                                                                 boolean isElementNullable) {
-        return new CompiledArrayConstant<>(TimebaseTypes.FLOAT64_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.FLOAT64_CONTAINER.getArrayType(true, isElementNullable),
                 DoubleInstanceArray.class, double.class, createDouble(constants), createDoubleArray(constants));
     }
 
     public static CompiledArrayConstant<Double, DoubleArrayList, DoubleInstanceArray> createDoubleArrayConstant(DoubleArrayList list) {
-        return new CompiledArrayConstant<>(TimebaseTypes.FLOAT64_CONTAINER.getArrayType(false, false),
+        return new CompiledArrayConstant<>(TimebaseTypes.FLOAT64_CONTAINER.getArrayType(true, true),
                 DoubleInstanceArray.class, double.class, toExpressions(list), list);
     }
 
@@ -343,26 +343,26 @@ public class CompiledArrayConstant<V, L extends List<V>, T extends BaseInstanceA
     public static CompiledArrayConstant<CharSequence, ObjectArrayList<CharSequence>, CharSequenceInstanceArray> createStringArrayConstant(
             CompiledConstant[] constants, boolean isElementNullable
     ) {
-        return new CompiledArrayConstant<>(TimebaseTypes.UTF8_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.UTF8_CONTAINER.getArrayType(true, isElementNullable),
                 CharSequenceInstanceArray.class, CharSequence.class, createString(constants), createStringArray(constants));
     }
 
     public static CompiledArrayConstant<Character, CharacterArrayList, CharacterInstanceArray> createCharArrayConstant(
             CompiledConstant[] constants, boolean isElementNullable
     ) {
-        return new CompiledArrayConstant<>(TimebaseTypes.CHAR_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.CHAR_CONTAINER.getArrayType(true, isElementNullable),
                 CharacterInstanceArray.class, char.class, createChar(constants), createCharArray(constants));
     }
 
     public static CompiledArrayConstant<Long, LongArrayList, LongInstanceArray> createDateArrayConstant(
             CompiledConstant[] constants, boolean isElementNullable
     ) {
-        return new CompiledArrayConstant<>(TimebaseTypes.DATE_TIME_CONTAINER.getArrayType(false, isElementNullable),
+        return new CompiledArrayConstant<>(TimebaseTypes.DATE_TIME_CONTAINER.getArrayType(true, isElementNullable),
                 LongInstanceArray.class, long.class, createLong(constants), createLongArray(constants));
     }
 
     public static CompiledArrayConstant<Long, LongArrayList, LongInstanceArray> createDateArrayConstant(LongArrayList list) {
-        return new CompiledArrayConstant<>(TimebaseTypes.DATE_TIME_CONTAINER.getArrayType(false, false),
+        return new CompiledArrayConstant<>(TimebaseTypes.DATE_TIME_CONTAINER.getArrayType(true, true),
                 LongInstanceArray.class, long.class, toExpressions(list), list);
     }
 

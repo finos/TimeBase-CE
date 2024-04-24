@@ -18,3 +18,6 @@ Running QQL: select "field".name, "field"."type".baseName as 'fieldType', "field
 {"$type":"QUERY7806381371293046800","symbol":"","field.name":"originalStatus","fieldType":"VARCHAR","encoding":"UTF8"}
 {"$type":"QUERY7806381371293046800","symbol":"","field.name":"status","fieldType":"ENUM"}
 !END
+Running QQL: select ([] as array(decimal) if true) as a1, (null as array(int8) if true) as a2, (null as int8 if true) as a, (a + (1 as timestamp) if true) as a3, (a + (1 as int16) if true) as a4
+,<null>,A1:ARRAY,A2:ARRAY,A:<null>,A3:<null>,A4:<null>
+!END

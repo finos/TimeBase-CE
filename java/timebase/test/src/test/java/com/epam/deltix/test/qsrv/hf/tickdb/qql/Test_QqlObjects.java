@@ -844,6 +844,11 @@ public class Test_QqlObjects extends TDBRunnerBase {
             QUERY_RAW("select t.name as 'typeName' array join streams()[this.key == 'KRAKEN'].topTypes as 't'"),
             QUERY_RAW("select \"field\".name, \"field\".\"type\".baseName as 'fieldType', \"field\".\"type\".encoding as 'encoding' " +
                     "array join streams()[this.key == 'KRAKEN'].topTypes.fields as 'field'"),
+        QUERY("select ([] as array(decimal) if true) as a1, " +
+            "(null as array(int8) if true) as a2, " +
+            "(null as int8 if true) as a, " +
+            "(a + (1 as timestamp) if true) as a3, " +
+            "(a + (1 as int16) if true) as a4"),
     };
 
 

@@ -79,7 +79,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
         if (lastStates != null) {
             while (lastStates.hasMoreElements()) {
                 FilterState state = lastStates.nextElement();
-                if (!state.havingAccepted) {
+                if (!state.havingAccepted || !state.changed) {
                     continue;
                 }
                 writeLast(state);
@@ -123,6 +123,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
             initialized = true;
             state.initializedOnInterval = true;
             state.initialized = true;
+            state.changed = true;
             aggregatedMessages++;
             return running ? result: REJECT;
         }
@@ -172,6 +173,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
         }
         if (result == ACCEPT) {
             aggregatedMessages++;
+            state.changed = true;
         }
 
         if (result == ABORT) {
@@ -207,6 +209,8 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
             if (!state.havingAccepted) {
                 continue;
             }
+
+            state.changed = false;
             return true;
         }
         intervalStates = null;
@@ -242,6 +246,8 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
                 if (!state.havingAccepted) {
                     continue;
                 }
+
+                state.changed = false;
                 return true;
             }
             emptyMessages--;
@@ -260,7 +266,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
         }
         while (lastStates.hasMoreElements()) {
             FilterState state = lastStates.nextElement();
-            if (!state.havingAccepted) {
+            if (!state.havingAccepted || !state.changed) {
                 continue;
             }
             writeLast(state);
@@ -276,6 +282,7 @@ public abstract class OverTimeFilter extends FilterIMSImpl {
     protected void writeLast(FilterState state) {
         outMsg = state.getLastMessage();
         outMsg.setNanoTime(timeSaver.getEnd());
+        state.changed = false;
     }
 
     protected abstract void encodeNull(MemoryDataOutput mdo);

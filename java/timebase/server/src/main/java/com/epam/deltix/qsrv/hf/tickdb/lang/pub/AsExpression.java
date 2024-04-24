@@ -35,9 +35,9 @@ public class AsExpression extends ComplexExpression {
     protected void print(int outerPriority, StringBuilder s) {
         s.append("(");
         expression.print(outerPriority, s);
+        s.append(")");
         s.append(" AS ");
         castType.print(s);
-        s.append(")");
     }
 
     @Override

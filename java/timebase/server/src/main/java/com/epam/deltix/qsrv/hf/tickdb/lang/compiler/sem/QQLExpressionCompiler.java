@@ -232,20 +232,20 @@ public class QQLExpressionCompiler {
 
     private CompiledConstant compileConstant(Constant e, DataType expectedType) {
         if (e instanceof BooleanConstant)
-            return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, ((BooleanConstant) e).value));
+            return (new CompiledConstant(StandardTypes.NULLABLE_BOOLEAN, ((BooleanConstant) e).value));
 
         if (e instanceof IntegerConstant) {
             long value = ((IntegerConstant) e).value;
 
             if (expectedType instanceof FloatDataType)
-                return (new CompiledConstant(StandardTypes.CLEAN_DECIMAL, Long.toString(value)));
+                return (new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, Long.toString(value)));
             else if (expectedType instanceof IntegerDataType)
                 return (new CompiledConstant(expectedType, value));
 
             if (value > Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
-                return new CompiledConstant(StandardTypes.INT32_CONTAINER.getType(false), value);
+                return new CompiledConstant(StandardTypes.INT32_CONTAINER.getType(true), value);
             } else {
-                return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(false), value);
+                return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(true), value);
             }
         }
 
@@ -253,33 +253,33 @@ public class QQLExpressionCompiler {
             long value = ((LongConstant) e).value;
 
             if (expectedType instanceof FloatDataType)
-                return (new CompiledConstant(StandardTypes.CLEAN_DECIMAL, Long.toString(value)));
+                return (new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, Long.toString(value)));
             else if (expectedType instanceof IntegerDataType)
                 return (new CompiledConstant(expectedType, value));
-            return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(false), value);
+            return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(true), value);
         }
 
         if (e instanceof FloatConstant) {
             if (!(expectedType instanceof FloatDataType)) {
                 if (((FloatConstant) e).isDecimal64()) {
-                    return new CompiledConstant(StandardTypes.CLEAN_DECIMAL, ((FloatConstant) e).toFloatString());
+                    return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, ((FloatConstant) e).toFloatString());
                 } else {
-                    return new CompiledConstant(StandardTypes.CLEAN_FLOAT, ((FloatConstant) e).toFloatString());
+                    return new CompiledConstant(StandardTypes.NULLABLE_FLOAT, ((FloatConstant) e).toFloatString());
                 }
             } else if (((FloatDataType) expectedType).isDecimal64()) {
-                return new CompiledConstant(StandardTypes.CLEAN_DECIMAL, ((FloatConstant) e).toFloatString());
+                return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, ((FloatConstant) e).toFloatString());
             } else {
-                return new CompiledConstant(StandardTypes.CLEAN_FLOAT, ((FloatConstant) e).toFloatString());
+                return new CompiledConstant(StandardTypes.NULLABLE_FLOAT, ((FloatConstant) e).toFloatString());
             }
         }
 
         if (e instanceof StringConstant)
-            return (new CompiledConstant(StandardTypes.CLEAN_VARCHAR, ((StringConstant) e).value));
+            return (new CompiledConstant(StandardTypes.NULLABLE_VARCHAR, ((StringConstant) e).value));
 
         if (e instanceof DateConstant)
             return (
                     new CompiledConstant(
-                            StandardTypes.CLEAN_TIMESTAMP,
+                            StandardTypes.NULLABLE_TIMESTAMP,
                             ((DateConstant) e).nanoseconds / 1000000
                     )
             );
@@ -287,7 +287,7 @@ public class QQLExpressionCompiler {
         if (e instanceof TimeConstant)
             return (
                     new CompiledConstant(
-                            StandardTypes.CLEAN_TIMEOFDAY,
+                            StandardTypes.NULLABLE_TIMEOFDAY,
                             (int) (((TimeConstant) e).nanoseconds / 1000000)
                     )
             );
@@ -295,7 +295,7 @@ public class QQLExpressionCompiler {
         if (e instanceof BinConstant)
             return (
                     new CompiledConstant(
-                            StandardTypes.CLEAN_BINARY,
+                            StandardTypes.NULLABLE_BINARY,
                             ((BinConstant) e).bytes
                     )
             );
@@ -303,13 +303,13 @@ public class QQLExpressionCompiler {
         if (e instanceof CharConstant)
             return (
                     new CompiledConstant(
-                            StandardTypes.CLEAN_CHAR,
+                            StandardTypes.NULLABLE_CHAR,
                             ((CharConstant) e).ch
                     )
             );
 
         if (e instanceof TimeIntervalConstant) {
-            return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(false), ((TimeIntervalConstant) e).getTimeStampMs());
+            return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(true), ((TimeIntervalConstant) e).getTimeStampMs());
         }
 
         if (e instanceof Null) {
@@ -434,9 +434,9 @@ public class QQLExpressionCompiler {
                 CompiledConstant c = (CompiledConstant) x;
 
                 if (((FloatDataType) ot).isDecimal64()) {
-                    return new CompiledConstant(StandardTypes.CLEAN_DECIMAL, c.getString());
+                    return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, c.getString());
                 } else {
-                    return new CompiledConstant(StandardTypes.CLEAN_FLOAT, c.getString());
+                    return new CompiledConstant(StandardTypes.NULLABLE_FLOAT, c.getString());
                 }
             }
 
@@ -448,9 +448,9 @@ public class QQLExpressionCompiler {
         } else if (xt instanceof FloatDataType && ot instanceof FloatDataType) {
             if (x instanceof CompiledConstant) {
                 if (!((FloatDataType) xt).isDecimal64() && ((FloatDataType) ot).isDecimal64()) {
-                    return new CompiledConstant(StandardTypes.CLEAN_DECIMAL, ((CompiledConstant) x).getString());
+                    return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, ((CompiledConstant) x).getString());
                 } else if (((FloatDataType) xt).isDecimal64() && !((FloatDataType) ot).isDecimal64()) {
-                    return new CompiledConstant(StandardTypes.CLEAN_FLOAT, ((CompiledConstant) x).getString());
+                    return new CompiledConstant(StandardTypes.NULLABLE_FLOAT, ((CompiledConstant) x).getString());
                 }
             } else if (!(other instanceof CompiledConstant) && ((FloatDataType) xt).isDecimal64()
                     && !((FloatDataType) ot).isDecimal64()) {
@@ -983,10 +983,10 @@ public class QQLExpressionCompiler {
             compile(ifExpression.elseExpression, expectedType) : new CompiledConstant(expectedType, null);
 
         DataType outputType = getOutputTypeOfExpressions(Arrays.asList(compiledThen, compiledElse));
-        if (isNullLiteral(compiledThen)) {
+        if (isUntypedNullLiteral(compiledThen)) {
             compiledThen = new CompiledConstant(outputType, null);
         }
-        if (isNullLiteral(compiledElse)) {
+        if (isUntypedNullLiteral(compiledElse)) {
             compiledElse = new CompiledConstant(outputType, null);
         }
 
@@ -1021,11 +1021,11 @@ public class QQLExpressionCompiler {
         List<CompiledExpression<?>> outputExpressions = new ArrayList<>(compiledThens);
         outputExpressions.add(compiledElse);
         DataType outputType = getOutputTypeOfExpressions(outputExpressions);
-        if (isNullLiteral(compiledElse)) {
+        if (isUntypedNullLiteral(compiledElse)) {
             compiledElse = new CompiledConstant(outputType, null);
         }
         for (int i = 0; i < compiledThens.size(); ++i) {
-            if (isNullLiteral(compiledThens.get(i))) {
+            if (isUntypedNullLiteral(compiledThens.get(i))) {
                 compiledThens.set(i, new CompiledConstant(outputType, null));
             }
 
@@ -1050,7 +1050,7 @@ public class QQLExpressionCompiler {
     private DataType getOutputTypeOfExpressions(List<CompiledExpression<?>> expressions) {
         for (int i = 0; i < expressions.size(); ++i) {
             CompiledExpression<?> e = expressions.get(i);
-            if (!isNullLiteral(e)) {
+            if (!isUntypedNullLiteral(e)) {
                 return e.type;
             }
         }
@@ -1058,13 +1058,17 @@ public class QQLExpressionCompiler {
         return null;
     }
 
+    private boolean isUntypedNullLiteral(CompiledExpression<?> e) {
+        return isNullLiteral(e) && e.type == null;
+    }
+
     private boolean isNullLiteral(CompiledExpression<?> e) {
-        return e instanceof CompiledConstant && ((CompiledConstant) e).value == null;
+        return e instanceof CompiledConstant && ((CompiledConstant) e).isNull();
     }
 
     private void validateConditionTypes(Expression e, DataType actual, DataType required) {
         if (actual != null && required != null) {
-            if (!isCompatibleWithoutConversion(actual, required)) {
+            if (!QQLCompiler.isStrictCompatibleWithoutConversion(actual, required)) {
                 throw new UnexpectedTypeException(e, actual, required);
             } else if (actual instanceof ClassDataType && required instanceof ClassDataType) {
                 if (isCastRequired((ClassDataType) actual, (ClassDataType) required)) {
@@ -1073,7 +1077,7 @@ public class QQLExpressionCompiler {
             } else if (actual instanceof ArrayDataType && required instanceof ArrayDataType) {
                 DataType actualArrayType = ((ArrayDataType) actual).getElementDataType();
                 DataType requiredArrayType = ((ArrayDataType) required).getElementDataType();
-                if (!isCompatibleWithoutConversion(actualArrayType, requiredArrayType)) {
+                if (!QQLCompiler.isStrictCompatibleWithoutConversion(actualArrayType, requiredArrayType)) {
                     throw new UnexpectedTypeException(e, actualArrayType, requiredArrayType);
                 } else if (actualArrayType instanceof ClassDataType && requiredArrayType instanceof ClassDataType) {
                     if (isCastRequired((ClassDataType) actualArrayType, (ClassDataType) requiredArrayType)) {
@@ -2029,7 +2033,10 @@ public class QQLExpressionCompiler {
     private CompiledExpression<DataType> compileCastExpression(AsExpression e) {
         CompiledExpression<DataType> parent = compile(e.expression, null);
 
-        DataType castDataType = getCastDataType(e, parent.type);
+        DataType castDataType = getCastDataType(e, parent.type == null || parent.type.isNullable());
+        if (isNullLiteral(parent)) {
+            return new CompiledConstant(castDataType, null);
+        }
 
         if (castDataType == null) {
             throw new CompilationException("Unknown target data type.", e);
@@ -2107,9 +2114,9 @@ public class QQLExpressionCompiler {
         return !Arrays.equals(sourceType.getDescriptors(), type.getDescriptors());
     }
 
-    private DataType getCastDataType(AsExpression e, DataType parentType) {
+    private DataType getCastDataType(AsExpression e, boolean isNullable) {
         if (e.castType instanceof CastTypeIdExpression) {
-            return compileCastTypeIdExpression((CastTypeIdExpression) e.castType, parentType.isNullable());
+            return compileCastTypeIdExpression((CastTypeIdExpression) e.castType, isNullable);
         } else if (e.castType instanceof CastObjectTypeExpression) {
             CastObjectTypeExpression castObjectType = (CastObjectTypeExpression) e.castType;
             return new ClassDataType(
@@ -2122,13 +2129,13 @@ public class QQLExpressionCompiler {
 
             if (castTypeIds.size() > 1) {
                 return new ArrayDataType(
-                    parentType.isNullable(),
+                    isNullable,
                     new ClassDataType(true, collectDescriptors(castTypeIds))
                 );
             } else {
                 return new ArrayDataType(
-                    parentType.isNullable(),
-                    compileCastTypeIdExpression(castTypeIds.get(0), parentType.isNullable())
+                    isNullable,
+                    compileCastTypeIdExpression(castTypeIds.get(0), isNullable)
                 );
             }
         }

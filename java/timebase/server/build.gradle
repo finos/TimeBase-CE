@@ -40,6 +40,8 @@ dependencies {
     implementation 'com.epam.deltix:gflog-api', 'com.epam.deltix:gflog-core',
             'com.epam.deltix:gflog-jul'
 
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
     // web application
 
     implementation 'org.springframework:spring-webmvc'

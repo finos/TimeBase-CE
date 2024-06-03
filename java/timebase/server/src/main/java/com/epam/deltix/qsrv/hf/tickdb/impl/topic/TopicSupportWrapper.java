@@ -95,4 +95,14 @@ public class TopicSupportWrapper extends BaseDXTickDBWrapper {
         }
         super.close();
     }
+
+    @Override
+    public int cursorsCount() {
+        return 0;
+    }
+
+    @Override
+    public int loadersCount() {
+        return 0;
+    }
 }

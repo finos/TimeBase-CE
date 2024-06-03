@@ -22,6 +22,8 @@ dependencies {
     implementation 'javax.servlet:javax.servlet-api:3.1.0' // Tomcat Requires
     implementation 'org.glassfish:javax.el:3.0.0' // Tomcat Requires
 
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
     implementation 'javax.mail:mail'
     implementation 'commons-collections:commons-collections'
 

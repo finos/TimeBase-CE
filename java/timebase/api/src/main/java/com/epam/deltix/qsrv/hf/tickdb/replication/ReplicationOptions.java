@@ -27,4 +27,6 @@ public class ReplicationOptions extends CommonOptions {
     public long     threshold = 100000;
     public boolean  format = false;
     public int      flush = 0;      // flush loader every 'flush' sends
+
+    public String[] spaces;
 }

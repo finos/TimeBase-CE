@@ -20,6 +20,7 @@ import com.epam.deltix.qsrv.config.QuantServerExecutor;
 import com.epam.deltix.qsrv.config.QuantServiceConfig;
 import com.epam.deltix.qsrv.config.QuantServiceConfig.Type;
 import com.epam.deltix.qsrv.config.ServiceExecutor;
+import com.epam.deltix.qsrv.util.metrics.MetricsService;
 import com.epam.deltix.qsrv.util.servlet.AccessFilter;
 import com.epam.deltix.snmp.QuantServerSnmpObjectContainer;
 import com.epam.deltix.snmp.SNMPTransportFactory;
@@ -112,6 +113,15 @@ public final class TomcatRunner {
         executors.add(0, executor);
 
         mCat.setConnectionHandler(QuantServerExecutor.HANDLER);
+
+        if (config.tb != null) {
+            if (isMetricsServiceEnabled(config.tb, MetricsService.ENABLE_TIMEBASE_METRICS)) {
+                MetricsService.init(config.tb.getHost(), config.port,
+                        isJvmMetricsEnabled(config.tb, MetricsService.ENABLE_JVM_TIMEBASE_METRICS),
+                        isTomcatMetricsEnabled(config.tb, MetricsService.ENABLE_TOMCAT_TIMEBASE_METRICS)
+                );
+            }
+        }
 
         if (config.tb != null) {
             ServiceExecutor tb = config.getExecutor(Type.TimeBase);
@@ -287,5 +297,23 @@ public final class TomcatRunner {
                 System.setProperty(AccessFilter.ENABLE_REMOTE_ACCESS_PROP, String.valueOf(enable));
             }
         }
+    }
+
+    private boolean isMetricsServiceEnabled(QuantServiceConfig config, boolean enabled) {
+        return enabled || (config != null && config.getBoolean(QuantServiceConfig.ENABLE_METRICS, false));
+    }
+
+    private boolean isJvmMetricsEnabled(QuantServiceConfig config, boolean enabled) {
+        return enabled ||
+                (config != null &&
+                        config.getBoolean(QuantServiceConfig.ENABLE_METRICS, false) &&
+                        config.getBoolean(QuantServiceConfig.ENABLE_JVM_METRICS, false));
+    }
+
+    private boolean isTomcatMetricsEnabled(QuantServiceConfig config, boolean enabled) {
+        return enabled ||
+                (config != null &&
+                        config.getBoolean(QuantServiceConfig.ENABLE_METRICS, false) &&
+                        config.getBoolean(QuantServiceConfig.ENABLE_TOMCAT_METRICS, false));
     }
 }

@@ -37,4 +37,8 @@ public interface TBMonitor {
     public void                     removeObjectMonitor(TBObjectMonitor monitor);
 
     public void                     addPropertyMonitor(String component, PropertyMonitor monitor);
+
+    int                             cursorsCount();
+
+    int                             loadersCount();
 }

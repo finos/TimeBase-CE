@@ -88,6 +88,11 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         return executor;
     }
 
+    public int                  getDispatchersCount() {
+        synchronized (dispatchers) {
+            return dispatchers.size();
+        }
+    }
     public VSDispatcher []      getDispatchers () {
         VSDispatcher [] ret;
 

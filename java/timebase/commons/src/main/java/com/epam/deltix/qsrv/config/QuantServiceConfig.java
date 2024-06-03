@@ -71,6 +71,11 @@ public class QuantServiceConfig {
 
     public static final String WEBAPP_PATH                 = "webapp.path";
 
+    public static final String ENABLE_METRICS              = "metrics.enable";
+    public static final String ENABLE_JVM_METRICS          = "metrics.enableJvmMetrics";
+    public static final String ENABLE_TOMCAT_METRICS       = "metrics.enableTomcatMetrics";
+
+
     public enum Type {
         TimeBase,
         QuantServer

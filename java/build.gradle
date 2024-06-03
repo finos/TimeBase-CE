@@ -208,6 +208,8 @@ configure(leafProjects) {
 //                entry 'hadoop-yarn-common'
 //            }
 
+            dependency 'io.micrometer:micrometer-registry-prometheus:1.7.3'
+
             dependencySet(group: 'org.apache.tomcat.embed', version: '8.0.53') {
                 entry 'tomcat-embed-core' // Tomcat core
                 entry 'tomcat-embed-jasper' // Tomcat JSP support

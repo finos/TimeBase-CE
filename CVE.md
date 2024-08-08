@@ -105,3 +105,15 @@ The SSI printenv command echoes user provided data without escaping and is, ther
 SSI is disabled by default. The printenv command is intended for debugging and is unlikely to be present in a production website.
 ```
 TimeBase Server with embedded tomcat setup is not affected, because SSI is disabled.
+
+
+12. [CVE-2016-1000027](https://www.cvedetails.com/cve/CVE-2016-1000027)
+```
+Pivotal Spring Framework through 5.3.16 suffers from a potential remote code execution (RCE) issue if used for Java deserialization of untrusted data. 
+Depending on how the library is implemented within a product, this issue may or not occur, and authentication may be required. 
+
+NOTE: the vendor's position is that untrusted data is not an intended use case. The product's behavior will not be changed because some users rely on deserialization of trusted data.
+```
+
+TimeBase Server with embedded tomcat setup is not affected, because we do not use object serialization via RMI. TimeBase uses own binary communication protocol to serialize internal objects.        
+Overall recommentation - do not open TimeBase HTTP endpoints to public internet.

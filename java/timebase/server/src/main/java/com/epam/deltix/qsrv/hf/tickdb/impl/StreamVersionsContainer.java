@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -87,8 +87,8 @@ public class StreamVersionsContainer extends AbstractMessageWriter implements Cl
 
         @Override
         protected void          onCommitLength() throws IOException {
-            DataExchangeUtils.writeLong (header, VERSION_OFFSET, version);
             DataExchangeUtils.writeLong (header, LENGTH_OFFSET, getLogicalLength());
+            DataExchangeUtils.writeLong (header, VERSION_OFFSET, version);
             directWrite(LENGTH_OFFSET, header, LENGTH_OFFSET, 16);
         }
 
@@ -96,8 +96,8 @@ public class StreamVersionsContainer extends AbstractMessageWriter implements Cl
         protected void          onFormat () throws IOException {
             header = new byte [HEADER_SIZE];
 
-            DataExchangeUtils.writeLong (header, LENGTH_OFFSET, HEADER_SIZE);
             DataExchangeUtils.writeLong (header, VERSION_OFFSET, version = -1);
+            DataExchangeUtils.writeLong (header, LENGTH_OFFSET, HEADER_SIZE);
             directWrite (0, header, 0, HEADER_SIZE);
             setLogicalLength (HEADER_SIZE);
         }

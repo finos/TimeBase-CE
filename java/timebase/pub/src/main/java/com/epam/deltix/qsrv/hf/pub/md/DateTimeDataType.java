@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,11 +16,15 @@
  */
 package com.epam.deltix.qsrv.hf.pub.md;
 
+import com.epam.deltix.timebase.messages.TimeStamp;
+import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.time.GMT;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import javax.xml.bind.annotation.*;
+
+import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.writeNullableString;
 
 /**
  *
@@ -31,8 +35,13 @@ public final class DateTimeDataType extends DataType {
 	
     public static final long NULL = Long.MIN_VALUE;
 
+    public static final String ENCODING_MILLISECONDS = "MILLISECOND";
+    public static final String ENCODING_MILLISECONDS_1 = "MS";
+    public static final String ENCODING_NANOSECONDS = "NANOSECOND";
+    public static final String ENCODING_NANOSECONDS_1 = "NS";
+
     public static DateTimeDataType getDefaultInstance() {
-        return new DateTimeDataType(true);
+        return new DateTimeDataType(true, ENCODING_MILLISECONDS);
     }
 
     DateTimeDataType () { // For JAXB
@@ -40,7 +49,43 @@ public final class DateTimeDataType extends DataType {
     }
 
     public DateTimeDataType(boolean nullable) {
-        super(null, nullable);
+        this(nullable, ENCODING_MILLISECONDS);
+    }
+
+    public DateTimeDataType(boolean nullable, String encoding) {
+        parseEncoding(encoding);
+        this.nullable = nullable;
+    }
+
+    @Override
+    public void parseEncoding(String encoding) {
+        if (ENCODING_NANOSECONDS.equalsIgnoreCase(encoding) || ENCODING_NANOSECONDS_1.equalsIgnoreCase(encoding))
+            this.encoding = ENCODING_NANOSECONDS;
+        else if (ENCODING_MILLISECONDS.equalsIgnoreCase(encoding) || ENCODING_MILLISECONDS_1.equalsIgnoreCase(encoding))
+            this.encoding = ENCODING_MILLISECONDS;
+        else if (encoding == null || StringUtils.isEmpty(encoding))
+            this.encoding = ENCODING_MILLISECONDS;
+        else
+            throw new IllegalArgumentException("Unknown encoding for DateTime:" + encoding);
+    }
+
+    public static boolean isEquals(String encoding1, String encoding2) {
+        return StringUtils.equals(staticParseEncoding(encoding1), staticParseEncoding(encoding2));
+    }
+
+    public static boolean isNotEquals(String encoding1, String encoding2) {
+        return !StringUtils.equals(staticParseEncoding(encoding1), staticParseEncoding(encoding2));
+    }
+
+    public static String staticParseEncoding(String encoding) {
+        if (ENCODING_NANOSECONDS.equalsIgnoreCase(encoding) || ENCODING_NANOSECONDS_1.equalsIgnoreCase(encoding))
+            return ENCODING_NANOSECONDS;
+        else if (ENCODING_MILLISECONDS.equalsIgnoreCase(encoding) || ENCODING_MILLISECONDS_1.equalsIgnoreCase(encoding))
+            return ENCODING_MILLISECONDS;
+        else if (encoding == null || StringUtils.isEmpty(encoding))
+            return ENCODING_MILLISECONDS;
+        else
+            throw new IllegalArgumentException("Unknown encoding for DateTime:" + encoding);
     }
 
     public String           getBaseName () {
@@ -57,33 +102,64 @@ public final class DateTimeDataType extends DataType {
         if (!(obj instanceof Long))
             throw unsupportedType (obj);               
     }
-    
+
+    /*
+     *   Returns true is type has nanoseconds encoding
+     */
+    public boolean          hasNanosecondPrecision() {
+        return ENCODING_NANOSECONDS.equals(encoding) || ENCODING_NANOSECONDS_1.equals(encoding);
+    }
+
     /**
      *  Convert non-null CharSequence to long (milliseconds) by parsing it as
      *  canonical representation in GMT
      */
-    public static long      staticParse (CharSequence text) {
+    public static long      staticParse (CharSequence text, String encoding) {
+
         String  s = text.toString ();
         
-        try {            
-            return (GMT.parseDateTimeMillis (s).getTime ());
+        try {
+            if (isEquals(ENCODING_MILLISECONDS, encoding)) {
+                if (s.length() < 20)
+                    return GMT.parseDateTime(s).getTime();
+                else
+                    return GMT.parseDateTimeMillis(s).getTime();
+            }
+
+            long time = GMT.parseDateTime(s).getTime();
+
+            String nanos = s.length() >= 20 ? s.substring(20) : "0";
+
+            if (nanos.length() > 9)
+                throw new NumberFormatException ("Illegal date: " + s);
+
+            int nsValue = Integer.parseInt(nanos);
+            if (nanos.length() == 9) { // full nanoseconds
+                return TimeStamp.getNanoTime(time, nsValue);
+            } else if (nanos.length() == 3) { // milliseconds
+                return TimeStamp.getNanoTime(time + nsValue);
+            } else {
+                double multiplier = Math.max(0, 9 - nanos.length());
+                nsValue = nsValue * (int) Math.pow(10, multiplier);
+                return TimeStamp.getNanoTime(time, nsValue);
+            }
+
         } catch (ParseException x) {
             throw new NumberFormatException ("Illegal date: " + s);
         }
-    }        
-    
-    public static String    staticFormat (long obj) {
-        return (GMT.formatDateTimeMillis (obj));
     }
-    
+
     @Override
     protected Object        toBoxedImpl (CharSequence text) {
-        return (staticParse (text));
+        return (staticParse (text, encoding));
     }
     
     @Override
     protected String        toStringImpl (Object obj) {
-        return (staticFormat ((Long) obj));
+        if (hasNanosecondPrecision())
+            return (GMT.formatNanos ((Long)obj));
+        else
+            return (GMT.formatDateTimeMillis ((Long)obj));
     }
 
     public ConversionType isConvertible(DataType to) {
@@ -91,17 +167,34 @@ public final class DateTimeDataType extends DataType {
             return ConversionType.Lossless;
         } else if (to instanceof FloatDataType) {
             return ((FloatDataType) to).check(0, Long.MAX_VALUE) ? ConversionType.Lossless : ConversionType.Lossy;
-        } else if (to instanceof DateTimeDataType || to instanceof IntegerDataType) {
+        } else if (to instanceof IntegerDataType) {
             return ConversionType.Lossy;
+        } else if (to instanceof DateTimeDataType) {
+            if (isEquals(to.getEncoding(), getEncoding()))
+                return ConversionType.Lossless;
+            else if (hasNanosecondPrecision())
+                return ConversionType.Lossy;
+            else
+                return ConversionType.Lossless;
         }
 
         return ConversionType.NotConvertible;
     }
 
+    /*
+     * Creates DateTimeDataType without specified encoding compatible with previous versions (4.3 and 5.X)
+     */
+    public static DateTimeDataType createEmpty(boolean nullable) {
+        DateTimeDataType type = new DateTimeDataType();
+        type.nullable = nullable;
+        return type;
+    }
+
     @Override
     public void             writeTo (DataOutputStream out) throws IOException {
         out.writeByte (T_DATE_TIME_TYPE);
-
-        super.writeTo (out);
+        out.writeBoolean (isNullable());
+        // write only 'nanosecond' encoding to have backward compatibility
+        writeNullableString (hasNanosecondPrecision() ? encoding : null, out);
     }
 }

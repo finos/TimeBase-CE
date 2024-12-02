@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -20,11 +20,14 @@ import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.SSLProperties;
 import com.epam.deltix.qsrv.dtb.fs.pub.FSFactory;
 import com.epam.deltix.qsrv.dtb.fs.pub.FSType;
+import com.epam.deltix.qsrv.hf.pub.TimeSource;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.ServerParameters;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.VSConnectionHandler;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.AeronThreadTracker;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.DXServerAeronContext;
+import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.IdleStrategyFactory;
 import com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler;
+import com.epam.deltix.qsrv.hf.tickdb.http.TopicContext;
 import com.epam.deltix.qsrv.hf.tickdb.http.rest.RESTHandshakeHandler;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.util.net.NetworkInterfaceUtil;
@@ -32,27 +35,26 @@ import com.epam.deltix.qsrv.hf.tickdb.impl.TickDBImpl;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicRegistryFactory;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicSupportWrapper;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.DirectTopicRegistry;
-import com.epam.deltix.qsrv.hf.tickdb.pub.mon.PropertyMonitor;
-import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBMonitor;
-import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBObjectMonitor;
-import com.epam.deltix.qsrv.snmp.model.timebase.TimeBase;
-import com.epam.deltix.qsrv.snmp.modimpl.TimeBaseImpl;
 import com.epam.deltix.qsrv.util.servlet.ShutdownServlet;
-import com.epam.deltix.snmp.QuantServerSnmpObjectContainer;
 import com.epam.deltix.util.ContextContainer;
 import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.net.SSLContextProvider;
 import com.epam.deltix.util.security.TimebaseAccessController;
+import com.epam.deltix.util.time.DefaultTimeSourceProvider;
 import com.epam.deltix.util.time.Interval;
+import com.epam.deltix.util.time.KeeperTimeSource;
 import com.epam.deltix.util.time.TimeKeeper;
 import com.epam.deltix.util.vsocket.*;
 import org.apache.catalina.Context;
+import org.springframework.util.unit.DataSize;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -84,16 +86,21 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         if (publicAddressForAeron != null)
             LOGGER.log(Level.INFO, "External Address: " + publicAddressForAeron);
 
-        boolean aeronEnabled = config.getBoolean("aeron.enabled", DXServerAeronContext.ENABLED_BY_DEFAULT);
-        if (!aeronEnabled)
-            LOGGER.warning("Disabled aeron");
+        boolean aeronEnabled = DXServerAeronContext.selectEffectiveAeronMode(config);
+        LOGGER.info("Aeron: " + (aeronEnabled ? "enabled" : "disabled"));
 
         boolean topicsIpcBypassRemoteCheck = config.getBoolean("topics.ipc.bypassRemoteCheck", false);
         if (topicsIpcBypassRemoteCheck) {
             LOGGER.info("Topics: Will skip remote address check for clients attempting to access IPC topics");
         }
 
-        aeronContext = DXServerAeronContext.createDefault(aeronEnabled, port, contextContainer.getAffinityConfig(), publicAddressForAeron, topicsIpcBypassRemoteCheck);
+        String termBufferLengthStr = config.getString("topics.termBufferLength", null);
+        Integer topicTermBufferLength = termBufferLengthStr == null ? null : Integer.valueOf(termBufferLengthStr);
+
+        IdleStrategyFactory copyToStreamIdleStrategyFactory = getCopyToStreamIdleStrategyConfig(config);
+        Long topicTotalTermBufferLimit = getConfiguredTotalTermBufferLimit(config);
+
+        aeronContext = DXServerAeronContext.createDefault(aeronEnabled, port, contextContainer.getAffinityConfig(), publicAddressForAeron, topicsIpcBypassRemoteCheck, copyToStreamIdleStrategyFactory, topicTermBufferLength, topicTotalTermBufferLimit);
         aeronContext.start();
 
         long cacheSize = getCacheSize(config);
@@ -102,7 +109,8 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
 
         long shutdownTimeout = config.getLong("shutdownTimeout", Long.MAX_VALUE);
 
-        System.setProperty(TickDBImpl.VERSION_PROPERTY, "5.0");
+        String      version = config.getString("version", System.getProperty(TickDBImpl.VERSION_PROPERTY, "5.0"));
+        System.setProperty(TickDBImpl.VERSION_PROPERTY, version);
 
         File tbFolder = QSHome.getFile(TickDBImpl.getFolderName());
         if (!tbFolder.exists() && !tbFolder.mkdirs())
@@ -110,21 +118,36 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
 
         DataCacheOptions cacheOptions = new DataCacheOptions(numFiles, cacheSize, ratio);
         cacheOptions.shutdownTimeout = shutdownTimeout;
-
         cacheOptions.fs = getFsOptionsFromConfig(config);
 
-        boolean safeMode = config.getBoolean("safeMode", false);
+        String property = TickDBImpl.SAFE_MODE_PROPERTY.replace("TimeBase.", "");
+        boolean safeMode = config.getBoolean(property, false);
         System.setProperty(TickDBImpl.SAFE_MODE_PROPERTY, String.valueOf(safeMode));
 
         if (safeMode)
             LOGGER.warning("Timebase running using \"SAVE MODE\"");
 
+        property = TickDBImpl.UPDATE_METADATA_PROPERTY.replace("TimeBase.", "");
+        boolean upgradeMetadata = config.getBoolean(property, Boolean.getBoolean(TickDBImpl.UPDATE_METADATA_PROPERTY));
+        System.setProperty(TickDBImpl.UPDATE_METADATA_PROPERTY, String.valueOf(upgradeMetadata));
+
+        TimeSource timeSource = configureTimeSource(config);
+
+        // TODO: We should pass contextContainer to TickDBImpl somehow. Shouldn't we?
+        // TODO: MODULARIZATION
         String uid = config.getString("uid");
-        TDB = new TickDBImpl(uid, cacheOptions, tbFolder);
+        TDB = new TickDBImpl(uid, cacheOptions, timeSource, tbFolder);
 
         if (config.getBoolean("highTimeResolution", false)) {
             LOGGER.info("Setting TimeKeeper time resolution to " + TimeKeeper.Mode.HIGH_RESOLUTION_SYNC_BACK);
             TimeKeeper.setMode(TimeKeeper.Mode.HIGH_RESOLUTION_SYNC_BACK);
+        } else {
+            String timeResolution = config.getString("timeResolution", null);
+            if (timeResolution!=null) {
+                TimeKeeper.Mode mode = TimeKeeper.Mode.valueOf(timeResolution);
+                LOGGER.info("Setting TimeKeeper time resolution to " + mode);
+                TimeKeeper.setMode(mode);
+            }
         }
 
         this.topicRegistry = TopicRegistryFactory.initRegistryAtQSHome(aeronContext);
@@ -138,7 +161,7 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         ShutdownServlet.localhostOnly = config.getBoolean("localhostShutdown", false);
 
         // create wrapper with TopicDB support
-        DXTickDB wrapper = TopicSupportWrapper.wrap(TDB, aeronContext, topicRegistry, contextContainer.getQuickExecutor(), aeronThreadTracker);
+        DXTickDB wrapper = TopicSupportWrapper.wrap(TDB, aeronContext, topicRegistry, aeronThreadTracker, timeSource);
 
         new Thread("TimeBase Warm-Up Thread") {
             @Override
@@ -202,6 +225,62 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
 
         AbstractHandler.TDB = TDB;
         AbstractHandler.SC = QuantServerExecutor.SC;
+        AbstractHandler.TOPICS = new TopicContext(aeronContext, topicRegistry);
+    }
+
+    @Nullable
+    private static IdleStrategyFactory getCopyToStreamIdleStrategyConfig(QuantServiceConfig config) {
+        String idleStrategyPrefix = DXServerAeronContext.CONF_PROP_TOPICS_COPY_TO_STREAM_IDLE_STRATEGY + ".";
+        long maxSpins = config.getLong(idleStrategyPrefix + "maxSpins", -1);
+        long maxYields = config.getLong(idleStrategyPrefix + "maxYields", -1);
+        long minParkPeriod = config.getLong(idleStrategyPrefix + "minParkPeriod", -1);
+        long maxParkPeriod = config.getLong(idleStrategyPrefix + "maxParkPeriod", -1);
+
+        if (maxSpins == -1 && maxYields == -1 && minParkPeriod == -1 && maxParkPeriod == -1) {
+            // No config for idle strategy. Fallback to default settings.
+            return null;
+        }
+
+        return new IdleStrategyFactory(
+                defaultToNull(maxSpins),
+                defaultToNull(maxYields),
+                defaultToNull(minParkPeriod),
+                defaultToNull(maxParkPeriod)
+        );
+    }
+
+    private static Long getConfiguredTotalTermBufferLimit(QuantServiceConfig config) {
+        Long sysPropVal = sizeTextToBytes(System.getProperty(DXServerAeronContext.SYS_PROP_TOPIC_TERM_BUFFER_LIMIT, null));
+        if (sysPropVal != null) {
+            return sysPropVal;
+        }
+
+        return sizeTextToBytes(config.getString(null, DXServerAeronContext.SYS_PROP_TOPIC_TERM_BUFFER_LIMIT, null));
+    }
+
+    private static Long sizeTextToBytes(String value) {
+        if (value == null) {
+            return null;
+        }
+        return DataSize.parse(value.toUpperCase(Locale.ENGLISH)).toBytes();
+    }
+
+    private static TimeSource configureTimeSource(QuantServiceConfig config) {
+        String timeSourceName = config.getString("timeSourceName", null);
+        if (timeSourceName != null) {
+            TimeSource timeSource = DefaultTimeSourceProvider.getTimeSourceByName(timeSourceName);
+            if (timeSource == null) {
+                throw new IllegalArgumentException("Unknown time source name: " + timeSourceName);
+            }
+            DefaultTimeSourceProvider.configure("TimebaseServiceExecutor", timeSource);
+            return timeSource;
+        } else {
+            return KeeperTimeSource.INSTANCE;
+        }
+    }
+
+    private static long defaultToNull(long maxSpins) {
+        return maxSpins == -1 ? 0 : maxSpins;
     }
 
     private String getPublicAddressForAeron(QuantServiceConfig config) {
@@ -232,6 +311,7 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         } else if (fs == FSType.AZURE) {
             options.url = FSFactory.AZURE_PROTOCOL_ID + FSFactory.SCHEME_SEPARATOR;
         }
+
         return options;
     }
 

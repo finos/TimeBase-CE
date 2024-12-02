@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -32,18 +32,7 @@ public class DeltixToArgonaStrategyAdapter implements org.agrona.concurrent.Idle
     private final IdleStrategy wrapped;
 
     static org.agrona.concurrent.IdleStrategy adapt(IdleStrategy idleStrategy) {
-        // Try to find direct match and use "native" implementation if possible.
-        Class<? extends IdleStrategy> sClass = idleStrategy.getClass();
-        if (sClass.equals(BusySpinIdleStrategy.class)) {
-            return new org.agrona.concurrent.BusySpinIdleStrategy();
-        } else if (sClass.equals(YieldingIdleStrategy.class)) {
-            return new org.agrona.concurrent.YieldingIdleStrategy();
-        } else if (sClass.equals(ArgonaToDeltixStrategyAdapter.class)) {
-            return ((ArgonaToDeltixStrategyAdapter) idleStrategy).getWrapped();
-        } else {
-            // Fallback to proxy-based adapter
-            return new DeltixToArgonaStrategyAdapter(idleStrategy);
-        }
+        return DeltixToAgronaStrategyAdapter.adapt(idleStrategy);
     }
 
     IdleStrategy getWrapped() {

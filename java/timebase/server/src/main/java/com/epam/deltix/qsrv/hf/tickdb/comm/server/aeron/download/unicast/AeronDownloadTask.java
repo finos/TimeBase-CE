@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -109,7 +109,16 @@ class AeronDownloadTask implements Runnable {
     private final FragmentAssembler commandFragmentHandler = new FragmentAssembler(new CommandHandler(this));
     private final CursorCommandProcessor commandProcessor;
 
-    public AeronDownloadTask(Aeron aeron, int aeronDataStreamId, int aeronCommandStreamId, InstrumentMessageSource cursor, DataFilter<RawMessage> filter, boolean binary, Principal user, ChannelPerformance channelPerformance, VSChannel channel, DXTickDB db, @Nullable TickCursor tcursor) {
+    public AeronDownloadTask(Aeron aeron,
+                             int aeronDataStreamId,
+                             int aeronCommandStreamId,
+                             InstrumentMessageSource cursor,
+                             DataFilter<RawMessage> filter,
+                             boolean binary,
+                             Principal user,
+                             ChannelPerformance channelPerformance,
+                             VSChannel channel,
+                             DXTickDB db) {
         this.cursor = cursor;
         this.filter = filter;
         this.binary = binary;
@@ -130,7 +139,7 @@ class AeronDownloadTask implements Runnable {
         this.channel = channel;
         this.channel.setAvailabilityListener(new DisconnectListener());
         this.db = db;
-        this.commandProcessor = new CursorCommandProcessor(cursor, tcursor, user, this.remoteAddress, this.remoteApplication);
+        this.commandProcessor = new CursorCommandProcessor(cursor, user, this.remoteAddress, this.remoteApplication);
     }
 
     @Override

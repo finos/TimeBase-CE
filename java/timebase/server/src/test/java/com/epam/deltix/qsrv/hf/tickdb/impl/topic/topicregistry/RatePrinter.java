@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
  * With this class you can measure how much time some event occurred during given interval.
  * This class is designed for case with millions messages per second.
  *
- * See also {@link deltix.util.time.PrintingStopWatch}.
- * See also {@link deltix.util.io.aeron.PrintingCounter}.
+ * See also {@link com.epam.deltix.util.time.PrintingStopWatch}.
+ * See also {@link com.epam.deltix.util.io.aeron.PrintingCounter}.
  * @author Alexei Osipov
  */
 public final class RatePrinter {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -27,6 +27,7 @@ import com.epam.deltix.timebase.messages.service.RealTimeStartMessage;
 import com.epam.deltix.util.concurrent.AbstractCursor;
 import com.epam.deltix.util.collections.generated.ObjectHashSet;
 import com.epam.deltix.util.concurrent.*;
+import net.jcip.annotations.GuardedBy;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -50,6 +51,8 @@ public class MessageSourceMultiplexer <T extends TimeStampedMessage>
     }
 
     static final Log LOGGER = LogFactory.getLog("deltix.tickdb.msm");
+
+    static final boolean VALIDATE_LOCKS = Boolean.getBoolean("Timebase.MessageSourceMultiplexer.VALIDATE_LOCKS");
 
     //
     //  Immutable properties
@@ -510,10 +513,12 @@ public class MessageSourceMultiplexer <T extends TimeStampedMessage>
 
             if (supportsRealTime && !source.isRealTime()) {
                 isRealTime = false;
-                if (LOGGER.isEnabled(LogLevel.DEBUG))
+                if (LOGGER.isEnabled(LogLevel.DEBUG)) {
                     LOGGER.debug(this + " installListener() set " + source + " in real-time = false");
-                if (!realTimeFeeds.contains(source))
-                realTimeFeeds.add(source);
+                }
+                if (!realTimeFeeds.contains(source)) {
+                    realTimeFeeds.add(source);
+                }
             }
         }
 
@@ -548,6 +553,7 @@ public class MessageSourceMultiplexer <T extends TimeStampedMessage>
 //            }
     }
 
+    @GuardedBy("this")
     private Runnable                syncNotify () {
         assert Thread.holdsLock (this);
 
@@ -796,12 +802,14 @@ public class MessageSourceMultiplexer <T extends TimeStampedMessage>
         return (syncNext ());
     }
 
+    @GuardedBy("this")
     public boolean                  syncNext () {
         return syncNext(true) == NextResult.OK;
     }
 
+    @GuardedBy("this")
     protected NextResult                  syncNext (boolean throwable) {
-        assert Thread.holdsLock (this);
+        assert !VALIDATE_LOCKS || Thread.holdsLock (this);
         
         for (;;) {
             //
@@ -856,6 +864,7 @@ public class MessageSourceMultiplexer <T extends TimeStampedMessage>
                 else {
                     // Main path for historic data
                     currentSource = queue.poll();
+                    assert currentSource != null;
 
 //                    String previous = last.get(currentSource, null);
 //                    if (previous != null && previous.equals(currentSource.getMessage().toString())) {
@@ -872,6 +881,7 @@ public class MessageSourceMultiplexer <T extends TimeStampedMessage>
         }      
     }
 
+    @GuardedBy("this")
     protected final NextResult processEmptyQueue(boolean throwable) {
         assert Thread.holdsLock (this);
 
@@ -943,26 +953,31 @@ public class MessageSourceMultiplexer <T extends TimeStampedMessage>
         return (queue == null);
     }
 
+    @GuardedBy("this")
     public final boolean            syncIsAtEnd () {
         assert Thread.holdsLock (this);
         return (isAtEnd);
     }
 
+    @GuardedBy("this")
     public final T                  syncGetMessage () {
         assert Thread.holdsLock (this);
         return (currentMessage);
     }
 
+    @GuardedBy("this")
     public final long               syncGetCurrentTime () {
         assert Thread.holdsLock (this);
         return (currentTime);
     }
 
+    @GuardedBy("this")
     public MessageSource <T>        syncGetCurrentSource () {
         assert Thread.holdsLock (this);
         return currentSource;
     }
 
+    @GuardedBy("this")
     public boolean                  syncIsClosed () {
         assert Thread.holdsLock (this);
         return (queue == null);

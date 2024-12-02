@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -40,8 +40,8 @@ class MessageFragmentHandler implements ControlledFragmentHandler {
     private MessageProcessor processor;
     private Throwable exception = null;
 
-    MessageFragmentHandler(boolean raw, CodecFactory codecFactory, TypeLoader typeLoader, List<RecordClassDescriptor> types, ConstantIdentityKey[] mapping, MappingProvider mappingProvider) {
-        this.decoder = new DirectMessageDecoder(arrayBuffer, raw, codecFactory, typeLoader, types, mapping, mappingProvider);
+    MessageFragmentHandler(boolean raw, CodecFactory codecFactory, TypeLoader typeLoader, List<RecordClassDescriptor> types) {
+        this.decoder = new DirectMessageDecoder(arrayBuffer, raw, codecFactory, typeLoader, types);
     }
 
     void setProcessor(MessageProcessor processor) {
@@ -85,7 +85,7 @@ class MessageFragmentHandler implements ControlledFragmentHandler {
             throw (RuntimeException) exception;
         } else {
             // TODO: Decide on better handling
-            throw new RuntimeException(exception);
+            throw new RuntimeException("Exception during message processing", exception);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -24,6 +24,8 @@ import java.util.zip.GZIPOutputStream;
 
 import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.writeIdentityKey;
 
+import com.epam.deltix.qsrv.hf.pub.util.SerializationUtils;
+import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBObject;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.util.concurrent.Signal;
@@ -101,12 +103,18 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
     private final Object writeLock = new Object();
     protected final Signal signal = new Signal();
 
+    private volatile boolean isClosed = false;
+
     public static synchronized DownloadHandler   getInstance(long id) {
         return instances.get(id, null);
     }
 
     public static synchronized boolean           removeInstance(long id) {
         return instances.remove(id);
+    }
+
+    public static synchronized void              removeClosed() {
+        //instances.removeAll(DownloadHandler::isClosed);
     }
 
     public static synchronized DownloadHandler getInstance(DXTickDB db, SelectRequest request, HttpServletResponse response) {
@@ -160,6 +168,9 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
             dout = request.isBigEndian ? new DataOutputStream(os) : new LittleEndianDataOutputStream(os);
 
             cursor = createSource();
+            if (cursor instanceof TBObject) {
+                ((TBObject) cursor).setApplication(request.applicationName);
+            }
 
             synchronized (writeLock) {
                 dout.write(HTTPProtocol.CURSOR_BLOCK_ID);
@@ -212,6 +223,7 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
                 LOGGER.log(Level.SEVERE, "failed to send an error block", t);
             }
         } finally {
+            isClosed = true;
             Util.close(cursor);
 
             if (!wasClientAbort) {
@@ -227,6 +239,10 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
                 }
             }
         }
+    }
+
+    public boolean      isClosed() {
+        return isClosed;
     }
 
     private void        flushInternal() throws IOException {
@@ -483,6 +499,8 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
     }
 
     private void writeMessageRecord(RawMessage raw, int typeIndex, int entityIndex, int streamIndex) throws IOException {
+        assert Thread.holdsLock(writeLock);
+
         int msgSize = raw.length + HTTPProtocol.CURSOR_MESSAGE_HEADER_SIZE;
         if (entityIndex >= 0x8000 && request.version >= CLIENT_ENTITYID32_SUPPORT_VERSION) {
             msgSize += 2;
@@ -546,8 +564,12 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
                     recordClassSet.addContentClasses(type);
 
                     final String xml = marshallUHF(cda);
-                    assert xml.length() > 0;
-                    dout.writeUTF(xml);
+
+                    if (request.version > 6)
+                        SerializationUtils.writeUTFString(dout, xml);
+                    else
+                        dout.writeUTF(xml);
+
                     break;
                 default:
                     throw new IllegalStateException("invalid typeTransmission=" + typeTransmission);
@@ -621,10 +643,19 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
             final SelectionOptions so = new SelectionOptions(true, request.live, request.reverse);
             so.allowLateOutOfOrder = request.allowLateOutOfOrder;
             so.realTimeNotification = request.realTimeNotification;
-            so.withSpaces(request.spaces);
+
+            if (request.spaces != null) {
+                so.withSpaces(request.spaces);
+            }
+
+            //InstrumentMessageSource cursor = db.createCursor(so, streams);
 
             InstrumentMessageSource cursor = db.select(request.reverse ? request.to : request.from, so, request.types, request.symbols, streams);
 
+            if (request.types != null)
+                cursor.setTypes(request.types);
+
+            cursor.reset(request.reverse ? request.to : request.from);
 
             cursor.setAvailabilityListener(new Runnable() {
                 @Override
@@ -660,7 +691,11 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
             final SelectionOptions so = new SelectionOptions(true, request.live, request.reverse);
             so.allowLateOutOfOrder = request.allowLateOutOfOrder;
             so.realTimeNotification = request.realTimeNotification;
-            so.withSpaces(request.spaces);
+            if (request.spaces != null) {
+                so.withSpaces(request.spaces);
+            }
+
+            IdentityKey[] instruments = StreamHandler.identityKeys(request.symbols);
             if (params != null)
                 source = db.executeQuery(request.qql, so, null, request.symbols, request.from, params);
             else

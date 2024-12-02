@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -23,11 +23,16 @@ public interface SchemaChange {
 
     public Impact getChangeImpact();
 
+    // do not change - order is important
     public enum Impact {
+
+        /**
+         * No changes impacting data
+         */
         None,
 
         /**
-         * Indicates that change will cause converting stream data.
+         * Indicates that change can be applied to stream schema with data conversion.
          */
         DataConvert,
         /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,17 +16,10 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.comm;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableBiMap;
-import com.epam.deltix.timebase.messages.ConstantIdentityKey;
-import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.settings.TopicType;
-import com.epam.deltix.util.collections.ElementsEnumeration;
-import com.epam.deltix.util.collections.generated.IntegerEntry;
-import com.epam.deltix.util.collections.generated.IntegerToObjectHashMap;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -44,47 +37,40 @@ import java.util.*;
 @ParametersAreNonnullByDefault
 public class TopicProtocol {
 
-    private static final int TOPIC_TO_STREAM_SUPPORT_VERSION = 108;
-    public static final int SINGLE_PUBLISHER_TOPIC_SUPPORT_VERSION = 109;
-
-    public static void writeCreateTopicRequest(DataOutputStream out, CreateTopicRequest request, int serverProtocolVersion) throws IOException {
+    public static void writeCreateTopicRequest(DataOutputStream out, CreateTopicRequest request, @SuppressWarnings("unused") int serverProtocolVersion) throws IOException {
         // Key
         out.writeUTF(request.getTopicKey());
 
         // Types
         writeTypes(out, request.getTypes());
 
-        // Entries
-        writeEntities(out, request.getInitialEntitySet());
+        // Target Stream
+        out.writeUTF(StringUtils.defaultString(request.getTargetStream()));
 
-        if (serverProtocolVersion >= TOPIC_TO_STREAM_SUPPORT_VERSION) {
-            // Target Stream
-            out.writeUTF(StringUtils.defaultString(request.getTargetStream()));
-        }
+        // Target Space
+        out.writeUTF(StringUtils.defaultString(request.getTargetSpace()));
     }
 
-    public static CreateTopicRequest readCreateTopicRequest(DataInputStream in, int clientVersion) throws IOException {
+    public static CreateTopicRequest readCreateTopicRequest(DataInputStream in, @SuppressWarnings("unused") int clientVersion) throws IOException {
         // Key
         String key = in.readUTF();
 
         // Types
         List<RecordClassDescriptor> types = readTypes(in);
 
-        // Entities
-        List<ConstantIdentityKey> entries = readEntities(in);
-
         // Target Stream
-        String targetStream;
-        if (clientVersion >= TOPIC_TO_STREAM_SUPPORT_VERSION) {
-            targetStream = in.readUTF();
-            if (targetStream.length() == 0) {
-                targetStream = null;
-            }
-        } else {
+        String targetStream = in.readUTF();
+        if (targetStream.isEmpty()) {
             targetStream = null;
         }
 
-        return new CreateTopicRequest(key, types, entries, targetStream);
+        // Target Space
+        String targetSpace = in.readUTF();
+        if (targetSpace.isEmpty()) {
+            targetSpace = null;
+        }
+
+        return new CreateTopicRequest(key, types, targetStream, targetSpace);
     }
 
     public static void writeCreateMulticastTopicRequest(DataOutputStream out, CreateMulticastTopicRequest request, int serverProtocolVersion) throws IOException {
@@ -110,17 +96,29 @@ public class TopicProtocol {
             ttl = null;
         }
 
-        return new CreateMulticastTopicRequest(createTopicRequest.getTopicKey(), createTopicRequest.getTypes(), createTopicRequest.getInitialEntitySet(),
-                createTopicRequest.getTargetStream(), endpointHost, endpointPort, networkInterface, ttl);
+        return new CreateMulticastTopicRequest(createTopicRequest.getTopicKey(), createTopicRequest.getTypes(),
+                createTopicRequest.getTargetStream(), createTopicRequest.getTargetSpace(),
+                endpointHost, endpointPort, networkInterface, ttl);
     }
 
 
 
-    private static final BiMap<TopicType, Integer> TOPIC_TYPE_TO_CODE_MAP = ImmutableBiMap.of(
-            TopicType.IPC, 1,
-            TopicType.MULTICAST, 2,
-            TopicType.UDP_SINGLE_PUBLISHER, 3
-    );
+    private static final EnumMap<TopicType, Integer> TOPIC_TYPE_TO_CODE_MAP = new EnumMap<>(TopicType.class);
+    static {
+        TOPIC_TYPE_TO_CODE_MAP.put(TopicType.IPC, 1);
+        TOPIC_TYPE_TO_CODE_MAP.put(TopicType.MULTICAST, 2);
+        TOPIC_TYPE_TO_CODE_MAP.put(TopicType.UDP_SINGLE_PUBLISHER, 3);
+    }
+    private static final TopicType[] CODE_TO_TOPIC_TYPE_MAP = new TopicType[TOPIC_TYPE_TO_CODE_MAP.size() + 1];
+    static {
+        for (Map.Entry<TopicType, Integer> entry : TOPIC_TYPE_TO_CODE_MAP.entrySet()) {
+            int code = entry.getValue();
+            if (CODE_TO_TOPIC_TYPE_MAP[code] != null) {
+                throw new IllegalStateException("Multiple values mapped to single type code");
+            }
+            CODE_TO_TOPIC_TYPE_MAP[code] = entry.getKey();
+        }
+    }
 
     public static void writeCreateCustomTopicRequest(DataOutputStream out, CreateCustomTopicRequest request, int serverProtocolVersion) throws IOException {
         writeCreateTopicRequest(out, request, serverProtocolVersion);
@@ -147,7 +145,11 @@ public class TopicProtocol {
         CreateTopicRequest createTopicRequest = readCreateTopicRequest(in, clientVersion);
 
         // topicType
-        TopicType topicType = TOPIC_TYPE_TO_CODE_MAP.inverse().get(in.readInt());
+        int topicTypeCode = in.readInt();
+        TopicType topicType = null;
+        if (topicTypeCode >= 0 && topicTypeCode < CODE_TO_TOPIC_TYPE_MAP.length) {
+            topicType = CODE_TO_TOPIC_TYPE_MAP[topicTypeCode];
+        }
         if (topicType == null) {
             throw new IllegalStateException();
         }
@@ -160,8 +162,8 @@ public class TopicProtocol {
             attributes.put(CreateCustomTopicRequest.Field.valueOf(key), value);
         }
 
-        return new CreateCustomTopicRequest(createTopicRequest.getTopicKey(), createTopicRequest.getTypes(), createTopicRequest.getInitialEntitySet(),
-                createTopicRequest.getTargetStream(), topicType, attributes);
+        return new CreateCustomTopicRequest(createTopicRequest.getTopicKey(), createTopicRequest.getTypes(),
+                createTopicRequest.getTargetStream(), createTopicRequest.getTargetSpace(), topicType, attributes);
     }
 
     public static void writeDeleteTopicRequest(DataOutputStream out, DeleteTopicRequest request) throws IOException {
@@ -179,57 +181,40 @@ public class TopicProtocol {
     public static void writeAddTopicPublisherRequest(DataOutputStream out, AddTopicPublisherRequest request) throws IOException {
         // Key
         out.writeUTF(request.getTopicKey());
-        // Entities
-        writeEntities(out, request.getInitialEntitySet());
     }
 
     public static AddTopicPublisherRequest readAddTopicPublisherRequest(DataInputStream in) throws IOException {
         // Key
         String key = in.readUTF();
-        // Entities
-        List<ConstantIdentityKey> entities = readEntities(in);
 
-        return new AddTopicPublisherRequest(key, entities);
+        return new AddTopicPublisherRequest(key);
     }
 
-    public static void writeAddTopicPublisherResponse(DataOutputStream out, AddTopicPublisherResponse response, int clientVersion) throws IOException {
+    public static void writeAddTopicPublisherResponse(
+            DataOutputStream out, AddTopicPublisherResponse response, @SuppressWarnings("unused") int clientVersion
+    ) throws IOException {
         writeTransferType(out, response.getTransferType());
-        writeEntities(out, response.getMapping());
         writeTypes(out, response.getTypes());
 
         out.writeUTF(response.getPublisherChannel());
-        if (clientVersion >= SINGLE_PUBLISHER_TOPIC_SUPPORT_VERSION) {
-            out.writeUTF(response.getMetadataSubscriberChannel());
-        }
+
         out.writeUTF(StringUtils.defaultString(response.getAeronDir()));
         out.writeInt(response.getDataStreamId());
-        out.writeInt(response.getServerMetadataStreamId());
-        out.write(response.getLoaderNumber());
-        out.writeInt(response.getMinTempEntityIndex());
-        out.writeInt(response.getMaxTempEntityIndex());
     }
 
-    public static AddTopicPublisherResponse readAddTopicPublisherResponse(DataInputStream in, int serverVersion) throws IOException {
+    public static AddTopicPublisherResponse readAddTopicPublisherResponse(
+            DataInputStream in, @SuppressWarnings("unused") int serverVersion
+    ) throws IOException {
         TopicTransferType transferType = readTransferType(in);
-        List<ConstantIdentityKey> mapping = readEntities(in);
         List<RecordClassDescriptor> types = readTypes(in);
 
         String publisherChannel = in.readUTF();
-        String metadataChannel;
-        if (serverVersion >= SINGLE_PUBLISHER_TOPIC_SUPPORT_VERSION) {
-            metadataChannel = in.readUTF();
-        } else {
-            metadataChannel = publisherChannel;
-        }
+
         String aeronDir = emptyToNull(in.readUTF());
         int dataStreamId = in.readInt();
-        int serverMetadataStreamId = in.readInt();
-        byte loaderNumber = (byte) in.read();
-        int minTempEntityIndex = in.readInt();
-        int maxTempEntityIndex = in.readInt();
 
-        return new AddTopicPublisherResponse(transferType, mapping, types, publisherChannel,
-                metadataChannel, aeronDir, dataStreamId, serverMetadataStreamId, loaderNumber, minTempEntityIndex, maxTempEntityIndex);
+        return new AddTopicPublisherResponse(transferType, types, publisherChannel,
+                aeronDir, dataStreamId);
     }
 
     public static void writeAddTopicSubscriberRequest(DataOutputStream out, AddTopicSubscriberRequest request) throws IOException {
@@ -246,7 +231,6 @@ public class TopicProtocol {
 
     public static void writeAddTopicSubscriberResponse(DataOutputStream out, AddTopicSubscriberResponse response) throws IOException {
         writeTransferType(out, response.getTransferType());
-        writeEntities(out, response.getMapping());
         writeTypes(out, response.getTypes());
         out.writeUTF(response.getChannel());
         out.writeUTF(StringUtils.defaultString(response.getAeronDir()));
@@ -255,13 +239,12 @@ public class TopicProtocol {
 
     public static AddTopicSubscriberResponse readAddTopicSubscriberResponse(DataInputStream in) throws IOException {
         TopicTransferType transferType = readTransferType(in);
-        List<ConstantIdentityKey> mapping = readEntities(in);
         List<RecordClassDescriptor> types = readTypes(in);
         String channel = in.readUTF();
         String aeronDir = emptyToNull(in.readUTF());
         int dataStreamId = in.readInt();
 
-        return new AddTopicSubscriberResponse(transferType, mapping, types, channel, aeronDir, dataStreamId);
+        return new AddTopicSubscriberResponse(transferType, types, channel, aeronDir, dataStreamId);
     }
 
     public static void writeListTopicsResponse(DataOutputStream out, ListTopicsResponse response) throws IOException {
@@ -305,70 +288,6 @@ public class TopicProtocol {
         return new GetTopicMetadataResponse(types);
     }
 
-    // GetTopicInstrumentMapping
-
-    public static void writeGetTopicInstrumentMappingRequest(DataOutputStream out, GetTopicInstrumentMappingRequest request) throws IOException {
-        out.writeUTF(request.getTopicKey()); // Key
-        out.writeInt(request.getDataStreamId());
-    }
-
-    public static GetTopicInstrumentMappingRequest readGetTopicInstrumentMappingRequest(DataInputStream in) throws IOException {
-        String key = in.readUTF(); // Key
-        int dataStreamId = in.readInt();
-        return new GetTopicInstrumentMappingRequest(key, dataStreamId);
-    }
-
-    public static void writeGetTopicInstrumentMappingResponse(DataOutputStream out, GetTopicInstrumentMappingResponse response) throws IOException {
-        writeEntities(out, response.getMapping());
-    }
-
-    public static GetTopicInstrumentMappingResponse readGetTopicInstrumentMappingResponse(DataInputStream in) throws IOException {
-        List<ConstantIdentityKey> entries = readEntities(in);
-        return new GetTopicInstrumentMappingResponse(entries);
-    }
-
-    // GetTopicInstrumentMapping
-
-    public static void writeGetTopicTemporaryInstrumentMappingRequest(DataOutputStream out, GetTopicTemporaryInstrumentMappingRequest request) throws IOException {
-        out.writeUTF(request.getTopicKey()); // Key
-        out.writeInt(request.getDataStreamId());
-        out.writeInt(request.getRequestedTempEntityIndex());
-    }
-
-    public static GetTopicTemporaryInstrumentMappingRequest readGetTopicTemporaryInstrumentMappingRequest(DataInputStream in) throws IOException {
-        String key = in.readUTF(); // Key
-        int dataStreamId = in.readInt();
-        int requestedTempEntityIndex = in.readInt();
-        return new GetTopicTemporaryInstrumentMappingRequest(key, dataStreamId, requestedTempEntityIndex);
-    }
-
-    public static void writeGetTopicTemporaryInstrumentMappingResponse(DataOutputStream out, GetTopicTemporaryInstrumentMappingResponse response) throws IOException {
-        IntegerToObjectHashMap<ConstantIdentityKey> mapping = response.getMapping();
-        out.writeInt(mapping.size());
-        ElementsEnumeration<ConstantIdentityKey> elements = mapping.elements();
-        IntegerEntry entry = (IntegerEntry) elements;
-        while (elements.hasMoreElements()) {
-            int key = entry.keyInteger();
-            ConstantIdentityKey element = elements.nextElement();
-            out.writeInt(key);
-            writeIdentityKey(out, element);
-        }
-    }
-
-    public static GetTopicTemporaryInstrumentMappingResponse readGetTopicTemporaryInstrumentMappingResponse(DataInputStream in) throws IOException {
-        int entryCount = in.readInt();
-        IntegerToObjectHashMap<ConstantIdentityKey> mapping = new IntegerToObjectHashMap<>(entryCount);
-
-        //InstrumentType[] instrumentTypes = InstrumentType.values();
-        for (int i = 0; i < entryCount; i++) {
-            int key = in.readInt();
-            ConstantIdentityKey instrumentKey = readInstrumentKey(in);
-            mapping.put(key, instrumentKey);
-        }
-
-        return new GetTopicTemporaryInstrumentMappingResponse(mapping);
-    }
-
     /////////
 
     private static void writeTransferType(DataOutputStream out, TopicTransferType transferType) throws IOException {
@@ -379,45 +298,10 @@ public class TopicProtocol {
         return TopicTransferType.getByCode(in.readByte());
     }
 
-
-    private static void writeEntities(DataOutputStream out, Collection<? extends IdentityKey> entities) throws IOException {
-        out.writeInt(entities.size());
-        for (IdentityKey entry : entities) {
-            writeIdentityKey(out, entry);
-        }
-    }
-
-    private static void writeIdentityKey(DataOutputStream out, IdentityKey entry) throws IOException {
-        out.writeUTF(entry.getSymbol().toString()); // TODO: Check if we can avoid this cast
-    }
-
-    @Nonnull
-    private static ConstantIdentityKey readInstrumentKey(DataInputStream in) throws IOException {
-        String symbol = in.readUTF();
-        return new ConstantIdentityKey(symbol);
-    }
-
-    @Nonnull
-    private static List<ConstantIdentityKey> readEntities(DataInputStream in) throws IOException {
-        int entryCount = in.readInt();
-        List<ConstantIdentityKey> entries;
-        if (entryCount > 0) {
-            entries = new ArrayList<>(entryCount);
-            for (int i = 0; i < entryCount; i++) {
-                ConstantIdentityKey instrumentKey = readInstrumentKey(in);
-                entries.add(instrumentKey);
-            }
-        } else {
-            entries = Collections.emptyList();
-        }
-        return entries;
-    }
-
-
     private static void writeTypes(DataOutputStream out, List<RecordClassDescriptor> types) throws IOException {
         RecordClassSet md = new RecordClassSet();
         md.addContentClasses(types.toArray(new RecordClassDescriptor[0]));
-        TDBProtocol.writeClassSet(out, md);
+        TDBProtocol.writeClassSet(out, md, TDBProtocol.VERSION);
     }
 
     @Nonnull
@@ -430,5 +314,13 @@ public class TopicProtocol {
     @Nullable
     private static String emptyToNull(@Nonnull String str) {
         return str.isEmpty() ? null : str;
+    }
+
+    public static void writeTopicProtocolVersion(DataOutputStream out, int protocolVersion) throws IOException {
+        out.writeInt(protocolVersion);
+    }
+
+    public static int readTopicProtocolVersion(DataInputStream in) throws IOException {
+        return in.readInt();
     }
 }

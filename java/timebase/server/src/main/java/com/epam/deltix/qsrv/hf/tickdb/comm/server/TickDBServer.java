@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.comm.server;
 
+import com.epam.deltix.qsrv.hf.pub.TimeSource;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.AeronThreadTracker;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.DXServerAeronContext;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.CopyTopicToStreamTaskManager;
@@ -25,6 +26,7 @@ import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.DirectTopicRegist
 import com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.util.concurrent.QuickExecutor;
+import com.epam.deltix.util.time.DefaultTimeSourceProvider;
 import com.epam.deltix.util.vsocket.TLSContext;
 import com.epam.deltix.util.vsocket.TransportProperties;
 import com.epam.deltix.util.vsocket.VSServer;
@@ -44,7 +46,7 @@ public class TickDBServer {
     private VSServer                    server;
     private InetAddress                 address;
     private final DXTickDB              db;
-    private TLSContext ssl;
+    private final TLSContext            ssl;
     private TransportProperties         transportProperties;
 
     private final DXServerAeronContext aeronContext;
@@ -56,21 +58,23 @@ public class TickDBServer {
     }
 
     public TickDBServer (int port, DXTickDB db, TLSContext ssl, TransportProperties transportProperties) {
+        this(port, db, ssl, transportProperties, false);
+    }
+
+    public TickDBServer (int port, DXTickDB db, TLSContext ssl, TransportProperties transportProperties, boolean aeronEnabled) {
         this.port = port;
         this.ssl = ssl;
         this.transportProperties = transportProperties;
 
-        boolean aeronEnabled = DXServerAeronContext.isAeronEnabledInJvmOpts();
-        this.aeronContext = DXServerAeronContext.createDefault(aeronEnabled, port, null, null, false);
+        this.aeronContext = DXServerAeronContext.createSimple(aeronEnabled, port);
 
         this.topicRegistry = TopicRegistryFactory.initRegistryAtQSHome(aeronContext);
 
-        // TODO: Design a way to use shared QuickExecutor
-        QuickExecutor qeForTopics = QuickExecutor.createNewInstance("TickDBServer-Topics", null);
         AeronThreadTracker aeronThreadTracker = new AeronThreadTracker();
 
         // Wrap the DB to provide topics support for local instances
-        this.db = TopicSupportWrapper.wrap(db, this.aeronContext, this.topicRegistry, qeForTopics, aeronThreadTracker);
+        TimeSource timeSource = DefaultTimeSourceProvider.getTimeSourceForApp("TickDBServer");
+        this.db = TopicSupportWrapper.wrap(db, this.aeronContext, this.topicRegistry, aeronThreadTracker, timeSource);
 
         if (this.aeronContext.isAeronEnabled()) {
             CopyTopicToStreamTaskManager copyTopicToStreamManager = new CopyTopicToStreamTaskManager(db, aeronContext, aeronThreadTracker, topicRegistry);

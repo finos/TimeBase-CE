@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.schema;
 
+import com.epam.deltix.qsrv.hf.pub.md.ArrayDataType;
 import com.epam.deltix.qsrv.hf.pub.md.DataField;
 import com.epam.deltix.qsrv.hf.pub.md.EnumDataType;
 import com.epam.deltix.qsrv.hf.pub.md.EnumValue;
@@ -36,8 +37,11 @@ public class EnumFieldTypeChange extends FieldTypeChange {
     }
 
     public Impact getChangeImpact(SchemaMapping mapping) {
-        EnumDataType src = (EnumDataType) getSource().getType();
-        EnumDataType trg = (EnumDataType) getTarget().getType();
+        EnumDataType src = (EnumDataType) (getSource().getType() instanceof ArrayDataType ?
+                ((ArrayDataType)getSource().getType()).getElementDataType() : getSource().getType());
+
+        EnumDataType trg = (EnumDataType) (getTarget().getType() instanceof ArrayDataType ?
+                ((ArrayDataType)getTarget().getType()).getElementDataType() : getTarget().getType());
 
         if (src.descriptor.equals(trg.descriptor))
             return Impact.None;

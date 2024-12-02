@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -33,7 +33,7 @@ public class TopicRegistryFactory {
 
     public static DirectTopicRegistry initRegistryAtPath(DXServerAeronContext aeronContext, String path) {
         TopicStorage topicStorage = TopicStorage.createAtPath(path);
-        DirectTopicRegistry topicRegistry = new DirectTopicRegistry(topicStorage.getPersistingListener());
+        DirectTopicRegistry topicRegistry = new DirectTopicRegistry(topicStorage.getPersistingListener(), aeronContext.isBypassRemoteCheckForIpcTopics(), aeronContext.getDefaultTopicTermBufferLength(), aeronContext.getTopicTotalTermBufferLimit());
         topicStorage.loadTopicDataInto(topicRegistry, aeronContext.getStreamIdGenerator());
         return topicRegistry;
     }

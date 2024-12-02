@@ -81,7 +81,7 @@ public class Test_Locking extends TDBRunnerBase {
 
         lock1.release();
         lock2.release();
-        
+
         stream.delete();
     }
 
@@ -91,7 +91,7 @@ public class Test_Locking extends TDBRunnerBase {
 
         stream.lock();
         TickLoader loader = stream.createLoader();
-        loader.close();        
+        loader.close();
 
         TickDBClient client = new TickDBClient("localhost", runner.getPort());
         client.open(false);
@@ -121,14 +121,14 @@ public class Test_Locking extends TDBRunnerBase {
         TickDBClient client = new TickDBClient("localhost", runner.getPort());
         client.open(false);
         DXTickStream stream1 = client.getStream("test2");
-       
+
         stream1.lock();
-        client.close();               
+        client.close();
     }
 
     @Test
     public void test3() throws IOException {
-        DXTickStream stream = createTestStream("test3");        
+        DXTickStream stream = createTestStream("test3");
 
         TickDBClient client = new TickDBClient("localhost", runner.getPort());
         client.open(false);
@@ -185,7 +185,7 @@ public class Test_Locking extends TDBRunnerBase {
         TickDBClient client = new TickDBClient("localhost", runner.getPort());
         client.open(false);
         DXTickStream stream1 = client.getStream("test6");
-        
+
         TickLoader loader = null;
         try {
             loader = stream1.createLoader(new LoadingOptions());
@@ -206,7 +206,7 @@ public class Test_Locking extends TDBRunnerBase {
 
         TickLoader loader1 = stream.createLoader();
         loader1.close();
-        
+
         client.close();
 
         //stream.delete();
@@ -226,6 +226,7 @@ public class Test_Locking extends TDBRunnerBase {
 
         try {
             BarMessage message = new BarMessage();
+            //message.setInstrumentType(InstrumentType.FUTURE);
             message.setSymbol("ORCL");
             for (int i = 0; i < 100000; i++)
                 loader.send(message);
@@ -252,15 +253,16 @@ public class Test_Locking extends TDBRunnerBase {
         client.open(false);
         DXTickStream stream1 = client.getStream("test71");
 
-        TickLoader loader = stream1.createLoader(new LoadingOptions());        
+        TickLoader loader = stream1.createLoader(new LoadingOptions());
 
         try {
             BarMessage message = new BarMessage();
+            //message.setInstrumentType(InstrumentType.FUTURE);
             message.setSymbol("ORCL");
             for (int i = 0; i < 100000; i++) {
                 if (i == 1000)
                     stream.lock();
-                
+
                 loader.send(message);
             }
 
@@ -281,12 +283,13 @@ public class Test_Locking extends TDBRunnerBase {
 
         TickDBClient client = new TickDBClient("localhost", runner.getPort());
         client.open(false);
-         
+
         DXTickStream stream1 = client.getStream("test72");
         TickLoader loader = stream1.createLoader(new LoadingOptions());
 
         try {
             BarMessage message = new BarMessage();
+            //message.setInstrumentType(InstrumentType.FUTURE);
             message.setSymbol("ORCL");
             for (int i = 0; i < 5000; i++) {
                 if (i == 1000)
@@ -300,7 +303,6 @@ public class Test_Locking extends TDBRunnerBase {
         }
 
         client.close();
-
         stream.delete();
     }
 
@@ -339,6 +341,7 @@ public class Test_Locking extends TDBRunnerBase {
         try {
             loader = stream1.createLoader(new LoadingOptions());
             BarMessage message = new BarMessage();
+            //message.setInstrumentType(InstrumentType.FUTURE);
             message.setSymbol("ORCL");
             for (int i = 0; i < 1000; i++)
                 loader.send(message);
@@ -442,7 +445,7 @@ public class Test_Locking extends TDBRunnerBase {
         } catch (StreamLockedException e) {
             // valid case
         }
-         
+
         client.close();
         stream.delete();
     }

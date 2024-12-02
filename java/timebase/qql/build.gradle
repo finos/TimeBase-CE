@@ -1,0 +1,112 @@
+group = 'deltix.qsrv.timebase'
+
+configurations {
+    qqlLexerGenerator
+    qqlParserGenerator
+}
+
+dependencies {
+
+    implementation project(':java:timebase:api')
+    implementation project(':java:timebase:pub')
+    implementation project(':java:timebase:computations-api')
+
+    implementation 'com.epam.deltix:gflog-api',
+            'com.epam.deltix:gflog-jul'
+
+    implementation project(':java:timebase:computations-std')
+
+    implementation ('com.epam.deltix:timebase-lang')
+    implementation ('com.epam.deltix:timebase-util')
+    implementation ('com.epam.deltix:timebase-messages')
+    implementation ('com.epam.deltix:timebase-collections')
+    implementation ('com.epam.deltix:dfp')
+    implementation ('com.epam.deltix:containers')
+
+    implementation group: 'org.ehcache', name: 'ehcache', version: '3.9.3'
+
+    implementation 'org.reflections:reflections'
+
+    implementation 'commons-io:commons-io'
+    implementation 'org.apache.commons:commons-lang3'
+
+    // Note: de.jflex:jflex and deltix.qsrv:deltix-commons-util
+    // contain package "java_cup.runtime" with different version of java_cup.
+    // We split them so they will not affect each other.
+    qqlLexerGenerator 'de.jflex:jflex:1.4.3'
+
+    qqlParserGenerator ('com.epam.deltix:timebase-util')
+    qqlParserGenerator project(':java:timebase:commons')
+}
+
+def generatedMainDir = file('build/generated-src/main/src')
+def lexerAndParserPackage = "com/epam/deltix/qsrv/hf/tickdb/lang/parser"
+def lexerAndParserDir = file("src/main/java/com/epam/deltix/qsrv/hf/tickdb/lang/parser")
+
+//def generatedMainDir = file('build/generated-src/main/src')
+//def lexerAndParserPackage = "com/epam/deltix/qsrv/hf/tickdb/lang/parser"
+//def lexerAndParserDir = file("src/main/java/com/epam/deltix/qsrv/hf/tickdb/lang/parser")
+
+
+sourceSets.main.java.srcDirs generatedMainDir
+
+task generateQqlLexer(type: JavaExec) {
+    group = "QQL"
+    description = "Generates QQL lexer via flex library"
+    classpath = configurations.qqlLexerGenerator
+    main = "JFlex.Main"
+    workingDir = lexerAndParserDir
+    args = ["qql.flex", "-d", "$generatedMainDir/$lexerAndParserPackage"]
+
+    inputs.files(workingDir)
+            .withPropertyName("workingDir")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    outputs.dir("$generatedMainDir/$lexerAndParserPackage")
+            .withPropertyName("outputDir")
+}
+
+task generateDdlParser(type: JavaExec, dependsOn: generateQqlLexer) {
+    group = "QQL"
+    description = "Generates DDL parser via java_cup library"
+    classpath = configurations.qqlParserGenerator
+    main = "java_cup.Main"
+    workingDir = "$generatedMainDir/$lexerAndParserPackage"
+
+    args = ["-package", lexerAndParserPackage,
+            "-parser", "DDLParser",
+            "-symbols", "Symbols",
+            "$lexerAndParserDir/ddl.cup"
+    ]
+
+    inputs.file(file("$workingDir/Lexer.java"))
+            .withPropertyName("workingDir")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    outputs.dir(lexerAndParserDir)
+            .withPropertyName("outputDir")
+}
+
+task generateQqlParser(type: JavaExec, dependsOn: [generateDdlParser]) {
+    group = "QQL"
+    description = "Generates QQL parser via java_cup library"
+    classpath = configurations.qqlParserGenerator
+    main = "java_cup.Main"
+    workingDir = "$generatedMainDir/$lexerAndParserPackage"
+
+    args = ["-package", lexerAndParserPackage,
+            "-parser", "Parser",
+            "-symbols", "Symbols",
+            "$lexerAndParserDir/qql.cup"
+    ]
+
+    inputs.file(file("$workingDir/Lexer.java"))
+            .withPropertyName("workingDir")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    outputs.dir(lexerAndParserDir)
+            .withPropertyName("outputDir")
+}
+
+ processResources.dependsOn generateQqlParser
+compileJava.dependsOn generateQqlParser

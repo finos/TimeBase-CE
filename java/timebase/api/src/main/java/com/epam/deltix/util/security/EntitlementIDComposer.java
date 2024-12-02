@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,15 +16,15 @@
  */
 package com.epam.deltix.util.security;
 
-import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.containers.BinaryArray;
+import com.epam.deltix.containers.interfaces.BinaryArrayReadOnly;
+import com.epam.deltix.util.lang.StringUtils;
 
 public class EntitlementIDComposer<T extends EntitlementIDComposer> implements EntitlementID {
-    
-    protected final int         entriesOffset;
+    protected final int     entriesOffset;
 
-    protected BinaryArray       content;
-    protected boolean           isNull;
+    protected BinaryArray   content;
+    protected boolean       isNull;
 
     public EntitlementIDComposer() {
         this(0);
@@ -45,37 +45,45 @@ public class EntitlementIDComposer<T extends EntitlementIDComposer> implements E
         return (T) this; // unchecked
     }
 
-    public T appendEntry(byte[] content) {
-        return appendEntry(content, 0, content.length);
+    public T appendEntry(byte[] entry) {
+        return appendEntry(entry, 0, entry.length);
     }
-    
+
     @SuppressWarnings("unchecked")
-    public T appendEntry(byte[] content, int offset, int length) {        
-        setSafely(this.content, entriesOffset, (byte) (numberOfEntries() + 1));
-        
-        this.content.append((byte) length);
-        this.content.append(content, offset, length);
-        
+    public T appendEntry(byte[] entry, int offset, int length) {
+        setSafely(content, entriesOffset, (byte)(numberOfEntries() + 1));
+
+        content.append((byte)length);
+        content.append(entry, offset, length);
+
         isNull = false;
-        
-        return (T) this; // unchecked
+
+        return (T) this; // Unchecked
     }
 
     @SuppressWarnings("unchecked")
     public T appendAllEntries(T from) {
-        setSafely(this.content, entriesOffset, (byte) (numberOfEntries() + from.numberOfEntries()));
+        setSafely(content, entriesOffset, (byte)(numberOfEntries() + from.numberOfEntries()));
 
         final int sizeToAdd = from.content.size() - from.entriesOffset - 1;
-        content.append(from.content.toByteArray(), from.entriesOffset + 1, sizeToAdd);
+
+        for (int i = 1; i <= sizeToAdd; i++) {
+            content.append(from.content.get(from.entriesOffset + i));
+        }
 
         isNull = false;
-        
-        return (T) this; // unchecked
+
+        return (T) this; // Unchecked
     }
-    
+
     @Override
     public boolean isNull() {
         return isNull;
+    }
+
+    @Override
+    public BinaryArrayReadOnly content() {
+        return content;
     }
 
     @Override
@@ -84,59 +92,33 @@ public class EntitlementIDComposer<T extends EntitlementIDComposer> implements E
     }
 
     @Override
-    public byte[] content() {
-        return content != null ? content.toByteArray() : null;
-    }
-
-    @Override
-    public int size() {
-        return content != null ? content.size() : 0;
-    }
-    
-    @Override
     public int entryOffset(int entryIndex) {
-        if (entryIndex >= numberOfEntries()) {
+        if (entryIndex >= numberOfEntries())
             throw new IndexOutOfBoundsException();
-        }
+
         return getEntryContentIndex(entryIndex) + 1;
     }
 
     @Override
     public int entryLength(int entryIndex) {
-        if (entryIndex >= numberOfEntries()) {
+        if (entryIndex >= numberOfEntries())
             throw new IndexOutOfBoundsException();
-        }        
+
         return content.get(getEntryContentIndex(entryIndex)) & 0xFF;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder result = new StringBuilder(getClass().getSimpleName()).append(':');
-        if (isNull) {
-            result.append("NULL");
-        } else {
-            result.append("entriesOffset=").append(Integer.toString(entriesOffset)).append(',');
-            result.append("numberOfEntries=").append(Integer.toString(numberOfEntries()));
-            result.append('[');
-            result.append(StringUtils.toHex(content.toByteArray(), 0, entriesOffset));
-            result.append('^');
-            result.append(StringUtils.toHex(content.toByteArray(), entriesOffset, content.size() - entriesOffset));
-            result.append(']');
-        }
-        return result.toString();
-    }    
-    
     protected void resetContent() {
         if (content != null) {
             content.clear();
         } else {
             content = new BinaryArray();
-        }        
+        }
     }
-    
+
     private int getEntryContentIndex(int entryIndex) {
         int result = entriesOffset + 1;
-        // some unrolling
+
+        // Some unrolling
         switch (entryIndex) {
             case 0:
                 break;
@@ -182,21 +164,33 @@ public class EntitlementIDComposer<T extends EntitlementIDComposer> implements E
     }
 
     protected static void setSafely(BinaryArray content, int index, byte value) {
-        int overhead = index - content.size();
+        final int deficiency = index - content.size();
 
-        for (int i = 0; i <= overhead; i++)
+        for (int i = 0; i <= deficiency; i++) {
             content.append((byte)0);
+        }
 
         content.set(index, value);
+    }
 
-//        final int d = content.size() - index;
-//        if (d <= 0) {
-//            for (int i = 0; i <= -d - 1; i++) {
-//                content.add(i, (byte) 0);
-//            }
-//            content.add(-d, value);
-//            return;
-//        }
-//        content.set(index, value);
+    @Override
+    public String toString() {
+        final StringBuilder result = new StringBuilder(getClass().getSimpleName()).append(": ");
+
+        if (isNull) {
+            result.append("NULL");
+        } else {
+            final byte[] contentBytes = content.toByteArray();
+
+            result.append("entriesOffset=").append(entriesOffset).append(",");
+            result.append("numberOfEntries=").append(numberOfEntries()).append(" ");
+            result.append("[");
+            result.append(StringUtils.toHex(content.toByteArray(), 0, entriesOffset));
+            result.append("^");
+            result.append(StringUtils.toHex(contentBytes, entriesOffset, content.size() - entriesOffset));
+            result.append("]");
+        }
+
+        return result.toString();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -121,12 +121,11 @@ public class FieldLayout <T extends DataField> implements DataFieldInfo {
                 throw new NoSuchFieldException();
 
             try {
-                // validate the bound type against DataType
-                if (field instanceof NonStaticDataField)
+                if (field instanceof NonStaticDataField) {
                     BindValidator.validateType(field.getType(), jfield);
-                    // validate static value against bound type
-                else if (field instanceof StaticDataField)
+                } else if (field instanceof StaticDataField) {
                     BindValidator.validateTypeStatic(field.getType(), jfield, ((StaticDataField) field).getStaticValue());
+                }
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(e.getMessage(), new RuntimeException(jfield.toString()));
             }
@@ -214,6 +213,15 @@ public class FieldLayout <T extends DataField> implements DataFieldInfo {
 
             SchemaElement schemaElement = method.getAnnotation(SchemaElement.class);
             if (schemaElement != null && Util.xequals(schemaElement.name().toLowerCase(), fieldName.toLowerCase())) {
+
+                // setter/getter for the nanoseconds precision has suffix "Ns"
+                try {
+                    if (field.getType() instanceof DateTimeDataType && ((DateTimeDataType) field.getType()).hasNanosecondPrecision())
+                        method = cls.getMethod(method.getName() + "Ns");
+                } catch (NoSuchMethodException e) {
+                    LOG.warn("Nanosecond getter with name \"" + (method.getName() + "Ns") + "\" is not found in class " + cls);
+                }
+
                 lookingForProperties(method, isBooleanField);
             }
         }
@@ -221,13 +229,21 @@ public class FieldLayout <T extends DataField> implements DataFieldInfo {
         if (! hasGetter() && ! hasSetter()) {
             // looking for properties with empty SchemaElement
             for (Method method : cls.getMethods()) {
+                if (method.isBridge()) continue;
+
                 if (hasGetter() && hasSetter())
                     break;
 
-                if (method.isBridge()) continue;
-
                 SchemaElement schemaElement = method.getAnnotation(SchemaElement.class);
                 if (schemaElement != null && isValidGetterJavaBeanNotation(method, fieldName, isBooleanField)) {
+                    // setter/getter for the nanoseconds precision has suffix "Ns"
+                    try {
+                        if (field.getType() instanceof DateTimeDataType && ((DateTimeDataType) field.getType()).hasNanosecondPrecision())
+                            method = cls.getMethod(method.getName() + "Ns");
+                    } catch (NoSuchMethodException e) {
+                        LOG.warn("Nanosecond getter with name \"" + (method.getName() + "Ns") + "\" is not found in class " + cls);
+                    }
+
                     lookingForProperties(method, isBooleanField);
                 }
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -18,6 +18,8 @@ package com.epam.deltix.qsrv.hf.tickdb.impl;
 
 import com.epam.deltix.data.stream.*;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
+import com.epam.deltix.qsrv.hf.tickdb.impl.lock.ServerLockOptions;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.*;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.timebase.messages.IdentityKey;
@@ -32,10 +34,6 @@ import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.comm.UnknownStreamException;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLock;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockEventListener;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.StreamLockedException;
 import com.epam.deltix.timebase.messages.schema.SchemaChangeMessage;
 import com.epam.deltix.timebase.messages.service.EventMessage;
 import com.epam.deltix.timebase.messages.service.EventMessageType;
@@ -73,7 +71,7 @@ import java.util.logging.Level;
  *
  */
 public abstract class TickStreamImpl extends ServerStreamImpl
-    implements AbstractDataStore, FriendlyStream, DisposableListener
+    implements AbstractDataStore, FriendlyStream, DisposableListener, LockVerifier
 {
     public static final String  BACKUP_SUFFIX = ".n.bak";
     public static final String  NEW_PREFIX = "new.";
@@ -199,14 +197,14 @@ public abstract class TickStreamImpl extends ServerStreamImpl
     @GuardedBy ("openCursors")
     private final Set <TickCursor>              openCursors = new HashSet <> ();
 
-    private volatile TickCursor []          snapshotOfOpenCursors = { };
+    private volatile TickCursor []              snapshotOfOpenCursors = { };
     
     @GuardedBy ("this")
     private long                                mdVersion = System.currentTimeMillis ();
 
     private final Set<StreamLockImpl>           sharedLocks = new HashSet <StreamLockImpl> ();
-    private StreamLockImpl                      exclusiveLock = null;
-
+    private final Set<StreamLockImpl>           writeLocks = new HashSet<>();
+    private final BaseDataLockVerifier          writeLockVerifier = new BaseDataLockVerifier();
 
     @GuardedBy("this")
     @XmlElement(name = "owner")
@@ -427,8 +425,10 @@ public abstract class TickStreamImpl extends ServerStreamImpl
                 close();
 
             File folder = file.getParentFile();
+
             File newFolder = new File(folder.getParentFile(), SimpleStringCodec.DEFAULT_INSTANCE.encode(key));
-            newFolder.mkdirs();
+            if (!newFolder.mkdirs())
+                throw new IllegalStateException("Cannot create stream folder: " + folder);
 
             File newFile = new File(newFolder,
                     SimpleStringCodec.DEFAULT_INSTANCE.encode(key) + TickDBImpl.STREAM_EXTENSION);
@@ -863,21 +863,27 @@ public abstract class TickStreamImpl extends ServerStreamImpl
         }
     }
 
-    public synchronized void        delete () {
-        if (metadataLocation.isRemote()) {
-            // TODO: Implement
-            throw new NotImplementedException("Not implemented for remote streams yet");
+    public void        delete () {
+
+        synchronized (this) {
+            assertWritable();
+
+            if (metadataLocation.isRemote()) {
+                // TODO: Implement
+                throw new UnsupportedOperationException("Not implemented for remote streams yet");
+            }
+
+            close();
+            onDelete();
+
+            if (scope != StreamScope.RUNTIME)
+                IOUtil.deleteUnchecked(file.getParentFile());
         }
 
-        assertWritable ();
+        getDBImpl().streamDeleted(key);
 
-        close ();
-
-        getDBImpl ().streamDeleted (key);
-        onDelete ();
-        
-        if (scope != StreamScope.RUNTIME)
-            IOUtil.deleteUnchecked (file.getParentFile());
+        firePropertyChanged(TickStreamProperties.ENTITIES);
+        firePropertyChanged(TickStreamProperties.TIME_RANGE);
     }
 
     public synchronized void  format () {
@@ -939,134 +945,258 @@ public abstract class TickStreamImpl extends ServerStreamImpl
         setDirty();
     }
 
-//    @Override
-//    protected void                  onSubscriptionListenerAdded(SubscriptionChangeListener lnr) {
-//        TickCursorImpl[] cursors = getSnapshotOfOpenCursors();
-//
-//        for (int i = 0; i < cursors.length; i++)
-//            if (!cursors[i].isClosed())
-//                cursors[i].fireCurrentSubscription();
-//    }
+    public synchronized void verifyWrite(String id) {
+        checkExclusiveWrite(findLock(id));
+    }
 
-    /// locking support
+    public synchronized void verifySharedWrite(String id) {
+        checkSharedWrite(findLock(id));
+    }
 
-    public synchronized void                     clearLocks(String id) {
+    public synchronized void verifyWriteRange(String id, long startTime, long endTime) {
+        checkWriteRange(findLock(id), startTime, endTime);
+    }
 
-        if (exclusiveLock != null && id.equals(exclusiveLock.getClientId())) {
-            removeLock(exclusiveLock);
+    public synchronized boolean verifyWriteTime(LoadingErrorListener errorListener, DBLock lock, long time) {
+        return checkWrite(errorListener, lock, time);
+    }
+
+    public StreamLockImpl findLock(String id) {
+        for (StreamLockImpl writeLock : writeLocks) {
+            if (writeLock.getGuid().equals(id))
+                return writeLock;
+        }
+
+        for (StreamLockImpl sharedLock : sharedLocks) {
+            if (sharedLock.getGuid().equals(id))
+                return sharedLock;
+        }
+
+        return null;
+    }
+
+    public synchronized void clearLocks(String id) {
+
+        for (StreamLockImpl writeLock : writeLocks) {
+            if (id.equals(writeLock.getClientId())) {
+                removeLock(writeLock);
+            }
         }
 
         for (StreamLockImpl sharedLock : sharedLocks) {
             if (id.equals(sharedLock.getClientId()))
                 removeLock(sharedLock);
         }
-
-    }
-
-    void                            assertExclusive(StreamLockImpl lock) {
-        if (exclusiveLock != null && !exclusiveLock.equals(lock)) {
-            throw new StreamLockedException("Stream '" + getKey() + "' is locked by " + exclusiveLock);
-        }
-        else if (!sharedLocks.isEmpty()) {
-            if (sharedLocks.size() == 1 && sharedLocks.contains(lock))
-                return;
-            
-            throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked exclusively. Shared locks exists:" + Arrays.toString(sharedLocks.toArray()));
-        }
-    }
-
-    void                            assertShared(StreamLockImpl lock) {
-        if (exclusiveLock != null && exclusiveLock.equals(lock))
-            return;
-        
-        if (exclusiveLock != null)
-            throw new StreamLockedException("Stream '" + getKey() + "' is locked by " + exclusiveLock);
-
-        if (!sharedLocks.contains(lock))
-            throw new IllegalStateException("Stream '" + getKey() + "' " + lock + " is not applied.");
     }
 
     @Override
-    public synchronized DBLock      verify(DBLock lock, LockType type) throws StreamLockedException {
+    public synchronized DBLock verify(DBLock lock, LockType type) throws StreamLockedException {
         if (lock != null) {
-            StreamLockImpl impl = new StreamLockImpl(this, (ServerLock)lock);
+            StreamLockImpl impl = new StreamLockImpl(this, (ServerLock) lock);
 
-            if (type == LockType.READ)
-                assertShared(impl);
-            else
-                assertExclusive(impl);
+            if (type == LockType.READ) {
+                assertReadLock(impl);
+            } else {
+                assertWriteLock(impl);
+            }
 
             return impl;
         } else {
-            if (type == LockType.WRITE)
-                assertExclusive(null);
-            
+            if (type == LockType.WRITE) {
+                assertWriteLock(null);
+            }
+
             return null;
         }
     }
 
-    synchronized void               addLock(StreamLockImpl lock) {
-        if (lock.getType() == LockType.WRITE && exclusiveLock != null)
-            throw new StreamLockedException("Stream '" + getKey() + "' is locked by " + exclusiveLock);
+    private void assertWriteLock(StreamLockImpl lock) {
+        if (lock != null && !writeLocks.contains(lock)) {
+            throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked exclusively. Write locks exists:" + Arrays.toString(writeLocks.toArray()));
+        }
 
-        if (lock.getType() == LockType.WRITE && !sharedLocks.isEmpty())
+        if (!sharedLocks.isEmpty()) {
+            if (sharedLocks.size() == 1 && sharedLocks.contains(lock))
+                return;
+
             throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked exclusively. Shared locks exists:" + Arrays.toString(sharedLocks.toArray()));
+        }
+    }
 
-        if (lock.getType() == LockType.READ)
-            sharedLocks.add(lock);
-        else
-            exclusiveLock = lock;
+    private void assertReadLock(StreamLockImpl lock) {
+        if (!writeLocks.isEmpty()) {
+            if (writeLocks.size() == 1 && writeLocks.contains(lock)) {
+                return;
+            }
+
+            throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked. Write locks exists:" + Arrays.toString(writeLocks.toArray()));
+        }
+
+        if (!sharedLocks.contains(lock)) {
+            throw new IllegalStateException("Stream '" + getKey() + "' " + lock + " is not applied.");
+        }
+    }
+
+    @Override
+    public synchronized void checkExclusiveWrite(DBLock lock) throws StreamLockedException {
+        assertExclusiveWrite(lock != null ? new StreamLockImpl(this, (ServerLock) lock) : null);
+    }
+
+    @Override
+    public synchronized void checkSharedWrite(DBLock lock) throws StreamLockedException {
+        assertSharedWrite(lock != null ? new StreamLockImpl(this, (ServerLock) lock) : null);
+    }
+
+    @Override
+    public synchronized void checkWriteRange(DBLock lock, long startTime, long endTime) throws StreamLockedException {
+        checkSharedWrite(lock != null ? new StreamLockImpl(this, (ServerLock) lock) : null);
+        writeLockVerifier.verifyStreamLock(getKey(), lock, startTime, endTime);
+    }
+
+    @Override
+    public boolean checkWrite(LoadingErrorListener listener, DBLock lock, long time) {
+        return writeLockVerifier.verifyLock(listener, getKey(), lock, time);
+    }
+
+//    @Override
+//    public synchronized boolean testWriteTime(DBLock lock, long time) {
+//        return writeLockVerifier.verifyLock(getKey(), lock, time);
+//    }
+
+    private void assertExclusiveWrite(StreamLockImpl lock) {
+        if (!writeLocks.isEmpty()) {
+            if (writeLocks.size() == 1 && writeLocks.contains(lock)) {
+                return;
+            }
+
+            throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked exclusively. Write Lock exists: " + Arrays.toString(writeLocks.toArray()));
+        }
+
+        if (!sharedLocks.isEmpty()) {
+            if (sharedLocks.size() == 1 && sharedLocks.contains(lock))
+                return;
+
+            throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked exclusively. Shared locks exists:" + Arrays.toString(sharedLocks.toArray()));
+        }
+    }
+
+    private void assertSharedWrite(StreamLockImpl lock) {
+        if (writeLockVerifier.isExclusive()) {
+            if (!writeLocks.contains(lock)) {
+                throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked exclusively. Write locks exists:" + Arrays.toString(writeLocks.toArray()));
+            }
+        } else if (!sharedLocks.isEmpty()) {
+            if (sharedLocks.size() == 1 && sharedLocks.contains(lock))
+                return;
+
+            throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked exclusively. Shared locks exists:" + Arrays.toString(sharedLocks.toArray()));
+        } else if (lock != null && !writeLocks.isEmpty() && !writeLocks.contains(lock)) {
+            throw new IllegalStateException("Stream '" + getKey() + "' " + lock + " is not applied.");
+        }
+    }
+
+    synchronized void addLock(StreamLockImpl lock) {
+        if (lock.getType() == LockType.WRITE) {
+            addWriteLock(lock);
+        } else {
+            addReadLock(lock);
+        }
 
         onLockAdded(lock);
     }
 
+    private void addWriteLock(StreamLockImpl lock) {
+        if (!sharedLocks.isEmpty()) {
+            throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked. Shared locks exists:" + Arrays.toString(sharedLocks.toArray()));
+        }
+
+        LockOptions options = lock.getOptions();
+
+        if (options instanceof WriteLockOptions) {
+            for (StreamLockImpl acquiredLock : writeLocks) {
+                LockOptions acquiredOptions = acquiredLock.getOptions();
+                if (acquiredOptions instanceof WriteLockOptions) {
+                    if (BaseDataLockVerifier.intersects((WriteLockOptions) options, (WriteLockOptions) acquiredOptions)) {
+                        throw new StreamLockedException("Stream '" + getKey() + "' is locked by write lock with intersecting interval " + acquiredOptions);
+                    }
+                } else {
+                    throw new IllegalStateException("Invalid type of data lock options: " + options);
+                }
+            }
+
+            writeLocks.add(lock);
+            writeLockVerifier.addWriteLock(lock);
+        } else {
+            throw new IllegalArgumentException("Invalid lock options type. Required options type is DataLockOptions.");
+        }
+    }
+
+    private void addReadLock(StreamLockImpl lock) {
+        if (!writeLocks.isEmpty()) {
+            throw new StreamLockedException("Stream '" + getKey() + "' cannot be locked. Write locks exists:" + Arrays.toString(writeLocks.toArray()));
+        }
+
+        sharedLocks.add(lock);
+    }
+
     @Override
-    synchronized boolean            hasLock(StreamLockImpl lock) {
-        if (exclusiveLock != null && exclusiveLock.equals(lock))
+    synchronized boolean hasLock(StreamLockImpl lock) {
+        if (writeLocks.contains(lock)) {
             return true;
+        }
 
         return sharedLocks.contains(lock);
     }
 
     @Override
-    synchronized void               removeLock(StreamLockImpl lock) {
-
-        if (lock.getType() == LockType.WRITE && lock.equals(exclusiveLock))
-            exclusiveLock = null;
-        else
+    synchronized void removeLock(StreamLockImpl lock) {
+        if (lock.getType() == LockType.WRITE) {
+            writeLocks.remove(lock);
+            writeLockVerifier.removeLock(lock);
+        } else {
             sharedLocks.remove(lock);
+        }
 
         onLockRemoved(lock);
     }
 
     @Override
-    public synchronized DBLock          lock() {
+    public synchronized DBLock lock() {
         return lock(LockType.WRITE);
     }
 
     @Override
-    public synchronized DBLock          lock(LockType type) {
-        if (exclusiveLock != null)
-            throw new StreamLockedException("Stream '" + getKey() + "' is locked by " + exclusiveLock);
-        
-        StreamLockImpl lock = new StreamLockImpl(this, type, new GUID().toStringWithPrefix(CachedLocalIP.getIP()));
+    public synchronized DBLock lock(LockType type) {
+        return lock(LockOptions.create(type));
+    }
+
+    @Override
+    public synchronized DBLock lock(LockOptions options) {
+        StreamLockImpl lock = new StreamLockImpl(this, options, new GUID().toStringWithPrefix(CachedLocalIP.getIP()));
+        if (options instanceof ServerLockOptions) {
+            lock.setClientId(((ServerLockOptions) options).getClientId());
+        }
         addLock(lock);
 
         return lock;
     }
 
     @Override
-    public DBLock          tryLock(long timeout) throws StreamLockedException {
+    public DBLock tryLock(long timeout) throws StreamLockedException {
         return tryLock(LockType.WRITE, timeout);
     }
 
     @Override
-    public DBLock          tryLock(LockType type, long timeout) throws StreamLockedException {
+    public DBLock tryLock(LockType type, long timeout) throws StreamLockedException {
+        return tryLock(LockOptions.create(type), timeout);
+    }
+
+    public DBLock tryLock(LockOptions options, long timeout) throws StreamLockedException {
         if (timeout <= 0)
-            return lock(type);
+            return lock(options);
 
         StreamLockedException error = null;
-        
+
         long timeLimit = TimeKeeper.currentTime + timeout;
         if (timeLimit < 0) // overflow check
             timeLimit = Long.MAX_VALUE;
@@ -1075,7 +1205,7 @@ public abstract class TickStreamImpl extends ServerStreamImpl
         try {
             while (TimeKeeper.currentTime < timeLimit) {
                 try {
-                    return lock(type);
+                    return lock(options);
                 } catch (StreamLockedException e) {
                     error = e;
                 }
@@ -1088,17 +1218,26 @@ public abstract class TickStreamImpl extends ServerStreamImpl
         throw error;
     }
 
-    void                            onLockAdded(StreamLockImpl lock) {
-        TickDBImpl.LOGGER.fine("Adding " + lock);
-        
+    void onLockAdded(StreamLockImpl lock) {
+        TickDBImpl.LOG.info("Adding " + lock);
+
         LockEventListener[] listeners = getEventListeners();
         for (int i = 0; i < listeners.length; i++)
             listeners[i].lockAdded(lock);
 
-        EventMessageType eventType = lock.getType() == LockType.READ ?
-                EventMessageType.READ_LOCK_ACQUIRED : EventMessageType.WRITE_LOCK_ACQUIRED;
+        EventMessageType eventType = createEventMessageType(lock.getType(), true);
         getDBImpl().log(createEventMessage(eventType, key));
         getDBImpl().registerLock(lock);
+    }
+
+    private static EventMessageType createEventMessageType(LockType lockType, boolean acquired) {
+        switch (lockType) {
+            case READ:  return acquired ? EventMessageType.READ_LOCK_ACQUIRED : EventMessageType.READ_LOCK_RELEASED;
+            case WRITE: return acquired ? EventMessageType.WRITE_LOCK_ACQUIRED : EventMessageType.WRITE_LOCK_RELEASED;
+            // todo LOCKS: add message for start, end time
+        }
+
+        throw new RuntimeException("Unknown or empty lock type: " + lockType);
     }
 
     public static InstrumentMessage createRealTimeStartMessage(boolean raw, long timestamp) {
@@ -1134,7 +1273,7 @@ public abstract class TickStreamImpl extends ServerStreamImpl
 
 
     void                            onLockRemoved(StreamLockImpl lock) {
-        TickDBImpl.LOGGER.fine("Removing " + lock);
+        TickDBImpl.LOG.debug("Removing " + lock);
 
         LockEventListener[] listeners = getEventListeners();
         for (int i = 0; i < listeners.length; i++)
@@ -1497,13 +1636,15 @@ public abstract class TickStreamImpl extends ServerStreamImpl
     public void             disposed(Disposable resource) {
         if (resource instanceof VSDispatcher) {
             String id = ((VSDispatcher)resource).getClientId();
-            
+
             synchronized (this) {
                 ArrayList<StreamLockImpl> list = new ArrayList<StreamLockImpl>();
-                
-                if (exclusiveLock != null && id.equals(exclusiveLock.getClientId()))
-                   list.add(exclusiveLock);
-                
+
+                for (StreamLockImpl lock : writeLocks) {
+                    if (lock != null && id.equals(lock.getClientId()))
+                        list.add(lock);
+                }
+
                 for (StreamLockImpl lock : sharedLocks) {
                     if (lock != null && id.equals(lock.getClientId()))
                         list.add(lock);

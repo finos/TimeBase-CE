@@ -1,0 +1,64 @@
+/*
+ * Copyright 2024 EPAM Systems, Inc
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Licensed under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx;
+
+import com.epam.deltix.qsrv.hf.pub.md.DataType;
+import com.epam.deltix.qsrv.hf.pub.md.StandardTypes;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler;
+
+import java.util.Objects;
+
+/**
+ *
+ */
+public class TimestampSelector extends CompiledExpression<DataType> {
+
+    private final boolean nanosecondPrecision;
+
+    public TimestampSelector() {
+        this(false);
+    }
+
+    public TimestampSelector(boolean nanosecondPrecision) {
+        super(nanosecondPrecision ? StandardTypes.CLEAN_TIMESTAMP_NS : StandardTypes.CLEAN_TIMESTAMP);
+        this.nanosecondPrecision = nanosecondPrecision;
+        name = "$" + (nanosecondPrecision ? QQLCompiler.KEYWORD_TIMESTAMPNS : QQLCompiler.KEYWORD_TIMESTAMP);
+    }
+
+    public boolean hasNanosecondPrecision() {
+        return nanosecondPrecision;
+    }
+
+    @Override
+    public void print(StringBuilder out) {
+        out.append(name);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        TimestampSelector that = (TimestampSelector) o;
+        return nanosecondPrecision == that.nanosecondPrecision;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), nanosecondPrecision);
+    }
+}

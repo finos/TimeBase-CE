@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.pub.codec;
 
+import com.epam.deltix.qsrv.hf.codec.cg.ObjectManager;
 import com.epam.deltix.qsrv.hf.pub.codec.intp.*;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
@@ -51,6 +52,12 @@ public abstract class CodecMetaFactory {
                 }
             }
         );
+    }
+
+    public ExternalCodecFactory<FixedExternalDecoder> createFixedExternalDecoderFactory(
+        TypeLoader loader, RecordClassDescriptor cd, ObjectManager objectManager
+    ) {
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     public Factory <BoundDecoder>           createFixedBoundDecoderFactory (

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.pub.topic;
 
 import com.epam.deltix.data.stream.ChannelPreferences;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Fluent-style API for setting up topic consumer channel preferences.
@@ -24,6 +25,8 @@ import com.epam.deltix.data.stream.ChannelPreferences;
  * @author Alexei Osipov
  */
 public class ConsumerPreferences extends TopicChannelPreferences<ConsumerPreferences> {
+    private TopicDataLossHandler topicDataLossHandler;
+
     public ConsumerPreferences() {
     }
 
@@ -32,5 +35,21 @@ public class ConsumerPreferences extends TopicChannelPreferences<ConsumerPrefere
             return (ConsumerPreferences) channelPreferences;
         }
         return new ConsumerPreferences().copyFrom(channelPreferences);
+    }
+
+    @Nullable
+    public TopicDataLossHandler getTopicDataLossHandler() {
+        return topicDataLossHandler;
+    }
+
+    /**
+     * In case of data loss this handler will be called.
+     * It may return {@code true} to ignore the data loss and continue polling.
+     *
+     * <p>If not set, poller will stop on data loss.
+     */
+    public ConsumerPreferences setTopicDataLossHandler(@Nullable TopicDataLossHandler topicDataLossHandler) {
+        this.topicDataLossHandler = topicDataLossHandler;
+        return this;
     }
 }

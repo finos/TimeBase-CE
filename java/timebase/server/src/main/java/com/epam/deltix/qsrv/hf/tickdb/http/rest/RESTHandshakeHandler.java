@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http.rest;
 
+import com.epam.deltix.qsrv.hf.tickdb.http.DownloadHandler;
 import com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol;
 import com.epam.deltix.qsrv.hf.tickdb.impl.TickDBWrapper;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
@@ -27,6 +28,7 @@ import com.epam.deltix.util.tomcat.ConnectionHandshakeHandler;
 import com.epam.deltix.util.ContextContainer;
 import com.epam.deltix.util.vsocket.TLSContext;
 
+import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -51,7 +53,7 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
     private DXTickDB                tickdb;
     private final Map<String, DXTickDB> userNameToDb = new HashMap<>();
     private final ContextContainer contextContainer;
-    private final TLSContext        tlsContext;
+    private final TLSContext tlsContext;
 
     public RESTHandshakeHandler(DXTickDB tickdb,
                                 SecurityController securityController,
@@ -76,8 +78,8 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
 
         setUpSocket(socket);
 
-        final DataInputStream dis = new DataInputStream(bis);
-        final DataOutputStream dos = new DataOutputStream(os);
+        DataInputStream dis = new DataInputStream(bis);
+        DataOutputStream dos = new DataOutputStream(os);
 
         final int init = dis.read();
         assert HTTPProtocol.PROTOCOL_INIT == init;
@@ -90,6 +92,39 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
             return false;
         }
 
+        if (clientVersion >= HTTPProtocol.CLIENT_SSL_SUPPORT_VERSION) {
+            // ssl handshake
+            dos.writeBoolean(tlsContext != null);
+            if (tlsContext != null) {
+                dos.writeInt(tlsContext.port);
+
+                socket = tlsContext.context.getSocketFactory().createSocket(
+                    socket,
+                    socket.getInetAddress().getHostAddress(),
+                    socket.getPort(), false);
+
+                //do handshake
+                ((SSLSocket) socket).setUseClientMode(false);
+                ((SSLSocket) socket).startHandshake();
+
+                //upgrade streams
+                bis = new BufferedInputStream(socket.getInputStream());
+                os = socket.getOutputStream();
+
+                dis = new DataInputStream(bis);
+                dos = new DataOutputStream(os);
+            }
+        }
+
+        if (clientVersion >= HTTPProtocol.CLIENT_SEPARATE_WEB_PORT_VERSION) {
+            dos.writeInt(0); // means, use binary protocol port
+        }
+
+        String applicationName = HTTPProtocol.UNKNOWN_APPLICATION_NAME;
+        if (clientVersion >= HTTPProtocol.CLIENT_APPLICATION_NAME_SUPPORT_VERSION) {
+            applicationName = dis.readUTF();
+        }
+
         DXTickDB db = readCredentialsAndAuthenticate(dis, dos);
         dos.writeInt(HTTPProtocol.RESP_OK);
 
@@ -98,11 +133,11 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
 
         switch (request) {
             case HTTPProtocol.REQ_UPLOAD_DATA:
-                handler = new UploadHandler(db, socket, bis, os, clientVersion, contextContainer);
+                handler = new UploadHandler(db, socket, bis, os, clientVersion, applicationName, contextContainer);
                 break;
 
             case HTTPProtocol.REQ_CREATE_SESSION:
-                handler = new SessionHandler(db, socket, bis, os, contextContainer);
+                handler = new SessionHandler(db, socket, bis, os, clientVersion, contextContainer);
                 break;
 
             default:
@@ -124,6 +159,18 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
         } catch (IOException x) {
             HTTPProtocol.LOGGER.log(Level.WARNING, null, x);
         }
+    }
+
+    private boolean                  handshakeVersion(DataInputStream dis, DataOutputStream dos) throws IOException {
+        dos.writeShort(HTTPProtocol.VERSION);
+        final short version = dis.readShort();
+        if (version < HTTPProtocol.MIN_CLIENT_VERSION) {
+            HTTPProtocol.LOGGER.severe(
+                String.format("Incompatible REST-TB protocol version %d. Minimal expected version is %d.", version, HTTPProtocol.MIN_CLIENT_VERSION));
+            return false;
+        }
+
+        return true;
     }
 
     private DXTickDB                readCredentialsAndAuthenticate(DataInputStream dis, DataOutputStream dos) throws IOException {
@@ -173,7 +220,7 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
         this.contextContainer.getQuickExecutor().shutdownInstance();
     }
 
-    private class KeepAlive extends QuickExecutor.QuickTask implements Disposable {
+    private static class KeepAlive extends QuickExecutor.QuickTask implements Disposable {
         List<RestHandler>           handlers = new CopyOnWriteArrayList<>();
         private volatile boolean    closed = false;
 
@@ -197,6 +244,8 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
 
                 handlers.removeAll(toRemove);
                 toRemove.clear();
+                DownloadHandler.removeClosed();
+
                 Thread.sleep(KEEP_ALIVE_INTERVAL);
             }
             handlers.clear();

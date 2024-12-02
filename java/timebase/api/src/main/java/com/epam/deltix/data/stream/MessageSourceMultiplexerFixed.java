@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -26,6 +26,7 @@ import com.epam.deltix.util.concurrent.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import net.jcip.annotations.GuardedBy;
 import java.util.ArrayDeque;
 import java.util.List;
 
@@ -256,11 +257,13 @@ public final class MessageSourceMultiplexerFixed<T extends TimeStampedMessage> {
         }
     }
 
+    @GuardedBy("lock")
     public boolean syncNext() {
         assert Thread.holdsLock(lock);
         return syncNextInternal() == NextResult.OK;
     }
 
+    @GuardedBy("lock")
     private NextResult syncNextInternal() {
         boolean throwable = true;
 

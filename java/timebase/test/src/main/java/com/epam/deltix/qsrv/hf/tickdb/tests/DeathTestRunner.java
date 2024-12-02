@@ -19,7 +19,6 @@ package com.epam.deltix.qsrv.hf.tickdb.tests;
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.util.cmdline.DefaultApplication;
-import org.agrona.concurrent.ShutdownSignalBarrier;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;

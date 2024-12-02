@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.hf.pub.codec;
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.gflog.api.LogLevel;
+import com.epam.deltix.qsrv.hf.codec.cg.ObjectManager;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 
@@ -95,6 +96,15 @@ public class CodecFactory {
     )
     {
         return (meta.createFixedExternalDecoderFactory(loader, classDescriptor).create());
+    }
+
+    // This codec allows you to reset pools manually using ObjectManager
+    public FixedExternalDecoder createFixedExternalDecoder(
+        TypeLoader loader,
+        RecordClassDescriptor classDescriptor,
+        ObjectManager objectManager
+    ) {
+        return (meta.createFixedExternalDecoderFactory(loader, classDescriptor, objectManager).create(objectManager));
     }
 
     public BoundDecoder                 createFixedBoundDecoder (

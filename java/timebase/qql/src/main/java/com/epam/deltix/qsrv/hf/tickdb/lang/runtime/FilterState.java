@@ -1,0 +1,135 @@
+/*
+ * Copyright 2024 EPAM Systems, Inc
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Licensed under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package com.epam.deltix.qsrv.hf.tickdb.lang.runtime;
+
+import com.epam.deltix.qsrv.hf.codec.cg.StringBuilderPool;
+import com.epam.deltix.qsrv.hf.pub.RawMessage;
+import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.EnumClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.Introspector;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.messages.QueryStatus;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.InstancePool;
+import com.epam.deltix.qsrv.util.json.DateFormatter;
+import com.epam.deltix.util.memory.MemoryDataOutput;
+
+/**
+ *
+ */
+public abstract class FilterState {
+
+    private static final Introspector INTROSPECTOR = Introspector.createEmptyMessageIntrospector();
+
+    boolean accepted = false;
+    boolean havingAccepted = true;
+    boolean changed = false;
+    boolean waitingByTime = false;
+    int messagesCount = 0;
+    boolean initializedOnInterval = false;
+    boolean initialized = false;
+    protected final StringBuilderPool varcharPool;
+    protected final InstancePool instancePool;
+
+    private String statusMessage;
+
+    private QueryStatus status;
+
+    private final FilterIMSImpl filter;
+
+    private final DateFormatter datetimeFormatter = new DateFormatter();
+
+    public FilterState(FilterIMSImpl filter) {
+        this.filter = filter;
+        if (filter != null) {
+            this.varcharPool = filter.varcharPool;
+            this.instancePool = filter.instancePool;
+        } else {
+            this.varcharPool = null;
+            this.instancePool = null;
+        }
+    }
+
+    public boolean isAccepted() {
+        return (accepted);
+    }
+
+    public void clearStatusMessage() {
+        setStatusMessage(null, null);
+    }
+
+    public boolean hasStatusMessage() {
+        return statusMessage != null;
+    }
+
+    public void setStatusMessage(String message, QueryStatus status) {
+        this.statusMessage = message;
+        this.status = status;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    public QueryStatus getStatus() {
+        return status;
+    }
+
+    protected RawMessage getLastMessage() {
+        throw new UnsupportedOperationException();
+    }
+
+    protected MemoryDataOutput getOut() {
+        throw new UnsupportedOperationException();
+    }
+
+    protected void resetFunctions() {
+    }
+
+    public RecordClassDescriptor getRecordDescriptor(String name) {
+        ClassDescriptor cd = filter.inputClassSet.getClassDescriptor(name);
+        if (cd instanceof RecordClassDescriptor) {
+            return (RecordClassDescriptor) cd;
+        }
+
+        try {
+            return INTROSPECTOR.introspectMemberClass(FilterIMSImpl.class.getName(), Class.forName(name));
+        } catch (ClassNotFoundException | Introspector.IntrospectionException e) {
+            return null;
+        }
+    }
+
+    public EnumClassDescriptor getEnumDescriptor(String name) {
+        ClassDescriptor cd = filter.inputClassSet.getClassDescriptor(name);
+        if (cd instanceof EnumClassDescriptor) {
+            return (EnumClassDescriptor) cd;
+        }
+
+        try {
+            return INTROSPECTOR.introspectEnumClass(Class.forName(name));
+        } catch (ClassNotFoundException | Introspector.IntrospectionException e) {
+            return null;
+        }
+    }
+
+    public DateFormatter datetimeFormatter() {
+        return datetimeFormatter;
+    }
+
+    public void setHavingAccepted(boolean havingAccepted) {
+        this.havingAccepted = havingAccepted;
+    }
+}

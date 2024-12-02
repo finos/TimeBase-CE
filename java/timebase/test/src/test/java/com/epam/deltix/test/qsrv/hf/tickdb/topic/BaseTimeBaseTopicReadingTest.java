@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb.topic;
 
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.PublisherPreferences;
 import com.epam.deltix.qsrv.test.messages.TradeMessage;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.gflog.api.Log;
@@ -26,15 +27,19 @@ import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDB;
+import com.epam.deltix.util.lang.Util;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -44,10 +49,13 @@ import java.util.concurrent.atomic.AtomicLong;
 abstract class BaseTimeBaseTopicReadingTest {
     protected static final Log LOG = LogFactory.getLog(BaseTimeBaseTopicReadingTest.class.getName());
 
-    private static final int TEST_DURATION_MS = 20 * 1000;
-    private static final int TIMEBASE_START_TIME_MS = 10 * 1000;
+    // Value for that parameter can be changed to get more stable results or reduce test time
+    private static final int TEST_DURATION_MS = 5 * 1000;
+
+    static final int TIMEBASE_START_TIME_MS = 10 * 1000;
     private static final int TIME_TO_WAIT_FOR_READER = 20 * 1000;
-    static final int TEST_TIMEOUT = TIMEBASE_START_TIME_MS + TEST_DURATION_MS + TIME_TO_WAIT_FOR_READER + 10 * 1000;
+
+    public static final int TEST_TIMEOUT = TIMEBASE_START_TIME_MS + TEST_DURATION_MS + TIME_TO_WAIT_FOR_READER + 10 * 1000;
 
     private final boolean isRemote;
     protected static TDBRunner runner;
@@ -63,7 +71,8 @@ abstract class BaseTimeBaseTopicReadingTest {
 
     @Before
     public void      start() throws Throwable {
-        runner = new TDBRunner(isRemote, true, TDBRunner.getTemporaryLocation(), new TomcatServer(), true);
+        runner = new TDBRunner(isRemote, true, TDBRunner.getTemporaryLocation(),
+                new TomcatServer(null, 0, 0, true), true);
         runner.startup();
     }
 
@@ -87,16 +96,17 @@ abstract class BaseTimeBaseTopicReadingTest {
 
         createTopic(topicDB, topicKey, new RecordClassDescriptor[]{StubData.makeTradeMessageDescriptor()});
 
+        CountDownLatch readerReady = new CountDownLatch(1);
         AtomicLong messagesSentCounter = new AtomicLong(0);
         AtomicLong messagesReceivedCounter = new AtomicLong(0);
         AtomicBoolean senderStopFlag = new AtomicBoolean(false);
 
-        List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<>());
 
-        List<Thread> loaderThreads = startLoaderThreads(topicDB, topicKey, messagesSentCounter, senderStopFlag, exceptions, loaderThreadCount);
+        List<Thread> loaderThreads = startLoaderThreads(topicDB, topicKey, messagesSentCounter, senderStopFlag, exceptions, loaderThreadCount, readerReady);
 
-        MessageValidator messageValidator = new MessageValidator(loaderThreadCount == 1);
-        Runnable runnable = createReader(messagesReceivedCounter, messageValidator, topicKey, topicDB);
+        MessageValidator messageValidator = getMessageValidator(loaderThreadCount);
+        Runnable runnable = createReader(messagesReceivedCounter, messageValidator, topicKey, topicDB, readerReady);
 
         Thread readerThread = new Thread(runnable);
         readerThread.setName("READER");
@@ -133,14 +143,21 @@ abstract class BaseTimeBaseTopicReadingTest {
         Assert.assertTrue(this.finalMessageSentCount > 0);
         Assert.assertTrue(receivedCount > 0);
 
-        Assert.assertEquals(this.finalMessageSentCount.longValue(), receivedCount);
+        Assert.assertEquals("Sent message count must match received count", this.finalMessageSentCount.longValue(), receivedCount);
+
+        topicDB.deleteTopic(topicKey);
     }
 
     @NotNull
-    private List<Thread> startLoaderThreads(TopicDB topicDB, String topicKey, AtomicLong messagesSentCounter, AtomicBoolean senderStopFlag, List<Throwable> exceptions, int loaderThreadCount) {
+    protected MessageValidator getMessageValidator(int loaderThreadCount) {
+        return new MessageValidatorImpl(loaderThreadCount == 1);
+    }
+
+    @Nonnull
+    private List<Thread> startLoaderThreads(TopicDB topicDB, String topicKey, AtomicLong messagesSentCounter, AtomicBoolean senderStopFlag, List<Throwable> exceptions, int loaderThreadCount, CountDownLatch readerReady) {
         List<Thread> result = new ArrayList<>(loaderThreadCount);
         for (int i = 1; i <= loaderThreadCount; i++) {
-            Thread loaderThread = new Thread(createLoaderRunnable(topicDB, topicKey, messagesSentCounter, senderStopFlag));
+            Thread loaderThread = new Thread(createLoaderRunnable(topicDB, topicKey, messagesSentCounter, senderStopFlag, readerReady));
             loaderThread.setName("LOADER-" + i);
             loaderThread.setUncaughtExceptionHandler((t, e) -> exceptions.add(e));
             loaderThread.start();
@@ -151,30 +168,71 @@ abstract class BaseTimeBaseTopicReadingTest {
         return result;
     }
 
-    @NotNull
-    Runnable createLoaderRunnable(TopicDB topicDB, String topicKey, AtomicLong messagesSentCounter, AtomicBoolean senderStopFlag) {
-        return () -> {
-            LOG.info("Starting Publisher...");
-            MessageChannel<InstrumentMessage> messageChannel = topicDB.createPublisher(topicKey, null, null);
-            LOG.info("Publisher started");
+    protected boolean isUdpTopic() {
+        return false;
+    }
 
-            TradeMessage msg = new TradeMessage();
-            msg.setSymbol("ABC");
-            msg.setOriginalTimestamp(234567890);
-            long messageSentCounter = 0;
-            while (!senderStopFlag.get()) {
-                messageSentCounter ++;
-                msg.setTimeStampMs(messageSentCounter); // Se store message number in the timestamp field.
-                messageChannel.send(msg);
-                long sentCount = messagesSentCounter.incrementAndGet();
+    @Nonnull
+    Runnable createLoaderRunnable(TopicDB topicDB, String topicKey, AtomicLong messagesSentCounter, AtomicBoolean senderStopFlag, CountDownLatch readerReady) {
+        return () -> runProducer(topicDB, topicKey, messagesSentCounter, senderStopFlag, readerReady);
+    }
+
+    void runProducer(TopicDB topicDB, String topicKey, AtomicLong messagesSentCounter, AtomicBoolean senderStopFlag, CountDownLatch readerReady) {
+        LOG.info("Starting Publisher...");
+        try (MessageChannel<InstrumentMessage> messageChannel = topicDB.createPublisher(topicKey, getPublisherPreferences(), null)) {
+            LOG.info("Publisher started");
+            long waitStart = System.currentTimeMillis();
+            try {
+                boolean success = readerReady.await(10, TimeUnit.SECONDS);
+                if (!success) {
+                    throw new IllegalStateException("Reader not ready");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+            LOG.info("Waited for reader to start: %s ms").with(System.currentTimeMillis() - waitStart);
+
+            if (isUdpTopic()) {
+                try {
+                    // Subscriber still may need some time to connect to producer
+                    Thread.sleep(1_000);
+                    LOG.info("Waited for additional 1s for subscriber to connect");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
+            }
+
+            sendMessages(messagesSentCounter, senderStopFlag, messageChannel);
+        }
+    }
+
+    protected PublisherPreferences getPublisherPreferences() {
+        return null;
+    }
+
+    void sendMessages(AtomicLong messagesSentCounter, AtomicBoolean senderStopFlag, MessageChannel<InstrumentMessage> messageChannel) {
+        TradeMessage msg = new TradeMessage();
+        msg.setSymbol("ABC");
+        msg.setOriginalTimestamp(234567890);
+        long messageSentCounter = 0;
+        while (!senderStopFlag.get()) {
+            messageSentCounter++;
+            setMessageTimestamp(msg, messageSentCounter);
+            messageChannel.send(msg);
+            long sentCount = messagesSentCounter.incrementAndGet();
+            Thread.yield(); // Let reader work on busy machine like CI
                 /*
                 if (sentCount <= 10) {
                     System.out.println("Message sent");
                 }
                 */
-            }
-            messageChannel.close();
-        };
+        }
+    }
+
+    protected void setMessageTimestamp(TradeMessage msg, long messageSentCounter) {
+        msg.setTimeStampMs(messageSentCounter); // We store message number in the timestamp field.
     }
 
     private static void waitForReaderToFinish(int timeToWaitForReader, AtomicLong sentCount, AtomicLong receivedCount) throws InterruptedException {
@@ -199,7 +257,7 @@ abstract class BaseTimeBaseTopicReadingTest {
             for (Throwable exception : exceptions) {
                 exception.printStackTrace(System.out);
             }
-            Assert.fail("Exception in threads");
+            throw new AssertionError("Exception in threads", exceptions.get(0));
         }
     }
 
@@ -207,28 +265,33 @@ abstract class BaseTimeBaseTopicReadingTest {
         topicDB.createTopic(topicKey, types, null);
     }
 
-    protected abstract Runnable createReader(AtomicLong messagesReceivedCounter, MessageValidator messageValidator, String topicKey, TopicDB topicDB);
+    protected abstract Runnable createReader(AtomicLong messagesReceivedCounter, MessageValidator messageValidator, String topicKey, TopicDB topicDB, CountDownLatch readerReady);
 
     protected abstract void stopReader();
 
-    static class MessageValidator {
+    public interface MessageValidator {
+        void validate(InstrumentMessage message);
+    }
+
+    public static class MessageValidatorImpl implements MessageValidator {
 
         final boolean validateOrder;
         long messageNumber = 0;
 
-        MessageValidator(boolean validateOrder) {
+        MessageValidatorImpl(boolean validateOrder) {
             this.validateOrder = validateOrder;
         }
 
-        void validate(InstrumentMessage message) {
+        @Override
+        public void validate(InstrumentMessage message) {
             messageNumber ++;
             TradeMessage msg = (TradeMessage) message;
 
             // Se store message number in the timestamp field.
             if (validateOrder && msg.getTimeStampMs() != messageNumber) {
-                throw new IllegalStateException("Invalid message order");
+                throw new IllegalStateException("Invalid message order: expected " + messageNumber + " but got " + msg.getTimeStampMs());
             }
-            if (!msg.getSymbol().equals("ABC")) {
+            if (!Util.equals(msg.getSymbol(), "ABC")) {
                 throw new AssertionError("Wrong symbol");
             }
             if (msg.getOriginalTimestamp() != 234567890) {

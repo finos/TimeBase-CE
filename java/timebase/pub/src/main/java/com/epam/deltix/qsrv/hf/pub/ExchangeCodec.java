@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,11 +17,11 @@
 package com.epam.deltix.qsrv.hf.pub;
 
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.epam.deltix.qsrv.hf.pub.codec.AlphanumericCodec;
 import com.epam.deltix.qsrv.hf.pub.md.IntegerDataType;
 import com.epam.deltix.util.text.UpperCaseCharSequence;
-import org.apache.commons.lang3.mutable.MutableLong;
 
 /**
  * Utility class provides methods to convert exchange code from string to long and vice versa.
@@ -41,9 +41,8 @@ public abstract class ExchangeCodec {
     public static final long                NULL = IntegerDataType.INT64_NULL;
     public static final int                 MAX_LEN = 10;
 
-    private static final MutableLong        v = new MutableLong();
-    private static final HashMap<MutableLong, String> 
-                                            map = new HashMap<>();
+    private static final AtomicLong v = new AtomicLong();
+    private static final HashMap<AtomicLong, String> map = new HashMap<>();
     private static final AlphanumericCodec  codec = new AlphanumericCodec(MAX_LEN);
 
     private static final UpperCaseCharSequence 
@@ -54,11 +53,11 @@ public abstract class ExchangeCodec {
             return null;
 
         synchronized (ExchangeCodec.class) {
-            v.setValue(n);
+            v.set(n);
             String code = map.get(v);
             if (code == null) {
                 code = codec.decodeFromLong(n).toString();
-                map.put(new MutableLong(n), code);
+                map.put(new AtomicLong(n), code);
             }
             return code;
         }

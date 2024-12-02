@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -28,6 +28,7 @@ public class Range {
 
     @Function("RANGE")
     public static boolean range(long startInclusive, long endExclusive, @Result LongArrayList result) {
+        result.clear();
         for (long i = startInclusive; i < endExclusive; i++) {
             result.add(i);
         }
@@ -36,6 +37,7 @@ public class Range {
 
     @Function("RANGE")
     public static boolean range(long startInclusive, long endExclusive, long step, @Result LongArrayList result) {
+        result.clear();
         for (long i = startInclusive; i < endExclusive; i+=step) {
             result.add(i);
         }
@@ -44,6 +46,7 @@ public class Range {
 
     @Function("RANGE")
     public static boolean decimalRange(@Decimal long startInclusive, @Decimal long endExclusive, @Decimal long step, @Result @Decimal LongArrayList result) {
+        result.clear();
         for (@Decimal long i = startInclusive; Decimal64Utils.isLess(i, endExclusive); i = Decimal64Utils.add(i, step)) {
             result.add(i);
         }

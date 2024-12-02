@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -37,7 +37,6 @@ public class CursorCommandProcessor {
     private static final boolean DEBUG_COMM = DownloadHandler.DEBUG_COMM;
 
     private final InstrumentMessageSource cursor;
-    private final TickCursor tcursor;
 
     private final Principal user;
     private final String remoteAddress;
@@ -45,9 +44,8 @@ public class CursorCommandProcessor {
 
     private final StringBuilder sb = new StringBuilder();
 
-    public CursorCommandProcessor(InstrumentMessageSource cursor, @Nullable TickCursor tcursor, Principal user, String remoteAddress, String remoteApplication) {
+    public CursorCommandProcessor(InstrumentMessageSource cursor, Principal user, String remoteAddress, String remoteApplication) {
         this.cursor = cursor;
-        this.tcursor = tcursor;
         this.user = user;
         this.remoteAddress = remoteAddress;
         this.remoteApplication = remoteApplication;
@@ -258,10 +256,10 @@ public class CursorCommandProcessor {
     }
 
     private void checkCursorState() {
-        checkCursorState(cursor, tcursor);
+        checkCursorState(cursor);
     }
 
-    private static void checkCursorState(InstrumentMessageSource cursor, @Nullable TickCursor tcursor) {
+    private static void checkCursorState(InstrumentMessageSource cursor) {
         if (cursor instanceof SubscriptionManager) {
             SubscriptionManager manager = (SubscriptionManager) cursor;
 
@@ -269,7 +267,7 @@ public class CursorCommandProcessor {
             boolean restricted = !manager.hasSubscribedTypes() && (manager.getSubscribedEntities().length > 0 || manager.isAllEntitiesSubscribed());
 
             if (restricted) {
-                if (tcursor == null || (tcursor instanceof TBCursor && ((TBCursor) tcursor).getSourceStreamKeys().length > 0)) {
+                if ((cursor instanceof TBCursor && ((TBCursor) cursor).getSourceStreamKeys().length > 0)) {
                     TickDBServer.LOGGER.log(Level.WARNING, cursor + ": FAST_FORWARD state.");
                 }
             }

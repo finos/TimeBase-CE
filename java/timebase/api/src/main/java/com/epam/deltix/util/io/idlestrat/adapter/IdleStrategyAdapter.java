@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -23,10 +23,10 @@ import com.epam.deltix.util.io.idlestrat.IdleStrategy;
  */
 public final class IdleStrategyAdapter {
     public static IdleStrategy adapt(org.agrona.concurrent.IdleStrategy idleStrategy) {
-        return ArgonaToDeltixStrategyAdapter.adapt(idleStrategy);
+        return AgronaToDeltixStrategyAdapter.adapt(idleStrategy);
     }
 
     public static org.agrona.concurrent.IdleStrategy adapt(IdleStrategy idleStrategy) {
-        return DeltixToArgonaStrategyAdapter.adapt(idleStrategy);
+        return DeltixToAgronaStrategyAdapter.adapt(idleStrategy);
     }
 }

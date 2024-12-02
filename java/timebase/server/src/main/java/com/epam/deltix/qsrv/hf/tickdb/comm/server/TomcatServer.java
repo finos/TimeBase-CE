@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -18,43 +18,53 @@ package com.epam.deltix.qsrv.hf.tickdb.comm.server;
 
 import com.epam.deltix.qsrv.comm.cat.StartConfiguration;
 import com.epam.deltix.qsrv.comm.cat.TomcatRunner;
+import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.DXServerAeronContext;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TimeBaseServerRegistry;
 import com.epam.deltix.qsrv.hf.tickdb.test.EmbeddedServer;
 
-import java.io.IOException;
 import java.net.ServerSocket;
 
 /**
  * Tomcat Test Server
  */
 public class TomcatServer implements EmbeddedServer {
-    private TomcatRunner        runner;
-    private StartConfiguration  config;
-    private int                 port;
-    private int                 webPort;
+    private TomcatRunner runner;
+    private StartConfiguration config;
+    private int             port;
+    private int             webPort;
+    private Boolean enableAeron = false; // Aeron is disabled for TomcatServer by default
 
     public TomcatServer() {
-        this(null, 0, 0);
+        this(null, 0);
     }
 
     public TomcatServer(StartConfiguration config) {
         this.config = config;
         this.port = config != null ? config.port : 0;
-        this.webPort = config != null ? config.webPort : 0;
     }
 
-    public TomcatServer (StartConfiguration config, int port, int webPort) {
+    public TomcatServer(StartConfiguration config, int port) {
+        this.config = config;
+        this.port = port;
+    }
+
+    public TomcatServer (StartConfiguration config, int port, int webPort, boolean enableAeron) {
         this.config = config;
         this.port = port;
         this.webPort = webPort;
+        this.enableAeron = enableAeron;
     }
 
     @Override
-    public int start () throws Exception {
+    public int start() throws Exception {
 
         if (config == null)
             config = StartConfiguration.create(true, false, false);
+
+        if (enableAeron != null) {
+            config.tb.getProps().setProperty(DXServerAeronContext.SYS_PROP_TIME_BASE_AERON_ENABLED, Boolean.toString(enableAeron));
+        }
 
         config.port = port;
 
@@ -81,7 +91,7 @@ public class TomcatServer implements EmbeddedServer {
     }
 
     @Override
-    public void stop () {
+    public void stop() {
         if (runner != null)
             runner.close();
     }

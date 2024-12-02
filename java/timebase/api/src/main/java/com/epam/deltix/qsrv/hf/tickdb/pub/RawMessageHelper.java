@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -46,6 +46,8 @@ public class RawMessageHelper {
 
     private final RawDecoder rawDecoder = new RawDecoder();
 
+    static final String TYPE_NAME_ATTRIBUTE = "objectClassName";
+
     public void                 setValues (RawMessage msg, Map<String, Object> values) {
         if (values == null)
             return;
@@ -84,7 +86,7 @@ public class RawMessageHelper {
         return values;
     }
 
-    public static void setValue (UnboundEncoder encoder, NonStaticFieldInfo info, Object value) {
+    public void setValue (UnboundEncoder encoder, NonStaticFieldInfo info, Object value) {
         try {
             if (value == null)
                 encoder.writeNull ();
@@ -166,7 +168,7 @@ public class RawMessageHelper {
     }
 
     private static RecordClassDescriptor matchObjectType(Map<String, Object> value, RecordClassDescriptor[] rcds) {
-        Object name = value.get("type");
+        Object name = value.get(TYPE_NAME_ATTRIBUTE);
 
         RecordClassDescriptor rcd = null;
         if (name != null) {
@@ -275,6 +277,25 @@ public class RawMessageHelper {
         } catch (FieldNotFoundException e) {
             return notFoundValue;
         }
+    }
+
+    public DataType             getFieldType(RawMessage msg, String field) {
+        if (msg.data == null)
+            return null;
+
+        final UnboundDecoder decoder = getDecoder (msg.type);
+
+        input.setBytes (msg.data, msg.offset, msg.length);
+        decoder.beginRead (input);
+
+        while (decoder.nextField ()) {
+            final NonStaticFieldInfo info = decoder.getField();
+
+            if (field.equals(info.getName()))
+                return info.getType();
+        }
+
+        return null;
     }
 
     public Object               getValue (RawMessage msg, String field)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -713,12 +713,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
         try {
             TSFile tsf = findTSFByRef(this, (TSRefImpl) tsref);
-
-            if (tsf == null)
-                return (null);
-
             safeCheckOut(tsf, accessor);
-
             return (tsf);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
@@ -796,8 +791,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             EntityFilter filter,
             boolean forward,
             boolean keepPrevCheckout
-    )
-            throws InterruptedException {
+    ) {
         TSFile prevTSF = (TSFile) previous;
 
         acquireSharedLock();
@@ -914,8 +908,6 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             DAPrivate accessor,
             TSFile prevTSF
     ) throws IOException {
-
-        //cache.checkWriteQueueLimit();
 
         // should hold write lock here
         sequence.incrementAndGet();

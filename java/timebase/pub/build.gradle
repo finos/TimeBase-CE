@@ -1,6 +1,7 @@
 description = "Timebase Public API Library"
 
 dependencies {
+
     implementation ('com.epam.deltix:timebase-lang')
     implementation ('com.epam.deltix:timebase-util')
     implementation ('com.epam.deltix:timebase-messages')
@@ -14,13 +15,19 @@ dependencies {
     implementation 'com.epam.deltix:gflog-api',
                    'com.epam.deltix:gflog-jul'
 
+    implementation 'com.fasterxml.jackson.core:jackson-annotations'
+
     implementation 'com.sun.activation:javax.activation:1.2.0'
     implementation 'javax.activation:javax.activation-api:1.2.0'
 
     implementation 'javax.xml.bind:jaxb-api'
-
     implementation 'com.sun.xml.bind:jaxb-impl'
     implementation 'com.sun.xml.bind:jaxb-core'
 
     compileOnly 'com.google.code.findbugs:jsr305'
+
+    implementation 'com.bettercloud:vault-java-driver'
+
+    implementation 'com.azure:azure-identity'
+    implementation 'com.azure:azure-security-keyvault-secrets'
 }

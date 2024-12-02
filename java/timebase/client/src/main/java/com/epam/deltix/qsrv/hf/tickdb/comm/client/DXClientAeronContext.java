@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -19,11 +19,13 @@ package com.epam.deltix.qsrv.hf.tickdb.comm.client;
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.gflog.api.LogLevel;
+import com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicTransferType;
 import com.epam.deltix.thread.affinity.AffinityConfig;
 import com.epam.deltix.thread.affinity.PinnedThreadFactoryWrapper;
+import com.epam.deltix.util.lang.StringUtils;
 import io.aeron.Aeron;
 import io.aeron.exceptions.DriverTimeoutException;
-import org.apache.commons.lang3.StringUtils;
+import net.jcip.annotations.GuardedBy;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -55,13 +57,12 @@ public class DXClientAeronContext {
 
     public static String getAeronDirForRemoteServer() {
         String property = System.getProperty(PROP_NAME_AERON_DIRECTORY);
-        if (StringUtils.isNotBlank(property)) {
+        if (!StringUtils.isEmpty(property))
             return property;
-        }
+
         String envValue = System.getenv(ENV_VAR_AERON_DIR);
-        if (StringUtils.isNotBlank(envValue)) {
+        if (!StringUtils.isEmpty(envValue))
             return envValue;
-        }
         return null;
     }
 
@@ -72,7 +73,7 @@ public class DXClientAeronContext {
 
     private DXAeronSubscriptionChecker subscriptionChecker = null;
 
-    public DXClientAeronContext(AffinityConfig affinityConfig) {
+    public DXClientAeronContext(@Nullable AffinityConfig affinityConfig) {
         this.affinityConfig = affinityConfig;
         this.state = State.NOT_STARTED;
     }
@@ -104,19 +105,21 @@ public class DXClientAeronContext {
                     .append(" New dir: ").appendLast(aeronDir);
             reset();
         }
+        if (this.aeron != null && aeron.isClosed()) {
+            LOG.warn("Aeron client is closed. Resetting it.");
+            reset();
+        }
 
         if (this.aeron == null) {
             this.aeronDir = aeronDir;
+            LOG.info("Starting instance of Aeron client (shared) at %s").with(this.aeronDir);
             this.aeron = createAeron(this.aeronDir, getThreadFactoryForAeron());
         }
         return aeron;
     }
 
     /**
-     * Get (or initialize) Aeron instance for communication with remote server (via UDP).
-     * Note: this should be used only if client and server on separate machines.
-     *
-     * Note: Aeron driver must be launched externally
+     * Get (or initialize) Aeron instance for explicitly provided Aeron driver directory. See {@link #isAeronDirSetExplicitly()}
      */
     @Nonnull
     public synchronized Aeron getStandaloneAeronInstance() {
@@ -124,15 +127,29 @@ public class DXClientAeronContext {
             throw new IllegalStateException("Wrong state: " + state);
         }
 
+        assertExternalDriverConfigured();
+
+        if (this.aeronForRemoteServer == null) {
+            LOG.info("Starting instance of Aeron client (standalone) at %s").with(this.aeronForRemoteServerDir);
+            // Start Aeron client
+            this.aeronForRemoteServer = createAeron(aeronForRemoteServerDir, getThreadFactoryForAeron());
+        }
+        return aeronForRemoteServer;
+    }
+
+    private void assertExternalDriverConfigured() {
         if (aeronForRemoteServerDir == null) {
             throw new IllegalStateException("Client is not configured for interaction with remote Aeron server. Specify " +
                     ENV_VAR_AERON_DIR + " environment variable or " + PROP_NAME_AERON_DIRECTORY + " property");
         }
+    }
 
-        if (this.aeronForRemoteServer == null) {
-            this.aeronForRemoteServer = createAeron(aeronForRemoteServerDir, getThreadFactoryForAeron());
-        }
-        return aeronForRemoteServer;
+    /**
+     * @return true if a directory with Aeron Driver was explicitly provided to client
+     * using {@link #PROP_NAME_AERON_DIRECTORY} system property or {@link #ENV_VAR_AERON_DIR} env variable.
+     */
+    public boolean isAeronDirSetExplicitly() {
+        return aeronForRemoteServerDir != null;
     }
 
     public synchronized void reset() {
@@ -153,12 +170,18 @@ public class DXClientAeronContext {
         this.state = State.STOPPED;
     }
 
+    @GuardedBy("this")
     private void closeAeron() {
         if (aeron != null) {
             aeron.close();
             aeron = null;
             aeronDir = null;
             LOG.trace().appendLast("Aeron client was closed");
+        }
+        if (aeronForRemoteServer != null) {
+            aeronForRemoteServer.close();
+            aeronForRemoteServer = null;
+            LOG.trace().appendLast("Aeron client for remote server was closed");
         }
     }
 
@@ -212,6 +235,32 @@ public class DXClientAeronContext {
 
     public synchronized void setAffinityConfig(AffinityConfig affinityConfig) {
         this.affinityConfig = affinityConfig;
+    }
+
+    @Nonnull
+    public Aeron getAeronInstance(@Nullable String serverProvidedAeronDir, @Nonnull TopicTransferType transferType) {
+        // Use client specific driver if configured
+        if (isAeronDirSetExplicitly()) {
+            return getStandaloneAeronInstance();
+        }
+
+        if (serverProvidedAeronDir != null) {
+            // Use server provided Aeron driver (server must be local)
+            return getServerSharedAeronInstance(serverProvidedAeronDir);
+        }
+
+        // Generate errors according to transfer type
+
+        switch (transferType) {
+            case UDP:
+                // Use client-specific driver
+                assertExternalDriverConfigured(); // Will throw exception here
+                throw new IllegalStateException("Must not happen");
+            case IPC:
+                throw new IllegalStateException("IPC transfer type requires explicitly set Aeron driver dir on client or enabled Aeron on local TimeBase instance");
+            default:
+                throw new IllegalArgumentException("Unknown transfer type: " + transferType);
+        }
     }
 
     private enum State {

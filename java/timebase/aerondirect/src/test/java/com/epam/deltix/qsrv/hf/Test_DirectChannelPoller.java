@@ -48,7 +48,7 @@ public class Test_DirectChannelPoller extends BaseTopicReadingTest {
 
 
         return () -> {
-            MessagePoller messagePoller = new DirectReaderFactory().createPoller(aeron, false, channel, dataStreamId, types, StubData.getStubMappingProvider());
+            MessagePoller messagePoller = new DirectReaderFactory().createPoller(aeron, false, channel, dataStreamId, types, null);
 
             RatePrinter ratePrinter = new RatePrinter("Reader");
             YieldingIdleStrategy idleStrategy = new YieldingIdleStrategy();

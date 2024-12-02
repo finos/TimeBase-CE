@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb.topic;
 
+import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
@@ -41,9 +42,8 @@ import java.util.List;
 @Category(TickDBFast.class)
 public class Test_PublisherInitialEntities extends TDBTestBase {
 
-
     public Test_PublisherInitialEntities() {
-        super(true);
+        super(true, true, getTemporaryLocation(), new TomcatServer(null, 0, 0, true), true);
     }
 
     @Test(timeout = 30_000)

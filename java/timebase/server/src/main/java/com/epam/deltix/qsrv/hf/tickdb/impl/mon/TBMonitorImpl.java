@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -22,6 +22,7 @@ import com.epam.deltix.util.collections.generated.*;
 import com.epam.deltix.util.lang.Util;
 import net.jcip.annotations.GuardedBy;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -52,6 +53,9 @@ public abstract class TBMonitorImpl implements TBMonitor {
     @GuardedBy("dbLock")
     private final CharSequenceToObjectMap<TBLock>   locks =
         new CharSequenceToObjectMap<>();
+
+    private final AtomicInteger cursorsCount = new AtomicInteger();
+    private final AtomicInteger loadersCount = new AtomicInteger();
 
     private volatile boolean                trackMessagesByInstrument = false;
 
@@ -118,6 +122,7 @@ public abstract class TBMonitorImpl implements TBMonitor {
         long index;
         synchronized (dbLock) {
             loaders.add (loader);
+            loadersCount.set(loaders.size());
             index = idSequence++;
             monObjects.put (index, loader);
         }
@@ -130,6 +135,7 @@ public abstract class TBMonitorImpl implements TBMonitor {
         long index;
         synchronized (dbLock) {
             cursors.add (cursor);
+            cursorsCount.set(cursors.size());
             index = idSequence++;
             monObjects.put (index, cursor);
         }
@@ -143,6 +149,7 @@ public abstract class TBMonitorImpl implements TBMonitor {
             if (!loaders.remove (loader))
                 throw new RuntimeException ();
 
+            loadersCount.set(loaders.size());
             if (loader != monObjects.remove (loader.getId (), null))
                 throw new RuntimeException ();
         }
@@ -155,6 +162,7 @@ public abstract class TBMonitorImpl implements TBMonitor {
             if (!cursors.remove (cursor))
                 throw new RuntimeException ();
 
+            cursorsCount.set(cursors.size());
             if (cursor != monObjects.remove (cursor.getId (), null))
                 throw new RuntimeException ();
         }
@@ -236,4 +244,11 @@ public abstract class TBMonitorImpl implements TBMonitor {
         fireObjectRemoved(lock, lock.getId());
     }
 
+    public int cursorsCount() {
+        return cursorsCount.get();
+    }
+
+    public int loadersCount() {
+        return loadersCount.get();
+    }
 }

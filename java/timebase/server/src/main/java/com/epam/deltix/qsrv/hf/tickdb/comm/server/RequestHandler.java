@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -19,13 +19,14 @@ package com.epam.deltix.qsrv.hf.tickdb.comm.server;
 import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.comm.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.Parameter;
+import com.epam.deltix.qsrv.hf.topic.DirectProtocol;
 import com.google.common.collect.ImmutableList;
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.gflog.api.LogLevel;
 import com.epam.deltix.qsrv.hf.tickdb.server.Version;
-import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.qsrv.hf.pub.md.MetaData;
@@ -46,12 +47,8 @@ import com.epam.deltix.qsrv.hf.tickdb.impl.topic.CreateCustomTopicRequest;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.CreateMulticastTopicRequest;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.CreateTopicRequest;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.DeleteTopicRequest;
-import com.epam.deltix.qsrv.hf.tickdb.impl.topic.GetTopicInstrumentMappingRequest;
-import com.epam.deltix.qsrv.hf.tickdb.impl.topic.GetTopicInstrumentMappingResponse;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.GetTopicMetadataRequest;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.GetTopicMetadataResponse;
-import com.epam.deltix.qsrv.hf.tickdb.impl.topic.GetTopicTemporaryInstrumentMappingRequest;
-import com.epam.deltix.qsrv.hf.tickdb.impl.topic.GetTopicTemporaryInstrumentMappingResponse;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.ListTopicsResponse;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicTransferType;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.CreateTopicResult;
@@ -62,16 +59,10 @@ import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.TopicChannelOptio
 import com.epam.deltix.qsrv.hf.tickdb.lang.parser.QQLParser;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TextMap;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLock;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLockImpl;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.StreamLockedException;
 import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBLock;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.TransformationTask;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.exception.TopicApiException;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.settings.TopicType;
-import com.epam.deltix.qsrv.hf.topic.consumer.MappingProvider;
-import com.epam.deltix.util.collections.generated.IntegerToObjectHashMap;
 import com.epam.deltix.util.concurrent.QuickExecutor;
 import com.epam.deltix.util.concurrent.UncheckedInterruptedException;
 import com.epam.deltix.util.io.ByteArrayOutputStreamEx;
@@ -83,12 +74,15 @@ import com.epam.deltix.util.vsocket.ChannelClosedException;
 import com.epam.deltix.util.vsocket.VSChannel;
 import com.epam.deltix.util.vsocket.VSChannelState;
 import com.epam.deltix.util.vsocket.VSServerFramework;
+import io.aeron.Aeron;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.naming.AuthenticationException;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -114,20 +108,19 @@ public class RequestHandler extends QuickExecutor.QuickTask {
 
     private final ServerParameters          params;
 
-    private SecurityContext                 context;
+    private final SecurityContext           context;
     private VSChannel                       ds;
     private final DataOutputStream          out;
     private Principal                       user;
     private int                             clientVersion;
 
 
-    private final DXServerAeronContext aeronContext;
-    private final AeronThreadTracker aeronThreadTracker;
-    private final DirectTopicRegistry topicRegistry;
+    private final DXServerAeronContext      aeronContext;
+    private final AeronThreadTracker        aeronThreadTracker;
+    private final DirectTopicRegistry       topicRegistry;
 
-    private final ByteArrayOutputStreamEx buffer = new ByteArrayOutputStreamEx(1024);
+    private final ByteArrayOutputStreamEx   buffer = new ByteArrayOutputStreamEx(1024);
     private final DataOutputStream          dout = new DataOutputStream(buffer);
-
 
     // TODO: Consider refactoring
     
@@ -201,7 +194,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
                         case TDBProtocol.REQ_SET_METADATA:              doSetMetadata (ds); break;
                         case TDBProtocol.REQ_TRIM_TO_SIZE:              doTrimToSize (ds);  break;
                         case TDBProtocol.REQ_START_SESSION:
-                            new SessionHandler(ds, db, executor, clientVersion);
+                            new SessionHandler(user, ds, db, context, executor, clientVersion);
                             ds = null;
                             break;
                         case TDBProtocol.REQ_CREATE_CURSOR:
@@ -267,20 +260,15 @@ public class RequestHandler extends QuickExecutor.QuickTask {
                         case TDBProtocol.REQ_GET_TIME_RANGE_FOR_SPACE:  doGetTimeRangeForSpace(ds); break;
                         case TDBProtocol.REQ_DESCRIBE_QUERY:            doDescribeQQL(ds); break;
 
-                        case TDBProtocol.REQ_CREATE_TOPIC:              doCreateIpcTopic(ds); break;
-                        case TDBProtocol.REQ_CREATE_MULTICAST_TOPIC:    doCreateMulticastTopic(ds); break;
-                        case TDBProtocol.REQ_CREATE_CUSTOM_TOPIC:       doCreateCustomTopic(ds); break;
-                        case TDBProtocol.REQ_DELETE_TOPIC:              doDeleteTopic(ds); break;
-                        case TDBProtocol.REQ_LIST_TOPICS:               doListTopics(ds); break;
-                        case TDBProtocol.REQ_GET_TOPIC_METADATA:        doGetTopicMetadata(ds); break;
-                        case TDBProtocol.REQ_GET_TOPIC_INSTRUMENT_MAPPING:  doGetTopicInstrumentMapping(ds); break;
-                        case TDBProtocol.REQ_GET_TOPIC_TEMPORARY_INSTRUMENT_MAPPING:  doGetTopicTemporaryInstrumentMapping(ds); break;
-                        case TDBProtocol.REQ_CREATE_TOPIC_PUBLISHER:
-                            doCreateTopicPublisher(ds);
-                            ds = null;
-                            break;
-                        case TDBProtocol.REQ_CREATE_TOPIC_SUBSCRIBER:   doCreateTopicSubscriber(ds, true); break;
-                        case TDBProtocol.REQ_CREATE_TOPIC_SUBSCRIBER_NO_MAPPING:   doCreateTopicSubscriber(ds, false); break;
+                        // TOPIC_SUB_PROTOCOL_VERSION
+                        case TDBProtocol.REQ_CREATE_TOPIC:              doCreateIpcTopic(ds, clientVersion); break;
+                        case TDBProtocol.REQ_CREATE_MULTICAST_TOPIC:    doCreateMulticastTopic(ds, clientVersion); break;
+                        case TDBProtocol.REQ_CREATE_CUSTOM_TOPIC:       doCreateCustomTopic(ds, clientVersion); break;
+                        case TDBProtocol.REQ_DELETE_TOPIC:              doDeleteTopic(ds, clientVersion); break;
+                        case TDBProtocol.REQ_LIST_TOPICS:               doListTopics(ds, clientVersion); break;
+                        case TDBProtocol.REQ_GET_TOPIC_METADATA:        doGetTopicMetadata(ds, clientVersion); break;
+                        case TDBProtocol.REQ_CREATE_TOPIC_PUBLISHER:    doCreateTopicPublisher(ds, clientVersion); break;
+                        case TDBProtocol.REQ_CREATE_TOPIC_SUBSCRIBER:   doCreateTopicSubscriber(ds, clientVersion); break;
 
                         default:
                             TickDBServer.LOGGER.warning ("Unrecognized request code: " + req);
@@ -418,7 +406,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         }
 
         out.writeInt (TDBProtocol.RESP_OK);        
-        TDBProtocol.writeClassSet (out, rcs);
+        TDBProtocol.writeClassSet (out, rcs, clientVersion);
     }
 
     private void                doSetMetadata (VSChannel ds)
@@ -448,7 +436,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         final DXTickStream          stream = getStream (ds);
 
         ServerLock lock = readLock(ds);
-        stream.verify(lock, LockType.WRITE); // verify lock
+        ((LockVerifier) stream).checkExclusiveWrite(lock);
 
         DataInputStream in = ds.getDataInputStream();
 
@@ -465,7 +453,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         final DXTickStream          stream = getStream (ds);
 
         ServerLock lock = readLock(ds);
-        stream.verify(lock, LockType.WRITE); // verify lock
+        ((LockVerifier) stream).checkExclusiveWrite(lock);
 
         String key = stream.getKey();
 
@@ -481,7 +469,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         final DXTickStream          stream = getStream (ds);
         String key = ds.getDataInputStream().readUTF ();
 
-        stream.verify(readLock(ds), LockType.WRITE); // verify lock
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
         stream.rename(key);
 
         if (UserLogger.canTrace(user))
@@ -489,6 +477,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
 
         out.writeInt (TDBProtocol.RESP_OK);
     }
+
     
     private void                doGetTimeRange (VSChannel ds) throws IOException {
         final DXTickStream            stream = getStream (ds);
@@ -552,7 +541,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         ClassSet set = db.describeQuery(query, options, parameters);
 
         out.writeInt(TDBProtocol.RESP_OK);
-        TDBProtocol.writeClassSet(ds.getDataOutputStream(), set);
+        TDBProtocol.writeClassSet(ds.getDataOutputStream(), set, clientVersion);
         out.flush();
     }
 
@@ -684,8 +673,8 @@ public class RequestHandler extends QuickExecutor.QuickTask {
     private void                doSetStreamName (VSChannel ds) throws IOException {
         DXTickStream            stream = getStream (ds);
         final String name = TDBProtocol.readNullableString(ds.getDataInputStream());
-        
-        stream.verify(readLock(ds), LockType.WRITE);
+
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
 
         stream.setName(name);
         
@@ -703,8 +692,8 @@ public class RequestHandler extends QuickExecutor.QuickTask {
     private void                doSetStreamPeriod (VSChannel ds) throws IOException {
         DXTickStream            stream = getStream (ds);
         final String v = TDBProtocol.readNullableString(ds.getDataInputStream());
-        
-        stream.verify(readLock(ds), LockType.WRITE);
+
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
 
         stream.setPeriodicity(Periodicity.parse(v));
         out.writeInt (TDBProtocol.RESP_OK);
@@ -733,7 +722,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         
         out.writeInt (TDBProtocol.RESP_OK);
         out.writeBoolean (isFixedType);
-        TDBProtocol.writeClassSet (out, md);        
+        TDBProtocol.writeClassSet (out, md, clientVersion);
     }
     
     private void                doGetStreamTypeVersion (VSChannel ds) throws IOException {
@@ -750,7 +739,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         boolean                     polymorphic = in.readBoolean ();
         RecordClassSet              md = (RecordClassSet) TDBProtocol.readClassSet (in);
 
-        stream.verify(readLock(ds), LockType.WRITE);
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
         
         if (polymorphic)
             stream.setPolymorphic (md.getTopTypes ());
@@ -786,7 +775,8 @@ public class RequestHandler extends QuickExecutor.QuickTask {
     private void                doSetStreamDescr (VSChannel ds) throws IOException {
         DXTickStream            stream = getStream (ds);
         final String description = TDBProtocol.readNullableString(ds.getDataInputStream());
-        stream.verify(readLock(ds), LockType.WRITE);
+
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
 
         stream.setDescription(description);
         out.writeInt (TDBProtocol.RESP_OK);
@@ -906,7 +896,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         final DXTickStream            stream = getStream (ds);
         final IdentityKey [] ids = TDBProtocol.readInstrumentIdentities (ds.getDataInputStream());
 
-        stream.verify(readLock(ds), LockType.WRITE);
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
 
         stream.clear( ids);
         out.writeInt (TDBProtocol.RESP_OK);
@@ -919,7 +909,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         long time = din.readLong();
         final IdentityKey [] ids = TDBProtocol.readInstrumentIdentities (din);
 
-        stream.verify(readLock(ds), LockType.WRITE);
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
 
         stream.truncate(time, ids);
         out.writeInt (TDBProtocol.RESP_OK);
@@ -932,7 +922,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         final DXTickStream            stream = getStream (ds);
         TransformationTask task = TDBProtocol.readTransformationTask(ds.getDataInputStream());
 
-        stream.verify(readLock(ds), LockType.WRITE);
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
 
         stream.execute(task);
 
@@ -1096,7 +1086,8 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         DXTickStream stream = getStream(ds);
         final String newOwner = TDBProtocol.readNullableString(ds.getDataInputStream());
 
-        stream.verify(readLock(ds), LockType.WRITE);
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
+
         stream.setOwner(newOwner);
         out.writeInt(TDBProtocol.RESP_OK);
     }
@@ -1128,23 +1119,28 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         return null;
     }
 
-    private void doCreateIpcTopic(VSChannel ds) throws IOException {
+    private void doCreateIpcTopic(VSChannel ds, int clientVersion) throws IOException {
         DataInputStream     in = ds.getDataInputStream();
 
-        CreateTopicRequest request = TopicProtocol.readCreateTopicRequest(in, clientVersion);
+        // Enforce strict version match
+        enforceStrictVersionMatch(clientVersion, in);
+
+        CreateTopicRequest request = TopicProtocol.readCreateTopicRequest(in, this.clientVersion);
 
         String topicKey = request.getTopicKey();
         List<RecordClassDescriptor> types = request.getTypes();
         String copyToStreamKey = request.getTargetStream();
+        String copyToSpace = request.getTargetSpace();
 
+        assertTopicCreationAllowed();
         assertTypesNotEmpty(types);
-        CopyTopicToStreamTaskManager.preValidateCopyToStreamKey(db, types, copyToStreamKey);
+        assertCopyToStreamIsValid(types, copyToStreamKey);
 
         //String channel = TopicChannelFactory.createIpcChannel();
 
-        CreateTopicResult createTopicResult = topicRegistry.createDirectTopic(topicKey, types, null, aeronContext.getStreamIdGenerator(), request.getInitialEntitySet(), TopicType.IPC, null, copyToStreamKey);
+        CreateTopicResult createTopicResult = topicRegistry.createDirectTopic(topicKey, types, null, aeronContext.getStreamIdGenerator(), TopicType.IPC, null, copyToStreamKey, copyToSpace);
 
-        setupCopyToStream(topicKey, types, copyToStreamKey, createTopicResult);
+        setupCopyToStream(topicKey, types, copyToStreamKey, createTopicResult, copyToSpace);
 
         out.writeInt(TDBProtocol.RESP_OK);
         out.flush();
@@ -1155,17 +1151,22 @@ public class RequestHandler extends QuickExecutor.QuickTask {
     }
 
     // TODO: Merge with doCreateTopic(...)
-    private void                 doCreateMulticastTopic(VSChannel ds) throws IOException {
+    private void                 doCreateMulticastTopic(VSChannel ds, int clientVersion) throws IOException {
         DataInputStream     in = ds.getDataInputStream();
 
-        CreateMulticastTopicRequest request = TopicProtocol.readCreateMulticastTopicRequest(in, clientVersion);
+        // Enforce strict version match
+        enforceStrictVersionMatch(clientVersion, in);
+
+        CreateMulticastTopicRequest request = TopicProtocol.readCreateMulticastTopicRequest(in, this.clientVersion);
 
         String topicKey = request.getTopicKey();
         List<RecordClassDescriptor> types = request.getTypes();
         String copyToStreamKey = request.getTargetStream();
+        String copyToSpace = request.getTargetSpace();
 
+        assertTopicCreationAllowed();
         assertTypesNotEmpty(types);
-        CopyTopicToStreamTaskManager.preValidateCopyToStreamKey(db, types, copyToStreamKey);
+        assertCopyToStreamIsValid(types, copyToStreamKey);
 
         TopicChannelOptionMap channelOptions = new TopicChannelOptionMap();
         channelOptions.put(TopicChannelOption.MULTICAST_ENDPOINT_HOST, request.getEndpointHost());
@@ -1173,9 +1174,9 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         channelOptions.put(TopicChannelOption.MULTICAST_NETWORK_INTERFACE, request.getNetworkInterface());
         channelOptions.put(TopicChannelOption.MULTICAST_TTL, request.getTtl());
 
-        CreateTopicResult createTopicResult = topicRegistry.createDirectTopic(topicKey, types, null, aeronContext.getStreamIdGenerator(), request.getInitialEntitySet(), TopicType.MULTICAST, channelOptions.getValueMap(), null);
+        CreateTopicResult createTopicResult = topicRegistry.createDirectTopic(topicKey, types, null, aeronContext.getStreamIdGenerator(), TopicType.MULTICAST, channelOptions.getValueMap(), copyToStreamKey, copyToSpace);
 
-        setupCopyToStream(topicKey, types, copyToStreamKey, createTopicResult);
+        setupCopyToStream(topicKey, types, copyToStreamKey, createTopicResult, copyToSpace);
 
         out.writeInt(TDBProtocol.RESP_OK);
         out.flush();
@@ -1184,17 +1185,22 @@ public class RequestHandler extends QuickExecutor.QuickTask {
             UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "CREATE MULTICAST TOPIC (%s)", request.getTopicKey());
         }
     }
-    private void                 doCreateCustomTopic(VSChannel ds) throws IOException {
+    private void                 doCreateCustomTopic(VSChannel ds, int clientVersion) throws IOException {
         DataInputStream     in = ds.getDataInputStream();
 
-        CreateCustomTopicRequest request = TopicProtocol.readCreateCustomTopicRequest(in, clientVersion);
+        // Enforce strict version match
+        enforceStrictVersionMatch(clientVersion, in);
+
+        CreateCustomTopicRequest request = TopicProtocol.readCreateCustomTopicRequest(in, this.clientVersion);
 
         String topicKey = request.getTopicKey();
         List<RecordClassDescriptor> types = request.getTypes();
         String copyToStreamKey = request.getTargetStream();
+        String copyToSpace = request.getTargetSpace();
 
+        assertTopicCreationAllowed();
         assertTypesNotEmpty(types);
-        CopyTopicToStreamTaskManager.preValidateCopyToStreamKey(db, types, copyToStreamKey);
+        assertCopyToStreamIsValid(types, copyToStreamKey);
 
         TopicChannelOptionMap channelOptions = new TopicChannelOptionMap();
         fillChannelOptionsFromAttributes(channelOptions, request.getAttributes());
@@ -1208,9 +1214,9 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         }
 
 
-        CreateTopicResult createTopicResult = topicRegistry.createDirectTopic(topicKey, types, null, aeronContext.getStreamIdGenerator(), request.getInitialEntitySet(), topicType, channelOptions.getValueMap(), null);
+        CreateTopicResult createTopicResult = topicRegistry.createDirectTopic(topicKey, types, null, aeronContext.getStreamIdGenerator(), topicType, channelOptions.getValueMap(), copyToStreamKey, copyToSpace);
 
-        setupCopyToStream(topicKey, types, copyToStreamKey, createTopicResult);
+        setupCopyToStream(topicKey, types, copyToStreamKey, createTopicResult, copyToSpace);
 
         out.writeInt(TDBProtocol.RESP_OK);
         out.flush();
@@ -1220,7 +1226,39 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         }
     }
 
-    private void fillChannelOptionsFromAttributes(TopicChannelOptionMap channelOptions, Map<CreateCustomTopicRequest.Field, String> attributes) {
+    private void assertTopicCreationAllowed() {
+        if (!aeronContext.isAeronEnabled()) {
+            // While we do not directly require Aeron to be enabled on the server side when we create topic.
+            // However, zero limit means that support of topics is generally not configured.
+            if (aeronContext.getTopicTotalTermBufferLimit() == 0) {
+                throw new IllegalStateException("Aeron is not enabled on TimeBase server");
+            }
+        }
+    }
+
+    private void assertCopyToStreamIsValid(List<RecordClassDescriptor> types, @Nullable String copyToStreamKey) {
+        CopyTopicToStreamTaskManager.preValidateCopyToStreamKey(db, types, copyToStreamKey);
+        if (copyToStreamKey != null) {
+            // We will need to start copyToStream process for that topic.
+            // This means that TimeBase will consume data from topic.
+            // So we have to ensure that Aeron is actually available before we start to create the topic.
+            if (!aeronContext.isAeronEnabled()) {
+                throw new IllegalStateException("copyToStreamKey is set but Aeron is not enabled on TimeBase server");
+            }
+            assertAeronClientIsValid();
+        }
+    }
+
+    private void assertAeronClientIsValid() {
+        try {
+            Aeron aeron = aeronContext.getAeron();
+            assert aeron != null;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize Aeron client", e);
+        }
+    }
+
+    private static void fillChannelOptionsFromAttributes(TopicChannelOptionMap channelOptions, Map<CreateCustomTopicRequest.Field, String> attributes) {
         // TODO: Process other options
         String publisherAddress = attributes.get(CreateCustomTopicRequest.Field.PUBLISHER_ADDRESS);
         if (publisherAddress != null) {
@@ -1230,24 +1268,29 @@ public class RequestHandler extends QuickExecutor.QuickTask {
                 channelOptions.put(TopicChannelOption.PUBLISHER_PORT, parts[1]);
             }
         }
+        String termBufferLength = attributes.get(CreateCustomTopicRequest.Field.TERM_BUFFER_LENGTH);
+        if (termBufferLength != null) {
+            channelOptions.put(TopicChannelOption.TERM_BUFFER_LENGTH, termBufferLength);
+        }
     }
 
-    private void assertTypesNotEmpty(List<RecordClassDescriptor> types) {
+    private static void assertTypesNotEmpty(List<RecordClassDescriptor> types) {
         if (types.isEmpty()) {
             throw new IllegalArgumentException("Type set can't be empty");
         }
     }
 
-    private void setupCopyToStream(String topicKey, List<RecordClassDescriptor> types, String copyToStreamKey, CreateTopicResult createTopicResult) {
+    private void setupCopyToStream(String topicKey, List<RecordClassDescriptor> types, String copyToStreamKey, CreateTopicResult createTopicResult, @Nullable String targetSpace) {
         if (copyToStreamKey != null) {
             CopyTopicToStreamTaskManager copyTopicToStream = new CopyTopicToStreamTaskManager(db, aeronContext, aeronThreadTracker, topicRegistry);
-            MappingProvider mappingProvider = topicRegistry.getMappingProvider(topicKey);
-            copyTopicToStream.subscribeToStreamCopyOrRollback(topicKey, types, copyToStreamKey, createTopicResult, mappingProvider);
+            copyTopicToStream.subscribeToStreamCopyOrRollback(topicKey, types, copyToStreamKey, targetSpace, createTopicResult);
         }
     }
 
-    private void                doDeleteTopic (VSChannel ds) throws IOException {
+    private void                doDeleteTopic (VSChannel ds, int clientVersion) throws IOException {
         DataInputStream in = ds.getDataInputStream();
+
+        readProtocolVersionWithoutCheck(clientVersion, in);
 
         DeleteTopicRequest request = TopicProtocol.readDeleteTopicRequest(in);
         String topicKey = request.getTopicKey();
@@ -1261,7 +1304,16 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         }
     }
 
-    private void                doListTopics (VSChannel ds) throws IOException {
+    /**
+     * Implementation note:
+     *  For this method we try to provide backward compatibility with older clients because
+     *  clients are likely to call that method as part of listChannels() call even if they do not directly use topics.
+     */
+    private void                doListTopics (VSChannel ds, int clientVersion) throws IOException {
+        DataInputStream in = ds.getDataInputStream();
+
+        readProtocolVersionWithoutCheck(clientVersion, in);
+
         List<String> topics = topicRegistry.listDirectTopics();
 
         out.writeInt(TDBProtocol.RESP_OK);
@@ -1273,8 +1325,15 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         }
     }
 
-    private void                doGetTopicMetadata (VSChannel ds) throws IOException {
+    /**
+     * Implementation note:
+     *  For this method we try to provide backward compatibility with older clients because
+     *  clients are likely to call that method as part of listChannels() call even if they do not directly use topics.
+     */
+    private void                doGetTopicMetadata (VSChannel ds, int clientVersion) throws IOException {
         DataInputStream in = ds.getDataInputStream();
+
+        readProtocolVersionWithoutCheck(clientVersion, in);
 
         GetTopicMetadataRequest request = TopicProtocol.readGetTopicMetadataRequest(in);
         String topicKey = request.getTopicKey();
@@ -1290,72 +1349,84 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         }
     }
 
-    private void                doGetTopicInstrumentMapping(VSChannel ds) throws IOException {
-        DataInputStream in = ds.getDataInputStream();
-
-        GetTopicInstrumentMappingRequest request = TopicProtocol.readGetTopicInstrumentMappingRequest(in);
-        String topicKey = request.getTopicKey();
-
-        ConstantIdentityKey[] mapping = topicRegistry.getTopicMappingSnapshot(topicKey, request.getDataStreamId());
-
-        out.writeInt(TDBProtocol.RESP_OK);
-        TopicProtocol.writeGetTopicInstrumentMappingResponse(out, new GetTopicInstrumentMappingResponse(Arrays.asList(mapping)));
-        out.flush();
-
-        if (UserLogger.canTrace(user)) {
-            UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "GET TOPIC INSTRUMENT MAPPING");
+    /**
+     * Reads topic sub protocol version but does not enforce it.
+     *
+     * <p>This method should be only used for cases when backwards compatibility is supported.
+     */
+    private static void readProtocolVersionWithoutCheck(int clientVersion, DataInputStream in) throws IOException {
+        // Older client version are compatible for now and does not need special handling for this method yet
+        if (clientVersion >= TDBProtocol.TOPIC_SUB_PROTOCOL_VERSION) {
+            int clientTopicProtocolVersion = TopicProtocol.readTopicProtocolVersion(in);
+            LOG.debug("Client topic protocol version: %s").with(clientTopicProtocolVersion);
+            if (clientTopicProtocolVersion <= 2) {
+                throw new IllegalArgumentException("Client and server topic protocol version mismatch: client=" + clientTopicProtocolVersion + ", server=" + DirectProtocol.PROTOCOL_VERSION);
+            }
         }
     }
 
-    private void                doGetTopicTemporaryInstrumentMapping(VSChannel ds) throws IOException {
-        DataInputStream in = ds.getDataInputStream();
-
-        GetTopicTemporaryInstrumentMappingRequest request = TopicProtocol.readGetTopicTemporaryInstrumentMappingRequest(in);
-        String topicKey = request.getTopicKey();
-
-        IntegerToObjectHashMap<ConstantIdentityKey> mapping = topicRegistry.getTopicTemporaryMappingSnapshot(topicKey, request.getDataStreamId(), request.getRequestedTempEntityIndex());
-
-        out.writeInt(TDBProtocol.RESP_OK);
-        TopicProtocol.writeGetTopicTemporaryInstrumentMappingResponse(out, new GetTopicTemporaryInstrumentMappingResponse(mapping));
-        out.flush();
-
-        if (UserLogger.canTrace(user)) {
-            UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "GET TOPIC TEMPORARY INSTRUMENT MAPPING");
+    /**
+     * Reads topic sub protocol version from client and ensures that this version is exactly version provided by server.
+     *
+     * <p>Should be used in all cases where exact match of versions is required.
+     */
+    private static void enforceStrictVersionMatch(int clientVersion, DataInputStream in) throws IOException {
+        if (clientVersion >= TDBProtocol.TOPIC_SUB_PROTOCOL_VERSION) {
+            ensureSameTopicProtocolVersion(in);
+        } else {
+            throw makeIncompatibleClientVersionErrorForTopics();
         }
     }
 
-    private void doCreateTopicPublisher(VSChannel ds) throws IOException {
+
+    private void doCreateTopicPublisher(VSChannel ds, int clientVersion) throws IOException {
         DataInputStream in = ds.getDataInputStream();
+
+        enforceStrictVersionMatch(clientVersion, in);
 
         AddTopicPublisherRequest request = TopicProtocol.readAddTopicPublisherRequest(in);
-        try {
-            boolean local = isLocal(ds);
-            LoaderSubscriptionResult result = topicRegistry.addLoader(request.getTopicKey(), in, request.getInitialEntitySet(), this.executor, aeronContext.getAeron(), local, aeronContext.getPublicAddress());
-            ds.setAvailabilityListener(result.getDataAvailabilityCallback());
 
-            if (result.getTopicType() == TopicType.UDP_SINGLE_PUBLISHER && clientVersion < TopicProtocol.SINGLE_PUBLISHER_TOPIC_SUPPORT_VERSION) {
-                throw new IllegalArgumentException("This client does not supports this topic type");
+        try {
+            if (!aeronContext.isAeronEnabled()) {
+                throw new IllegalStateException("Aeron support is disabled on the server");
             }
+
+            boolean local = isLocal(ds);
+            LoaderSubscriptionResult result = topicRegistry.addLoader(request.getTopicKey(), local, aeronContext.getPublicAddress());
+
+            // TODO: We are keeping this only to be able to handle loader disconnects
+            ds.setAvailabilityListener(() -> {
+                try {
+                    DataInputStream dis = ds.getDataInputStream();
+                    int available;
+                    while ((available = dis.available()) > 0) {
+                        dis.skipBytes(available);
+                    }
+                } catch (EOFException eoq) {
+                    // Graceful close
+                    LOG.info("Client closed topic publisher connection: remoteAddress=%s clientId=%s")
+                            .with(ds.getRemoteAddress()).with(ds.getClientId());
+                } catch (IOException e) {
+                    LOG.warn("Client closed topic publisher connection unexpectedly (remoteAddress=%s clientId=%s): %s")
+                            .with(ds.getRemoteAddress()).with(ds.getClientId()).with(e);
+                }
+            });
 
             assert local || result.getTopicType() != TopicType.IPC;
             TopicTransferType transferType = result.getTopicType() == TopicType.IPC ? TopicTransferType.IPC : TopicTransferType.UDP;
-            String aeronDir = local ? aeronContext.getAeronDir() : null; // Don't send Aeron driver directory path to remote client
+            // Don't send Aeron driver directory path to remote client
+            String aeronDir = local ? aeronContext.getAeronDir() : null;
 
             out.writeInt(TDBProtocol.RESP_OK);
             // TODO: IMPORTANT: Send metadata channel to client
+            LOG.debug("Sending topic publisher channel to client: dataStreamId=%s, channel=%s").with(result.getDataStreamId()).with(result.getPublisherChannel());
             TopicProtocol.writeAddTopicPublisherResponse(out, new AddTopicPublisherResponse(
                     transferType,
-                    Arrays.asList(result.getMapping()),
                     result.getTypes(),
                     result.getPublisherChannel(),
-                    result.getMetadataSubscriberChannel(),
                     aeronDir,
-                    result.getDataStreamId(),
-                    result.getServerMetadataStreamId(),
-                    result.getLoaderNumber(),
-                    result.getMinTempEntityIndex(),
-                    result.getMaxTempEntityIndex()
-            ), clientVersion);
+                    result.getDataStreamId()
+            ), this.clientVersion);
             out.flush();
 
             if (UserLogger.canTrace(user)) {
@@ -1368,30 +1439,28 @@ public class RequestHandler extends QuickExecutor.QuickTask {
             ds.close();
         }
     }
-
     /**
-     * @param sendMapping if true then instrument mapping will be sent to client
      */
-    private void doCreateTopicSubscriber(VSChannel ds, boolean sendMapping) throws IOException {
+    private void doCreateTopicSubscriber(VSChannel ds, int clientVersion) throws IOException {
         DataInputStream in = ds.getDataInputStream();
+
+        // Enforce strict version match
+        enforceStrictVersionMatch(clientVersion, in);
 
         AddTopicSubscriberRequest request = TopicProtocol.readAddTopicSubscriberRequest(in);
         boolean local = isLocal(ds);
-        String remoteClientAddress = !local ? getAddress(ds) : null;
+        String remoteClientAddress = getAddress(ds);
         ReaderSubscriptionResult result = topicRegistry.addReader(request.getTopicKey(), local, aeronContext.getPublicAddress(), remoteClientAddress);
-
-        if (result.getTopicType() == TopicType.UDP_SINGLE_PUBLISHER && clientVersion < TopicProtocol.SINGLE_PUBLISHER_TOPIC_SUPPORT_VERSION) {
-            throw new IllegalArgumentException("This client does not supports this topic type");
-        }
 
         assert local || result.getTopicType() != TopicType.IPC;
         TopicTransferType transferType = result.getTopicType() == TopicType.IPC ? TopicTransferType.IPC : TopicTransferType.UDP;
-        String aeronDir = local ? aeronContext.getAeronDir() : null; // Don't send Aeron driver directory path to remote client
+        // Don't send Aeron driver directory path to remote client
+        String aeronDir = local ? aeronContext.getAeronDir() : null;
 
         out.writeInt(TDBProtocol.RESP_OK);
+        LOG.debug("Sending topic subscriber channel to client: dataStreamId=%s, channel=%s").with(result.getDataStreamId()).with(result.getSubscriberChannel());
         TopicProtocol.writeAddTopicSubscriberResponse(out, new AddTopicSubscriberResponse(
                 transferType,
-                sendMapping ? Arrays.asList(result.getMapping()) : Collections.emptyList(),
                 result.getTypes(),
                 result.getSubscriberChannel(),
                 aeronDir,
@@ -1402,5 +1471,20 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         if (UserLogger.canTrace(user)) {
             UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "CREATE TOPIC SUBSCRIBER (%s)", request.getTopicKey());
         }
+    }
+
+    private static void ensureSameTopicProtocolVersion(DataInputStream in) throws IOException {
+        int clientTopicProtocolVersion = TopicProtocol.readTopicProtocolVersion(in);
+        if (clientTopicProtocolVersion != DirectProtocol.PROTOCOL_VERSION) {
+            throw new IllegalArgumentException("Client and server topic protocol version mismatch: client="
+                    + clientTopicProtocolVersion + ", server=" + DirectProtocol.PROTOCOL_VERSION
+                    + ". Recommended TimeBase client version: " + Version.getVersion());
+        }
+    }
+
+    @NotNull
+    private static IllegalArgumentException makeIncompatibleClientVersionErrorForTopics() {
+        return new IllegalArgumentException("Client does not support this version of topic protocol. Please upgrade client."
+                + " Recommended TimeBase client version: " + Version.getVersion());
     }
 }

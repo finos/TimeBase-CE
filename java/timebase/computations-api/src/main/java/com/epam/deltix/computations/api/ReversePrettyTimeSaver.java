@@ -38,11 +38,6 @@ public class ReversePrettyTimeSaver implements TimeSaver {
         return new ReversePrettyTimeSaver();
     }
 
-    public static ReversePrettyTimeSaver create(long start, long step) {
-        long nearest = nearest(start, step);
-        return nearest == start ? new ReversePrettyTimeSaver(start + step, start, step) : new ReversePrettyTimeSaver(start, nearest, step);
-    }
-
     @Override
     public long put(long timestamp) {
         last = timestamp;
@@ -82,11 +77,11 @@ public class ReversePrettyTimeSaver implements TimeSaver {
     }
 
     @Override
-    public void reset(long start, long step) {
-        long nearest = nearest(start, step);
+    public void reset(long start, long step, long offset) {
+        long nearest = nearest(start, offset, step);
         if (nearest == start) {
             this.start = start + step;
-            this.end = start;
+            this.end = nearest;
             this.step = step;
         } else {
             this.start = start;
@@ -95,9 +90,9 @@ public class ReversePrettyTimeSaver implements TimeSaver {
         }
     }
 
-    private static long nearest(long timestamp, long interval) {
+    private static long nearest(long timestamp, long offset, long interval) {
         long d = timestamp % interval;
-        return d == 0 ? timestamp: (timestamp - d);
+        return d >= offset ? timestamp - d + offset : timestamp - d + offset - interval;
     }
 
 }

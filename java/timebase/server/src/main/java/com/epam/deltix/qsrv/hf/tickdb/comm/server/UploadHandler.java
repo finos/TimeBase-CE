@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -22,6 +22,7 @@ import com.epam.deltix.qsrv.hf.tickdb.impl.TickLoaderWrapper;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBObject;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
+import com.epam.deltix.util.time.TimeKeeper;
 import com.epam.deltix.util.vsocket.ConnectionAbortedException;
 import com.epam.deltix.util.vsocket.VSChannel;
 import com.epam.deltix.util.vsocket.ChannelClosedException;
@@ -43,7 +44,7 @@ import java.security.Principal;
 import java.util.logging.Level;
 
 class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener {
-    private final VSChannel                 ds;        
+    private final VSChannel                 ds;
     private final ByteArrayList             byteBuffer = new ByteArrayList (1024);
     private final MemoryDataInput           inBuffer = new MemoryDataInput ();
     private final DXTickStream              stream;
@@ -55,17 +56,23 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
 
     private final Principal                 user;
     private final boolean                   binary; // use binary serialization
-    private volatile ServerLock             lock;
+    private final LockVerifier              lockVerifier;
+
+    private volatile Throwable              exclusiveLockError;
+    private volatile ServerLock             writeLock;
 
     private final UploadHandlerSubChangeListener listener;
+
+    private final LoadingErrorListener lockErrorListener;
+
     private final Runnable              avlnr =
-        new Runnable () {
-            @Override
-            public void    run () {
-                //System.out.println ("UPLOAD WAKES UP");
-                submit ();
-            }
-        };
+            new Runnable () {
+                @Override
+                public void    run () {
+                    //System.out.println ("UPLOAD WAKES UP");
+                    submit ();
+                }
+            };
 
     UploadHandler(Principal user, VSChannel ds, QuickExecutor exe, int clientVersion, boolean binary,
                   @Nonnull LoadingOptions options,
@@ -84,9 +91,12 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
         this.binary = binary;
         this.options = options;
         this.stream = stream;
+        this.lockVerifier = (LockVerifier) stream;
+
+        this.writeLock = lock instanceof ServerLock && lock.getType() == LockType.WRITE ? (ServerLock) lock : null;
 
         // we should abort writer when 'write' lock added.
-        if (lock == null && this.stream instanceof LockHandler)
+        if (this.stream instanceof LockHandler)
             ((LockHandler) this.stream).addEventListener(this);
 
         RecordClassSet      md = RequestHandler.getMetaData (this.stream);
@@ -103,6 +113,8 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
         this.listener = new UploadHandlerSubChangeListener(ds, this.binary, this::closeAll);
         loader.addEventListener (listener);
         loader.addSubscriptionListener(listener);
+
+        lockErrorListener = loader instanceof LoadingErrorListener ? (LoadingErrorListener) loader : listener;
 
         setLoaderMonitorInfo(loader);
     }
@@ -134,21 +146,17 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
                 if (in.available () == 0)
                     return;
 
-                if (lock != null && lock.getClientId() != null) {
-
-                    if (!lock.isAcceptable(ds.getClientId())) {
-                        RuntimeException error = new StreamLockedException("Loader aborted because of " + lock);
-                        TickDBServer.LOGGER.log (Level.WARNING, error.getMessage());
-                        listener.onError((LoadingError)error);
-                        throw error;
-                    }
+                if (exclusiveLockError != null) {
+                    TickDBServer.LOGGER.log (Level.WARNING, exclusiveLockError.getMessage());
+                    listener.onError((LoadingError) exclusiveLockError);
+                    throw exclusiveLockError;
                 }
 
                 int     size = MessageSizeCodec.read (ds.getInputStream());
 
                 if (size < 0) {
                     TickDBServer.LOGGER.warning (
-                        "Unexpected EOS loading into " + stream.getKey ()
+                            "Unexpected EOS loading into " + stream.getKey ()
                     );
                     closeAll ();
                     return;
@@ -195,11 +203,15 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
 
                         msg.setNanoTime(nanos);
 
+                        if (!checkDataLock(msg)) {
+                            break;
+                        }
+
                         if (remove)
                             loader.removeUnique(msg);
                         else
                             loader.send (msg);
-                        
+
                         break;
                     }
                 }
@@ -219,7 +231,7 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
             closeLoader();
             close();
         } catch (Throwable iox) {
-            UserLogger.severe(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "Error while loading data.", iox);
+            UserLogger.severe(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "[" + stream.getKey() + "]. Error while loading data.", iox);
             //TickDBServer.LOGGER.log (Level.SEVERE, "IOException on upload:", iox);
             closeAll();
         }
@@ -251,12 +263,39 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
 
     @Override
     public void         lockAdded(DBLock lock) {
-        if (this.lock == null && lock instanceof ServerLock)
-            this.lock = (ServerLock) lock;
+        if (lock instanceof ServerLock) {
+            ServerLock serverLock = (ServerLock) lock;
+            if (lock.getType() == LockType.WRITE) {
+                if (ds.getClientId().equals(serverLock.getClientId())) {
+                    writeLock = serverLock;
+                }
+            }
+
+            if (needExclusiveLockValidation(lock)) {
+                checkAndSetLockError(serverLock);
+            }
+        }
+    }
+
+    private boolean needExclusiveLockValidation(DBLock lock) {
+        return !(lock.getType() == LockType.WRITE && ((WriteLockOptions) lock.getOptions()).isRanged());
+    }
+
+    private void checkAndSetLockError(ServerLock serverLock) {
+        if (!ds.getClientId().equals(serverLock.getClientId())) {
+            exclusiveLockError = new StreamLockedException("Loader aborted because of " + serverLock);
+        }
     }
 
     @Override
     public void         lockRemoved(DBLock lock) {
-        
+        if (lock.equals(writeLock))
+            writeLock = null;
+    }
+
+    private boolean checkDataLock(InstrumentMessage message) {
+        long time = message.getTimeStampMs() != Long.MIN_VALUE ? message.getTimeStampMs() : TimeKeeper.currentTime;
+
+        return lockVerifier.checkWrite(lockErrorListener, writeLock, time);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.topic.loader;
 
+import com.epam.deltix.qsrv.hf.pub.TimeSource;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
@@ -49,19 +50,17 @@ import org.agrona.concurrent.UnsafeBuffer;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.nio.ByteOrder;
-import java.util.List;
 
-import static com.epam.deltix.qsrv.hf.topic.DirectProtocol.*;
+import static com.epam.deltix.qsrv.hf.topic.DirectProtocol.SYMBOL_OFFSET;
 
 /**
  * @author Alexei Osipov
  */
 @ParametersAreNonnullByDefault
-class DirectLoaderChannel implements MessageChannel<InstrumentMessage>, FragmentHandler {
+class DirectLoaderChannel implements MessageChannel<InstrumentMessage> {
     private static final Log LOG = LogFactory.getLog(DirectLoaderChannel.class.getName());
 
-    private static final int NOT_FOUND_VALUE = -1;
-    private final RecordTypeMap<Class> typeMap;
+    private final RecordTypeMap<Class<?>> typeMap;
     private final RecordTypeMap<RecordClassDescriptor> rawTypeMap;
 
     private final FixedBoundEncoder[] encoders;
@@ -69,34 +68,18 @@ class DirectLoaderChannel implements MessageChannel<InstrumentMessage>, Fragment
     private final AeronPublicationMDOAdapter publicationAdapter;
     private final UnsafeBuffer buffer = new UnsafeBuffer(new byte[0]);
 
-    private final InstrumentKeyToIntegerHashMap entities;
-    private final FragmentAssembler fragmentAssembler;
-    private int nextTempEntityIndex;
-
     private final boolean raw;
-    private final MessageChannel<MemoryDataOutput> serverPublicationChannel;
-
-    private final Subscription serverMetadataUpdates;
-    private final ExpandableArrayBuffer arrayBuffer = new ExpandableArrayBuffer(); // Contains only current message
-    private final MemoryDataInput mdi;
 
     private final Runnable closeCallback;
+    private final boolean addTimestamp;
+    private final TimeSource timeSource;
 
-    private final int presetEntityCount; // Number of predefined entities (provided from mapping)
-
-    /**
-     * An array of bit flags to check if an entity with specific index was sent to consumers at least once by this publisher.
-     *
-     * This works just like {@link java.util.BitSet}.
-     */
-    private final long[] unsentEntities; // TODO: Instead of tracking of entities on one-by-one basis we can send all of them at once at registration time.
-
-
-    DirectLoaderChannel(ExclusivePublication publication, CodecFactory factory, boolean raw, TypeLoader typeLoader, int firstTempEntityIndex, MessageChannel<MemoryDataOutput> serverPublicationChannel, Subscription serverMetadataUpdates, RecordClassDescriptor[] types, List<ConstantIdentityKey> mapping, @Nullable Runnable closeCallback, IdleStrategy publicationIdleStrategy) {
+    DirectLoaderChannel(ExclusivePublication publication, CodecFactory factory, boolean raw, TypeLoader typeLoader,
+                        RecordClassDescriptor[] types, @Nullable Runnable closeCallback, IdleStrategy publicationIdleStrategy,
+                        TimeSource timeSource, boolean preserveNullTimestamp) {
         this.raw = raw;
-        this.serverPublicationChannel = serverPublicationChannel;
-        this.serverMetadataUpdates = serverMetadataUpdates;
         this.closeCallback = closeCallback;
+        this.addTimestamp = !preserveNullTimestamp;
         if (!ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
             throw new IllegalArgumentException("Only LITTLE_ENDIAN byte order supported");
         }
@@ -118,30 +101,12 @@ class DirectLoaderChannel implements MessageChannel<InstrumentMessage>, Fragment
             this.typeMap = null;
             this.rawTypeMap = new RecordTypeMap<>(types);
         }
-
-
-        this.nextTempEntityIndex = firstTempEntityIndex;
-
-        this.fragmentAssembler = new FragmentAssembler(this);
-        this.mdi = new MemoryDataInput(arrayBuffer.byteArray());
-
-        this.presetEntityCount = mapping.size();
-        this.entities = new InstrumentKeyToIntegerHashMap(Math.max(16, BitUtil.nextPowerOfTwo(presetEntityCount)));
-        this.unsentEntities = new long[bitIndexToWordIndex(this.presetEntityCount - 1) + 1];
-        for (int i = 0; i < presetEntityCount; i++) {
-            ConstantIdentityKey key = mapping.get(i);
-            entities.put(key, i);
-        }
+        this.timeSource = timeSource;
     }
 
 
     @Override
     public void send(InstrumentMessage msg) {
-        /*
-        if (newDataFlag.getAndSet(false)) {
-            checkForMappingUpdates();
-        }
-        */
         RawMessage rawMsg;
         int typeIndex;
         if (this.raw) {
@@ -152,28 +117,36 @@ class DirectLoaderChannel implements MessageChannel<InstrumentMessage>, Fragment
             typeIndex = typeMap.getCode(msg.getClass());
         }
 
+        //InstrumentType instrumentType = msg.getInstrumentType();
         CharSequence symbol = msg.getSymbol();
-        int entityIndex = determineEntityIndex(symbol); // Note: we may send additional message here
+
+        long nanoTime = msg.getNanoTime();
+        if (addTimestamp && nanoTime == TimeStampedMessage.TIMESTAMP_UNKNOWN) {
+            // For topics API we must set timestamp on the sender side. There is no "server" time for topics.
+            nanoTime = timeSource.currentTimeNanos();
+        }
 
 
         MemoryDataOutput mdo = publicationAdapter.getMemoryDataOutput();
         // Ensure space
-        mdo.ensureSize(DirectProtocol.REQUIRED_HEADER_SIZE);
+        int maxSymbolBytes = symbol.length() * 2 + Short.BYTES;
+
+        // WARNING! This not just ensures that we have enough capacity but also increases SIZE value despite this is NOT needed.
+        // However, we do not use "size" field later, so this is not a problem.
+        mdo.ensureSize(DirectProtocol.DATA_MSG_MIN_HEAD_SIZE + maxSymbolBytes);
 
         // Write common header
-        buffer.wrap(mdo.getBuffer(), 0, DirectProtocol.REQUIRED_HEADER_SIZE);
+        buffer.wrap(mdo.getBuffer(), 0, DirectProtocol.DATA_MSG_MIN_HEAD_SIZE);
+        //buffer.verifyAlignment();
+        buffer.putLong(DirectProtocol.TIME_OFFSET, nanoTime);
         buffer.putByte(DirectProtocol.CODE_OFFSET, DirectProtocol.CODE_MSG);
         buffer.putByte(DirectProtocol.TYPE_OFFSET, (byte) typeIndex);
-        buffer.putInt(DirectProtocol.ENTITY_OFFSET, entityIndex);
-        long nanoTime = msg.getNanoTime();
-        if (nanoTime == TimeStampedMessage.TIMESTAMP_UNKNOWN) {
-            nanoTime = TimeKeeper.currentTimeNanos;
-        }
+        //buffer.putByte(DirectProtocol.INSTRUMENT_OFFSET, (byte) instrumentType.getNumber());
 
-        buffer.putLong(DirectProtocol.TIME_OFFSET, nanoTime);
-
+        // Write symbol
+        mdo.seek(SYMBOL_OFFSET);
+        mdo.writeStringNonNull(symbol);
         // Write message body
-        mdo.seek(DirectProtocol.DATA_OFFSET);
         if (raw) {
             rawMsg.writeTo(mdo);
         } else {
@@ -183,152 +156,19 @@ class DirectLoaderChannel implements MessageChannel<InstrumentMessage>, Fragment
         publicationAdapter.sendBufferIfConnected();
     }
 
-    private boolean checkForMappingUpdates() {
-        return serverMetadataUpdates.poll(this.fragmentAssembler, Integer.MAX_VALUE) > 0;
-    }
-
-    @Override
-    public void onFragment(DirectBuffer buffer, int offset, int length, Header header) {
-        // Handles metadata from server
-        buffer.getBytes(offset, arrayBuffer, 0, length);
-        byte code = arrayBuffer.getByte(CODE_OFFSET);
-
-        switch (code) {
-            case DirectProtocol.CODE_METADATA:
-                processMetadataFromServer(length);
-                break;
-
-            default:
-                throw new IllegalArgumentException("Unknown code");
-        }
-    }
-
-    private void processMetadataFromServer(int length) {
-        mdi.setBytes(arrayBuffer.byteArray(), METADATA_OFFSET, length - METADATA_OFFSET);
-        int recordCount = mdi.readInt();
-        for (int i = 0; i < recordCount; i++) {
-            int entityIndex = mdi.readInt();
-            String symbol = mdi.readCharSequence().toString().intern();
-
-            ConstantIdentityKey key = new ConstantIdentityKey(symbol);
-            updateEntityMappingFromServer(key, entityIndex);
-        }
-    }
-
-    private void updateEntityMappingFromServer(ConstantIdentityKey key, int entityIndex) {
-        assert entityIndex >= 0;
-        int prevValue = entities.putAndGet(key, entityIndex, NOT_FOUND_VALUE);
-        if (entityIndex != prevValue) {
-            // We got new mapping => we must send it to clients
-            sendMappingMetadata(key.getSymbol(), entityIndex, false);
-            if (prevValue != NOT_FOUND_VALUE) {
-                sendTempIndexRemoved(prevValue);
-            }
-        }
-    }
-
-    private int determineEntityIndex(CharSequence symbol) {
-        int entityIndex = entities.get(symbol, NOT_FOUND_VALUE);
-        if (entityIndex < 0) {
-            // Not found OR temp value
-            assert DirectProtocol.isValidTempIndex(entityIndex) || entityIndex == NOT_FOUND_VALUE;
-
-            if (checkForMappingUpdates()) {
-                // We got updates
-                entityIndex = entities.get(symbol, NOT_FOUND_VALUE);
-            }
-        } else {
-            // Already known entity
-            if (entityIndex < presetEntityCount && !isSent(entityIndex)) {
-                // This loader never sent this specific entity before. Send it now.
-                // We have to do this because there is no guarantee that other publishers sent this entity.
-                sendMappingMetadata(symbol, entityIndex, false);
-                setSent(entityIndex);
-            }
-        }
-        if (entityIndex == NOT_FOUND_VALUE) {
-            // This is unknown combination.
-            // Generate temp value and use it
-            entityIndex = generateAndSendTempIndex(symbol);
-        }
-        return entityIndex;
-    }
-
-    private int generateAndSendTempIndex(CharSequence symbol) {
-        int entityIndex;
-        entityIndex = getTempIndex();
-        assert isValidTempIndex(entityIndex);
-        entities.put(new ConstantIdentityKey(symbol), entityIndex);
-        sendMappingMetadata(symbol, entityIndex, true);
-        return entityIndex;
-    }
-
-    private int getTempIndex() {
-        int result = this.nextTempEntityIndex;
-        nextTempEntityIndex --; // Note: we decrease value because its negative and we want to increase absolute value
-        // Bounds check. We must insure that new value is withing min/max bounds
-        if (DirectProtocol.getPublisherNumberFromTempIndex(result) != DirectProtocol.getPublisherNumberFromTempIndex(nextTempEntityIndex)) {
-            throw new IllegalStateException("Temporary value is out of range dedicated for current producer (too many temp values for producer)");
-        }
-        return result;
-    }
-
-    private void sendMappingMetadata(CharSequence symbol, int entityIndex, boolean sendToServer) {
-        MemoryDataOutput mdo = publicationAdapter.getMemoryDataOutput();
-        DirectTopicLoaderCodec.writeSingleEntryInstrumentMetadata(mdo, symbol, entityIndex);
-
-        if (sendToServer) {
-            serverPublicationChannel.send(mdo); // Send to server so it would give us permanent id
-            LOG.debug().append("Sent index to server: ").appendLast(entityIndex);
-        }
-        boolean sent = publicationAdapter.sendBufferIfConnected();// Send to data channel so clients could use that new temp id
-        LOG.debug("Sent index to client: %s %s").with(entityIndex).with(sent);
-    }
-
-    private void sendTempIndexRemoved(int tempIndex) {
-        assert isValidTempIndex(tempIndex);
-        MemoryDataOutput mdo = publicationAdapter.getMemoryDataOutput();
-        mdo.writeByte(DirectProtocol.CODE_TEMP_INDEX_REMOVED);
-        mdo.writeInt(1); // Record count
-        mdo.writeInt(tempIndex);
-        serverPublicationChannel.send(mdo); // Send to server so it would give us permanent id
-        publicationAdapter.sendBufferIfConnected(); // Send to data channel so clients could use that new temp id
-        LOG.debug().append("Temp index removed: ").appendLast(tempIndex);
-    }
-
     private void sendEndOfStream() {
         MemoryDataOutput mdo = publicationAdapter.getMemoryDataOutput();
-        mdo.writeByte(DirectProtocol.CODE_END_OF_STREAM);
-        mdo.writeInt(publicationAdapter.getAeronSessionId());
+        mdo.ensureSize(DirectProtocol.END_OF_STREAM_MSG_SIZE);
+        buffer.wrap(mdo.getBuffer(), 0, DirectProtocol.END_OF_STREAM_MSG_SIZE);
 
-        serverPublicationChannel.send(mdo); // Notify server about graceful shutdown of that publisher
+        buffer.putLong(DirectProtocol.TIME_OFFSET, 0); // Clear the message time
+        buffer.putByte(DirectProtocol.CODE_OFFSET, DirectProtocol.CODE_END_OF_STREAM);
+        buffer.putInt(DirectProtocol.SESSION_ID_OFFSET, publicationAdapter.getAeronSessionId());
+
+        mdo.seek(DirectProtocol.END_OF_STREAM_MSG_SIZE); // This is needed to tell the api the length of data to send
+
         publicationAdapter.sendBufferIfConnected(); // Send to data channel so clients could use that new temp id
         LOG.debug("Sent EOS for session %s").with(publicationAdapter.getAeronSessionId());
-    }
-
-
-    /**
-     * See {@link java.util.BitSet#wordIndex(int)}
-     */
-    private static int bitIndexToWordIndex(int bitIndex) {
-        // Returns -1 for -1
-        return bitIndex >> 6; // Divide by 64
-    }
-
-    /**
-     * @return true if metadata for this entityIndex was sent.
-     */
-    private boolean isSent(int entityIndex) {
-        int wordIndex = bitIndexToWordIndex(entityIndex);
-        return (unsentEntities[wordIndex] & 1L << entityIndex) != 0;
-    }
-
-    /**
-     * Mark metadata for this entityIndex as sent.
-     */
-    private void setSent(int entityIndex) {
-        int wordIndex = bitIndexToWordIndex(entityIndex);
-        unsentEntities[wordIndex] |= (1L << entityIndex);
     }
 
     @Override

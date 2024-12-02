@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -31,7 +31,10 @@ import java.util.Map;
  */
 @ParametersAreNonnullByDefault
 public interface TopicRegistryEventListener {
-    void topicCreated(String topicKey, @Nullable String channel, ImmutableList<RecordClassDescriptor> types, InstrumentKeyToIntegerHashMap entities, TopicType topicType, Map<TopicChannelOption, String> channelOptions, @Nullable String copyToStreamKey);
+    void topicCreated(String topicKey,
+                      @Nullable String channel,
+                      ImmutableList<RecordClassDescriptor> types, TopicType topicType,
+                      Map<TopicChannelOption, String> channelOptions, @Nullable String copyToStreamKey);
 
     void topicDeleted(String topicKey);
 }

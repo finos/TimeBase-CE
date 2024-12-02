@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -32,8 +32,8 @@ import java.nio.file.Files;
 
 public class TBServerCmd extends DefaultApplication {
 
-    private static final String TB_WEBAPP_RESOURCE_FILE = "webapp/deltix-timebase-web.war";
-    private static final String QS_WEBAPP_RESOURCE_FILE = "webapp/deltix-quantserver-web.war";
+    private static final String QS_WEBAPP_RESOURCE_FILE = "webapp/timebase-web.war";
+    private static final String TB_WEBAPP_RESOURCE_FILE = "webapp/timebase-webmonitor.war";
 
     private final long startTime = System.currentTimeMillis();
     //protected static final Logger LOGGER = Logger.getLogger("deltix.util.tomcat");
@@ -71,6 +71,7 @@ public class TBServerCmd extends DefaultApplication {
         LogKeeper.LOG.info("QuantServer Version:  %s").with(Version.getVersion());
         LogKeeper.LOG.info("QuantServer Home:     %s").with(QSHome.get());
         LogKeeper.LOG.info("QuantServer Port:     %s").with(config.port);
+        LogKeeper.LOG.info("JVM:                  %s (%s)").with(System.getProperty("java.version")).with(System.getProperty("java.vendor"));
     }
 
     private class QuantServerShutdownHook extends Thread {

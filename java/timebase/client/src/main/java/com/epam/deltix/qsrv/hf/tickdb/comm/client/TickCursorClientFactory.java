@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -130,7 +130,7 @@ public class TickCursorClientFactory {
                 if (db.getServerProtocolVersion() >= 131) { // added in protocol version 114
                     out.writeLong(endTimestamp);
                 }
-                writeParameters (parameters, out);
+                writeParameters (parameters, out, db.getServerProtocolVersion());
             }
 
             out.flush ();
@@ -237,12 +237,14 @@ public class TickCursorClientFactory {
         VSChannel tmpds = null;
 
         try {
+            int serverProtocol = db.getServerProtocolVersion();
+
             tmpds = db.connect (ChannelType.Input, false, false, options.compression, options.channelBufferSize);
 
             DataOutputStream out = tmpds.getDataOutputStream ();
             out.writeInt (REQ_CREATE_CURSOR);
 
-            boolean aeronSupported = db.getServerProtocolVersion() >= TDBProtocol.AERON_SUPPORT_VERSION;
+            boolean aeronSupported = serverProtocol >= TDBProtocol.AERON_SUPPORT_VERSION;
             if (aeronSupported) {
                 byte preferredTransport = options.channelPerformance == ChannelPerformance.HIGH_THROUGHPUT ||
                         options.channelPerformance == ChannelPerformance.LATENCY_CRITICAL
@@ -288,7 +290,7 @@ public class TickCursorClientFactory {
                 if (db.getServerProtocolVersion() >= 131) { // added in protocol version 114
                     out.writeLong(endTime);
                 }
-                writeParameters (parameters, out);
+                writeParameters (parameters, out, serverProtocol);
             }
 
             out.flush ();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -103,8 +103,13 @@ public class UnboundWriter<T> {
         else if (type instanceof BooleanDataType) {
             if (value instanceof Boolean)
                 uenc.writeBoolean((Boolean) value);
-            else
-                uenc.writeBoolean((Byte) value == BooleanDataType.TRUE);
+            else if (value instanceof Number) {
+                Number v = (Number)value;
+                if (v.byteValue() == BooleanDataType.NULL)
+                    uenc.writeNull();
+                else
+                    uenc.writeBoolean(v.byteValue() == BooleanDataType.TRUE);
+            }
         }
         else if (type instanceof DateTimeDataType)
             uenc.writeLong((Long) value);
@@ -137,6 +142,19 @@ public class UnboundWriter<T> {
         }
     }
 
+    public void             writeArray(T[] value, int size, ArrayDataType type, WritableValue uenc) {
+        uenc.setArrayLength(size);
+        final DataType underlineType = type.getElementDataType();
+
+        for (int i = 0; i < value.length; i++) {
+            final WritableValue rv = uenc.nextWritableElement();
+
+            if (value[i] != null || type.getElementDataType().isNullable())
+                writeField(value[i], underlineType, rv);
+
+        }
+    }
+
     public void             writeObject(Map<String, T> values, UnboundEncoder encoder) {
         while (encoder.nextField()) {
             T v = values.get(encoder.getField().getName());
@@ -149,6 +167,9 @@ public class UnboundWriter<T> {
     public void             writeArray(T value, ArrayDataType type, WritableValue uenc) {
         if (value instanceof Iterable)
             writeArray((Iterable)value, ((Collection)value).size(), type, uenc);
+        else if (value instanceof Object[]) {
+            writeArray((T[])value, ((T[])value).length, type, uenc);
+        }
         else
             throw new UnsupportedOperationException("Array " + value + " is not supported");
     }

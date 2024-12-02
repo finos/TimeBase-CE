@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -18,6 +18,7 @@ package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
 import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.MetaData;
 import com.epam.deltix.qsrv.hf.tickdb.impl.PQExecutor;
@@ -42,6 +43,7 @@ import com.epam.deltix.util.parsers.CompilationException;
 import com.epam.deltix.util.parsers.Element;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Delegates all method calls to the provided delegate.
@@ -320,6 +322,16 @@ public abstract class BaseDXTickDBWrapper implements Wrapper<DXTickDB>, DXTickDB
     }
 
     @Override
+    public int cursorsCount() {
+        return delegate.cursorsCount();
+    }
+
+    @Override
+    public int loadersCount() {
+        return delegate.loadersCount();
+    }
+
+    @Override
     public void addObjectMonitor(TBObjectMonitor monitor) {
         delegate.addObjectMonitor(monitor);
     }
@@ -332,5 +344,10 @@ public abstract class BaseDXTickDBWrapper implements Wrapper<DXTickDB>, DXTickDB
     @Override
     public TBObject getObjectById(long id) {
         return delegate.getObjectById(id);
+    }
+
+    @Override
+    public void compileQuery(String query, List<Token> outTokens) {
+        delegate.compileQuery(query, outTokens);
     }
 }

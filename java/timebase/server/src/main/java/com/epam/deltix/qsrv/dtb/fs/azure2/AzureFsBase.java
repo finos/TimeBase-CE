@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -26,13 +26,13 @@ import com.epam.deltix.qsrv.dtb.fs.pub.AbstractFileSystem;
 public abstract class AzureFsBase implements AbstractFileSystem {
 
 
+    public static final String AZURE_GEN2_PROP = "TimeBase.fileSystem.azure.gen2";
+    public static final String AZURE_FILESYSTEM_NAME = "TimeBase.fileSystem.azure.fsName";
     public static final String AZURE_CLIENT_ID_PROP = "TimeBase.fileSystem.azure.clientId";
-    @Deprecated
-    public static final String AZURE_TENANT_ID_PROP = "TimeBase.fileSystem.azure.tenantId";
     public static final String AZURE_SECRET_PROP = "TimeBase.fileSystem.azure.secret";
-    @Deprecated
-    public static final String AZURE_ACCOUTN_PROP = "TimeBase.fileSystem.azure.account";
-    public static final String AZURE_FULL_ACCOUTN_PROP = "TimeBase.fileSystem.azure.fullAccount";
+    public static final String AZURE_ACCOUNT_PROP = "TimeBase.fileSystem.azure.account";
+    public static final String AZURE_ACCOUNT_KEY_PROP = "TimeBase.fileSystem.azure.accountKey";
+    public static final String AZURE_FULL_ACCOUNT_PROP = "TimeBase.fileSystem.azure.fullAccount";
     public static final String AZURE_TIMEOUT_PROP = "TimeBase.fileSystem.azure.timeout";
     public static final String AZURE_AUTH_TOKEN_ENDPOINT_PROP = "TimeBase.fileSystem.azure.authTokenEndpoint";
     public static final String AZURE_REOPEN_ON_SEEK_THRESHOLD_PROP = "TimeBase.fileSystem.azure.reopenOnSeekThreshold";
@@ -51,6 +51,10 @@ public abstract class AzureFsBase implements AbstractFileSystem {
     protected AzureFsBase(Long reopenOnSeekThreshold, int prefetchSize) {
         this.reopenOnSeekThreshold = reopenOnSeekThreshold != null ? reopenOnSeekThreshold : DEFAULT_REOPEN_ON_SEEK_THRESHOLD;
         this.prefetchSize = prefetchSize;
+    }
+
+    public static boolean isGen2Set() {
+        return Boolean.getBoolean(AZURE_GEN2_PROP);
     }
 
     @Override
@@ -72,5 +76,9 @@ public abstract class AzureFsBase implements AbstractFileSystem {
     @Override
     public boolean isLocal() {
         return false;
+    }
+
+    public String getSeparator() {
+        return AZURE_PATH_SEPARATOR;
     }
 }

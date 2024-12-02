@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -58,11 +58,26 @@ public class ClassDescriptorChange implements SchemaChange {
         this.targetId = target != null ? target.getGuid() : null;
     }
 
+    public boolean hasChanges() {
+        return fieldChanges != null && fieldChanges.length > 0;
+    }
+
     public AbstractFieldChange[] getChanges() {
         return fieldChanges;
     }
 
-//    public void setFieldChanges(AbstractFieldChange[] fieldChanges) {
+    public void setFieldChanges(AbstractFieldChange[] changes) {
+        this.fieldChanges = changes;
+    }
+
+    public void setFieldChanges(List<AbstractFieldChange> changes) {
+        if (changes != null && !changes.isEmpty())
+            this.fieldChanges = changes.toArray(new AbstractFieldChange[changes.size()]);
+        else
+            this.fieldChanges = new AbstractFieldChange[0];
+    }
+
+    //    public void setFieldChanges(AbstractFieldChange[] fieldChanges) {
 //        this.fieldChanges = fieldChanges;
 //    }
 

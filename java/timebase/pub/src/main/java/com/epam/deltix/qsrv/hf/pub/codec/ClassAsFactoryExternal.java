@@ -1,0 +1,51 @@
+/*
+ * Copyright 2024 EPAM Systems, Inc
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Licensed under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package com.epam.deltix.qsrv.hf.pub.codec;
+
+import com.epam.deltix.util.lang.ClassAsFactory;
+
+import java.util.Arrays;
+
+public class ClassAsFactoryExternal<C> extends ClassAsFactory<C> implements ExternalCodecFactory<C> {
+
+    private final int externalArgsPosition;
+
+    public ClassAsFactoryExternal(Class<? extends C> cls, Object[] arguments, Object... externalArguments)
+        throws NoSuchMethodException {
+
+        super(cls, concat(arguments, externalArguments));
+        externalArgsPosition = arguments.length;
+    }
+
+    private static Object[] concat(Object[] args, Object[] externalArgs) {
+        Object[] result = Arrays.copyOf(args, args.length + externalArgs.length);
+        System.arraycopy(externalArgs, 0, result, args.length, externalArgs.length);
+        return result;
+    }
+
+    @Override
+    public C create(Object... externalArgs) {
+        fillExternalArgs(externalArgs);
+        return super.create();
+    }
+
+    private void fillExternalArgs(Object... external) {
+        for (int i = externalArgsPosition, j = 0; i < args.length && j < external.length; ++i, ++j) {
+            args[i] = external[j];
+        }
+    }
+}

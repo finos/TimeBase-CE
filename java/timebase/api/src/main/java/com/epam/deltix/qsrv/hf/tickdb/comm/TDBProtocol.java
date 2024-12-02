@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,6 +17,9 @@
 package com.epam.deltix.qsrv.hf.tickdb.comm;
 
 import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockOptions;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.WriteLockOptions;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.TimeInterval;
 import com.epam.deltix.timebase.messages.TimeStamp;
@@ -91,7 +94,7 @@ public abstract class TDBProtocol extends SerializationUtils {
     /**
      *  This component's version, whether server or client.
      */
-    public static final int     VERSION = 132;
+    public static final int     VERSION = 133;
     
     /**
      *  Server will refuse to talk to a client unless the client's version is   at least
@@ -106,7 +109,12 @@ public abstract class TDBProtocol extends SerializationUtils {
     public static final int     MIN_SERVER_VERSION = VERSION;
 
     public static final int     AERON_SUPPORT_VERSION = 106;
-    
+    public static final int     WRITE_RANGED_LOCKS_SUPPORT_VERSION = 115;
+    public static final int     OPTIONS_APPLICATION_NAME_SUPPORT_VERSION = 117;
+
+    // Version when topic sub protocol was added
+    public static final int     TOPIC_SUB_PROTOCOL_VERSION = 118;
+
     public static final int     NO_CHANGES = -1;
 
     public static final int     READ_ONLY = 1;
@@ -177,14 +185,12 @@ public abstract class TDBProtocol extends SerializationUtils {
     public static final int     REQ_CREATE_TOPIC =      205;
     public static final int     REQ_DELETE_TOPIC =      206;
     public static final int     REQ_CREATE_TOPIC_PUBLISHER = 207;
-    public static final int     REQ_CREATE_TOPIC_SUBSCRIBER = 208;
+    // Note: Some values are missing because some topic-related requests were removed
     public static final int     REQ_LIST_TOPICS =       209;
     public static final int     REQ_GET_TOPIC_METADATA = 210;
     public static final int     REQ_CREATE_MULTICAST_TOPIC = 211;
     public static final int     REQ_CREATE_CUSTOM_TOPIC = 212;
-    public static final int     REQ_GET_TOPIC_INSTRUMENT_MAPPING = 213; // Returns current snapshot of topic instrument mapping
-    public static final int     REQ_CREATE_TOPIC_SUBSCRIBER_NO_MAPPING = 214; // Same as REQ_CREATE_TOPIC_SUBSCRIBER but not sends mapping to client
-    public static final int     REQ_GET_TOPIC_TEMPORARY_INSTRUMENT_MAPPING = 215; // Returns current snapshot of topic temporary instrument mapping
+    public static final int     REQ_CREATE_TOPIC_SUBSCRIBER = 214;
 
     //  Download sub-protocol
     public static final int     REQ_CREATE_CURSOR =     1001;
@@ -266,12 +272,19 @@ public abstract class TDBProtocol extends SerializationUtils {
     public static final int     SESSION_STARTED =           18;
     public static final int     STREAMS_CHANGED =           19;
 
+    public static final int     END_STREAMS_DEFINITION =    20;
+
     // Additional flags
     // TODO: Convert to enum
     public static final int     AF_STUB_STREAM =            11;
 
     public static final byte TRANSPORT_TYPE_SOCKET = 1;
     public static final byte TRANSPORT_TYPE_AERON  = 2;
+
+    public static final byte LOCK_TYPE_WRITE = 0;
+    public static final byte LOCK_TYPE_READ = 1;
+    public static final byte LOCK_TYPE_WRITE_RANGED = 2;
+    public static final byte LOCK_TYPE_MAX = 3;
 
     //returns NonSSL port for loopback connections while server is running with SSL
     public static int                   getSSLPort(int port) {
@@ -300,9 +313,39 @@ public abstract class TDBProtocol extends SerializationUtils {
         return protocol.equalsIgnoreCase(SSL_PROTOCOL_ID);
     }
 
+    public static LockType getLockType(byte lockProtocolType) {
+        switch (lockProtocolType) {
+            case LOCK_TYPE_WRITE:
+            case LOCK_TYPE_WRITE_RANGED:
+                return LockType.WRITE;
+            case LOCK_TYPE_READ:
+                return LockType.READ;
+            default:
+                throw new IllegalArgumentException("Unknown lock type value: " + lockProtocolType);
+        }
+    }
+
+    public static byte getLockProtocolType(LockOptions lockOptions) {
+        if (lockOptions.getType() == LockType.WRITE) {
+            if (lockOptions instanceof WriteLockOptions) {
+                WriteLockOptions writeLockOptions = (WriteLockOptions) lockOptions;
+                if (writeLockOptions.isRanged()) {
+                    return LOCK_TYPE_WRITE_RANGED;
+                } else {
+                    return LOCK_TYPE_WRITE;
+                }
+            }
+        } else if (lockOptions.getType() == LockType.READ) {
+            return LOCK_TYPE_READ;
+        }
+
+        throw new IllegalArgumentException("Unknown lock type: " + lockOptions.getType());
+    }
+
     public static void                  writeParameters (
         Parameter []                        params,
-        DataOutputStream                    out
+        DataOutputStream                    out,
+        int                                 clientVersion
     )
         throws IOException
     {
@@ -337,7 +380,8 @@ public abstract class TDBProtocol extends SerializationUtils {
 
     public static void                  writeTransformationTask (
             TransformationTask                  task,
-            DataOutputStream                    out)
+            DataOutputStream                    out,
+            int                                 clientVersion)
         throws IOException
     {
         try {
@@ -350,15 +394,72 @@ public abstract class TDBProtocol extends SerializationUtils {
                 StringWriter    s = new StringWriter ();
                 m.marshal (task, s);
 
-                writeHugeString(out, s.toString());
+                StringBuffer buffer = s.getBuffer();
+
+                // backward compatibility with 5.5 if NANOSECONDS is not used
+                if (clientVersion < 118)
+                    TDBProtocol.removeElements(buffer, "encoding", "MILLISECOND");
+
+                String content = buffer.toString();
+                if (clientVersion < 99) {
+                    content = removeElements(content, "enumMapping");
+                    content = removeElements(content, "enumValues");
+                }
+
+                writeHugeString(out, content);
             }
         } catch (JAXBException x) {
             throw new RuntimeException (x);
         }
     }
 
+    static String removeElements(String content, String tagName) {
+        int index = content.indexOf(tagName + ">");
+        if (index == -1)
+            index = content.indexOf(tagName + "/>");
+
+        if (index == -1)
+            return content;
+
+        String ns = "";
+        // has namespace
+        if (content.charAt(index - 1) == ':') {
+            String temp = content.substring(0, index - 1);
+            ns = temp.substring(temp.lastIndexOf("<") + 1);
+        }
+
+        tagName = ns + ":" + tagName;
+
+        String next = removeElement(content, tagName);
+        while (next != null) {
+            String r = removeElement(next, tagName);
+            if (r != null)
+                next = r;
+            else
+                return next;
+        }
+
+        return content;
+    }
+
+    static String removeElement(String content, String tagName) {
+        String result = null;
+
+        int startIndex = content.indexOf("<" + tagName + ">");
+        if (startIndex != -1) {
+            result = content.substring(0, startIndex);
+            int endIndex = content.indexOf("</" + tagName + ">", startIndex) + ("</" + tagName + ">").length();
+            result += content.substring(endIndex);
+        } else {
+            startIndex = content.indexOf("<" + tagName + "/>");
+            if (startIndex != -1)
+                result = content.substring(0, startIndex) + content.substring(startIndex + ("<" + tagName + "/>").length());
+        }
+
+        return result;
+    }
+
     public static TransformationTask   readTransformationTask (DataInputStream in)
-        throws IOException
     {
         try {
             String          className = in.readUTF ();
@@ -450,53 +551,75 @@ public abstract class TDBProtocol extends SerializationUtils {
         return null;
     }
 
-    public static void                  writeClassSet (
-        DataOutputStream                    out,
-        ClassSet                            md
-    )
+    public static void                  writeClassSet (DataOutputStream out, ClassSet set, int clientVersion)
         throws IOException
     {
         try {
             Marshaller      m = UHFJAXBContext.createMarshaller ();
 
             StringWriter    s = new StringWriter ();
+            m.marshal (set, s);
 
-            synchronized (md) {
-                m.marshal (md, s);
+            // replace 'MILLISECOND' encoding if version less than 118
+            if (clientVersion < 118) {
+                StringBuffer buffer = s.getBuffer();
+                removeElements(buffer, "encoding", "MILLISECOND");
+                writeHugeString(out, buffer);
+            } else {
+                writeHugeString(out, s.getBuffer());
             }
-
-            writeHugeString (out, s.getBuffer ());
         } catch (JAXBException x) {
             throw new RuntimeException (x);
         }
     }
 
-    public static String                  toString (RecordClassSet md) throws IOException {
-        try {
-            Marshaller      m = UHFJAXBContext.createMarshaller ();
+    public static void removeElements(StringBuffer sb, String elementName, String content) {
+        String value = elementName + ">" + content + "</";
 
-            StringWriter    s = new StringWriter ();
-            m.marshal (md, s);
-            return s.getBuffer().toString();
-        } catch (JAXBException x) {
-            throw new RuntimeException (x);
+        // search for match without namespace
+        int firstIndex = sb.indexOf(value);
+
+        while (firstIndex != -1) {
+            int endIndex = sb.indexOf(">", firstIndex + value.length());
+            String elementWithNs = sb.substring(firstIndex + value.length(), endIndex);
+
+            // contract full element name with namespace (if present)
+            String fullValue = "<" + elementWithNs + ">" + content + "</" + elementWithNs + ">";
+
+            int index = sb.indexOf(fullValue);
+            if (index != -1)
+                sb.replace(index, index + fullValue.length(), "");
+
+            firstIndex = sb.indexOf(value);
         }
     }
 
-    public static RecordClassSet                  readClassSet (String in) {
+//    public static String                  toString (RecordClassSet md) throws IOException {
+//        try {
+//            Marshaller      m = UHFJAXBContext.createMarshaller ();
+//
+//            StringWriter    s = new StringWriter ();
+//            m.marshal (md, s);
+//            return s.getBuffer().toString();
+//        } catch (JAXBException x) {
+//            throw new RuntimeException (x);
+//        }
+//    }
+
+    public static  ClassSet                  readClassSet (String in) {
         try {
             Unmarshaller    u = UHFJAXBContext.createUnmarshaller ();
 
-            return ((RecordClassSet) u.unmarshal (new StringReader (in)));
+            return ((ClassSet) u.unmarshal (new StringReader (in)));
         } catch (JAXBException x) {
             throw new RuntimeException (x);
         }
     }
 
     public static ClassSet                  readClassSet (
-            DataInputStream                     in
+        DataInputStream                     in
     )
-            throws IOException
+        throws IOException
     {
         try {
             StringBuilder   sb = new StringBuilder ();
@@ -631,7 +754,7 @@ public abstract class TDBProtocol extends SerializationUtils {
         out.writeBoolean(so.unique);
         out.writeBoolean(so.duplicatesAllowed);
         out.writeBoolean (so.isPolymorphic ());
-        writeClassSet (out, so.getMetaData ());
+        writeClassSet (out, so.getMetaData (), clientVersion);
 
         // write options
         out.writeBoolean(so.bufferOptions != null);
@@ -896,6 +1019,23 @@ public abstract class TDBProtocol extends SerializationUtils {
         out.flush();
     }
 
+    public static void                  writeErrorSimple(DataOutputStream out, Throwable x) throws IOException {
+        out.writeUTF (x.getClass ().getName());
+
+        String xmsg = x.getMessage();
+
+        out.writeUTF (xmsg == null ? "" : xmsg);
+        out.flush ();
+    }
+
+    public static Throwable                  readErrorSimple(DataInputStream in) throws IOException {
+
+        String  clsName = in.readUTF ();
+        String  message = in.readUTF ();
+        // for now
+        return new com.epam.deltix.util.io.UncheckedIOException(clsName + ": " + message);
+    }
+
     public static Throwable             readError(DataInputStream in) throws IOException, ClassNotFoundException {
         return readError(in, DefaultExceptionResolver.INSTANCE);
     }
@@ -935,7 +1075,12 @@ public abstract class TDBProtocol extends SerializationUtils {
 
         if (!StringUtils.isEmpty(token)) {
             String[] tokens = token.split(":");
-            UserCredentials c = new UserCredentials(protocol, tokens[0], tokens.length > 1 ? tokens[1] : "");
+            UserCredentials c;
+            if (tokens.length >= 1)
+                c = new UserCredentials(protocol, tokens[0], tokens.length > 1 ? tokens[1] : "");
+            else
+                c = new UserCredentials(protocol, "", "");
+
             c.delegate = delegate;
             return c;
         }

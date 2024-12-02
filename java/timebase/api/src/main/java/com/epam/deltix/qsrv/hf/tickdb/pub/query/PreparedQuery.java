@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -25,7 +25,7 @@ import com.epam.deltix.util.lang.Disposable;
 /**
  *  Analogous to JDBC's PreparedStatement
  */
-public interface PreparedQuery extends Disposable {
+public interface PreparedQuery {
     public boolean                      isReverse ();
     
     public InstrumentMessageSource      executeQuery (

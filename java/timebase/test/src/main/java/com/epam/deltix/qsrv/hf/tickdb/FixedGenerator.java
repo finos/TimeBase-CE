@@ -29,6 +29,8 @@ import com.epam.deltix.util.collections.generated.IntegerToObjectHashMap;
 
 import javax.annotation.Nonnull;
 
+import static com.epam.deltix.qsrv.hf.pub.md.DateTimeDataType.ENCODING_MILLISECONDS;
+
 public class FixedGenerator implements Generator {
 
     public static final byte BYTE_VALUE = 125;
@@ -44,7 +46,7 @@ public class FixedGenerator implements Generator {
     @TimeOfDay
     public static final int TIMEOFDAY_VALUE = TimeOfDayDataType.staticParse("23:34:42");
     @TimestampMs
-    public static final long TIMESTAMP_VALUE = DateTimeDataType.staticParse("2021-03-12 06:12:42.100");
+    public static final long TIMESTAMP_VALUE = DateTimeDataType.staticParse("2021-03-12 06:12:42.100", ENCODING_MILLISECONDS );
 
     private final IntegerToObjectHashMap<AlphanumericCodec> codecs = new IntegerToObjectHashMap<>();
 

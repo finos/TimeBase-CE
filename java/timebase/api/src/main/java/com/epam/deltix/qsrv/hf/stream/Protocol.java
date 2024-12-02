@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.stream;
 
+import com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol;
 import com.sun.xml.bind.api.JAXBRIContext;
 import com.sun.xml.bind.v2.model.annotation.AnnotationReader;
 import com.epam.deltix.data.stream.ConsumableMessageSource;
@@ -75,7 +76,7 @@ public class Protocol {
 
     public static void                      writeTypes (
         DataOutputStream                    out,
-        final RecordClassDescriptor[]       rcd
+        RecordClassDescriptor[]             rcd
     )
         throws IOException
     {
@@ -83,16 +84,17 @@ public class Protocol {
             Marshaller m = JAXBContextFactory.createStdMarshaller(createContext());
 
             StringWriter s = new StringWriter ();
-            synchronized (rcd) {
-                m.marshal (new ClassSet(rcd), s);
-            }
+            m.marshal (new MixedClassSet(rcd), s);
+            StringBuffer buffer = s.getBuffer();
 
-            String xml = s.toString();
-            if (xml.length() < 65535) {
-                out.writeUTF(xml);
+            // backward compatibility with 5.5 if NANOSECONDS is not used
+            TDBProtocol.removeElements(buffer, "encoding", "MILLISECOND");
+
+            if (buffer.length() < 65535) {
+                out.writeUTF(buffer.toString());
             } else {
                 out.writeUTF("");
-                SerializationUtils.writeHugeString(out, xml);
+                SerializationUtils.writeHugeString(out, buffer);
             }
 
         } catch (JAXBException x) {
@@ -103,6 +105,7 @@ public class Protocol {
     public static TypeLoader getDefaultTypeLoader() {
         return TypeLoaderImpl.DEFAULT_INSTANCE;
     }
+
 
     public static ConsumableMessageSource<InstrumentMessage> openRawReader(File f)
         throws IOException
@@ -158,7 +161,7 @@ public class Protocol {
         jaxbConfig.put(JAXBRIContext.ANNOTATION_READER, reader);
 
         String path = RecordClassDescriptor.class.getPackage().getName() + ":" +
-                        ClassSet.class.getPackage().getName();
+                        MixedClassSet.class.getPackage().getName();
         return JAXBContextFactory.newInstance (path, jaxbConfig);
     }
 
@@ -197,7 +200,7 @@ public class Protocol {
         }
     }
 
-    static ClassSet                  readTypes (DataInputStream in)
+    static MixedClassSet readTypes (DataInputStream in)
             throws IOException
     {
         try {
@@ -215,7 +218,7 @@ public class Protocol {
             //xml = upgradeMetaData(xml);
             Unmarshaller u = JAXBContextFactory.createStdUnmarshaller(createContext());
 
-            ClassSet classSet = (ClassSet) u.unmarshal(new StringReader(xml));
+            MixedClassSet classSet = (MixedClassSet) u.unmarshal(new StringReader(xml));
 //            try {
 //                classSet = new SchemaUpdater(new ClassMappings()).update(classSet);
 //            } catch (ClassNotFoundException | Introspector.IntrospectionException e) {
@@ -245,7 +248,7 @@ public class Protocol {
             xml = upgradeMetaData(xml);
             Unmarshaller u = JAXBContextFactory.createStdUnmarshaller(createContext());
 
-            ClassSet classSet = (ClassSet) u.unmarshal(new StringReader(xml));
+            MixedClassSet classSet = (MixedClassSet) u.unmarshal(new StringReader(xml));
 //            try {
 //                classSet = new SchemaUpdater(new ClassMappings()).update(classSet);
 //            } catch (ClassNotFoundException | Introspector.IntrospectionException e) {

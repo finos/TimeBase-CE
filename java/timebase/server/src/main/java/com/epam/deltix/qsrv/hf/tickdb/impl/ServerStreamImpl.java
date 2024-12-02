@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl;
 
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockVerifier;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.GrammarUtil;
 import com.epam.deltix.qsrv.hf.tickdb.pub.BackgroundProcessInfo;
@@ -28,18 +29,14 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.query.SubscriptionChangeListener;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.TransformationTask;
 import com.epam.deltix.util.lang.Util;
 
-import javax.annotation.CheckReturnValue;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public abstract class ServerStreamImpl implements DXTickStream, LockHandler {
+public abstract class ServerStreamImpl implements DXTickStream, LockHandler, LockVerifier {
 
     public static long sequence = 0;
 
@@ -66,9 +63,7 @@ public abstract class ServerStreamImpl implements DXTickStream, LockHandler {
         return index;
     }
 
-    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-
-    private InstrumentsSubscription      entitiesSubscription = new InstrumentsSubscription() {
+    private final InstrumentsSubscription      entitiesSubscription = new InstrumentsSubscription() {
 
         @Override
         void            fireChanges(Collection<IdentityKey> added,
@@ -348,27 +343,6 @@ public abstract class ServerStreamImpl implements DXTickStream, LockHandler {
 
         typesSubscription.change(cursor, added, removed);
     }
-
-    /**
-     * Lock for stream metadata access. <p>
-     * This lock is designed to prevent access to partially constructed streams.
-     */
-    @CheckReturnValue
-    ReadWriteLock getLock() {
-        return readWriteLock;
-    }
-
-    /**
-     * Ensures that stream is properly constructed.
-     * May block.
-     * Do not call inside of synchronization block on "TickDBImpl.streams".
-     */
-    void blockTillReadable() {
-        Lock lock = readWriteLock.readLock();
-        lock.lock();
-        lock.unlock();
-    }
-
     //    void                fireTimeRangeChanged() {
 //        timeRangeChangeNotifier.submit();
 //    }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -85,7 +85,9 @@ public class Sum {
         }
         float result = 0;
         for (int i = 0; i < list.size(); i++) {
-            result += list.getFloat(i);
+            if (!Float.isNaN(list.getFloat(i))) {
+                result += list.getFloat(i);
+            }
         }
         return result;
     }
@@ -97,7 +99,9 @@ public class Sum {
         }
         double result = 0;
         for (int i = 0; i < list.size(); i++) {
-            result += list.getDouble(i);
+            if (!Double.isNaN(list.getDouble(i))) {
+                result += list.getDouble(i);
+            }
         }
         return result;
     }
@@ -110,7 +114,9 @@ public class Sum {
         }
         long result = Decimal64Utils.ZERO;
         for (int i = 0; i < list.size(); i++) {
-            result = Decimal64Utils.add(result, list.getLong(i));
+            if (!Decimal64Utils.isNaN(list.getLong(i))) {
+                result = Decimal64Utils.add(result, list.getLong(i));
+            }
         }
         return result;
     }

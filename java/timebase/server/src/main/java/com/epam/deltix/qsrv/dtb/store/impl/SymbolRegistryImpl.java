@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -26,6 +26,7 @@ import com.epam.deltix.util.collections.generated.IntegerArrayList;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
@@ -42,7 +43,7 @@ public class SymbolRegistryImpl implements SymbolRegistry {
 
     private static class SymbolEntry {
 
-        SymbolEntry(String name, String data, int index, boolean active) {
+        public SymbolEntry(String name, String data, int index, boolean active) {
             // TODO: Consider using .intern() on name and data.
             // Note: We must be sure that ne not just store interned value in fields
             // but share interned value with other value holders. Example: we have a string and use that string
@@ -136,12 +137,16 @@ public class SymbolRegistryImpl implements SymbolRegistry {
         String                              entityData
     )
     {
-        int             id = symbols.indexOf (null);
-            
-        if (id < 0) 
-            id = symbols.size ();                                                               
+        //assert entityData != null;
 
-        boolean         check = symbolToIdMap.put (symbol, id); 
+        // assume we do not have nulls inside, searching for nulls affects performance a lot
+//        int             id = symbols.indexOf (null);
+//        if (id < 0)
+//            id = symbols.size ();
+
+        int id = symbols.size();
+
+        boolean         check = symbolToIdMap.put (symbol, id);
         
         if (!check) 
             throw new IllegalArgumentException ("Duplicate symbol");
@@ -181,8 +186,17 @@ public class SymbolRegistryImpl implements SymbolRegistry {
         }
     }
 
+    /**
+     *  Renames existing symbol. When newSymbol equals to symbol, change entityData only.
+     *  @param symbol symbol to rename
+     *  @param newSymbol new name, can be equal to the symbol
+     *  @param newEntityData entity data
+     *
+     *  @throws IllegalArgumentException when symbol is not exists
+     **/
     public synchronized void            renameSymbol(String symbol, String newSymbol, String newEntityData) {
-        if (symbolToIdMap.get(newSymbol, NO_SUCH_SYMBOL) != NO_SUCH_SYMBOL)
+
+        if (!symbol.equals(newSymbol) && symbolToIdMap.get(newSymbol, NO_SUCH_SYMBOL) != NO_SUCH_SYMBOL)
             throw new IllegalArgumentException("Symbol '" + newSymbol + "' already exists!");
 
         int index = symbolToIdMap.get(symbol, NO_SUCH_SYMBOL);
@@ -381,9 +395,11 @@ public class SymbolRegistryImpl implements SymbolRegistry {
                 int index = dis.readInt();
                 String name = dis.readUTF().intern();
                 String data = dis.readUTF().intern();
-                SymbolEntry entry = new SymbolEntry(name, data, index, active);
-                symbols.add (entry);
 
+                if ("<NULL>".equals(data))
+                    data = null;
+
+                symbols.add (new SymbolEntry(name, data, index, active));
                 symbolToIdMap.put (name, index);
 
                 assert i == index;
@@ -397,7 +413,7 @@ public class SymbolRegistryImpl implements SymbolRegistry {
     {
         try (InputStream    is = fp.openInput (0)) {
             BufferedReader  rd = 
-                new BufferedReader (new InputStreamReader (is, "UTF-8"));
+                new BufferedReader (new InputStreamReader (is, StandardCharsets.UTF_8));
             int             id = 0;
             
             for (;; id++) {
@@ -446,7 +462,7 @@ public class SymbolRegistryImpl implements SymbolRegistry {
                 out.writeBoolean(e.active);
                 out.writeInt(e.index);
                 out.writeUTF(e.name);
-                out.writeUTF(e.data != null ? e.data : "");
+                out.writeUTF(e.data != null ? e.data : "<NULL>");
             }
         }
 

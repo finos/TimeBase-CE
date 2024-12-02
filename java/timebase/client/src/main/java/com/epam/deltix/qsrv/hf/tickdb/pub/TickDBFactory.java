@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -44,7 +44,8 @@ public class TickDBFactory {
     private static final Log LOG = LogFactory.getLog(TickDBFactory.class);
     //public static final String  CATALOG_NAME = "dbcat.txt";
     public static final String  EVENTS_STREAM_NAME = "events#";
-    
+    public static final String  SECURITIES_STREAM_NAME = "securities";
+
     private static final String HOME_MAGIC = "${home}";
 
     public static String            VERSION_PROPERTY          = "TimeBase.version";

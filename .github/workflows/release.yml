@@ -94,12 +94,12 @@ jobs:
       - name: Build with gradle
         run: ./gradlew build windowsTimebaseInstaller linuxTimebaseInstaller
       - name: Archive Linux installer
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: java/installer/build/installer/timebase-linux-installer-*.jar
           name: timebase-linux-installer
       - name: Archive Windows installer
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: java/installer/build/installer/timebase-windows-installer-*.jar
           name: timebase-windows-installer

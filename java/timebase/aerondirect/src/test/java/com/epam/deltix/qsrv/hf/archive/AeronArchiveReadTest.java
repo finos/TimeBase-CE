@@ -18,7 +18,6 @@ package com.epam.deltix.qsrv.hf.archive;
 
 import com.epam.deltix.qsrv.hf.BaseTopicReadingTest;
 import com.epam.deltix.qsrv.hf.RatePrinter;
-import com.epam.deltix.qsrv.hf.StubData;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.Messages;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.MessagePoller;
@@ -173,7 +172,7 @@ public class AeronArchiveReadTest {
 
 
         return () -> {
-            MessagePoller messagePoller = new DirectReaderFactory().createPoller(aeron, false, channel, dataStreamId, types, StubData.getStubMappingProvider());
+            MessagePoller messagePoller = new DirectReaderFactory().createPoller(aeron, false, channel, dataStreamId, types, null);
 
             RatePrinter ratePrinter = new RatePrinter("Reader");
             YieldingIdleStrategy idleStrategy = new YieldingIdleStrategy();

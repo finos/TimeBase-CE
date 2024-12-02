@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,20 +17,24 @@
 package com.epam.deltix.qsrv.hf.tickdb.http;
 
 import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.pub.md.json.SchemaBuilder;
+import com.epam.deltix.qsrv.hf.pub.md.json.SchemaDef;
 import com.epam.deltix.qsrv.hf.tickdb.http.stream.*;
 import com.epam.deltix.qsrv.hf.tickdb.impl.ServerLock;
-import com.epam.deltix.qsrv.hf.tickdb.pub.BackgroundProcessInfo;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
-import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLock;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.StreamLockedException;
+import com.epam.deltix.qsrv.hf.tickdb.impl.ServerStreamWrapper;
+import com.epam.deltix.qsrv.hf.tickdb.impl.TickStreamImpl;
+import com.epam.deltix.qsrv.hf.tickdb.impl.lock.ServerLockOptions;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBObject;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.SchemaChangeTask;
+import com.epam.deltix.qsrv.hf.tickdb.pub.task.StreamChangeTask;
 import com.epam.deltix.qsrv.hf.tickdb.schema.*;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
+import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.util.lang.StringUtils;
+import com.epam.deltix.util.time.Periodicity;
 import org.owasp.encoder.Encode;
 
 import javax.servlet.http.HttpServletResponse;
@@ -50,11 +54,17 @@ public final class StreamHandler {
     static void     createStream(DXTickDB db, CreateStreamRequest request, HttpServletResponse response) throws IOException {
         StreamDef def = request.options;
 
-        String metadata = request.options.metadata;
-
         StreamOptions options = def.convert();
-        if (!StringUtils.isEmpty(metadata))
-            options.setMetaData(def.polymorphic, (RecordClassSet)unmarshallUHF(new StringReader(metadata)));
+
+        String metadataJson = request.options.metadataJson;
+        if (!StringUtils.isEmpty(metadataJson)) {
+            SchemaDef schema = HTTPProtocol.JSON_MAPPER.readValue(metadataJson, SchemaDef.class);
+            options.setMetaData(def.polymorphic, SchemaBuilder.toClassSet(schema));
+        } else {
+            String metadata = request.options.metadata;
+            if (!StringUtils.isEmpty(metadata))
+                options.setMetaData(def.polymorphic, (RecordClassSet) unmarshallUHF(new StringReader(metadata)));
+        }
 
         db.createStream(request.key, options);
 
@@ -100,12 +110,17 @@ public final class StreamHandler {
         ServerLock lock;
 
         try {
+            LockOptions options = req.write ?
+                ServerLockOptions.createWrite(req.startTime, req.endTime, req.sid) :
+                ServerLockOptions.create(LockType.READ, req.sid);
             if (req.timeout > 0)
-                lock = (ServerLock) stream.tryLock(req.write ? LockType.WRITE : LockType.READ, req.timeout);
+                lock = (ServerLock) stream.tryLock(options, req.timeout);
             else
-                lock = (ServerLock) stream.lock(req.write ? LockType.WRITE : LockType.READ);
+                lock = (ServerLock) stream.lock(options);
 
-            lock.setClientId(req.sid);
+            if (lock instanceof TBObject) {
+                ((TBObject) lock).setApplication(req.applicationName);
+            }
 
             r.id = lock.getGuid();
             r.write = req.write;
@@ -123,8 +138,10 @@ public final class StreamHandler {
         if (stream == null)
             return;
 
-        ServerLock lock = new ServerLock(req.write ? LockType.WRITE : LockType.READ, req.id, null);
+        LockOptions options = req.write ?
+            WriteLockOptions.create(req.startTime, req.endTime) : LockOptions.create(LockType.READ);
 
+        ServerLock lock = new ServerLock(options, req.id, null);
         try {
             DBLock dbLock = stream.verify(lock, lock.getType());
             dbLock.release();
@@ -139,6 +156,8 @@ public final class StreamHandler {
         DXTickStream stream = getStream(db, req, response);
 
         if (stream != null) {
+            verifyWrite(stream, req.token);
+
             RecordClassSet classSet = (RecordClassSet) unmarshallUHF(new StringReader(req.schema));
 
             if (req.polymorphic)
@@ -154,7 +173,18 @@ public final class StreamHandler {
         DXTickStream stream = getStream(db, req, response);
 
         if (stream != null) {
-            RecordClassSet classSet = (RecordClassSet) unmarshallUHF(new StringReader(req.schema));
+            verifyWrite(stream, req.token);
+
+            RecordClassSet classSet;
+            MetaDataChange.ContentType outType = req.polymorphic ? MetaDataChange.ContentType.Polymorphic : MetaDataChange.ContentType.Fixed;
+            String metadataJson = req.schemaJson;
+            if (!StringUtils.isEmpty(metadataJson)) {
+                SchemaDef schema = HTTPProtocol.JSON_MAPPER.readValue(metadataJson, SchemaDef.class);
+                outType = schema.types.length > 1 ? MetaDataChange.ContentType.Polymorphic : MetaDataChange.ContentType.Fixed;
+                classSet = SchemaBuilder.toClassSet(schema);
+            } else {
+                classSet = (RecordClassSet) unmarshallUHF(new StringReader(req.schema));
+            }
 
             RecordClassSet source = new RecordClassSet ();
             MetaDataChange.ContentType  inType;
@@ -166,8 +196,6 @@ public final class StreamHandler {
                 inType = MetaDataChange.ContentType.Polymorphic;
                 source.addContentClasses (stream.getPolymorphicDescriptors ());
             }
-
-            MetaDataChange.ContentType  outType = req.polymorphic ? MetaDataChange.ContentType.Polymorphic : MetaDataChange.ContentType.Fixed;
 
             SchemaMapping mapping = new SchemaMapping();
 
@@ -199,15 +227,15 @@ public final class StreamHandler {
                     String[] from = entry.getKey().split(":");
 
                     if (from.length == 2) { // DataField
-                        RecordClassDescriptor cd = MetaDataChange.getClassDescriptor(source, from[0]);
+                        RecordClassDescriptor cd = getClassDescriptorByName(changes.getTarget(), from[0]);
 
-                        ClassDescriptorChange change = changes.getChange(cd, null);
+                        ClassDescriptorChange change = changes.getChange(null, cd);
                         if (change != null && cd != null) {
-                            AbstractFieldChange[] fieldChanges = change.getFieldChanges(cd.getField(from[1]), null);
+                            AbstractFieldChange[] fieldChanges = change.getFieldChanges(null, cd.getField(from[1]));
 
                             for (AbstractFieldChange c : fieldChanges) {
 
-                                String fullName = cd.getName() + " [" + c.getSource().getName() + "]";
+                                String fullName = cd.getName() + " [" + c.getTarget().getName() + "]";
 
                                 if (c.hasErrors()) {
                                     String value = entry.getValue();
@@ -247,6 +275,28 @@ public final class StreamHandler {
         }
 
         response.setStatus(HttpServletResponse.SC_OK);
+    }
+
+    static DataField findField(ClassSet<RecordClassDescriptor> set, String typeName, String fieldName) {
+
+        ClassDescriptor[] classes = set.getClasses();
+        for (int i = 0; i < classes.length; i++) {
+            if (typeName.equals(classes[i].getName())) {
+                return ((RecordClassDescriptor) classes[i]).getField(fieldName);
+            }
+        }
+
+        return null;
+    }
+
+    static RecordClassDescriptor getClassDescriptorByName(ClassSet<RecordClassDescriptor> set, String name) {
+        ClassDescriptor[] classes = set.getClasses();
+        for (int i = 0; i < classes.length; i++) {
+            if (name.equals(classes[i].getName()))
+                return (RecordClassDescriptor) classes[i];
+        }
+
+        return null;
     }
 
     static void processGetSchema(DXTickDB db, GetSchemaRequest req, HttpServletResponse response) throws IOException {
@@ -297,6 +347,11 @@ public final class StreamHandler {
             writer.getBuffer().setLength(0);
             marshallUHF(stream.getStreamOptions().getMetaData(), writer);
             streamDef.metadata = writer.getBuffer().toString();
+            streamDef.metadataJson = HTTPProtocol.JSON_MAPPER.writeValueAsString(
+                SchemaBuilder.toSchemaDef(
+                    stream.getStreamOptions().getMetaData(), false
+                )
+            );
 
             options.add(streamDef);
         }
@@ -311,6 +366,8 @@ public final class StreamHandler {
     static void processClear(DXTickDB db, ClearRequest req, HttpServletResponse response) throws IOException {
         DXTickStream stream = getStream(db, req, response);
         if (stream != null) {
+            verifyWrite(stream, req.token);
+
             if (req.identities == null || req.identities.length == 0)
                 stream.clear();
             else
@@ -333,6 +390,8 @@ public final class StreamHandler {
         DXTickStream stream = getStream(db, req, response);
 
         if (stream != null) {
+            verifyWriteRange(stream, req.token, req.time, Long.MAX_VALUE);
+
             if (req.identities != null && req.identities.length > 0)
                 stream.truncate(req.time, identityKeys(req.identities));
             else
@@ -342,9 +401,28 @@ public final class StreamHandler {
         }
     }
 
+    static void processDeleteData(DXTickDB db, DeleteDataRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+
+        if (stream != null) {
+//            verifyLock(stream, req.token, LockType.WRITE); todo: this check is commented for RequestHandler
+
+            IdentityKey[] instruments = identityKeys(req.symbols);
+            if (instruments != null && instruments.length > 0) {
+                stream.delete(TimeStamp.fromNanoseconds(req.fromNs), TimeStamp.fromNanoseconds(req.toNs), instruments);
+            } else {
+                stream.delete(TimeStamp.fromNanoseconds(req.fromNs), TimeStamp.fromNanoseconds(req.toNs));
+            }
+
+            response.setStatus(HttpServletResponse.SC_OK);
+        }
+    }
+
     static void processDelete(DXTickDB db, DeleteRequest req, HttpServletResponse response) throws IOException {
         DXTickStream stream = getStream(db, req, response);
         if (stream != null) {
+            verifyWrite(stream, req.token);
+
             stream.delete();
             response.setStatus(HttpServletResponse.SC_OK);
         }
@@ -381,11 +459,149 @@ public final class StreamHandler {
     public static void processRename(DXTickDB db, RenameStreamRequest req, HttpServletResponse response) throws IOException {
         DXTickStream stream = getStream(db, req, response);
         try {
-            if (stream != null)
+            if (stream != null) {
+                verifyWrite(stream, req.token);
                 stream.rename(req.key);
+            }
         } catch (Exception e) {
             sendError(response, e);
         }
+    }
+
+    public static void setName(DXTickDB db, SetNameRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null) {
+                verifyWrite(stream, req.token);
+                stream.setName(req.name);
+            }
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    public static void setDescription(DXTickDB db, SetDescriptionRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null) {
+                verifyWrite(stream, req.token);
+                stream.setDescription(req.description);
+            }
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    public static void setOwner(DXTickDB db, SetOwnerRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null) {
+                verifyWrite(stream, req.token);
+                stream.setOwner(req.owner);
+            }
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    public static void setDistributionFactor(DXTickDB db, SetDistributionFactorRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null) {
+                verifyWrite(stream, req.token);
+                if (stream.getScope() == StreamScope.DURABLE && stream.getFormatVersion() == 4) {
+                    StreamChangeTask task = makeStreamChangeTask(stream);
+                    task.df = req.distributionFactor;
+                    stream.execute(task);
+                }
+            }
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    public static void setHighAvailability(DXTickDB db, SetHighAvailabilityRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null) {
+                verifyWrite(stream, req.token);
+                stream.setHighAvailability(req.highAvailability);
+            }
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    public static void setReplicaVersion(DXTickDB db, SetReplicaVersionRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null) {
+                verifyWrite(stream, req.token);
+                stream.setReplicaVersion(req.replicaVersion);
+            }
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    public static void setPeriodicity(DXTickDB db, SetPeriodicityRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null) {
+                verifyWrite(stream, req.token);
+                stream.setPeriodicity(Periodicity.parse(req.periodicity));
+            }
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    public static void setBufferOptions(DXTickDB db, SetBufferOptionsRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null) {
+                verifyWrite(stream, req.token);
+                if (stream.getScope() == StreamScope.TRANSIENT) {
+                    StreamChangeTask task = makeStreamChangeTask(stream);
+                    if (task.bufferOptions == null) {
+                        task.bufferOptions = new BufferOptions();
+                    }
+                    task.bufferOptions.initialBufferSize = req.initialBufferSize;
+                    task.bufferOptions.maxBufferSize = req.maxBufferSize;
+                    task.bufferOptions.maxBufferTimeDepth = req.maxBufferTimeDepth;
+                    task.bufferOptions.lossless = req.lossless;
+                    stream.execute(task);
+                }
+            }
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    public static void enableVersioning(DXTickDB db, EnableVersioningRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+        try {
+            if (stream != null) {
+                verifyWrite(stream, req.token);
+                stream.enableVersioning();
+            }
+        } catch (Exception e) {
+            sendError(response, e);
+        }
+    }
+
+    private static StreamChangeTask makeStreamChangeTask(DXTickStream stream) {
+        StreamChangeTask task = new StreamChangeTask();
+        task.bufferOptions = stream.getStreamOptions().bufferOptions;
+        task.df = stream.getDistributionFactor();
+        task.name = stream.getName();
+        task.description = stream.getDescription();
+        task.ha = stream.getHighAvailability();
+        task.periodicity = stream.getPeriodicity();
+        task.background = false;
+        task.change = SchemaAnalyzer.getChanges(stream, stream);
+
+        return task;
     }
 
     static void processListSpaces(DXTickDB db, ListSpacesRequest req, HttpServletResponse response) throws IOException {
@@ -402,8 +618,10 @@ public final class StreamHandler {
     public static void processRenameSpace(DXTickDB db, RenameSpaceRequest req, HttpServletResponse response) throws IOException {
         DXTickStream stream = getStream(db, req, response);
         try {
-            if (stream != null)
+            if (stream != null) {
+                verifyWrite(stream, req.token);
                 stream.renameSpace(req.newName, req.oldName);
+            }
         } catch (Exception e) {
             sendError(response, e);
         }
@@ -454,4 +672,45 @@ public final class StreamHandler {
 
         return keys;
     }
+
+    public static void verifyWrite(DXTickStream stream, String lockId) {
+        TickStreamImpl serverStream = getServerStream(stream);
+        if (serverStream != null) {
+            serverStream.verifyWrite(lockId);
+        }
+    }
+
+    public static void verifySharedWrite(DXTickStream stream, String lockId) {
+        TickStreamImpl serverStream = getServerStream(stream);
+        if (serverStream != null) {
+            serverStream.verifySharedWrite(lockId);
+        }
+    }
+
+    public static void verifyWriteRange(DXTickStream stream, String lockId, long startTime, long endTime) {
+        TickStreamImpl serverStream = getServerStream(stream);
+        if (serverStream != null) {
+            serverStream.verifyWriteRange(lockId, startTime, endTime);
+        }
+    }
+
+    public static TickStreamImpl getServerStream(DXTickStream stream) {
+        if (stream instanceof ServerStreamWrapper) {
+            stream = ((ServerStreamWrapper) stream).getNestedInstance();
+        }
+
+        if (stream instanceof TickStreamImpl) {
+            return (TickStreamImpl) stream;
+        }
+
+        return null;
+    }
+
+//        IdentityKey[] keys = new IdentityKey[identities.length];
+//        for (int i = 0; i < identities.length; ++i) {
+//            keys[i] = new ConstantIdentityKey(identities[i]);
+//        }
+//
+//        return keys;
+//    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -34,6 +34,7 @@ public class TestServer implements EmbeddedServer {
     private final File location;
 
     private final TLSContext ssl;
+    private final boolean aeronEnabled;
 
     public TestServer (int port, TLSContext ssl, TransportProperties transportProperties, DataCacheOptions options, File location) {
         this.port = port;
@@ -41,6 +42,7 @@ public class TestServer implements EmbeddedServer {
         this.transportProperties = transportProperties;
         this.options = options;
         this.location = location;
+        this.aeronEnabled = false;
     }
 
     public TestServer(DataCacheOptions options, File location) {
@@ -48,6 +50,7 @@ public class TestServer implements EmbeddedServer {
         this.location = location;
         this.transportProperties = null;
         this.ssl = null;
+        this.aeronEnabled = false;
     }
 
     public TestServer(File location) {
@@ -55,6 +58,7 @@ public class TestServer implements EmbeddedServer {
         this.location = location;
         this.transportProperties = null;
         this.ssl = null;
+        this.aeronEnabled = false;
     }
 
     @Override
@@ -62,7 +66,7 @@ public class TestServer implements EmbeddedServer {
         DXTickDB db = new TickDBImpl(options, location);
         db.open(false);
 
-        server = new TickDBServer(port, db, ssl, transportProperties);
+        server = new TickDBServer(port, db, ssl, transportProperties, aeronEnabled);
         server.start ();
 
         return server.getPort();

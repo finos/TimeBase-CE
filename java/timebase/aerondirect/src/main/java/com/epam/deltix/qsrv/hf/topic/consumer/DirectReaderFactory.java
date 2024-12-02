@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.topic.consumer;
 
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDataLossHandler;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
@@ -27,6 +28,7 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.topic.MessageProcessor;
 import com.epam.deltix.util.io.idlestrat.IdleStrategy;
 import com.epam.deltix.util.io.idlestrat.YieldingIdleStrategy;
 import io.aeron.Aeron;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -40,12 +42,9 @@ public class DirectReaderFactory {
     private final CodecFactory codecFactory;
     private final TypeLoader typeLoader;
 
+    @VisibleForTesting
     public DirectReaderFactory() {
-        this(CodecFactory.newCompiledCachingFactory());
-    }
-
-    public DirectReaderFactory(CodecFactory codecFactory) {
-        this(codecFactory, TypeLoaderImpl.DEFAULT_INSTANCE);
+        this(CodecFactory.newCompiledCachingFactory(), TypeLoaderImpl.DEFAULT_INSTANCE);
     }
 
     public DirectReaderFactory(CodecFactory codecFactory, TypeLoader typeLoader) {
@@ -55,23 +54,25 @@ public class DirectReaderFactory {
 
     public SubscriptionWorker createListener(Aeron aeron, boolean raw, String channel, int dataStreamId,
                                              List<RecordClassDescriptor> types, MessageProcessor processor,
-                                             @Nullable IdleStrategy idleStrategy, MappingProvider mappingProvider) {
+                                             @Nullable IdleStrategy idleStrategy,
+                                             @Nullable TopicDataLossHandler topicDataLossHandler) {
         if (idleStrategy == null) {
             idleStrategy = new YieldingIdleStrategy();
         }
-        return new DirectMessageListenerProcessor(processor, aeron, raw, channel, dataStreamId, codecFactory, typeLoader, types, idleStrategy, mappingProvider);
+        return new DirectMessageListenerProcessor(processor, aeron, raw, channel, dataStreamId, codecFactory, typeLoader, types, idleStrategy, topicDataLossHandler);
     }
 
     public MessagePoller createPoller(Aeron aeron, boolean raw, String channel, int dataStreamId,
-                                      List<RecordClassDescriptor> types, MappingProvider mappingProvider) {
-        return new DirectMessageNonblockingPoller(aeron, raw, channel, dataStreamId, types, codecFactory, typeLoader, mappingProvider);
+                                      List<RecordClassDescriptor> types, @Nullable TopicDataLossHandler topicDataLossHandler) {
+        return new DirectMessageNonblockingPoller(aeron, raw, channel, dataStreamId, types, codecFactory, typeLoader, topicDataLossHandler);
     }
 
     public MessageSource<InstrumentMessage> createMessageSource(Aeron aeron, boolean raw, String channel, int dataStreamId,
-                                                                List<RecordClassDescriptor> types, @Nullable IdleStrategy idleStrategy, MappingProvider mappingProvider) {
+                                                                List<RecordClassDescriptor> types, @Nullable IdleStrategy idleStrategy,
+                                                                @Nullable TopicDataLossHandler topicDataLossHandler) {
         if (idleStrategy == null) {
             idleStrategy = new YieldingIdleStrategy();
         }
-        return new DirectMessageSource(aeron, raw, channel, dataStreamId, codecFactory, typeLoader, types, idleStrategy, mappingProvider);
+        return new DirectMessageSource(aeron, raw, channel, dataStreamId, codecFactory, typeLoader, types, idleStrategy, topicDataLossHandler);
     }
 }

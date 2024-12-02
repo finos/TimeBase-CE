@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -23,10 +23,11 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.thread.affinity.AffinityConfig;
 import com.epam.deltix.util.concurrent.QuickExecutor;
 import com.epam.deltix.util.vsocket.VSChannel;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.IOException;
 
-public interface DXRemoteDB extends DXTickDB {
+interface DXRemoteDB extends DXTickDB {
 
     VSChannel           connect() throws IOException;
 
@@ -36,6 +37,8 @@ public interface DXRemoteDB extends DXTickDB {
     VSChannel           connect(ChannelType type, boolean autoCommit, boolean noDelay, ChannelCompression c, int channelBufferSize) throws IOException;
 
     int                 getServerProtocolVersion();
+
+    String              getServerVersion();
 
     CodecFactory        getCodecFactory(ChannelQualityOfService channelQOS);
 

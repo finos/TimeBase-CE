@@ -46,23 +46,22 @@ import static com.epam.deltix.qsrv.hf.BaseAeronTest.createAeron;
 public class DirectTopicLoaderTest {
 
     static final int INT = 300;
-    static final List<ConstantIdentityKey> mapping = Collections.singletonList(new ConstantIdentityKey("ABC"));
 
     @Test
     public void send() throws Exception {
+        @SuppressWarnings("resource")
         Aeron aeron = createAeron("/home/deltix/aeron_test");
 
         String channel = CommonContext.IPC_CHANNEL;
+        @SuppressWarnings("UnnecessaryLocalVariable")
         int dataStreamId = INT;
-        int serverMetadataStreamId = dataStreamId + 1;
         List<RecordClassDescriptor> types = Collections.singletonList(Messages.ERROR_MESSAGE_DESCRIPTOR);
-        byte loaderNumber = 1;
 
         Thread loaderThread = new Thread(new Runnable() {
             @Override
             public void run() {
-
-                MessageChannel<InstrumentMessage> channel2 = new DirectLoaderFactory().create(aeron, false, channel, channel, dataStreamId, serverMetadataStreamId, types, loaderNumber, new ByteArrayOutputStream(8 * 1024), mapping, null, null);
+                MessageChannel<InstrumentMessage> channel2 = new DirectLoaderFactory().
+                        create(aeron, false, channel, dataStreamId, types, null, null, null, false);
 
                 ErrorMessage msg = new ErrorMessage();
                 msg.setSymbol("ABC");

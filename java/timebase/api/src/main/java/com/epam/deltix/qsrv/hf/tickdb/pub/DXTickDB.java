@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -18,6 +18,7 @@ package com.epam.deltix.qsrv.hf.tickdb.pub;
 
 import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.MetaData;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
@@ -27,6 +28,7 @@ import com.epam.deltix.util.parsers.Element;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.*;
 import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
 import java.io.*;
+import java.util.List;
 
 import com.epam.deltix.util.lang.GrowthPolicy;
 
@@ -238,8 +240,13 @@ public interface DXTickDB extends WritableTickDB {
      *  <code>select * from bars</code>
      *
      *  @param qql      Query text.
-     *  @param params   Specified message types to be subscribed. If null, then all types will be subscribed.*
-     *  @return         A cursor used to read messages.
+     *  @param options  Selection options.
+     *  @param streams  Streams from which data will be selected.
+     *  @param ids      Specified entities to be subscribed. If null, then all entities will be subscribed.
+     *  @param time     The start timestamp.
+     *  @param params   The parameter values of the query.
+     *
+     *  @return         An iterable message source to read messages.
      *
      *  @throws CompilationException when query has errors.
      */
@@ -313,6 +320,15 @@ public interface DXTickDB extends WritableTickDB {
 //    )
 //        throws CompilationException;
 
+    /**
+     * Compiles QQL/DDL Query.
+     * <p>Adds parsed tokens into provided {@code outTokens} list.
+     * <p>If query contains errors, throws {@link CompilationException}.
+     *
+     * @param query query to compile
+     * @param outTokens list to store parsed tokens into
+     */
+    void compileQuery(String query, List<Token> outTokens);
 
     /**
      * Topic API. May be not be supported by some implementations. Use {@link #isTopicDBSupported()} to check this.

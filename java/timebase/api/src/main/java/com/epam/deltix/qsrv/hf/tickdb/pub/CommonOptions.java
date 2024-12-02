@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -33,10 +33,13 @@ public abstract class CommonOptions extends ChannelPreferences {
 
     public int                      channelBufferSize = 0; // 0 means default value
 
+    public String                   applicationName;
+
     protected void copy(CommonOptions template) {
         this.typeLoader = template.typeLoader;
         this.channelQOS = template.channelQOS;
         this.channelPerformance = template.channelPerformance;
         this.channelBufferSize = template.channelBufferSize;
+        this.applicationName = template.applicationName;
     }
 }

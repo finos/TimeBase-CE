@@ -22,7 +22,6 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
 import com.epam.deltix.qsrv.hf.tickdb.tests.reports.JsonReport;
 import com.epam.deltix.util.cmdline.DefaultApplication;
-import org.agrona.concurrent.ShutdownSignalBarrier;
 
 import java.io.File;
 import java.io.IOException;

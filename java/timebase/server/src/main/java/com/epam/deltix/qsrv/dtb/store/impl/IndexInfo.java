@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -232,7 +232,7 @@ public class IndexInfo {
         return null;
     }
 
-    private void fixEntity(ChildInfo curChild, List<EntityInfo> entitiesToRemove) throws IOException {
+    private void fixEntity(ChildInfo curChild, List<EntityInfo> entitiesToRemove) {
 
         for (IndexInfo.EntityInfo curEntity : entityInfo) {
 

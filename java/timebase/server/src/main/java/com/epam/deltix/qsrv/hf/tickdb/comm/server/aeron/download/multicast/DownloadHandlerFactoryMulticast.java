@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -115,8 +115,11 @@ public class DownloadHandlerFactoryMulticast {
         DownloadHandler.writeSelectedTransport(clientVersion, dout, TDBProtocol.TRANSPORT_TYPE_AERON);
 
         // If client is local then give him direct path to aeron directory so client can use it as is.
-        // Otherwise send empty string. In this case client should figure out location of Aeron on it's machine himself.
-        String aeronDir = isLocal ? aeronContext.getAeronDir() : "";
+        // Otherwise, send empty string. In this case client should figure out location of Aeron on it's machine himself.
+        String aeronDir = isLocal ? aeronContext.getAeronDir() : null;
+        if (aeronDir == null) {
+            aeronDir = "";
+        }
         dout.writeUTF(aeronDir);
 
         dout.writeUTF(multicastContext.getAeronChannel());

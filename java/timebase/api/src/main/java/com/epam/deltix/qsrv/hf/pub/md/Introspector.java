@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -75,11 +75,13 @@ public final class Introspector {
 
     // Use createMessageIntrospector() factory methods
     private Introspector () {
-        this(false, true);
+        introspectAllMethods = false;
+        introspectEnumNew = false;
     }
 
     private Introspector (boolean introspectAllMethods) {
-        this(introspectAllMethods, true);
+        this.introspectAllMethods = introspectAllMethods;
+        introspectEnumNew = false;
     }
 
     private Introspector (boolean introspectAllMethods, boolean introspectEnumNew) {
@@ -695,7 +697,6 @@ public final class Introspector {
                     new NonStaticDataField(f, annotator, type);
         }
 
-
         type = getDataType(name, cls, genericCls, cls != boolean.class, null, null, null, true, null, null, null);
         if (type == null)
             throw new IntrospectionException(
@@ -780,7 +781,7 @@ public final class Introspector {
                     return new FloatDataType(encoding, isNullable);
 
             case TIMESTAMP:
-                return new DateTimeDataType(isNullable);
+                return new DateTimeDataType(isNullable, encoding);
 
             case TIME_OF_DAY:
                 return new TimeOfDayDataType(isNullable);
@@ -900,8 +901,7 @@ public final class Introspector {
         } else if (cls == Decimal64.class) {
             if (encoding == null || encoding.equals(""))
                 encoding = FloatDataType.ENCODING_DECIMAL64;
-        }
-        else if (cls == float.class) {
+        } else if (cls == float.class) {
             if (encoding == null || encoding.equals(""))
                 encoding = FloatDataType.ENCODING_FIXED_FLOAT;
         } else if (cls == double.class) {

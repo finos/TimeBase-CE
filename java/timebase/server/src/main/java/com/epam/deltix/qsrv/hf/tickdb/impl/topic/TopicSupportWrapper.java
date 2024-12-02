@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,11 +16,13 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
+import com.epam.deltix.qsrv.hf.pub.TimeSource;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.AeronThreadTracker;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.DXServerAeronContext;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.DirectTopicRegistry;
 import com.epam.deltix.util.concurrent.QuickExecutor;
+import com.epam.deltix.util.time.KeeperTimeSource;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -45,8 +47,8 @@ public class TopicSupportWrapper extends BaseDXTickDBWrapper {
         this.topicDB = topicDB;
     }
 
-    public static DXTickDB wrap(DXTickDB delegate, DXServerAeronContext aeronContext, DirectTopicRegistry topicRegistry, QuickExecutor executor, AeronThreadTracker aeronThreadTracker) {
-        return new TopicSupportWrapper(delegate, new TickDBTopicDBImpl(delegate, aeronContext, topicRegistry, executor, aeronThreadTracker), false);
+    public static DXTickDB wrap(DXTickDB delegate, DXServerAeronContext aeronContext, DirectTopicRegistry topicRegistry, AeronThreadTracker aeronThreadTracker, TimeSource timeSource) {
+        return new TopicSupportWrapper(delegate, new TickDBTopicDBImpl(delegate, aeronContext, topicRegistry, aeronThreadTracker, timeSource), false);
     }
 
     /**
@@ -55,7 +57,7 @@ public class TopicSupportWrapper extends BaseDXTickDBWrapper {
     @SuppressWarnings("unused")
     public static DXTickDB wrapStandalone(DXTickDB delegate) {
         boolean aeronEnabled = true; // Always enabled when this wrapper is used
-        DXServerAeronContext aeronContext = DXServerAeronContext.createDefault(aeronEnabled, STUB_PORT_NUMBER, null, null, false);
+        DXServerAeronContext aeronContext = DXServerAeronContext.createSimple(aeronEnabled, STUB_PORT_NUMBER);
         DirectTopicRegistry topicRegistry = TopicRegistryFactory.initRegistryAtQSHome(aeronContext);
         // TODO: Design a way to use shared QuickExecutor
         QuickExecutor qeForTopics = QuickExecutor.createNewInstance("TopicSupportWrapper-Topics", null);
@@ -63,7 +65,8 @@ public class TopicSupportWrapper extends BaseDXTickDBWrapper {
             aeronContext.start();
         }
         AeronThreadTracker aeronThreadTracker = new AeronThreadTracker();
-        return new TopicSupportWrapper(delegate, new TickDBTopicDBImpl(delegate, aeronContext, topicRegistry, qeForTopics, aeronThreadTracker), true);
+        TimeSource timeSource = KeeperTimeSource.INSTANCE;
+        return new TopicSupportWrapper(delegate, new TickDBTopicDBImpl(delegate, aeronContext, topicRegistry, aeronThreadTracker, timeSource), true);
     }
 
     @Override

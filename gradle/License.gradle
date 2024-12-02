@@ -58,7 +58,7 @@ downloadLicenses {
                         license('GNU Library General Public License v2.1 or later', 'http://www.opensource.org/licenses/LGPL-2.1'),
                         license('GNU Lesser General Public License', 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt')],
             (lgpl3) : ['GNU General Lesser Public License (LGPL) version 3.0', license('GNU LESSER GENERAL PUBLIC LICENSE', 'https://www.gnu.org/licenses/lgpl-3.0.txt')],
-            (mit) : ['MIT License', 'The MIT License', 'MIT', 'The MIT License (MIT)', 'MIT License (MIT)', 'Bouncy Castle Licence'],
+            (mit) : ['MIT License', 'The MIT License', 'MIT', 'The MIT License (MIT)', 'MIT License (MIT)', 'Bouncy Castle Licence', 'MIT-0'],
             (moz) : ['Mozilla Public License', 'Mozilla Public License 1.1', 'Mozilla Public License Version 1.1', 'Mozilla Public License 1.1 (MPL 1.1)', 'MPL 1.1']
     ]
 

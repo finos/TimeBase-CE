@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
+import com.epam.deltix.qsrv.hf.pub.util.SerializationUtils;
 import com.sun.xml.bind.IDResolver;
 import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.readIdentityKey;
 
@@ -144,7 +145,7 @@ public class HTTPCursor implements MessageSource<RawMessage> {
 
                 case HTTPProtocol.COMMAND_BLOCK_ID:
                     this.commandSerial = din.readLong();
-                    System.out.println("Command recieved: " + commandSerial);
+                    System.out.println("Command received: " + commandSerial);
                     break;
 
                 case HTTPProtocol.TYPE_BLOCK_ID:
@@ -238,7 +239,7 @@ public class HTTPCursor implements MessageSource<RawMessage> {
                     throw new IllegalStateException("Type is not found: name=" + name);
                 break;
             case DEFINITION:
-                final String xml = din.readUTF();
+                final String xml = SerializationUtils.readUTFString(din);
                 final ClassDescriptorArray cda = unmarshall(xml);
                 rcd = (RecordClassDescriptor)cda.getDescriptors()[0];
                 break;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,20 +16,26 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron;
 
-import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.IdGenerator;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
+import com.epam.deltix.qsrv.config.QuantServiceConfig;
 import com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.download.multicast.AeronMulticastStreamContext;
+import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.IdGenerator;
 import com.epam.deltix.thread.affinity.AffinityConfig;
 import com.epam.deltix.thread.affinity.PinnedThreadFactoryWrapper;
+import com.epam.deltix.util.BitUtil;
 import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.vsocket.VSChannel;
 import io.aeron.Aeron;
+import io.aeron.driver.Configuration;
 import io.aeron.driver.MediaDriver;
 import io.aeron.driver.ThreadingMode;
 import io.aeron.exceptions.DriverTimeoutException;
 import org.agrona.concurrent.BusySpinIdleStrategy;
 import org.agrona.concurrent.YieldingIdleStrategy;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -45,11 +51,28 @@ import java.util.function.BiFunction;
 import java.util.logging.Level;
 
 /**
+ * Contains all settings related to "topics" feature and Aeron lib config.
+ *
  * @author Alexei Osipov
  */
 @ParametersAreNonnullByDefault
 public class DXServerAeronContext {
-    public static final boolean ENABLED_BY_DEFAULT = false;
+
+    private static final Log LOG = LogFactory.getLog(DXServerAeronContext.class);
+
+    protected static final boolean ENABLED_BY_DEFAULT = false;
+
+    public static final String SYS_PROP_TIME_BASE_AERON_ENABLED = "TimeBase.aeron.enabled";
+
+    private static final String SYS_PROP_TERM_BUFFER_LENGTH = "TimeBase.transport.aeron.topic.term.buffer.length";
+    private static final String SYS_PROP_TERM_BUFFER_LENGTH_OLD = "TimeBase.transport.aeron.topic.ipc.term.buffer.length";
+
+    public static final String CONF_PROP_TOPICS_COPY_TO_STREAM_IDLE_STRATEGY = "topics.copyToStream.idleStrategy";
+
+    /**
+     * See {@link #topicTotalTermBufferLimit}
+     */
+    public static final String SYS_PROP_TOPIC_TERM_BUFFER_LIMIT = "TimeBase.topics.totalTermMemoryLimit";
 
     // Aeron driver communication timeout, in seconds
     // This timeout defines how fast we detect that driver is unavailable
@@ -62,12 +85,9 @@ public class DXServerAeronContext {
     // So increase with caution.
 
     // Buffer size for Aeron-based cursors and loaders.
-    public static final int IPC_TERM_BUFFER_LENGTH = Integer.getInteger("TimeBase.transport.aeron.ipc.term.buffer.length", 2 * 1024 * 1024); // 2Mb default
+    private static final int IPC_TERM_BUFFER_LENGTH = Integer.getInteger("TimeBase.transport.aeron.ipc.term.buffer.length", 2 * 1024 * 1024); // 2Mb default
 
     private static final String DRIVER_STRATEGY = System.getProperty("TimeBase.transport.aeron.driverStrategy");
-
-    // Buffer size for Aeron based topics (per topic size).
-    public static final int TOPIC_IPC_TERM_BUFFER_LENGTH = Integer.getInteger("TimeBase.transport.aeron.topic.ipc.term.buffer.length", 16 * 1024 * 1024); // 16 Mb default
 
     // Address of multicast group.
     // Note: 1) different IP for different topics means independent network routing;
@@ -85,21 +105,41 @@ public class DXServerAeronContext {
     public static final int SINGLE_PUBLISHER_TOPIC_DEFAULT_PUBLISHER_PORT = Integer.getInteger("TimeBase.transport.aeron.topic.udp.single.publisher.default.port", 40491);
     public static final int SINGLE_PUBLISHER_TOPIC_DEFAULT_SUBSCRIBER_PORT = Integer.getInteger("TimeBase.transport.aeron.topic.udp.single.subscriber.default.port", 40492);
 
-    public static final int SINGLE_PUBLISHER_TOPIC_METADATA_PUBLISHER_PORT = Integer.getInteger("TimeBase.transport.aeron.topic.udp.single.metadata.publisher.default.port", 40493);
-    public static final int SINGLE_PUBLISHER_TOPIC_METADATA_SUBSCRIBER_PORT = Integer.getInteger("TimeBase.transport.aeron.topic.udp.single.metadata.subscriber.default.port", 40494);
-
     // Sets id range to be used for Aeron stream ID. If set then TB will use only values from the specified range for Aeron Stream IDs.
     // Last generated ID will be written into a file after each new stream created.
     // This option usually makes sense only when used together with "TimeBase.transport.aeron.external.driver.dir" option.
     // In that case it's important to ensure that different applications that use same shared Aeron driver do not have overlapping Stream ID ranges.
     // Value must contain two integer numbers (lowest and highest possible values) separated by ":". Values may be negative.
     // Example value: "-100000000:299999999".
-    private static final String RANGE_PROP_NAME = "TimeBase.transport.aeron.id.range";
+    static final String RANGE_PROP_NAME = "TimeBase.transport.aeron.id.range";
     public static final String ID_RANGE = System.getProperty(RANGE_PROP_NAME, null);
 
-    private final boolean enabled; // If false, then any Aeron support should be disabled.
-    private final String aeronDir;
-    private final boolean startDriver;
+    private static final boolean DEBUG_MODE = false;
+
+    // Buffer size for Aeron based topics (per topic).
+    private final int defaultTopicTermBufferLength;
+
+    /**
+     * If total term buffer size of all topics exceeds this value, then new topics will not be created.
+     *
+     * <p>Please take into account that this limit uses very simplified model that assumes that
+     * there no more than one producer for every topic
+     *
+     * <p>See <a href="https://gitlab.deltixhub.com/Deltix/QuantServer/QuantServer/-/issues/1098">Issue #1098</a>
+     */
+    private final long topicTotalTermBufferLimit;
+
+    /**
+     * If false, then Aeron client on the TimeBase server side should be disabled.
+     *
+     * <p>However, it does not mean that client can't use Aeron.
+     * For instance, it is possible that two client instances will use some external Aeron driver
+     * to communicate with each other. They still have to set {@link #SYS_PROP_TOPIC_TERM_BUFFER_LIMIT} property
+     * on the server side to be able to create topics.
+     */
+    private final boolean enabled; //
+    private final String aeronDir; // Directory for Aeron driver. Can be external or embedded
+    private final boolean startEmbeddedDriver;
 
     private final String publicAddress;
     /**
@@ -124,6 +164,8 @@ public class DXServerAeronContext {
 
     private final AtomicBoolean copyThreadsCanRun = new AtomicBoolean(true);
 
+    private final IdleStrategyFactory copyToStreamIdleStrategyFactory;
+
     @Nonnull
     private static IdGenerator createIdGenerator() {
         if (ID_RANGE != null) {
@@ -138,19 +180,73 @@ public class DXServerAeronContext {
         }
     }
 
-    public DXServerAeronContext(boolean enabled, String aeronDir, boolean startEmbeddedDriver, @Nullable AffinityConfig affinityConfig, @Nullable String publicAddress, boolean bypassRemoteCheckForIpcTopics) {
+    public DXServerAeronContext(boolean enabled, String aeronDir, boolean startEmbeddedDriver, @Nullable AffinityConfig affinityConfig, @Nullable String publicAddress, boolean bypassRemoteCheckForIpcTopics, IdleStrategyFactory copyToStreamIdleStrategyFactory, int topicTermBufferLength, long topicTotalTermBufferLimit) {
+        if (!BitUtil.isPowerOfTwo(topicTermBufferLength)) {
+            throw new IllegalArgumentException("Term buffer length must be power of 2");
+        }
+
         this.enabled = enabled;
         this.aeronDir = aeronDir;
-        this.startDriver = startEmbeddedDriver;
+        this.startEmbeddedDriver = startEmbeddedDriver && enabled;
         this.affinityConfig = affinityConfig;
         this.bypassRemoteCheckForIpcTopics = bypassRemoteCheckForIpcTopics;
+        this.copyToStreamIdleStrategyFactory = copyToStreamIdleStrategyFactory;
         this.state = State.NOT_STARTED;
         this.publicAddress = publicAddress;
+        this.defaultTopicTermBufferLength = topicTermBufferLength;
+        this.topicTotalTermBufferLimit = topicTotalTermBufferLimit;
     }
 
-    public static DXServerAeronContext createDefault(boolean enabled, int tickDbPort, @Nullable AffinityConfig affinityConfig, @Nullable String publicAddress, boolean bypassRemoteCheckForIpcTopics) {
+    public static DXServerAeronContext createSimple(
+            boolean enabled, int tickDbPort
+    ) {
+        return createDefault(enabled, tickDbPort, null, null, false, null, null, null);
+    }
+
+    /**
+     * @param enabled set false to disable Aeron support
+     * @param tickDbPort a port number associated with current TimeBase instance. It is used to identify unique directory for Aeron driver. Does not have to be a real port.
+     */
+    public static DXServerAeronContext createDefault(
+            boolean enabled, int tickDbPort, @Nullable AffinityConfig affinityConfig, @Nullable String publicAddress,
+            boolean bypassRemoteCheckForIpcTopics, @Nullable IdleStrategyFactory copyToStreamIdleStrategyFactory,
+            @Nullable Integer topicTermBufferLength, @Nullable Long topicTotalTermBufferLimit
+    ) {
         String aeronDir = AeronWorkDirManager.setupWorkingDirectory(tickDbPort, System.currentTimeMillis());
-        return new DXServerAeronContext(enabled, aeronDir, AeronWorkDirManager.useEmbeddedDriver(), affinityConfig, publicAddress, bypassRemoteCheckForIpcTopics);
+        int selectedTopicTermBufferLength = determineTermBufferLength(topicTermBufferLength);
+
+        if (copyToStreamIdleStrategyFactory == null) {
+            // This does not provide low latency, but it will not eat CPU in case of many topics
+            copyToStreamIdleStrategyFactory = createDefaultCopyToStreamIdleStrategy();
+        }
+
+        boolean embeddedDriver = AeronWorkDirManager.useEmbeddedDriver();
+
+        long effectiveTopicTotalTermBufferLimit = getEffectiveTopicTotalTermBufferLimit(topicTotalTermBufferLimit, enabled, embeddedDriver);
+
+        return new DXServerAeronContext(enabled, aeronDir, embeddedDriver, affinityConfig, publicAddress, bypassRemoteCheckForIpcTopics, copyToStreamIdleStrategyFactory, selectedTopicTermBufferLength, effectiveTopicTotalTermBufferLimit);
+    }
+
+    /**
+     * <a href="https://gitlab.deltixhub.com/Deltix/QuantServer/QuantServer/-/issues/1098#note_700292">...</a>
+     */
+    private static long getEffectiveTopicTotalTermBufferLimit(@Nullable Long topicTotalTermBufferLimit, boolean enabled, boolean embeddedDriver) {
+        if (topicTotalTermBufferLimit != null) {
+            if (topicTotalTermBufferLimit == -1) {
+                // "-1: in config means "No limit"
+                return Long.MAX_VALUE;
+            }
+            return topicTotalTermBufferLimit;
+        }
+        if (!enabled) {
+            return 0;
+        }
+        if (embeddedDriver) {
+            // For embedded driver we do not use any limit
+            return Long.MAX_VALUE;
+        }
+
+        throw new IllegalArgumentException("topicTotalTermBufferLimit is not set and external Aeron driver is used. Please set " + SYS_PROP_TOPIC_TERM_BUFFER_LIMIT + " property to explicitly define amount of native memory dedicated to Aeron topics");
     }
 
     public synchronized void start() {
@@ -162,7 +258,7 @@ public class DXServerAeronContext {
             throw new IllegalStateException("Wrong state: " + state);
         }
 
-        if (startDriver && TDBProtocol.NEEDS_AERON_DRIVER) {
+        if (startEmbeddedDriver && TDBProtocol.NEEDS_AERON_DRIVER) {
             this.driver = createDriver(this.aeronDir, getThreadFactoryForAeron());
         }
 
@@ -177,7 +273,12 @@ public class DXServerAeronContext {
         if (state != State.STARTED) {
             throw new IllegalStateException("Wrong state: " + state);
         }
+        if (this.aeron != null && aeron.isClosed()) {
+            LOG.warn("Aeron client is closed. Resetting it.");
+            aeron = null;
+        }
         if (aeron == null) {
+            LOG.info("Starting instance of Aeron client at %s").with(this.aeronDir);
             aeron = createAeron(this.aeronDir, getThreadFactoryForAeron());
         }
         return aeron;
@@ -211,7 +312,6 @@ public class DXServerAeronContext {
      * Ignore failure.
      */
     private void deleteAeronDir(String dirName) {
-        //noinspection ResultOfMethodCallIgnored
         IOUtil.deleteFileOrDir(new File(dirName));
     }
 
@@ -262,9 +362,14 @@ public class DXServerAeronContext {
         context.ipcTermBufferLength(IPC_TERM_BUFFER_LENGTH);
         context.aeronDirectoryName(aeronDir);
 
-        // Set high timeouts to simplify debugging. In fact we don't use Aeron's timeouts.
-        //context.clientLivenessTimeoutNs(TimeUnit.MINUTES.toNanos(5));
         context.driverTimeoutMs(TimeUnit.SECONDS.toMillis(DRIVER_COMMUNICATION_TIMEOUT));
+
+        // Set high timeouts to simplify debugging. In fact we don't use Aeron's timeouts.
+        if (DEBUG_MODE) {
+            context.publicationUnblockTimeoutNs(TimeUnit.MINUTES.toNanos(10));
+            context.clientLivenessTimeoutNs(TimeUnit.MINUTES.toNanos(5));
+            context.driverTimeoutMs(TimeUnit.MINUTES.toMillis(5));
+        }
 
         if (threadFactory != null) {
             context.conductorThreadFactory(threadFactory);
@@ -285,7 +390,9 @@ public class DXServerAeronContext {
             }
         }
 
-        return MediaDriver.launchEmbedded(context);
+        MediaDriver mediaDriver = MediaDriver.launchEmbedded(context);
+        LOG.info("Aeron driver started in directory: %s").with(aeronDir);
+        return mediaDriver;
     }
 
     public int getNextStreamId() {
@@ -296,8 +403,9 @@ public class DXServerAeronContext {
         return aeronStreamIdGenerator;
     }
 
+    @Nullable
     public String getAeronDir() {
-        return aeronDir;
+        return enabled ? aeronDir : null;
     }
 
     public AeronMulticastStreamContext subscribeToMulticast(String streamKey, BiFunction<String, AeronMulticastStreamContext, AeronMulticastStreamContext> remappingFunction) {
@@ -326,6 +434,12 @@ public class DXServerAeronContext {
             s.append("|ttl=").append(MULTICAST_TTL);
         }
         return s.toString();
+    }
+
+    @Nonnull
+    private static IdleStrategyFactory createDefaultCopyToStreamIdleStrategy() {
+        long waitTimeNs = TimeUnit.MILLISECONDS.toNanos(100);
+        return new IdleStrategyFactory(0, 0, waitTimeNs, waitTimeNs);
     }
 
     public boolean copyThreadsCanRun() {
@@ -365,12 +479,97 @@ public class DXServerAeronContext {
         return enabled;
     }
 
-    public static boolean isAeronEnabledInJvmOpts() {
-        return Boolean.parseBoolean(System.getProperty("TimeBase.aeron.enabled", Boolean.toString(DXServerAeronContext.ENABLED_BY_DEFAULT)));
-    }
-
     public boolean isBypassRemoteCheckForIpcTopics() {
         return bypassRemoteCheckForIpcTopics;
+    }
+
+    @Nonnull
+    public IdleStrategyFactory getCopyToStreamIdleStrategyFactory() {
+        return copyToStreamIdleStrategyFactory;
+    }
+
+    public int getDefaultTopicTermBufferLength() {
+        return defaultTopicTermBufferLength;
+    }
+
+    public long getTopicTotalTermBufferLimit() {
+        return topicTotalTermBufferLimit;
+    }
+
+    @NotNull
+    private static Integer determineTermBufferLength(@Nullable Integer termBufferLengthFromConfig) {
+        if (termBufferLengthFromConfig != null) {
+            return termBufferLengthFromConfig;
+        }
+        Integer value1 = Integer.getInteger(SYS_PROP_TERM_BUFFER_LENGTH, null);
+        if (value1 != null) {
+            return value1;
+        }
+        // Older parameter name - for compatibility.
+        // The name is misleading because it's not for IPC.
+        Integer value2 = Integer.getInteger(SYS_PROP_TERM_BUFFER_LENGTH_OLD, null);
+        //noinspection ReplaceNullCheck
+        if (value2 != null) {
+            return value2;
+        }
+
+        return Configuration.TERM_BUFFER_LENGTH_DEFAULT; // Use defaults from Aeron
+    }
+
+    /**
+     * Determines if Aeron client should be enabled with current system properties and provided config.
+     * During execution this method will report warnings to log in case of misconfiguration.
+     *
+     * <p>Rules:</p>
+     * <ul>
+     *     <li>Check value for {@link #SYS_PROP_TIME_BASE_AERON_ENABLED} in config and system properties</li>
+     *     <li>If system and config values are in conflict, then use system value and report a warning</li>
+     *     <li>If there is no conflict, use corresponding value.</li>
+     *     <li>If there are no any value, enable aeron if external Aeron driver directory is configured.</li>
+     *     <li>Otherwise return default value (See {@link #ENABLED_BY_DEFAULT})</li>
+     * </ul>
+     */
+    public static boolean selectEffectiveAeronMode(@Nullable QuantServiceConfig config) {
+        Boolean systemOptionValue = null;
+        String systemStrValue = System.getProperty(SYS_PROP_TIME_BASE_AERON_ENABLED, null);
+        if (systemStrValue != null) {
+            systemOptionValue = Boolean.parseBoolean(systemStrValue);
+        }
+
+        Boolean configOptionValue = null;
+        if (config != null) {
+            String strValue = config.getString(null, SYS_PROP_TIME_BASE_AERON_ENABLED, null);
+            if (strValue != null) {
+                configOptionValue = Boolean.parseBoolean(strValue);
+            }
+        }
+
+        Boolean result = null;
+        if (systemOptionValue != null) {
+            if (configOptionValue != null && !systemOptionValue.equals(configOptionValue)) {
+                LOG.warn("Aeron enabled value is in conflict between system and config properties. System value (used): %s. Config value (ignored): %s")
+                        .with(systemOptionValue).with(configOptionValue);
+            }
+            result = systemOptionValue;
+        }
+        if (result == null && configOptionValue != null) {
+            result = configOptionValue;
+        }
+
+        boolean externalDriver = AeronWorkDirManager.isExternalDriverConfigured();
+        if (result != null) {
+            if (externalDriver && !result) {
+                LOG.warn("Misconfiguration: Aeron is disabled in config but external Aeron driver is configured. Aeron will remain disabled.");
+            }
+            return result;
+        }
+
+        assert result == null;
+        if (externalDriver) {
+            return true;
+        }
+
+        return ENABLED_BY_DEFAULT;
     }
 
     private enum State {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -34,10 +34,18 @@ import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 import com.epam.deltix.util.time.TimeFormatter;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
+import java.util.Locale;
 
 /**
  * Json parser into InstrumentMessage message.
+ * <p>
+ * This class is not thread-safe.
+ *
+ *  <p>Multiple threads should not access the same instance of this class concurrently
+ *  as it may result in unexpected behavior or data corruption.</p>
  */
 public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
 
@@ -48,14 +56,31 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
     private final RawMessage                raw = new RawMessage();
     private final MemoryDataOutput          out = new MemoryDataOutput();
     private final DateFormatter             dateFormatter = new DateFormatter();
+    private DecimalFormat                   decimalFormat;
+    private String                          decimalSeparator;
+
 
     public JSONRawMessageParser(RecordClassDescriptor[] descriptors) {
         this(descriptors, "type");
     }
 
     public JSONRawMessageParser(RecordClassDescriptor[] descriptors, String typePropertyName) {
+        this(descriptors, typePropertyName, Locale.getDefault(Locale.Category.FORMAT));
+    }
+
+    public JSONRawMessageParser(RecordClassDescriptor[] descriptors, String typePropertyName, Locale locale) {
         super(typePropertyName);
         this.descriptors = descriptors;
+        decimalFormat = new DecimalFormat("#.#", DecimalFormatSymbols.getInstance(locale));
+        updateDecimalSeparator();
+    }
+    private void updateDecimalSeparator() {
+        decimalSeparator = Character.toString(decimalFormat.getDecimalFormatSymbols().getDecimalSeparator());
+    }
+
+    public void setDecimalFormat(DecimalFormat decimalFormat) {
+        this.decimalFormat = decimalFormat;
+        updateDecimalSeparator();
     }
 
     private FixedUnboundEncoder getEncoder (final RecordClassDescriptor type) {
@@ -77,11 +102,11 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
             w.writeLong(value.getAsLong());
         else if (type instanceof FloatDataType) {
             if (((FloatDataType) type).isDecimal64()) {
-                w.writeLong(Decimal64Utils.parse(value.getAsString()));
+                w.writeLong(Decimal64Utils.parse(value.getAsString(), decimalSeparator));
             } else if (((FloatDataType) type).isFloat()) {
-                w.writeFloat(value.getAsFloat());
+                w.writeFloat(parseNumber(value.getAsString()).floatValue());
             } else {
-                w.writeDouble(value.getAsDouble());
+                w.writeDouble(parseNumber(value.getAsString()).doubleValue());
             }
         }
         else if (type instanceof VarcharDataType || type instanceof CharDataType) {
@@ -103,7 +128,7 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
             w.writeBoolean(value.getAsBoolean());
         }
         else if (type instanceof DateTimeDataType) {
-            long time = parseDateTime(value.getAsString());
+            long time = parseDateTime(value.getAsString(), (DateTimeDataType) type);
             w.writeLong(time);
         }
         else if (type instanceof TimeOfDayDataType) {
@@ -125,17 +150,21 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
             throw new RuntimeException("Unrecognized DataType: " + type);
     }
 
-    protected long parseDateTime(String value) {
+    protected long parseTimestamp(String value) {
         try {
-            return dateFormatter.fromDateString(value);
+            return dateFormatter.nanoFromDateString(value);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
     }
 
-    protected long parseNanoDateTime(String value) {
+    protected long parseDateTime(String value, DateTimeDataType type) {
         try {
-            return dateFormatter.fromNanosDateString(value);
+            if (type.hasNanosecondPrecision()) {
+                return dateFormatter.nanoFromDateString(value);
+            } else {
+                return dateFormatter.msFromDateString(value);
+            }
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
@@ -145,6 +174,13 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
         return TimeFormatter.parseTimeOfDayMillis(value);
     }
 
+    private Number parseNumber(String strValue) {
+        try {
+            return decimalFormat.parse(strValue);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Failed to convert the '" + strValue + "' to a numeric value", e);
+        }
+    }
     @Override
     protected Object getObjectType(JsonElement value) {
         JsonElement element = ((JsonObject) value).get(typePropertyName);
@@ -195,13 +231,14 @@ public class JSONRawMessageParser extends UnboundWriter<JsonElement> {
         else
             raw.setSymbol("");
 
-        if (object.has("timestamp"))
-            raw.setTimeStampMs(parseDateTime(object.get("timestamp").getAsString()));
-        else
+        if (object.has("timestamp")) {
+            raw.setNanoTime(parseTimestamp(object.get("timestamp").getAsString()));
+        } else {
             raw.setTimeStampMs(Long.MIN_VALUE);
+        }
 
         if (object.has("nanoTime")) {
-            raw.setNanoTime(parseNanoDateTime(object.get("nanoTime").getAsString()));
+            raw.setNanoTime(parseTimestamp(object.get("nanoTime").getAsString()));
         }
 
         return raw;

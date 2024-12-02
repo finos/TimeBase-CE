@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -22,6 +22,7 @@ import com.epam.deltix.qsrv.hf.pub.codec.*;
 import com.epam.deltix.util.concurrent.*;
 import com.epam.deltix.util.memory.*;
 import com.epam.deltix.util.time.GMT;
+import net.jcip.annotations.GuardedBy;
 
 /**
  *  Lock ordering: this, then current time slice.
@@ -70,9 +71,10 @@ public class DataWriterImpl extends BlockAccessorBase implements DataWriter {
         super.close ();
     }
 
+    @GuardedBy("this")
     private int                encode(long nstime, int typeCode, TSMessageProducer producer)
     {
-        assert Thread.holdsLock(this);
+        assert !AccessorBlockLink.VALIDATE_LOCKS || Thread.holdsLock(this);
 
         buffer.reset();
 

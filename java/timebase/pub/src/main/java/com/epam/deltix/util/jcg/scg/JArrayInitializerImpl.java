@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -32,7 +32,7 @@ public class JArrayInitializerImpl extends JExprImplBase implements JArrayInitia
         final int size = values.size();
         for (int i = 0; i < size; i++) {
             out.print(values.get(i));
-            if(i<size -1)
+            if (i < size -1)
                 out.print(", ");
 
         }

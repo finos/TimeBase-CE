@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -114,7 +114,7 @@ public class RawMessageManipulator {
                         }
                         break;
                         default: {
-                            encoder.writeLong((Long) value);
+                            encoder.writeLong(((Number) value). longValue());
                         }
                     }
                 } else if (type instanceof EnumDataType) {
@@ -145,6 +145,17 @@ public class RawMessageManipulator {
                 "'. Reason: " + x.getLocalizedMessage(),
                 x);
         }
+
+        RawMessageManipulator helper = new RawMessageManipulator( new RawDecoder() {
+            @Override
+            protected Object readFloat(FloatDataType type, ReadableValue rv) {
+                if (type.isDecimal64())
+                    return rv.getLong();
+
+                return super.readFloat(type, rv);
+            }
+        }
+        );
     }
 
     private static void writeArray(WritableValue uenc, ArrayDataType type, Object[] values) {
@@ -154,14 +165,14 @@ public class RawMessageManipulator {
             uenc.setArrayLength(len);
 
             for (int i = 0; i < len; i++) {
-                if (values[i] instanceof HashMap) {
-                    Object descriptor = ((HashMap) values[i]).get(OBJECT_CLASS_NAME);
+                if (values[i] instanceof Map) {
+                    Object descriptor = ((Map) values[i]).get(OBJECT_CLASS_NAME);
                     if (descriptor instanceof RecordClassDescriptor) {
                         UnboundEncoder encoder = uenc.nextWritableElement().getFieldEncoder((RecordClassDescriptor) descriptor);
                         if (encoder instanceof FixedUnboundEncoder) {
                             while (encoder.nextField()) {
                                 NonStaticFieldInfo field = encoder.getField();
-                                Object value = ((HashMap) values[i]).get(field.getName());
+                                Object value = ((Map) values[i]).get(field.getName());
 
                                 if (field.getType() instanceof DateTimeDataType) {
                                     if (value instanceof String)
@@ -172,6 +183,8 @@ public class RawMessageManipulator {
                             }
                         }
                     }
+                } else if (dataType.isNullable()) {
+                    uenc.nextWritableElement().writeNull();
                 }
             }
         } else {

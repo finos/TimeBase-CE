@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -71,6 +71,9 @@ public final class TimebaseTypes {
             nullable -> new VarcharDataType(VarcharDataType.ENCODING_INLINE_VARSIZE, nullable, true));
     public static final TypesContainer<CharDataType> CHAR_CONTAINER = new TypesContainer<>("CHAR", CharDataType::new);
     public static final TypesContainer<DateTimeDataType> DATE_TIME_CONTAINER = new TypesContainer<>("TIMESTAMP", DateTimeDataType::new);
+    public static final TypesContainer<DateTimeDataType> DATE_TIME_MS_CONTAINER = new TypesContainer<>("TIMESTAMP(MS)", DateTimeDataType::new);
+    public static final TypesContainer<DateTimeDataType> DATE_TIME_NS_CONTAINER = new TypesContainer<>("TIMESTAMP(NS)",
+        nullable -> new DateTimeDataType(nullable, DateTimeDataType.ENCODING_NANOSECONDS));
     public static final TypesContainer<TimeOfDayDataType> TIME_OF_DAY_CONTAINER = new TypesContainer<>("TIMEOFDAY", TimeOfDayDataType::new);
     public static final TypesContainer<ClassDataType> OBJECT_CONTAINER = new TypesContainer<>("OBJECT", ClassDataType::new);
 
@@ -79,7 +82,7 @@ public final class TimebaseTypes {
             FLOAT32_CONTAINER, FLOAT64_CONTAINER, DECIMAL64_CONTAINER,
             BOOLEAN_CONTAINER,
             ALPHANUMERIC10_CONTAINER, UTF8_CONTAINER, CHAR_CONTAINER,
-            DATE_TIME_CONTAINER, TIME_OF_DAY_CONTAINER,
+            DATE_TIME_CONTAINER, DATE_TIME_MS_CONTAINER, DATE_TIME_NS_CONTAINER, TIME_OF_DAY_CONTAINER,
             OBJECT_CONTAINER
     };
 
@@ -96,6 +99,8 @@ public final class TimebaseTypes {
             UTF8_CONTAINER.getArrayType(true, true),
             CHAR_CONTAINER.getArrayType(true, true),
             DATE_TIME_CONTAINER.getArrayType(true, true),
+            DATE_TIME_MS_CONTAINER.getArrayType(true, true),
+            DATE_TIME_NS_CONTAINER.getArrayType(true, true),
             TIME_OF_DAY_CONTAINER.getArrayType(true, true),
             OBJECT_CONTAINER.getArrayType(true, true)
     };

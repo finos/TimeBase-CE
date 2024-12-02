@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,12 +16,11 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
+import com.epam.deltix.qsrv.hf.pub.TimeSource;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.data.stream.UnknownChannelException;
-import com.epam.deltix.qsrv.dtb.fs.common.DelegatingOutputStream;
-import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
@@ -42,7 +41,6 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.topic.settings.MulticastTopicSettings;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.settings.TopicType;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.settings.TopicSettings;
 import com.epam.deltix.qsrv.hf.topic.consumer.DirectReaderFactory;
-import com.epam.deltix.qsrv.hf.topic.consumer.MappingProvider;
 import com.epam.deltix.qsrv.hf.topic.consumer.SubscriptionWorker;
 import com.epam.deltix.qsrv.hf.topic.loader.DirectLoaderFactory;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.CreateTopicResult;
@@ -75,17 +73,17 @@ class TickDBTopicDBImpl implements TopicDB {
     private final DXTickDB db;
     private final DXServerAeronContext aeronContext;
     private final DirectTopicRegistry topicRegistry;
-    private final QuickExecutor executor;
     private final AeronThreadTracker aeronThreadTracker;
 
     private final CodecFactory compCodecFactory = CodecFactory.newCompiledCachingFactory();
+    private final TimeSource timeSource;
 
-    public TickDBTopicDBImpl(DXTickDB db, DXServerAeronContext aeronContext, DirectTopicRegistry topicRegistry, QuickExecutor executor, AeronThreadTracker aeronThreadTracker) {
+    public TickDBTopicDBImpl(DXTickDB db, DXServerAeronContext aeronContext, DirectTopicRegistry topicRegistry, AeronThreadTracker aeronThreadTracker, TimeSource timeSource) {
         this.db = db;
         this.aeronContext = aeronContext;
         this.topicRegistry = topicRegistry;
-        this.executor = executor;
         this.aeronThreadTracker = aeronThreadTracker;
+        this.timeSource = timeSource;
         startCopyToStreamThreadsForAllTopics();
     }
 
@@ -104,13 +102,14 @@ class TickDBTopicDBImpl implements TopicDB {
             throw new IllegalArgumentException("Type set can't be empty");
         }
         String copyToStreamKey = settings.getCopyToStream();
+        String copyToSpace = settings.getCopyToSpace();
 
         CopyTopicToStreamTaskManager.preValidateCopyToStreamKey(db, typeList, copyToStreamKey);
 
         CreateTopicResult createTopicResult;
         TopicType topicType = settings.getTopicType();
         if (topicType == TopicType.MULTICAST) {
-            createTopicResult = createMulticastClient(topicKey, types, settings.getInitialEntitySet(), settings.getMulticastSettings(), copyToStreamKey);
+            createTopicResult = createMulticastClient(topicKey, types, settings.getMulticastSettings(), copyToStreamKey, copyToSpace);
         } else if (topicType == TopicType.IPC) {
             createTopicResult = createIpcClient(topicKey, types, settings);
         } else {
@@ -119,19 +118,18 @@ class TickDBTopicDBImpl implements TopicDB {
 
         if (copyToStreamKey != null) {
             CopyTopicToStreamTaskManager copyTopicToStream = new CopyTopicToStreamTaskManager(db, aeronContext, aeronThreadTracker, topicRegistry);
-            MappingProvider mappingProvider = getMappingProvider(topicKey);
-            copyTopicToStream.subscribeToStreamCopyOrRollback(topicKey, typeList, copyToStreamKey, createTopicResult, mappingProvider);
+            copyTopicToStream.subscribeToStreamCopyOrRollback(topicKey, typeList, copyToStreamKey, copyToSpace, createTopicResult);
         }
         return new TopicClientChannel(this, topicKey);
     }
 
-    @NotNull
+    @Nonnull
     private CreateTopicResult createIpcClient(String topicKey, RecordClassDescriptor[] types, @Nonnull TopicSettings settings) {
-        return topicRegistry.createDirectTopic(topicKey, Arrays.asList(types), null, aeronContext.getStreamIdGenerator(), settings.getInitialEntitySet(), TopicType.IPC, null, settings.getCopyToStream());
+        return topicRegistry.createDirectTopic(topicKey, Arrays.asList(types), null, aeronContext.getStreamIdGenerator(), TopicType.IPC, null, settings.getCopyToStream(), settings.getCopyToSpace());
     }
 
-    @NotNull
-    private CreateTopicResult createMulticastClient(String topicKey, RecordClassDescriptor[] types, @Nullable List<? extends IdentityKey> initialEntitySet, @Nullable MulticastTopicSettings multicastTopicSettings, @Nullable String targetStreamKey) {
+    @Nonnull
+    private CreateTopicResult createMulticastClient(String topicKey, RecordClassDescriptor[] types, @Nullable MulticastTopicSettings multicastTopicSettings, @Nullable String targetStreamKey, @Nullable String copyToSpace) {
         MulticastTopicSettings mts = multicastTopicSettings != null ? multicastTopicSettings : new MulticastTopicSettings();
 
         TopicChannelOptionMap channelOptions = new TopicChannelOptionMap();
@@ -140,7 +138,7 @@ class TickDBTopicDBImpl implements TopicDB {
         channelOptions.put(TopicChannelOption.MULTICAST_NETWORK_INTERFACE, mts.getNetworkInterface());
         channelOptions.put(TopicChannelOption.MULTICAST_TTL, mts.getTtl());
 
-        return topicRegistry.createDirectTopic(topicKey, Arrays.asList(types), null, aeronContext.getStreamIdGenerator(), initialEntitySet, TopicType.MULTICAST, channelOptions.getValueMap(), targetStreamKey);
+        return topicRegistry.createDirectTopic(topicKey, Arrays.asList(types), null, aeronContext.getStreamIdGenerator(), TopicType.MULTICAST, channelOptions.getValueMap(), targetStreamKey, copyToSpace);
     }
 
     @Nullable
@@ -179,23 +177,9 @@ class TickDBTopicDBImpl implements TopicDB {
         if (pref == null) {
             pref = new PublisherPreferences();
         }
-        List<? extends IdentityKey> initialEntitySet = pref.getInitialEntitySet();
-        if (initialEntitySet == null) {
-            initialEntitySet = Collections.emptyList();
-        }
-        CommunicationPipe pipe = new CommunicationPipe(8 * 1024);
 
-        LoaderSubscriptionResult result = topicRegistry.addLoader(topicKey, pipe.getInputStream(), initialEntitySet, this.executor, aeronContext.getAeron(), true, null);
-        Runnable dataAvailabilityCallback = result.getDataAvailabilityCallback();
+        LoaderSubscriptionResult result = topicRegistry.addLoader(topicKey, true, null);
 
-        OutputStream baseOutputStream = pipe.getOutputStream();
-        DelegatingOutputStream wrappedOutputStream = new DelegatingOutputStream(baseOutputStream) {
-            @Override
-            public void flush() throws IOException {
-                super.flush();
-                dataAvailabilityCallback.run();
-            }
-        };
 
         DirectLoaderFactory loaderFactory = new DirectLoaderFactory(compCodecFactory, pref.getTypeLoader());
 
@@ -204,11 +188,10 @@ class TickDBTopicDBImpl implements TopicDB {
 
         Runnable closeCallback = null;
         return loaderFactory.create(
-                aeron, pref.raw, result.getPublisherChannel(), result.getMetadataSubscriberChannel(), result.getDataStreamId(),
-                result.getServerMetadataStreamId(), result.getTypes(),
-                result.getLoaderNumber(), wrappedOutputStream, Arrays.asList(result.getMapping()),
-                closeCallback, pref.getEffectiveIdleStrategy(idleStrategy)
-        );
+                aeron, pref.raw, result.getPublisherChannel(), result.getDataStreamId(),
+                result.getTypes(),
+                closeCallback, pref.getEffectiveIdleStrategy(idleStrategy), timeSource,
+                pref.isPreserveNullTimestamp());
     }
 
     @Override
@@ -222,7 +205,9 @@ class TickDBTopicDBImpl implements TopicDB {
         DirectReaderFactory factory = new DirectReaderFactory(compCodecFactory, preferences.getTypeLoader());
 
         Aeron aeron = aeronContext.getAeron();
-        SubscriptionWorker subscriptionWorker = factory.createListener(aeron, preferences.raw, result.getSubscriberChannel(), result.getDataStreamId(), result.getTypes(), processor, preferences.getEffectiveIdleStrategy(idleStrategy), getMappingProvider(topicKey));
+        SubscriptionWorker subscriptionWorker = factory.createListener(
+                aeron, preferences.raw, result.getSubscriberChannel(), result.getDataStreamId(), result.getTypes(),
+                processor, preferences.getEffectiveIdleStrategy(idleStrategy), preferences.getTopicDataLossHandler());
         if (threadFactory == null) {
             // TODO: Add affinity support (inherit affinity config from TickDBImpl)
             threadFactory = new ThreadFactoryBuilder().setNameFormat("topic-embedded-consumer-%d").build();
@@ -243,7 +228,8 @@ class TickDBTopicDBImpl implements TopicDB {
         DirectReaderFactory factory = new DirectReaderFactory(compCodecFactory, preferences.getTypeLoader());
 
         Aeron aeron = aeronContext.getAeron();
-        return factory.createPoller(aeron, preferences.raw, result.getSubscriberChannel(), result.getDataStreamId(), result.getTypes(), getMappingProvider(topicKey));
+        return factory.createPoller(aeron, preferences.raw, result.getSubscriberChannel(), result.getDataStreamId(),
+                result.getTypes(), preferences.getTopicDataLossHandler());
     }
 
     @Override
@@ -257,12 +243,8 @@ class TickDBTopicDBImpl implements TopicDB {
         DirectReaderFactory factory = new DirectReaderFactory(compCodecFactory, preferences.getTypeLoader());
 
         Aeron aeron = aeronContext.getAeron();
-        return factory.createMessageSource(aeron, preferences.raw, result.getSubscriberChannel(), result.getDataStreamId(), result.getTypes(), preferences.getEffectiveIdleStrategy(idleStrategy), getMappingProvider(topicKey));
-    }
-
-    @NotNull
-    private MappingProvider getMappingProvider(String topicKey) {
-        return topicRegistry.getMappingProvider(topicKey);
+        return factory.createMessageSource(aeron, preferences.raw, result.getSubscriberChannel(), result.getDataStreamId(),
+                result.getTypes(), preferences.getEffectiveIdleStrategy(idleStrategy), preferences.getTopicDataLossHandler());
     }
 
     DXServerAeronContext getAeronContext() {

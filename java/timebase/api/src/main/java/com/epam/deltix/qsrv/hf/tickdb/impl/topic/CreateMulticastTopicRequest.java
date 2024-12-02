@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,12 +16,10 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
-import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -36,11 +34,13 @@ public class CreateMulticastTopicRequest extends CreateTopicRequest {
     private final Integer ttl;
 
 
-    public CreateMulticastTopicRequest(String topicKey, List<RecordClassDescriptor> types, @Nullable Collection<? extends IdentityKey> initialEntitySet,
+    public CreateMulticastTopicRequest(String topicKey, List<RecordClassDescriptor> types,
                                        @Nullable String targetStream,
-                                       @Nullable String endpointHost, @Nullable Integer endpointPort,
-                                       @Nullable String networkInterface, @Nullable Integer ttl) {
-        super(topicKey, types, initialEntitySet, targetStream);
+                                       @Nullable String targetSpace, @Nullable String endpointHost,
+                                       @Nullable Integer endpointPort, @Nullable String networkInterface,
+                                       @Nullable Integer ttl
+    ) {
+        super(topicKey, types, targetStream, targetSpace);
         this.endpointHost = endpointHost;
         this.endpointPort = endpointPort;
         this.networkInterface = networkInterface;

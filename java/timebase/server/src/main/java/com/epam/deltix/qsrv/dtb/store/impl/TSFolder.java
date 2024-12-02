@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -622,7 +622,8 @@ abstract class TSFolder extends TSFolderEntry {
         synchronized (this) {
             pos = findEntity(entity);
 
-            assert pos >= 0;
+            if (pos < 0)
+                return true;
 
             if (cache != null) {
                 IntegerArrayList list = cache.get(child);
@@ -657,6 +658,10 @@ abstract class TSFolder extends TSFolderEntry {
                 synchronized (this) {
                     // check position again, collection may change out-of lock
                     pos = findEntity(entity);
+
+                    if (pos < 0)
+                        return true;
+
                     entityIndex.remove(pos);
                     setDirty();
                     return true;
@@ -677,6 +682,10 @@ abstract class TSFolder extends TSFolderEntry {
                 synchronized (this) {
                     // check position again, collection may change out-of lock
                     pos = findEntity(entity);
+
+                    if (pos < 0)
+                        return true;
+
                     entityIndex.remove(pos);
                     setDirty();
                     return true;
@@ -1167,24 +1176,29 @@ abstract class TSFolder extends TSFolderEntry {
                 TSFolderEntry       first = idToChild.get (firstId, null);
                 
                 if (first == null)
-                    throw new IOException (
+                    LOGGER.warn("Bad entity index in " + fp + ": child is " +
+                            firstId + " was not found");
+
+                    /* throw new IOException (
                         "Bad entity index in " + fp + ": child is " +
                         firstId + " was not found"
-                    );
+                    );*/
                 
                 int                 lastId = dis.readUnsignedShort ();                
                 TSFolderEntry       last = idToChild.get (lastId, null);
                 
                 if (last == null)
-                    throw new IOException (
+                    LOGGER.warn("Bad entity index in " + fp + ": child is " +
+                            lastId + " was not found");
+
+                    /* throw new IOException (
                         "Bad entity index in " + fp + ": child is " +
                         lastId + " was not found"
-                    );
-                
-                EntityIndexEntry    ee = 
-                    new EntityIndexEntry (entity, first, last);
-                
-                entityIndex.add (ee);
+                    );*/
+
+                if (last != null && first != null) {
+                    entityIndex.add(new EntityIndexEntry(entity, first, last));
+                }
             }
         }         
         

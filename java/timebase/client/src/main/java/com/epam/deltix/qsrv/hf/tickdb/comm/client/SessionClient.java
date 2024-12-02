@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -54,7 +54,7 @@ public class SessionClient implements Closeable {
     private class ServerListener extends QuickExecutor.QuickTask {
         private final Signal closeSignal = new Signal();
 
-        private DataInputStream     in;
+        private final DataInputStream     in;
 
         final Runnable              avlnr =
                 new Runnable () {
@@ -158,11 +158,16 @@ public class SessionClient implements Closeable {
                     int count = in.readInt();
                     for (int i = 0; i < count; i++) {
                         TickStreamClient stream = readStream(in);
-                        // cache may already contains this stream
+                        // cache may already contain this stream
                         if (cache.addStream(stream))
                             stateNotifierTask.fireStateChanged(stream.getKey());
                     }
 
+                    if (serverVersion < 116)
+                        streamsSignal.set();
+                    break;
+
+                case TDBProtocol.END_STREAMS_DEFINITION:
                     streamsSignal.set();
                     break;
 
@@ -189,11 +194,14 @@ public class SessionClient implements Closeable {
         }
     }
 
-    private ServerListener  serverListener;
+    private final ServerListener  serverListener;
     private final Signal    streamsSignal = new Signal();
 
-    public SessionClient(TickDBClient db) {
+    private final int serverVersion;
+
+    public SessionClient(TickDBClient db, int serverVersion) {
         this.db = db;
+        this.serverVersion = serverVersion;
 
         VSChannel channel = null;
         try {
@@ -297,6 +305,16 @@ public class SessionClient implements Closeable {
                 if (stream != null)
                     stream.options.owner = !StringUtils.equals("<NULL>", owner) ? owner : null;
                 break;
+
+            case TickStreamProperties.HIGH_AVAILABILITY:
+                boolean available = in.readBoolean();
+                if (stream != null)
+                    stream.options.highAvailability = available;
+                break;
+
+            default:
+                LOGGER.warn("Stream " + key + "' processing for property = (" + property + ") is not supported");
+                return;
         }
 
         StreamState state = cache.getState(key);
@@ -314,7 +332,7 @@ public class SessionClient implements Closeable {
         if (LOGGER.isEnabled(LogLevel.DEBUG))
             LOGGER.debug(this + ": reading stream:" + key);
 
-        StreamOptions options = TDBProtocol.readStreamOptions(in, TDBProtocol.VERSION);
+        StreamOptions options = TDBProtocol.readStreamOptions(in, serverVersion);
 
         TickStreamClient stream = new TickStreamClient(db, key, options);
 
@@ -434,7 +452,7 @@ public class SessionClient implements Closeable {
             out.writeUTF(key);
             out.flush();
 
-            TickDBClient.checkResponse(channel);
+            TickDBClient.checkResponse(channel, serverVersion);
             boolean notNull = in.readBoolean();
             if (notNull)
                 stream = readStream(in);

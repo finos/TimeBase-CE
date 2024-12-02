@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,7 +16,8 @@
  */
 package com.epam.deltix.data.stream.pq;
 
-import com.google.common.annotations.VisibleForTesting;
+
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;

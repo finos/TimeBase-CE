@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -18,6 +18,7 @@ package com.epam.deltix.qsrv.hf.tickdb.http.stream;
 
 
 import com.epam.deltix.qsrv.hf.tickdb.pub.BackgroundProcessInfo;
+import com.epam.deltix.util.progress.ExecutionStatus;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -25,14 +26,32 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "BgProcess")
 public class GetBGProcessResponse {
 
+    @XmlElement()
+    public String name;
+
+    @XmlElement()
+    public ExecutionStatus status = ExecutionStatus.None;
+
+    @XmlElement()
+    public double progress = 0;
+
+    @XmlElement()
+    public long startTime;
+
+    @XmlElement()
+    public long endTime;
+
     public GetBGProcessResponse() {
     }
 
     public GetBGProcessResponse(BackgroundProcessInfo info) {
-        this.info = info;
+        if (info != null) {
+            this.name = info.getName();
+            this.status = info.status;
+            this.progress = info.progress;
+            this.startTime = info.startTime;
+            this.endTime = info.endTime;
+        }
     }
-
-    @XmlElement()
-    public BackgroundProcessInfo info;
 
 }

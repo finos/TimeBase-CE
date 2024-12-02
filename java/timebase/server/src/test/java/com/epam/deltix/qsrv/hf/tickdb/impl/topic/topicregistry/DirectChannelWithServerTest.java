@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -64,45 +64,26 @@ public class DirectChannelWithServerTest {
         Aeron aeron = TopicTestUtils.createAeron();
 
         DirectTopicRegistry directTopicRegistry = new DirectTopicRegistry();
-        List<RecordClassDescriptor> types = Collections.singletonList(Messages.ERROR_MESSAGE_DESCRIPTOR);
+        List<RecordClassDescriptor> types = Collections.singletonList(StubData.makeErrorMessageDescriptor());
 
         String topicName = "testTopic";
         AtomicInteger streamIdGenerator = new AtomicInteger(new Random().nextInt());
 
-        ConstantIdentityKey key = new ConstantIdentityKey("ABC");
-        directTopicRegistry.createDirectTopic(topicName, types, null, streamIdGenerator::incrementAndGet, Collections.singletonList(key), TopicType.IPC, null, null);
+        directTopicRegistry.createDirectTopic(topicName, types, null, streamIdGenerator::incrementAndGet, TopicType.IPC, null, null, null);
 
-        CommunicationPipe pipe = new CommunicationPipe();
+        LoaderSubscriptionResult loaderSubscriptionResult = directTopicRegistry.addLoader(topicName, true, null);
 
 
-        InputStream loaderInputStream = pipe.getInputStream();
-        List<ConstantIdentityKey> keys = Collections.emptyList();
-        LoaderSubscriptionResult loaderSubscriptionResult = directTopicRegistry.addLoader(topicName, loaderInputStream, keys, QuickExecutor.createNewInstance("Test Executor", null), aeron, true, null);
-        Runnable dataAvailabilityCallback = loaderSubscriptionResult.getDataAvailabilityCallback();
+        Thread loaderThread = new Thread(() -> {
+            MessageChannel<InstrumentMessage> channel = new DirectLoaderFactory().create(aeron, false, loaderSubscriptionResult.getPublisherChannel(), loaderSubscriptionResult.getDataStreamId(), loaderSubscriptionResult.getTypes(), null, null, null, false);
 
-        OutputStream outputStream = new FilterOutputStream(pipe.getOutputStream()) {
-            @Override
-            public void flush() throws IOException {
-                super.flush();
-                dataAvailabilityCallback.run();
-            }
-        };
+            ErrorMessage msg = new ErrorMessage();
+            msg.setSymbol("ABC");
+            msg.setSeqNum(234567890);
 
-        Thread loaderThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                List<ConstantIdentityKey> mapping = Arrays.asList(loaderSubscriptionResult.getMapping());
-                MessageChannel<InstrumentMessage> channel = new DirectLoaderFactory().create(aeron, false, loaderSubscriptionResult.getPublisherChannel(), loaderSubscriptionResult.getMetadataSubscriberChannel(), loaderSubscriptionResult.getDataStreamId(), loaderSubscriptionResult.getServerMetadataStreamId(), loaderSubscriptionResult.getTypes(), loaderSubscriptionResult.getLoaderNumber(), outputStream, mapping, null, null);
-
-                ErrorMessage msg = new ErrorMessage();
-                msg.setSymbol("ABC");
-                msg.setDetails("more to come");
-
-                while (true) {
-                    msg.setTimeStampMs(TimeKeeper.currentTime);
-                    channel.send(msg);
-                }
+            while (true) {
+                msg.setTimeStampMs(TimeKeeper.currentTime);
+                channel.send(msg);
             }
         });
         loaderThread.setName("SENDER");
@@ -111,12 +92,10 @@ public class DirectChannelWithServerTest {
         ReaderSubscriptionResult readerSubscriptionResult = directTopicRegistry.addReader(topicName, true, null, null);
 
         RatePrinter ratePrinter = new RatePrinter("Listener");
-        SubscriptionWorker directMessageListener = new DirectReaderFactory().createListener(aeron, false, readerSubscriptionResult.getSubscriberChannel(), readerSubscriptionResult.getDataStreamId(), readerSubscriptionResult.getTypes(), new MessageProcessor() {
-            @Override
-            public void process(InstrumentMessage message) {
-                ratePrinter.inc();
-            }
-        }, null, directTopicRegistry.getMappingProvider(topicName));
+        SubscriptionWorker directMessageListener = new DirectReaderFactory().createListener(aeron, false, readerSubscriptionResult.getSubscriberChannel(), readerSubscriptionResult.getDataStreamId(), readerSubscriptionResult.getTypes(),
+                message -> {
+                    ratePrinter.inc();
+                }, null, null);
         ratePrinter.start();
         directMessageListener.processMessagesUntilStopped();
     }

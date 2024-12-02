@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -65,8 +65,29 @@ public class LoadingOptions extends CommonOptions {
     public LoadingOptions () {
     }
 
-    public LoadingOptions (boolean raw) {        
+    /**
+     * Deprecated. Use constructor with full list of arguments specification:
+     *    @see #LoadingOptions(boolean raw, WriteMode writeMode)
+     * @param raw use raw messages (@see deltix.qsrv.hf.pub.RawMessage).
+     */
+    @Deprecated(since = "5.6")
+    public LoadingOptions (boolean raw) {
+        this(raw, WriteMode.REWRITE);
+    }
+
+    /**
+     * Deprecated. Use constructor with full list of arguments specification:
+     *    @see #LoadingOptions(boolean raw, WriteMode writeMode)
+     * @param writeMode WriteMode
+     */
+    @Deprecated(since = "1.2")
+    public LoadingOptions (WriteMode writeMode) {
+        this(false, writeMode);
+    }
+
+    public LoadingOptions (boolean raw, WriteMode writeMode) {
         this.raw = raw;
+        this.writeMode = writeMode;
     }
 
     public boolean isGlobalSorting () {
@@ -77,9 +98,18 @@ public class LoadingOptions extends CommonOptions {
         this.globalSorting = globalSorting;
     }
 
-    public LoadingOptions(WriteMode writeMode) {
-        this.writeMode = writeMode;
+    public static LoadingOptions withAppendMode(boolean raw) {
+        return new LoadingOptions(raw, WriteMode.APPEND);
     }
+
+    public static LoadingOptions withRewriteMode(boolean raw) {
+        return new LoadingOptions(raw, WriteMode.REWRITE);
+    }
+
+    public static LoadingOptions withInsertMode(boolean raw) {
+        return new LoadingOptions(raw, WriteMode.INSERT);
+    }
+
 
 //    public boolean isLoaderLevel () {
 //        return loaderLevel;
@@ -95,6 +125,14 @@ public class LoadingOptions extends CommonOptions {
 
     public void setRaw (boolean raw) {
         this.raw = raw;
+    }
+
+    public String getSpace() {
+        return space;
+    }
+
+    public void setSpace(String space) {
+        this.space = space;
     }
 
     public void addErrorAction(Class <? extends LoadingError> clazz, ErrorAction action) {
@@ -144,6 +182,11 @@ public class LoadingOptions extends CommonOptions {
           New data inserts into a stream without truncation
          */
         INSERT
+    }
+
+    public LoadingOptions withSpace(String space) {
+        this.space = space;
+        return this;
     }
 
     public void copy(LoadingOptions template) {

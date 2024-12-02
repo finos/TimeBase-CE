@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -23,11 +23,13 @@ import io.aeron.ChannelUriStringBuilder;
 import io.aeron.CommonContext;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Alexei Osipov
@@ -36,24 +38,25 @@ import java.util.Map;
 public class TopicChannelFactory {
 
     @NotNull
-    public static String createPublisherChannel(TopicType topicType, @Nullable String channel, Map<TopicChannelOption, String> channelOptions) {
+    public static String createPublisherChannel(TopicType topicType, @Nullable String channel, Map<TopicChannelOption, String> channelOptions, int defaultTopicTermBufferLength) {
         if (channel != null) {
             // This topic has legacy predefined channel. Use it as is.
             return channel;
         }
+        int termBufferLength = getTermBufferLength(channelOptions, defaultTopicTermBufferLength);
 
         switch (topicType) {
             case IPC:
-                return createIpcChannel();
+                return createIpcChannel(termBufferLength);
 
             case MULTICAST:
-                return createMulticastChannel(channelOptions);
+                return createMulticastChannel(channelOptions, termBufferLength);
 
             case UDP_SINGLE_PUBLISHER:
                 return createSinglePublisherChannelForPublisher(
                         Preconditions.checkNotNull(channelOptions.get(TopicChannelOption.PUBLISHER_HOST)),
-                        asInt(channelOptions.get(TopicChannelOption.PUBLISHER_PORT))
-                );
+                        asInt(channelOptions.get(TopicChannelOption.PUBLISHER_PORT)),
+                        termBufferLength);
 
             default:
                 throw new IllegalArgumentException("Unknown topic type: " + topicType);
@@ -61,18 +64,19 @@ public class TopicChannelFactory {
     }
 
     @NotNull
-    public static String createSubscriberChannel(TopicType topicType, @Nullable String channel, Map<TopicChannelOption, String> channelOptions, @Nullable String subscriberHost) {
+    public static String createSubscriberChannel(TopicType topicType, @Nullable String channel, Map<TopicChannelOption, String> channelOptions, @Nullable String subscriberHost, int defaultTopicTermBufferLength) {
         if (channel != null) {
             // This topic has legacy predefined channel. Use it as is.
             return channel;
         }
+        int termBufferLength = getTermBufferLength(channelOptions, defaultTopicTermBufferLength);
 
         switch (topicType) {
             case IPC:
-                return createIpcChannel();
+                return createIpcChannel(termBufferLength);
 
             case MULTICAST:
-                return createMulticastChannel(channelOptions);
+                return createMulticastChannel(channelOptions, termBufferLength);
 
             case UDP_SINGLE_PUBLISHER:
                 if (subscriberHost == null) {
@@ -82,70 +86,8 @@ public class TopicChannelFactory {
                         Preconditions.checkNotNull(channelOptions.get(TopicChannelOption.PUBLISHER_HOST), "Publisher host must be specified"),
                         asInt(channelOptions.get(TopicChannelOption.PUBLISHER_PORT)),
                         subscriberHost,
-                        asInt(channelOptions.get(TopicChannelOption.SUBSCRIBER_PORT))
-                );
-
-            default:
-                throw new IllegalArgumentException("Unknown topic type: " + topicType);
-        }
-    }
-
-    // TODO: Make publisher and subscriber channel to use smaller term length
-    @NotNull
-    public static String createMetadataPublisherChannel(TopicType topicType, @Nullable String channel, Map<TopicChannelOption, String> channelOptions, @Nullable String timebaseServerHost) {
-        if (channel != null) {
-            // This topic has legacy predefined channel. Use it as is.
-            return channel;
-        }
-
-        switch (topicType) {
-            case IPC:
-                return createIpcChannel();
-
-            case MULTICAST:
-                // TODO: We can use different port and host for metadata
-                return createMulticastChannel(channelOptions);
-
-            case UDP_SINGLE_PUBLISHER:
-                if (timebaseServerHost == null) {
-                    throw new IllegalArgumentException("timebaseServerHost must be set for SINGLE_PUBLISHER topic");
-                }
-                return createSinglePublisherChannelForPublisher(
-                        timebaseServerHost,
-                        DXServerAeronContext.SINGLE_PUBLISHER_TOPIC_METADATA_PUBLISHER_PORT
-                );
-
-            default:
-                throw new IllegalArgumentException("Unknown topic type: " + topicType);
-        }
-    }
-
-    @NotNull
-    public static String createMetadataSubscriberChannel(TopicType topicType, @Nullable String channel, Map<TopicChannelOption, String> channelOptions, @Nullable String timebaseServerHost) {
-        if (channel != null) {
-            // This topic has legacy predefined channel. Use it as is.
-            return channel;
-        }
-
-        switch (topicType) {
-            case IPC:
-                return createIpcChannel();
-
-            case MULTICAST:
-                // TODO: We can use different port and host for metadata
-                return createMulticastChannel(channelOptions);
-
-            case UDP_SINGLE_PUBLISHER:
-                if (timebaseServerHost == null) {
-                    throw new IllegalArgumentException("timebaseServerHost must be set for SINGLE_PUBLISHER topic");
-                }
-                String publisherHost = Preconditions.checkNotNull(channelOptions.get(TopicChannelOption.PUBLISHER_HOST), "Publisher host must be specified");
-                return createSinglePublisherChannelForSubscriber(
-                        timebaseServerHost,
-                        DXServerAeronContext.SINGLE_PUBLISHER_TOPIC_METADATA_PUBLISHER_PORT,
-                        publisherHost,
-                        DXServerAeronContext.SINGLE_PUBLISHER_TOPIC_METADATA_SUBSCRIBER_PORT
-                );
+                        asInt(channelOptions.get(TopicChannelOption.SUBSCRIBER_PORT)),
+                        termBufferLength);
 
             default:
                 throw new IllegalArgumentException("Unknown topic type: " + topicType);
@@ -163,17 +105,18 @@ public class TopicChannelFactory {
 
 
     @NotNull
-    public static String createIpcChannel() {
-        return CommonContext.IPC_CHANNEL + "?term-length=" + getTopicTermBufferLength();
+    public static String createIpcChannel(int termBufferLength) {
+        return CommonContext.IPC_CHANNEL + "?term-length=" + termBufferLength;
     }
 
     @NotNull
-    private static String createMulticastChannel(Map<TopicChannelOption, String> channelOptions) {
+    private static String createMulticastChannel(Map<TopicChannelOption, String> channelOptions, int topicTermBufferLength) {
         return createMulticastChannel(
                 channelOptions.get(TopicChannelOption.MULTICAST_ENDPOINT_HOST),
                 asInt(channelOptions.get(TopicChannelOption.MULTICAST_ENDPOINT_PORT)),
                 channelOptions.get(TopicChannelOption.MULTICAST_NETWORK_INTERFACE),
-                asInt(channelOptions.get(TopicChannelOption.MULTICAST_TTL))
+                asInt(channelOptions.get(TopicChannelOption.MULTICAST_TTL)),
+                topicTermBufferLength
         );
     }
 
@@ -181,10 +124,12 @@ public class TopicChannelFactory {
      * Constructs Aeron channel URI for Multicast-based topics.
      */
     @NotNull
-    public static String createMulticastChannel(@Nullable String endpointHost, @Nullable Integer endpointPort, @Nullable String networkInterface, @Nullable Integer ttl) {
+    public static String createMulticastChannel(
+            @Nullable String endpointHost, @Nullable Integer endpointPort, @Nullable String networkInterface, @Nullable Integer ttl, int topicTermBufferLength
+    ) {
         ChannelUriStringBuilder builder = new ChannelUriStringBuilder()
                 .media("udp")
-                .termLength(getTopicTermBufferLength());
+                .termLength(topicTermBufferLength);
 
         if (endpointHost != null) {
             try {
@@ -218,11 +163,13 @@ public class TopicChannelFactory {
         return builder.build();
     }
 
-    @NotNull
-    private static String createSinglePublisherChannelForPublisher(String publisherHost, @Nullable Integer publisherPort) {
+    @Nonnull
+    private static String createSinglePublisherChannelForPublisher(String publisherHost, @Nullable Integer publisherPort, int termBufferLength) {
         ChannelUriStringBuilder builder = new ChannelUriStringBuilder()
                 .media("udp")
-                .termLength(getTopicTermBufferLength());
+                .controlMode(CommonContext.MDC_CONTROL_MODE_DYNAMIC)
+                .flowControl("min")
+                .termLength(termBufferLength);
 
         if (publisherPort == null) {
             publisherPort = DXServerAeronContext.SINGLE_PUBLISHER_TOPIC_DEFAULT_PUBLISHER_PORT;
@@ -233,11 +180,18 @@ public class TopicChannelFactory {
         return builder.build();
     }
 
-    @NotNull
-    private static String createSinglePublisherChannelForSubscriber(String publisherHost, @Nullable Integer publisherPort, String subscriberHost, @Nullable Integer subscriberPort) {
+    @Nonnull
+    private static String createSinglePublisherChannelForSubscriber(
+            String publisherHost,
+            @Nullable Integer publisherPort,
+            String subscriberHost,
+            @Nullable Integer subscriberPort,
+            int termBufferLength
+    ) {
         ChannelUriStringBuilder builder = new ChannelUriStringBuilder()
                 .media("udp")
-                .termLength(getTopicTermBufferLength());
+                .controlMode(CommonContext.MDC_CONTROL_MODE_DYNAMIC)
+                .termLength(termBufferLength);
 
         if (publisherPort == null) {
             publisherPort = DXServerAeronContext.SINGLE_PUBLISHER_TOPIC_DEFAULT_PUBLISHER_PORT;
@@ -254,8 +208,8 @@ public class TopicChannelFactory {
         return builder.build();
     }
 
-    private static int getTopicTermBufferLength() {
-        // Note: we override buffer size because TB sets it to relatively low value (2Mb).
-        return DXServerAeronContext.TOPIC_IPC_TERM_BUFFER_LENGTH;
+    public static int getTermBufferLength(Map<TopicChannelOption, String> channelOptions, int defaultTopicTermBufferLength) {
+        Integer termBufferLength = asInt(channelOptions.get(TopicChannelOption.TERM_BUFFER_LENGTH));
+        return Objects.requireNonNullElse(termBufferLength, defaultTopicTermBufferLength);
     }
 }

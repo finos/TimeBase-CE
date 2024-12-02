@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -14,7 +14,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.epam.deltix.qsrv.dtb.store.impl;
 
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
@@ -47,55 +46,64 @@ public class WriteQueue {
         notifyAll ();
     }
 
-    public synchronized void         add(TSFile tsf) {
-        assert !contains(tsf) : tsf + " is already queued";
-
-        tsf.queued = true;
-
-        if (PDSImpl.LOGGER.isDebugEnabled())
-            PDSImpl.LOGGER.debug("Adding to the write queue: " + tsf.getPathString());
-
-        int index = getQueueIndex(tsf);
-        dirtyFiles[index].addLast(tsf);
+    public void         add(TSFile tsf) {
 
         usedMemory.addAndGet(tsf.getAllocatedSize(true));
 
-        notifyAll ();
+        synchronized (this) {
+            assert !contains(tsf) : tsf + " is already queued";
+
+            tsf.queued = true;
+
+            if (PDSImpl.LOGGER.isDebugEnabled())
+                PDSImpl.LOGGER.debug("Adding to the write queue: " + tsf.getPathString());
+
+            int index = getQueueIndex(tsf);
+            dirtyFiles[index].addLast(tsf);
+
+            notifyAll ();
+        }
     }
 
     private int getQueueIndex(TSFile tsf) {
         return tsf.root.hashCode() % writers;
     }
 
-    public synchronized boolean     remove(TSFile tsf) {
-        int index = getQueueIndex(tsf);
-        boolean removed = dirtyFiles[index].remove(tsf);
+    public boolean     remove(TSFile tsf) {
+        boolean removed;
 
-        if (removed) {
-            tsf.queued = false;
-            usedMemory.addAndGet(-tsf.getAllocatedSize(false));
-            notifyAll ();
+        synchronized (this) {
+            int index = getQueueIndex(tsf);
+            removed = dirtyFiles[index].remove(tsf);
+
+            if (removed) {
+                tsf.queued = false;
+                notifyAll();
+            }
         }
 
+        if (removed)
+            usedMemory.addAndGet(-tsf.getAllocatedSize(false));
         return removed;
     }
 
-    public synchronized TSFile       poll(int index) throws InterruptedException {
-        ArrayDeque<TSFile> deque = dirtyFiles[index];
+    public  TSFile       poll(int index) throws InterruptedException {
+        TSFile next;
 
-        while (deque.isEmpty ()) {
-            // We don't have "normal" file to process, so let's try a "bad" file
-            if (!badDirtyFiles.isEmpty()) {
-                return badDirtyFiles.remove(0);
+        synchronized (this) {
+            ArrayDeque<TSFile> deque = dirtyFiles[index];
+            while (deque.isEmpty()) {
+                // We don't have "normal" file to process, so let's try a "bad" file
+                if (!badDirtyFiles.isEmpty()) {
+                    return badDirtyFiles.remove(0);
+                }
+                wait();
             }
-
-            wait ();
+            next = deque.poll();
         }
 
-        TSFile file = deque.poll();
-        usedMemory.addAndGet(-file.getAllocatedSize(false));
-
-        return file;
+        usedMemory.addAndGet(-next.getAllocatedSize(false));
+        return next;
     }
 
     public long                     getUsedMemory() {

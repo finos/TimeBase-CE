@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -60,7 +60,7 @@ public class SchemaUpdateTask implements TransformationTask {
     }
 
     public SchemaChangeTask     getChanges(DXTickStream stream) {
-        RecordClassSet classSet = TDBProtocol.readClassSet(schema);
+        RecordClassSet classSet = (RecordClassSet) TDBProtocol.readClassSet(schema);
 
         RecordClassSet source = new RecordClassSet ();
         MetaDataChange.ContentType  inType;

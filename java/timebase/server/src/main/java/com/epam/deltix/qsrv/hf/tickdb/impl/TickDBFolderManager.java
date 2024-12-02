@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.impl;
 
 import com.epam.deltix.util.io.*;
+import com.epam.deltix.util.io.UncheckedIOException;
 import com.epam.deltix.util.lang.Util;
 import java.io.*;
 import java.util.*;
@@ -26,37 +27,36 @@ import java.util.logging.Logger;
  *
  */
 public class TickDBFolderManager {
-    static final Logger                         LOGGER =
-        Logger.getLogger ("deltix.tickdb");
 
     static int FOLDER_HAS_STREAM_FILES  = 0x1;
     static int FOLDER_HAS_SUBFOLDERS    = 0x10;
     static int FOLDER_HAS_KNOWN_FILES   = 0x100;
     static int FOLDER_IS_EMPTY          = 0x1000;
     static int FOLDER_RENAMED           = 0x10000;
+    static int FOLDER_HAS_DATA_FILES    = 0x100000;
 
     public static class FolderInfo {
         File                                    folder;
         List <File>                             files = new ArrayList <File> ();
-        
+
         FolderInfo (File folder) {
-            this.folder = folder;                        
+            this.folder = folder;
         }
     }
 
     private final boolean                       readOnly;
-    private Map <File, FolderInfo>              dbDirs = new TreeMap <File, FolderInfo> ();
-    private Map <String, File>                  nameToFileMap = new TreeMap <String, File> ();
-    
+    private final Map <File, FolderInfo>        dbDirs = new TreeMap <File, FolderInfo> ();
+    private final Map <String, File>            nameToFileMap = new TreeMap <String, File> ();
+
     public TickDBFolderManager (boolean readOnly, File ... dirs) throws IOException {
         this.readOnly = readOnly;
         addDirs(dirs);
     }
 
     public void                             addDirs(File ... dirs) throws IOException {
-        
+
         ArrayList<String> list = new ArrayList<String>();
-        
+
         for (File file : dbDirs.keySet())
             list.add(file.getCanonicalPath());
 
@@ -91,20 +91,20 @@ public class TickDBFolderManager {
         }
     }
 
-    private void                            addDir (File dir) 
-        throws IOException
+    private void                            addDir (File dir)
+            throws IOException
     {
         File                canonicalDir = dir.getCanonicalFile ();
 
-        if (!dbDirs.containsKey (canonicalDir)) {            
+        if (!dbDirs.containsKey (canonicalDir)) {
             FolderInfo      fi = new FolderInfo (canonicalDir);
             File []         ff = canonicalDir.listFiles ();
 
             if ((getFolderState(dir) & FOLDER_HAS_STREAM_FILES) == FOLDER_HAS_STREAM_FILES) {
                 String message = String.format(
-                    "Folder '%s' contains stream definition file (%s) and cannot be opened as timebase.",
-                    dir, dir.getName() + TickDBImpl.STREAM_EXTENSION);
-                
+                        "Folder '%s' contains stream definition file (%s) and cannot be opened as timebase.",
+                        dir, dir.getName() + TickDBImpl.STREAM_EXTENSION);
+
                 throw new IllegalStateException(message);
             }
 
@@ -125,7 +125,7 @@ public class TickDBFolderManager {
     }
 
     private void addFiles(FolderInfo info, File[] files, boolean isRootFolder)
-        throws IOException
+            throws IOException
     {
         ArrayList<File> toRename = new ArrayList<>();
 
@@ -135,25 +135,26 @@ public class TickDBFolderManager {
             // OK to run read-only directly from a project
             if (readOnly && f.isHidden())
                 continue;
-            
+
             if (f.isDirectory() && isRootFolder) {
                 int state = getFolderState(f);
                 String message = null;
 
                 if ((state & FOLDER_IS_EMPTY) == FOLDER_IS_EMPTY) {
+                    TickDBImpl.LOG.warn ("Deleting empty folder " + f);
                     f.delete();
-                } 
+                }
                 else if (!readOnly) {
                     if ((state & FOLDER_HAS_STREAM_FILES) != FOLDER_HAS_STREAM_FILES) {
-                        if ((state & FOLDER_HAS_KNOWN_FILES) != FOLDER_HAS_KNOWN_FILES)
+                        if ((state & FOLDER_HAS_DATA_FILES) == FOLDER_HAS_DATA_FILES) {
                             message = String.format(
-                                "Folder '%s' does not contain stream definition file (%s) as expected.",
-                                f, f.getName() + TickDBImpl.STREAM_EXTENSION);
+                                    "Folder '%s' does not contain stream definition file (%s) as expected.",
+                                    f, f.getName() + TickDBImpl.STREAM_EXTENSION);
+                        } else {
+                            TickDBImpl.LOG.warn ("Ignore folder " + f + " (missing definition file and has no data)");
+                            continue;
+                        }
                     }
-
-//                    else if ((state & FOLDER_HAS_SUBFOLDERS) == FOLDER_HAS_SUBFOLDERS) {
-//                        message = String.format("Folder %s cannot contain any sub-folders.", f);
-//                    }
                 }
 
                 if (message != null)
@@ -191,6 +192,8 @@ public class TickDBFolderManager {
         if (dups != null)
             throw new IOException (dups.toString ());
 
+        toRename.sort(Comparator.comparing(File::getName));
+
         while (!toRename.isEmpty()) {
             for (int i = toRename.size() - 1; i >= 0; i--) {
                 File f = rename(toRename.get(i));
@@ -206,9 +209,9 @@ public class TickDBFolderManager {
     }
 
     private void                            addCatalogToDirSet (
-        File                                    inDir
+            File                                    inDir
     )
-        throws IOException
+            throws IOException
     {
         File            cat = new File (inDir, TickDBImpl.CATALOG_NAME);
 
@@ -219,12 +222,12 @@ public class TickDBFolderManager {
                 if (folder.isDirectory ())
                     addDirs (folder);
                 else
-                    LOGGER.warning ("Folder " + path + " referenced in " + cat + " is invalid.");
+                    TickDBImpl.LOG.warn ("Folder " + path + " referenced in " + cat + " is invalid.");
             }
         } catch (FileNotFoundException x) {
             // do nothing
         } catch (InterruptedException ix) {
-            throw new com.epam.deltix.util.io.UncheckedIOException(ix);
+            throw new UncheckedIOException(ix);
         }
     }
 
@@ -233,14 +236,14 @@ public class TickDBFolderManager {
     }
 
     public void                         createCatalogs ()
-        throws IOException
+            throws IOException
     {
         for (File dbDir : dbDirs.keySet ())
             createCatalog (dbDir);
     }
 
     public void                         createCatalog (File inDir)
-        throws IOException
+            throws IOException
     {
         File            cat = new File (inDir, TickDBImpl.CATALOG_NAME);
         FileWriter      fwr = new FileWriter (cat);
@@ -253,7 +256,7 @@ public class TickDBFolderManager {
                 fwr.write (dbDir.getAbsolutePath ());
                 fwr.write ("\n");
             }
-            
+
             fwr.close ();
             fwr = null;
         } finally {
@@ -264,34 +267,34 @@ public class TickDBFolderManager {
     public Map <String, File>           getNameToFileMap () {
         return (Collections.unmodifiableMap (nameToFileMap));
     }
-    
+
     public void                         format (File ... newFolders)
-        throws IOException
+            throws IOException
     {
         for (File f : newFolders) {
-            
+
             if (!f.mkdirs ()) {
                 File[] files = f.isDirectory() ? f.listFiles() : new File[0];
-                
+
                 for (File file : files) {
 
                     if (file.isDirectory()) {
                         int state = getFolderState(file);
-                        
+
                         if ((state & FOLDER_HAS_STREAM_FILES) == FOLDER_HAS_STREAM_FILES ||
-                            (state & FOLDER_HAS_KNOWN_FILES) == FOLDER_HAS_KNOWN_FILES) {
+                                (state & FOLDER_HAS_KNOWN_FILES) == FOLDER_HAS_KNOWN_FILES) {
                             IOUtil.removeRecursive (file, null, true);
                         } else {
                             String message = String.format(
-                                "Folder '%s' does not contain stream definition file (%s), so it cannot be formatted.",
-                                file, file.getName() + TickDBImpl.STREAM_EXTENSION);
+                                    "Folder '%s' does not contain stream definition file (%s), so it cannot be formatted.",
+                                    file, file.getName() + TickDBImpl.STREAM_EXTENSION);
 
                             throw new IllegalStateException(message);
                         }
                     }
                 }
             }
-            
+
             IOUtil.removeRecursive(f, null, false);
             addDirs(f);
         }
@@ -300,8 +303,8 @@ public class TickDBFolderManager {
     }
 
     /*
-         Renames folder to make sure that stream and folder name are equals
-      */
+        Renames folder to make sure that stream and folder name are equals
+     */
     public static File               rename(File folder) {
 
         File[] files = folder.listFiles(new FilenameFilter() {
@@ -310,6 +313,9 @@ public class TickDBFolderManager {
                 return name.endsWith(TickDBImpl.STREAM_EXTENSION);
             }
         });
+
+        if (files == null)
+            throw new IllegalStateException("Folder" + folder + " does not contain stream definition file.");
 
         if (files.length != 1)
             throw new IllegalStateException("Folder" + folder + " contains more that one definition file.");
@@ -333,6 +339,7 @@ public class TickDBFolderManager {
     public static int                   getFolderState(File folder) {
         int result = 0;
         boolean hasUnknownFiles = false;
+        boolean hasDataFiles = false;
 
         File[] files = folder.listFiles();
 
@@ -343,12 +350,15 @@ public class TickDBFolderManager {
                 result |= FOLDER_HAS_SUBFOLDERS;
                 if ((getFolderState(file) & FOLDER_HAS_KNOWN_FILES) != FOLDER_HAS_KNOWN_FILES)
                     hasUnknownFiles = true;
+
+                if ((getFolderState(file) & FOLDER_HAS_DATA_FILES) == FOLDER_HAS_DATA_FILES)
+                    hasDataFiles = true;
             } else {
                 String fileName = file.getName();
 
                 int index = fileName.indexOf(TickDBImpl.STREAM_EXTENSION);
 
-                if (index > 0) {
+                if (index > 0 && fileName.endsWith(TickDBImpl.STREAM_EXTENSION)) {
                     String stream = fileName.substring(0, index);
                     if (stream.startsWith(TickStreamImpl.NEW_PREFIX))
                         stream = stream.substring(TickStreamImpl.NEW_PREFIX.length());
@@ -358,6 +368,9 @@ public class TickDBFolderManager {
 
                     result |= FOLDER_HAS_STREAM_FILES;
                 } else {
+                    if (!hasDataFiles)
+                        hasDataFiles = TickDBImpl.isDataFile(folder, fileName);
+
                     if (!hasUnknownFiles)
                         hasUnknownFiles = !TickDBImpl.isDBFile(folder, fileName);
                 }
@@ -367,10 +380,12 @@ public class TickDBFolderManager {
         if (!hasUnknownFiles)
             result |= FOLDER_HAS_KNOWN_FILES;
 
+        if (hasDataFiles)
+            result |= FOLDER_HAS_DATA_FILES;
+
         if (files == null || files.length == 0)
             result |= FOLDER_IS_EMPTY;
 
         return result;
     }
-
 }

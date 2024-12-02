@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.pub;
 
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockOptions;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.*;
@@ -224,6 +225,20 @@ public interface DXTickStream extends WritableTickStream, AuthorizationControlle
     DBLock                   lock(LockType type)
             throws StreamLockedException, UnsupportedOperationException;
 
+    /**
+     *  Non-blocking operation that lock of this stream (or fails immediately).
+     *
+     *  @param      options     Lock options.
+     *  @return     A not-null DBLock object representing the newly-acquired lock
+     *
+     *  @throws     StreamLockedException
+     *              if this stream is already locked by another client
+     *
+     *  @throws     UnsupportedOperationException
+     *              if this stream is not supporting locks
+     */
+    DBLock                   lock(LockOptions options)
+        throws StreamLockedException, UnsupportedOperationException;
 
     /** Blocking operation that attempts to obtain WRITE lock on this stream.
      *  If lock cannot be obtained during specified timeout operation fails with StreamLockedException.
@@ -244,7 +259,7 @@ public interface DXTickStream extends WritableTickStream, AuthorizationControlle
     /** Blocking operation that attempts to obtain given type of lock on this stream.
      *  If lock cannot be obtained during specified timeout operation fails with StreamLockedException.
      *
-     *  @param      type        Type of lock (WRITE or READ)
+     *  @param      type        Type of lock (WRITE, READ or DATA)
      *  @param      timeout     timeout to wait in milliseconds
      *  @return     A not-null DBLock object representing the newly-acquired lock
      *
@@ -258,8 +273,27 @@ public interface DXTickStream extends WritableTickStream, AuthorizationControlle
     DBLock                   tryLock(LockType type, long timeout)
             throws StreamLockedException, UnsupportedOperationException;
 
+    /** Blocking operation that attempts to obtain given type of lock on this stream.
+     *  If lock cannot be obtained during specified timeout operation fails with StreamLockedException.
+     *
+     *  @param      options     Lock options.
+     *  @param      timeout     timeout to wait in milliseconds
+     *  @return     A not-null DBLock object representing the newly-acquired lock
+     *
+     *  @throws     StreamLockedException
+     *              if this stream is already locked by another client
+     *
+     *  @throws     UnsupportedOperationException
+     *              if this stream is not supporting locks
+     *
+     */
+    DBLock                   tryLock(LockOptions options, long timeout)
+        throws StreamLockedException, UnsupportedOperationException;
+
     /**
      * Blocking operation that attempts to verify that given lock is applied to the stream.
+     * This interface is not checks read or write permission of lock.
+     * To check a permission use LockVerifier interface.
      *
      *  @param      type        Type of lock (WRITE or READ)
      *  @return     A DBLock object representing the applied lock, or null if lock is not exists

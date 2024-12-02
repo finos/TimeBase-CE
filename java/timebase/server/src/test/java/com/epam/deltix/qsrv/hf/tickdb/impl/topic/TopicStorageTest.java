@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -47,14 +47,6 @@ public class TopicStorageTest {
         topic.setChannel("a:cnannel?some=params&etc=20");
         topic.setTypes(Arrays.asList(getDescriptorForInstrumentMessage(), getDescriptorForInstrumentMessage(), getDescriptorForInstrumentMessage()));
 
-        ConstantIdentityKey e1 = new ConstantIdentityKey("GOOG");
-        ConstantIdentityKey e2 = new ConstantIdentityKey("APPL");
-        ConstantIdentityKey e3 = new ConstantIdentityKey("DLTX");
-        ConstantIdentityKey e4 = new ConstantIdentityKey("ABC");
-        List<ConstantIdentityKey> originalEntities = Arrays.asList(e1, e2, e3, e4);
-        topic.setEntities(originalEntities);
-
-
         AbstractPath topicFilePath = topicStorage.getTopicFilePath(topic.getTopicKey());
         TopicStorage.writeTopic(topicFilePath, topic);
 
@@ -62,7 +54,6 @@ public class TopicStorageTest {
         assertEquals(topic.getTopicKey(), read.getTopicKey());
         assertEquals(topic.getChannel(), read.getChannel());
         assertEquals(topic.getTypes(), read.getTypes());
-        assertEquals(new HashSet<>(originalEntities), new HashSet<>(read.getEntities()));
 
         topicFilePath.deleteExisting();
 

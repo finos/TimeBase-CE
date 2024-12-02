@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -48,7 +48,7 @@ public abstract class DataType implements Serializable, Cloneable {
     protected String          encoding;
 
     @XmlElement (name = "nullable")
-    private boolean           nullable;
+    protected boolean           nullable;
 
     protected DataType() {
         encoding = null;
@@ -71,9 +71,6 @@ public abstract class DataType implements Serializable, Cloneable {
     }
     
     public final DataType           nullableInstance (boolean nullable) {
-        if (this.nullable == nullable)
-            return (this);
-
         DataType    copy = clone ();
         copy.nullable = nullable;
         return (copy);        
@@ -87,6 +84,7 @@ public abstract class DataType implements Serializable, Cloneable {
         return nullable;
     }
 
+    @Deprecated
     public void                     setNullable(boolean nullable) {
         this.nullable = nullable;
     }

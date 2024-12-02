@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -169,7 +169,7 @@ public class DownloadHandlerFactory {
             int aeronDataStreamId = aeronContext.getNextStreamId();
             int aeronCommandStreamId = aeronContext.getNextStreamId();
             String aeronDir = aeronContext.getAeronDir();
-            AeronDownloadHandler.createAndStart(options, user, ds, db, cursor, tcursor, filter, binary, dout, clientVersion, aeronThreadTracker, aeron, aeronDir, aeronDataStreamId, aeronCommandStreamId);
+            AeronDownloadHandler.createAndStart(options, user, ds, db, cursor, filter, binary, dout, clientVersion, aeronThreadTracker, aeron, aeronDir, aeronDataStreamId, aeronCommandStreamId);
         } else {
             throw new IllegalStateException("Unknown transport type code: " + selectedTransportType);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -21,107 +21,73 @@ import org.agrona.BitUtil;
 /**
  * Communication types:
  * <ul>
- *     <li>A) From Loader to Consumer - Metadata and Message Data - high traffic. Low latency required. Aeron.</li>
- *     <li>B) From Loader to Server - Metadata (temporary entity ids), latency can be high. VSChannel.</li>
- *     <li>C) From Server to Loader - Metadata (permanent entity ids), latency can be high. Aeron (we could use sockets but we need fast non-blocking implementation).</li>
- *     <li>D) From Loader to Server and from Server to Loader - new loader registration process. Executed once per loader.</li>
- *     <li>E) From Consumer to Server and from Server to Consumer - new consumer registration process. Executed once per consumer.</li>
+ *     <li>A) From Loader to Consumer - Message Data - high traffic. Low latency required. Aeron.</li>
+ *     <li>B) From Loader to Server and from Server to Loader - new loader registration process. VSChannel. Executed once per loader.</li>
+ *     <li>C) From Consumer to Server and from Server to Consumer - new consumer registration process. VSChannel. Executed once per consumer.</li>
  * </ul>
  *
  * Conventions:
  * <ul>
- *     <li>Consumer reads data only from E-type channel.</li>
- *     <li>Loader must send permanent entity index to client as soon as it known to loader. That's not server's responsibility.</li>
- *     <li>Server always responds to loader with all requested symbols</li>
- *
- *     <li>Types are defined upon topic creation and can't be changed</li>
- *     <li>Entities can be initialized upon topic creation. So all loaders will know such entities upon start.</li>
- *     <li>Entities can be added/updated upon loader creation. Each loader get full list of known entities upon start.</li>
- *     <li>Entities can be added by any loader on the fly. Such entities get temporary ID. Loader is responsible to send that temporary mapping to topic server. Topic server will assign permanent id</li>
+ *     <li>Consumer reads all message data from A-type channel.</li>
+ *     <li>Types are defined upon topic creation and can't be changed. We send only type index with each message.</li>
+ *     <li>Symbol data is sent with each message. Reason: consumers can join "topics" at any moment,
+ *     as result it very difficult to deliver symbol mapping data without potential latency penalties.</li>
  * </ul>
- *
  *
  *
  * @author Alexei Osipov
  */
 public class DirectProtocol {
+    public static final int PROTOCOL_VERSION = 3;
+
+    public static final int PROTOCOL_VERSION_ADDED_TARGET_STREAM = 3;
+
+
     public static final byte CODE_MSG = 1; // Data message
-    public static final byte CODE_METADATA = 2; // Metadata (mapping of entity to index)
-    public static final byte CODE_TEMP_INDEX_REMOVED = 3; // Indication that specific temporary index is not used anymore
     public static final byte CODE_END_OF_STREAM = 4; // Indicated that specific loader is closed and will not publish more data
 
-    public static final int CODE_OFFSET = BitUtil.align(0, Byte.BYTES); // 0
-    public static final int AFTER_CODE_OFFSET = BitUtil.align(CODE_OFFSET + Byte.BYTES, Byte.BYTES);
+    // IMPORTANT! Code field is placed not at the beginning of message (offset 0) but at offset 8.
+    // This is needed to have aligned access to the "TIME" field without wasting extra space for padding.
+
 
     // Data message structure
+    private static final AlignedField TIME_FIELD = new AlignedField(Long.BYTES, 0);
+    private static final AlignedField CODE_FIELD = AlignedField.create(Byte.BYTES, TIME_FIELD); // Special field - determines message type in topics protocol
+    private static final AlignedField MSG_TYPE_FIELD = AlignedField.create(Byte.BYTES, CODE_FIELD);
+    //private static final AlignedField INSTRUMENT_FIELD = AlignedField.create(Byte.BYTES, MSG_TYPE_FIELD);
 
-    public static final int TYPE_OFFSET = BitUtil.align(AFTER_CODE_OFFSET, Byte.BYTES); // 1
-    // 2 bytes wasted here
-    public static final int ENTITY_OFFSET = BitUtil.align(TYPE_OFFSET + Byte.BYTES, Integer.BYTES); // 4
-    public static final int TIME_OFFSET = BitUtil.align(ENTITY_OFFSET + Integer.BYTES, Long.BYTES); // 8
-    public static final int DATA_OFFSET = BitUtil.align(TIME_OFFSET + Long.BYTES, Byte.BYTES); // 16
-    public static final int REQUIRED_HEADER_SIZE = DATA_OFFSET;
+    public static final int TIME_OFFSET = TIME_FIELD.getOffset(); // 0
+    public static final int CODE_OFFSET = CODE_FIELD.getOffset(); // 8
+    public static final int TYPE_OFFSET = MSG_TYPE_FIELD.getOffset(); // 9
+    //public static final int INSTRUMENT_OFFSET = INSTRUMENT_FIELD.getOffset(); // 10
+    public static final int SYMBOL_OFFSET = MSG_TYPE_FIELD.getEndOffset(); // 11
+    public static final int DATA_MSG_MIN_HEAD_SIZE = SYMBOL_OFFSET;
 
-    // Metadata message structure
-    // MDI-style access so we don't have to fix alignment
-    public static final int METADATA_OFFSET = BitUtil.align(AFTER_CODE_OFFSET, Byte.BYTES); // 1
+    // "End of stream" message structure
+    private static final AlignedField SESSION_ID_FIELD = AlignedField.create(Integer.BYTES, CODE_FIELD);
+    public static final int SESSION_ID_OFFSET = SESSION_ID_FIELD.getOffset();
+    public static final int END_OF_STREAM_MSG_SIZE = SESSION_ID_FIELD.getEndOffset();
 
-    // MDI-style access so we don't have to fix alignment
-    public static final int TEMP_INDEX_REMOVED_DATA_OFFSET = BitUtil.align(AFTER_CODE_OFFSET, Byte.BYTES); // 1
-    public static final int MAX_PUBLISHER_NUMBER = -Byte.MIN_VALUE - 1;
 
-    // MDI-style access so we don't have to fix alignment
-    public static final int END_OF_STREAM_DATA_OFFSET = BitUtil.align(AFTER_CODE_OFFSET, Byte.BYTES); // 1
+    private static final class AlignedField {
+        private final int byteSize; // Byte size of field
+        private final int offset; // Offset of field in message (aligned to byteSize)
 
-    public static int getFirstTempEntryIndex(int publisherNumber) {
-        return getMaxTempEntryIndex(publisherNumber);
-    }
-
-    public static int getMinTempEntryIndex(int publisherNumber) {
-        int maxPublisherNumber = -Byte.MIN_VALUE - 1;
-        if (publisherNumber > maxPublisherNumber) {
-            throw new IllegalArgumentException("No more than " + maxPublisherNumber + " publishers permitted");
+        AlignedField(int byteSize, int unalignedOffset) {
+            this.byteSize = byteSize;
+            this.offset = BitUtil.align(unalignedOffset, byteSize);
         }
-        if (publisherNumber < 1) {
-            throw new IllegalArgumentException("Publisher number must start from 1");
+
+        static AlignedField create(int byteSize, AlignedField previous) {
+            return new AlignedField(byteSize, previous.getEndOffset());
         }
-        int result = -(publisherNumber << 24 | 0x00_FF_FF_FF);
-        assert isValidTempIndex(result);
-        return result;
-    }
 
-    public static int getMaxTempEntryIndex(int publisherNumber) {
-        int maxPublisherNumber = MAX_PUBLISHER_NUMBER;
-        if (publisherNumber > maxPublisherNumber) {
-            throw new IllegalArgumentException("No more than " + maxPublisherNumber + " publishers permitted");
+        int getOffset() {
+            return offset;
         }
-        if (publisherNumber < 1) {
-            throw new IllegalArgumentException("Publisher number must start from 1");
+
+        int getEndOffset() {
+            return offset + byteSize;
         }
-        int result = -((publisherNumber << 24) | 0x00_00_00_00);
-        assert isValidTempIndex(result);
-        return result;
-    }
-
-    public static int getPublisherNumberFromTempIndex(int entityIndex) {
-        assert isValidTempIndex(entityIndex);
-        return (-entityIndex) >>> 24;
-    }
-
-    /**
-     * More strict check than in {@link #isTempIndex}.
-     * The difference is that we treat value -1 as invalid temp index because it's not permitted as value.
-     * This is done because we want to use value "-1" as "NOT_FOUND" value in lookups.
-     */
-    public static boolean isValidTempIndex(int entityIndex) {
-        return entityIndex < -1;
-    }
-
-    public static boolean isTempIndex(int entityIndex) {
-        return entityIndex < 0;
-    }
-
-    public static boolean isValidPermanentIndex(int entityIndex) {
-        return entityIndex >= 0;
     }
 }

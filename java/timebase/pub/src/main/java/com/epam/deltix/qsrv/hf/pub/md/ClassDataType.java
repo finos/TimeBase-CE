@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -94,11 +94,9 @@ public final class ClassDataType extends DataType {
         throws IOException
     {
         out.writeByte (T_OBJECT_TYPE);
-
         super.writeTo (out);
 
-        int     n = types.length;
-
+        int     n = types != null ? types.length : 0;
         out.writeShort (n);
 
         for (int ii = 0; ii < n; ii++)

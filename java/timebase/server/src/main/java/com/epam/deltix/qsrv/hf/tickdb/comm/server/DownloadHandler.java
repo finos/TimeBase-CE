@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -292,7 +292,7 @@ public class DownloadHandler {
 
         this.cursor = cursor;
 
-        this.commandProcessor = new CursorCommandProcessor(cursor, tcursor, user, ds.getRemoteAddress(), ds.getRemoteApplication());
+        this.commandProcessor = new CursorCommandProcessor(cursor, user, ds.getRemoteAddress(), ds.getRemoteApplication());
 
         dout.writeBoolean (true);  // OK
         writeSelectedTransport(clientVersion, dout, TDBProtocol.TRANSPORT_TYPE_SOCKET);

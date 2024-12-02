@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -22,22 +22,24 @@ import com.epam.deltix.qsrv.hf.pub.codec.RecordLayout;
 import com.epam.deltix.qsrv.hf.pub.codec.StaticFieldLayout;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
-import com.epam.deltix.util.collections.generated.ObjectArrayList;
-import com.epam.deltix.util.collections.generated.ObjectHashSet;
 import com.epam.deltix.util.lang.Util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class SchemaAnalyzer {
 
     public static final SchemaAnalyzer DEFAULT = new SchemaAnalyzer(new SchemaMapping());
-    private SchemaMapping mapping;
+    private final SchemaMapping mapping;
+    private final Map<RecordClassDescriptor, RecordClassDescriptor> processed = new HashMap<>();
+    private boolean exactFieldMap = false;
 
     public SchemaAnalyzer(SchemaMapping mapping) {
         this.mapping = mapping;
+    }
+
+    public SchemaAnalyzer(SchemaMapping mapping, boolean exactFieldMap) {
+        this.mapping = mapping;
+        this.exactFieldMap = exactFieldMap;
     }
 
     public StreamMetaDataChange getChanges(RecordClassSet in,
@@ -80,21 +82,20 @@ public class SchemaAnalyzer {
         return DEFAULT.getChanges(in, inType, out, outType);
     }
 
-    protected MetaDataChange buildChanges(MetaDataChange dataChange) {
+    private void buildChanges(MetaDataChange mdChange) {
 
-        HashMap<RecordClassDescriptor, RecordClassDescriptor> processed = new HashMap<>();
          // check only top types
-        RecordClassDescriptor[] input = dataChange.source.getContentClasses();
-        RecordClassDescriptor[] output = dataChange.target.getContentClasses();
+        RecordClassDescriptor[] input = mdChange.source.getContentClasses();
+        RecordClassDescriptor[] output = mdChange.target.getContentClasses();
 
         for (RecordClassDescriptor source : input) {
             RecordClassDescriptor target = (RecordClassDescriptor)
-                    mapping.findClassDescriptor(source, dataChange.target);
+                    mapping.findClassDescriptor(source, mdChange.target);
 
             if (target != null) {
-                ClassDescriptorChange change = getChanges(dataChange, source, target);
+                ClassDescriptorChange change = getChanges(mdChange, source, target);
                 if (change != null)
-                    dataChange.changes.add(change);
+                    mdChange.add(change);
 
                 SchemaChange.Impact impact = change != null ? change.getChangeImpact() : SchemaChange.Impact.None;
 
@@ -102,25 +103,25 @@ public class SchemaAnalyzer {
                     if (Arrays.asList(input).indexOf(source) != Arrays.asList(output).indexOf(target)) {
                         if (change != null)
                             change.setImpact(SchemaChange.Impact.DataConvert);
-                        else if (dataChange.targetType == dataChange.sourceType)
-                            dataChange.changes.add(new ClassDescriptorChange(source, target, SchemaChange.Impact.DataConvert));
+                        else if (mdChange.targetType == mdChange.sourceType)
+                            mdChange.add(new ClassDescriptorChange(source, target, SchemaChange.Impact.DataConvert));
                     }
                 }
             } else {
-                dataChange.changes.add(new ClassDescriptorChange(source, null));
+                mdChange.add(new ClassDescriptorChange(source, null));
             }
             processed.put(source, target);
         }
 
         for (RecordClassDescriptor target : output) {
             if (!processed.containsValue(target)) {
-                dataChange.changes.add(new ClassDescriptorChange(null, target));
+                mdChange.add(new ClassDescriptorChange(null, target));
             }
         }
 
-        buildEnumChanges(dataChange);
+        buildEnumChanges(mdChange);
 
-        return dataChange;
+        processed.clear();
     }
 
     private void buildEnumChanges(MetaDataChange dataChange) {
@@ -185,17 +186,20 @@ public class SchemaAnalyzer {
 
             if (source.getType().getClass() != target.getType().getClass()) {
                 return false;
-            } else if (!Util.xequals(source.getType().getEncoding(), target.getType().getEncoding())) {
-                return false;
-            }
+            } else {
+                if (source.getType().getCode() == DataType.T_DATE_TIME_TYPE)
+                    return DateTimeDataType.isEquals(source.getType().getEncoding(), target.getType().getEncoding());
 
-            return true;
+                return Util.xequals(source.getType().getEncoding(), target.getType().getEncoding());
+            }
         }
 
         return Util.xequals(source, target);
     }    
 
     protected ClassDescriptorChange getChanges(MetaDataChange meta, RecordClassDescriptor in, RecordClassDescriptor out) {
+
+        ClassDescriptorChange cdc = new ClassDescriptorChange(in, out);
 
         ArrayList<AbstractFieldChange> changes = new ArrayList<AbstractFieldChange>();
         ArrayList<AbstractFieldChange> positionChanges = new ArrayList<AbstractFieldChange>();
@@ -205,16 +209,15 @@ public class SchemaAnalyzer {
         List<NonStaticFieldLayout> sourceFields = Arrays.asList(notNull(sourceLayout.getNonStaticFields()));
         List<NonStaticFieldLayout> targetFields = Arrays.asList(notNull(targetLayout.getNonStaticFields()));
 
-        HashMap<FieldLayout, FieldLayout> processed = new HashMap<FieldLayout, FieldLayout>();
+        HashMap<FieldLayout, FieldLayout> processed = new HashMap<>();
 
         for (NonStaticFieldLayout source : sourceFields) {
-            FieldLayout match = mapping.findField(source, targetLayout);
+            FieldLayout match = findField(source, targetLayout);
 
             if (match instanceof NonStaticFieldLayout) {
-
                 NonStaticFieldLayout target = (NonStaticFieldLayout) match;
 
-                changes.addAll(getChanges(meta, source, target));
+                changes.addAll(processChanges(meta, cdc, source, target));
 
                 // check if field position changed
                 if (sourceFields.indexOf(source) != targetFields.indexOf(target))
@@ -233,7 +236,7 @@ public class SchemaAnalyzer {
 
         // process static fields
         for (StaticFieldLayout source : notNull(sourceLayout.getStaticFields())) {
-            FieldLayout target = mapping.findField(source, targetLayout);
+            FieldLayout target = findField(source, targetLayout);
 
             if (target instanceof NonStaticFieldLayout) {
                 changes.add(new FieldModifierChange(source.getField(),
@@ -262,7 +265,6 @@ public class SchemaAnalyzer {
             }
         }
 
-        ClassDescriptorChange change = null;
         if (changes.size() > 0) {
             SchemaChange.Impact impact = ClassDescriptorChange.getChangeImpact(changes);
 
@@ -270,18 +272,24 @@ public class SchemaAnalyzer {
             if (impact == SchemaChange.Impact.None)
                 changes.addAll(positionChanges);
 
-            change = new ClassDescriptorChange(in, out, changes.toArray(new AbstractFieldChange[changes.size()]));
+            cdc.setFieldChanges(changes);
+            return cdc;
 
         } else if (positionChanges.size() > 0) {
-            // if any field position change - we should convert data
-            change = new ClassDescriptorChange(in, out,
-                    positionChanges.toArray(new AbstractFieldChange[positionChanges.size()]));
+            cdc.setFieldChanges(positionChanges);
+            return cdc;
         }
 
-        return change;
+        // if ClassDescriptor has field changes, or it has changes in fields with complex types
+        if (cdc.hasChanges() || cdc.getChangeImpact() != SchemaChange.Impact.None)
+            return cdc;
+
+        return null;
     }
 
-    private void processChanges(MetaDataChange meta, ClassDataType source, ClassDataType target) {
+    private SchemaChange.Impact processChanges(MetaDataChange meta, ClassDataType source, ClassDataType target) {
+
+        SchemaChange.Impact result = SchemaChange.Impact.None;
 
         List<RecordClassDescriptor> inList = source.getDescriptors() != null ?
                 Arrays.asList(source.getDescriptors()) :
@@ -295,31 +303,40 @@ public class SchemaAnalyzer {
             RecordClassDescriptor found = (RecordClassDescriptor) mapping.findClassDescriptor(rcd, outSet, false);
 
             if (found != null) {
+                if (processed.containsKey(rcd) && found.equals(processed.get(rcd)))
+                    continue;
+
                 ClassDescriptorChange change = getChanges(meta, rcd, found);
-                if (change != null)
-                    meta.changes.add(change);
+                meta.add(change);
 
                 SchemaChange.Impact impact = change != null ? change.getChangeImpact() : SchemaChange.Impact.None;
 
                 if (impact == SchemaChange.Impact.None) {
-
-                    // index changed?
+                    // is index changed?
                     if (i != outList.indexOf(found)) {
                         if (change != null)
-                            change.setImpact(SchemaChange.Impact.DataConvert);
+                            change.setImpact(impact = SchemaChange.Impact.DataConvert);
                         else if (meta.targetType == meta.sourceType)
-                            meta.changes.add(new ClassDescriptorChange(rcd, found, SchemaChange.Impact.DataConvert));
+                            meta.add(new ClassDescriptorChange(rcd, found, impact = SchemaChange.Impact.DataConvert));
                     }
                 }
+
+                if (impact.ordinal() > result.ordinal())
+                    result = impact;
+
             } else {
                 ClassDescriptorChange change = new ClassDescriptorChange(rcd, null);
                 change.setImpact(SchemaChange.Impact.DataLoss);
                 meta.changes.add(change);
+                result = SchemaChange.Impact.DataLoss;
             }
         }
+
+        return result;
     }
 
-    private List<AbstractFieldChange> getChanges(MetaDataChange meta,
+    private List<AbstractFieldChange> processChanges(MetaDataChange meta,
+                                                 ClassDescriptorChange cdChange,
                                                  NonStaticFieldLayout source,
                                                  NonStaticFieldLayout target) {
         ArrayList<AbstractFieldChange> changes = new ArrayList<AbstractFieldChange>();
@@ -348,16 +365,23 @@ public class SchemaAnalyzer {
         }
 
         if (from instanceof ClassDataType && to instanceof ClassDataType) {
-            processChanges(meta, (ClassDataType) from, (ClassDataType) to);
+            SchemaChange.Impact impact = processChanges(meta, (ClassDataType) from, (ClassDataType) to);
+            if (impact != SchemaChange.Impact.None)
+                cdChange.setImpact(impact);
         }
 
         // is type changed?
         if (from.getClass() != to.getClass()) {
             changes.add(new FieldTypeChange(source.getField(), target.getField()));
         }
+
         // is type encoding changed?
         else if (!Util.xequals(from.getEncoding(), to.getEncoding())) {
-            changes.add(new FieldTypeChange(source.getField(), target.getField()));
+            // special check for encoding for DateTime
+            if (from.getCode() != DataType.T_DATE_TIME_TYPE)
+                changes.add(new FieldTypeChange(source.getField(), target.getField()));
+            else if (DateTimeDataType.isNotEquals(from.getEncoding(), to.getEncoding()))
+                changes.add(new FieldTypeChange(source.getField(), target.getField()));
         }
         else {
             // additional constraints check
@@ -394,7 +418,7 @@ public class SchemaAnalyzer {
                 VarcharDataType sourceType = (VarcharDataType) from;
                 VarcharDataType targetType = (VarcharDataType) to;
                 if (sourceType.isMultiLine() != targetType.isMultiLine())
-                    changes.add(new FieldTypeChange(source.getField(), target.getField()));
+                    changes.add(new FieldTypeChange(source.getField(), target.getField(), SchemaChange.Impact.None));
             }
 
             // is nullable changed?
@@ -427,11 +451,11 @@ public class SchemaAnalyzer {
         if (from instanceof ArrayDataType && to instanceof ArrayDataType) {
             from = ((ArrayDataType)from).getElementDataType();
             to = ((ArrayDataType)to).getElementDataType();
-        }
 
-        if (from instanceof ClassDataType && to instanceof ClassDataType) {
-            processChanges(meta, (ClassDataType) from, (ClassDataType) to);
         }
+        // actually we do not support complex static types
+        if (from instanceof ClassDataType && to instanceof ClassDataType)
+            processChanges(meta, (ClassDataType) from, (ClassDataType) to);
 
         // is type changed?
         if (from.getClass() != to.getClass()) {
@@ -543,4 +567,18 @@ public class SchemaAnalyzer {
     private StaticFieldLayout[] notNull(StaticFieldLayout[] fields) {
         return fields != null ? fields : new StaticFieldLayout[0];
     }
+
+    public FieldLayout findField(FieldLayout source, RecordLayout target) {
+        if (exactFieldMap) {
+            for (Map.Entry<DataField, DataField> entry : mapping.fields.entrySet()) {
+                if (Objects.equals(entry.getKey(), source.getField()))
+                    return target.getField(entry.getValue().getName());
+            }
+
+            return target.getField(source.getField().getName());
+        } else {
+            return mapping.findField(source, target);
+        }
+    }
+
 }

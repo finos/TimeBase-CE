@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -42,8 +42,11 @@ public class ServerStreamWrapper extends ServerStreamImpl implements Wrapper<DXT
     private final DXTickStream              delegate;
     private final AuthorizationContext      context;
 
+    private final LockVerifier              verifier;
+
     public ServerStreamWrapper(DXTickStream delegate, AuthorizationContext context) {
         this.delegate = delegate;
+        this.verifier = delegate instanceof LockVerifier ? (LockVerifier) delegate : null;
         this.context = context;
     }
 
@@ -188,6 +191,26 @@ public class ServerStreamWrapper extends ServerStreamImpl implements Wrapper<DXT
     }
 
     @Override
+    public void deleteSpaces(String... names) {
+        delegate.deleteSpaces(names);
+    }
+
+    @Override
+    public void renameSpace(String newName, String oldName) {
+        delegate.renameSpace(newName, oldName);
+    }
+
+    @Override
+    public String[]                 listSpaces() {
+        return delegate.listSpaces();
+    }
+
+    @Override
+    public IdentityKey[]            listEntities(String space) {
+        return delegate.listEntities(space);
+    }
+
+    @Override
     public int                      getDistributionFactor() {
         return delegate.getDistributionFactor();
     }
@@ -249,6 +272,8 @@ public class ServerStreamWrapper extends ServerStreamImpl implements Wrapper<DXT
     public void                     delete() {
         context.checkWritable(this);
 
+        context.checkPermission(TimeBasePermissions.WRITE_PERMISSION, this);
+
         delegate.delete();
     }
 
@@ -309,26 +334,6 @@ public class ServerStreamWrapper extends ServerStreamImpl implements Wrapper<DXT
     }
 
     @Override
-    public void                     deleteSpaces(String... names) {
-        delegate.deleteSpaces(names);
-    }
-
-    @Override
-    public void                     renameSpace(String newName, String oldName) {
-        delegate.renameSpace(newName, oldName);
-    }
-
-    @Override
-    public String[]                 listSpaces() {
-        return delegate.listSpaces();
-    }
-
-    @Override
-    public IdentityKey[]            listEntities(String space) {
-        return delegate.listEntities(space);
-    }
-
-    @Override
     public void                     setHighAvailability(boolean value) {
         context.checkWritable(this);
 
@@ -356,6 +361,11 @@ public class ServerStreamWrapper extends ServerStreamImpl implements Wrapper<DXT
     }
 
     @Override
+    public DBLock lock(LockOptions options) throws StreamLockedException, UnsupportedOperationException {
+        return delegate.lock(options);
+    }
+
+    @Override
     public DBLock                   tryLock(long timeout) throws StreamLockedException, UnsupportedOperationException {
         return delegate.tryLock(timeout);
     }
@@ -366,9 +376,52 @@ public class ServerStreamWrapper extends ServerStreamImpl implements Wrapper<DXT
     }
 
     @Override
+    public DBLock tryLock(LockOptions options, long timeout) throws StreamLockedException, UnsupportedOperationException {
+        return delegate.tryLock(options, timeout);
+    }
+
+    @Override
     public DBLock                   verify(DBLock lock, LockType type) throws StreamLockedException, UnsupportedOperationException {
         return delegate.verify(lock, type);
     }
+
+    @Override
+    public void checkExclusiveWrite(DBLock lock) throws StreamLockedException {
+        if (delegate instanceof LockVerifier) {
+            ((LockVerifier) delegate).checkExclusiveWrite(lock);
+        }
+    }
+
+    @Override
+    public void checkSharedWrite(DBLock lock) throws StreamLockedException {
+        if (delegate instanceof LockVerifier) {
+            ((LockVerifier) delegate).checkSharedWrite(lock);
+        }
+    }
+
+    @Override
+    public void checkWriteRange(DBLock lock, long startTime, long endTime) throws StreamLockedException {
+        if (verifier != null)
+            verifier.checkWriteRange(lock, startTime, endTime);
+
+    }
+
+    @Override
+    public boolean checkWrite(LoadingErrorListener listener, DBLock lock, long time) {
+        if (verifier != null)
+            return verifier.checkWrite(listener, lock, time);
+
+        return true;
+    }
+
+//    @Override
+//    public boolean testWriteTime(DBLock lock, long time) {
+//        if (delegate instanceof LockVerifier) {
+//            return ((LockVerifier) delegate).testWriteTime(lock, time);
+//        }
+//
+//        return true;
+//    }
 
     @Override
     public boolean                  enableVersioning() {

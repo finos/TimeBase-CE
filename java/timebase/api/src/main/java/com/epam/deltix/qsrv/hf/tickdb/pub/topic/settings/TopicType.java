@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -20,11 +20,14 @@ package com.epam.deltix.qsrv.hf.tickdb.pub.topic.settings;
  * @author Alexei Osipov
  */
 public enum TopicType {
-    IPC, // Inter process communication only
+    /** Inter process communication only. Supports multiple producers. */
+    IPC,
 
-    MULTICAST, // Transfer data using UDP multicast. Support of multicast in the network is required.
+    /** Transfer data using UDP multicast. Support of multicast in the network is required. Supports multiple producers. */
+    MULTICAST,
 
-    UDP_SINGLE_PUBLISHER //
+    /** Transfer data using UDP. Supports only one producer per topic. Producer address must be specified at topic creation time. */
+    UDP_SINGLE_PUBLISHER,
 
 
     //CUSTOM // Topics created with custom channel configuration

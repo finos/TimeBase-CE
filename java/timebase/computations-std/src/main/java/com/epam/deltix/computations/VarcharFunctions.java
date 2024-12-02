@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -18,12 +18,11 @@ package com.epam.deltix.computations;
 
 import com.epam.deltix.computations.api.annotations.*;
 import com.epam.deltix.computations.api.util.FunctionsUtils;
+import com.epam.deltix.containers.CharSequenceUtils;
 import com.epam.deltix.qsrv.hf.codec.cg.StringBuilderPool;
 import com.epam.deltix.qsrv.hf.pub.md.IntegerDataType;
 import com.epam.deltix.util.collections.generated.IntegerArrayList;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
-import com.epam.deltix.util.lang.StringUtils;
-import com.epam.deltix.util.lang.Util;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -54,7 +53,7 @@ public class VarcharFunctions {
     public static int indexOf(@Nullable CharSequence source, @Nullable CharSequence target) {
         if (source == null || target == null)
             return IntegerDataType.INT32_NULL;
-        return StringUtils.indexOf(source, target);
+        return CharSequenceUtils.indexOf(source, 0, source.length(), target, 0, target.length(), 0);
     }
 
     @Function("INDEXOF")
@@ -183,6 +182,39 @@ public class VarcharFunctions {
         return true;
     }
 
+    @Function("CONCAT")
+    public static boolean concat(@Nullable CharSequence s1, @Nullable CharSequence s2, @Nonnull @Result StringBuilder result) {
+        result.setLength(0);
+        if (s1 == null && s2 == null) {
+            return false;
+        }
+
+        if (s1 != null) {
+            result.append(s1);
+        }
+        if (s2 != null) {
+            result.append(s2);
+        }
+
+        return true;
+    }
+
+    @Function("CONCAT")
+    public static boolean concat(@Type("ARRAY(VARCHAR?)?") @Nullable ObjectArrayList<CharSequence> source, @Nonnull @Result StringBuilder result) {
+        result.setLength(0);
+        if (FunctionsUtils.isNullOrEmpty(source)) {
+            return false;
+        }
+
+        for (int i = 0; i < source.size(); i++) {
+            if (source.get(i) != null) {
+                result.append(source.get(i));
+            }
+        }
+
+        return true;
+    }
+
     @Function("SORT")
     public static boolean sort(@Type("ARRAY(VARCHAR?)?") @Nullable ObjectArrayList<CharSequence> list,
                                @Type("ARRAY(VARCHAR?)?") @Nonnull @Result ObjectArrayList<CharSequence> result,
@@ -196,7 +228,7 @@ public class VarcharFunctions {
             StringBuilder sb = pool.borrow();
             result.set(i, list.get(i) == null ? null : sb.append(list.get(i)));
         }
-        result.sort((x, y) -> Util.compare(x, y, true));
+        result.sort((x, y) -> CharSequenceUtils.compare(x, y, true));
         return true;
     }
 

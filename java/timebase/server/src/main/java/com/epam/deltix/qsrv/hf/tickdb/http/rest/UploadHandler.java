@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,11 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http.rest;
 
+import com.epam.deltix.qsrv.hf.tickdb.http.StreamHandler;
+import com.epam.deltix.qsrv.hf.tickdb.impl.ServerLock;
+import com.epam.deltix.qsrv.hf.tickdb.impl.TickStreamImpl;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBObject;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
@@ -26,10 +31,12 @@ import com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol;
 import com.epam.deltix.qsrv.hf.tickdb.http.ValidationException;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.SubscriptionChangeListener;
+import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.util.ContextContainer;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.io.LittleEndianDataInputStream;
 import com.epam.deltix.util.lang.Util;
+import com.epam.deltix.util.time.TimeKeeper;
 
 import java.io.*;
 import java.net.Socket;
@@ -42,7 +49,7 @@ import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.readIdentityKe
 /**
  *
  */
-public class UploadHandler extends RestHandler implements Runnable {
+public class UploadHandler extends RestHandler implements Runnable, LockEventListener {
     private final DXTickDB              db;
     private final Socket                socket;
     private final DataInput             din;
@@ -59,14 +66,28 @@ public class UploadHandler extends RestHandler implements Runnable {
 
     private final short                 clientVersion;
 
+    private final String                applicationName;
+
+    private TickStreamImpl              serverStream;
+
+    private String                      sessionId;
+
+    private String                      lockId;
+
+    private volatile DBLock             lock;
+
+    private volatile Throwable          exclusiveLockError;
+
     public UploadHandler(DXTickDB db, Socket socket, InputStream plainIs, OutputStream os, short clientVersion,
-                         ContextContainer contextContainer) throws IOException
+                         String applicationName, ContextContainer contextContainer)
+        throws IOException
     {
         super(contextContainer.getQuickExecutor());
         this.db = db;
         this.socket = socket;
         this.dout = new DataOutputStream(os);
         this.clientVersion = clientVersion;
+        this.applicationName = applicationName;
 
         boolean useCompression = (plainIs.read() == 1);
         InputStream is = useCompression ? new GZIPInputStream(plainIs) : plainIs;
@@ -85,8 +106,11 @@ public class UploadHandler extends RestHandler implements Runnable {
     }
 
     private void                        process() throws IOException {
-        final String streamKey = din.readUTF();
+        if (clientVersion >= HTTPProtocol.CLIENT_RANGED_LOCKS_SUPPORT_VERSION) {
+            sessionId = din.readUTF();
+        }
 
+        final String streamKey = din.readUTF();
         final LoadingOptions.WriteMode writeMode = LoadingOptions.WriteMode.values()[din.readByte()];
 
         boolean hasSpace = din.readBoolean();
@@ -96,16 +120,34 @@ public class UploadHandler extends RestHandler implements Runnable {
         if (stream == null)
             throw new UnknownStreamException(String.format("stream \"%s\" doesn't exist", streamKey));
 
-        LoadingOptions options = new LoadingOptions(true);
-        options.writeMode = writeMode;
-        options.space = space;
+        serverStream = StreamHandler.getServerStream(stream);
+        if (serverStream == null) {
+            throw new IllegalStateException(String.format("stream \"%s\" must be instance of server stream", streamKey));
+        }
 
-        concreteTypes = stream.getStreamOptions().getMetaData().getTopTypes();
+        if (clientVersion >= HTTPProtocol.CLIENT_LOCKS_SUPPORT_VERSION) {
+            lockId = din.readUTF();
+        }
 
         TickLoader loader = null;
         int count = 0;
         try {
+            serverStream.addEventListener(this);
+
+            lock = serverStream.findLock(lockId);
+            serverStream.verifySharedWrite(lockId);
+            dout.write(HTTPProtocol.KEEP_ALIVE_ID);
+
+            LoadingOptions options = new LoadingOptions(true);
+            options.writeMode = writeMode;
+            options.space = space;
+
+        concreteTypes = stream.getStreamOptions().getMetaData().getTopTypes();
+
             loader = stream.createLoader(options);
+            if (loader instanceof TBObject) {
+                ((TBObject) loader).setApplication(applicationName);
+            }
 
             log(Level.INFO, stream.getKey(), "Upload started.");
 
@@ -140,6 +182,7 @@ public class UploadHandler extends RestHandler implements Runnable {
                 }
             }
         } finally {
+            serverStream.removeEventListener(this);
             closeLoader(loader);
         }
 
@@ -192,9 +235,22 @@ public class UploadHandler extends RestHandler implements Runnable {
 
         din.readFully(streamMsgBuffer, 0, size);
         raw.setBytes(streamMsgBuffer, 0, size);
-        loader.send(raw);
+
+        // todo: fix client crash after the error
+//        if (exclusiveLockError != null) {
+//            throw new RuntimeException(exclusiveLockError);
+//        }
+
+        if (checkDataLock(raw)) {
+            loader.send(raw);
+        }
 
         return true;
+    }
+
+    private boolean checkDataLock(InstrumentMessage message) {
+        long time = message.getTimeStampMs() != Long.MIN_VALUE ? message.getTimeStampMs() : TimeKeeper.currentTime;
+        return serverStream.verifyWriteTime(listener, lock, time);
     }
 
     private void                        closeLoader(TickLoader loader) {
@@ -240,6 +296,40 @@ public class UploadHandler extends RestHandler implements Runnable {
     public void                         sendKeepAlive() throws IOException {
         synchronized (dout) {
             dout.write(HTTPProtocol.KEEP_ALIVE_ID);
+        }
+    }
+
+    @Override
+    public void lockAdded(DBLock lock) {
+        if (lock instanceof ServerLock) {
+            ServerLock serverLock = (ServerLock) lock;
+            if (lock.getType() == LockType.WRITE) {
+                if (serverLock.getClientId() != null && serverLock.getClientId().equals(sessionId)) {
+                    this.lock = serverLock;
+                }
+            }
+
+            if (needExclusiveLockValidation(lock)) {
+                checkAndSetLockError(serverLock);
+            }
+        }
+    }
+
+    @Override
+    public void lockRemoved(DBLock lock) {
+        if (lock.equals(this.lock)) {
+            this.lock = null;
+        }
+    }
+
+    private boolean needExclusiveLockValidation(DBLock lock) {
+        return !(lock.getType() == LockType.WRITE && ((WriteLockOptions) lock.getOptions()).isRanged());
+    }
+
+    private void checkAndSetLockError(ServerLock serverLock) {
+        boolean lockIsMine = serverLock.getClientId() != null && serverLock.getClientId().equals(sessionId);
+        if (!lockIsMine) {
+            exclusiveLockError = new StreamLockedException("Loader aborted because of " + serverLock);
         }
     }
 

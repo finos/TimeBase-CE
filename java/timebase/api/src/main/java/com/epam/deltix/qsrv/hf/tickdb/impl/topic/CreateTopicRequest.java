@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,14 +16,11 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
-import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,17 +30,18 @@ import java.util.List;
 public class CreateTopicRequest {
     private final String topicKey;
     private final List<RecordClassDescriptor> types;
-    private final Collection<? extends IdentityKey> initialEntitySet;
     private final String targetStream;
+    private final String targetSpace;
 
-    public CreateTopicRequest(String topicKey, List<RecordClassDescriptor> types, @Nullable Collection<? extends IdentityKey> initialEntitySet, @Nullable String targetStream) {
+    public CreateTopicRequest(String topicKey, List<RecordClassDescriptor> types, @Nullable String targetStream, @Nullable String targetSpace) {
+        if (targetSpace != null && targetStream == null) {
+            throw new IllegalArgumentException("targetSpace is set but targetStream is not set");
+        }
         this.topicKey = topicKey;
         this.types = types;
-        if (initialEntitySet == null) {
-            initialEntitySet = Collections.emptyList();
-        }
-        this.initialEntitySet = initialEntitySet;
+
         this.targetStream = targetStream;
+        this.targetSpace = targetSpace;
     }
 
     @Nonnull
@@ -56,13 +54,13 @@ public class CreateTopicRequest {
         return types;
     }
 
-    @Nonnull
-    public Collection<? extends IdentityKey> getInitialEntitySet() {
-        return initialEntitySet;
-    }
-
     @Nullable
     public String getTargetStream() {
         return targetStream;
+    }
+
+    @Nullable
+    public String getTargetSpace() {
+        return targetSpace;
     }
 }

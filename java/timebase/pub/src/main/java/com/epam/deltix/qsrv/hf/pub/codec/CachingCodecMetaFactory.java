@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.pub.codec;
 
+import com.epam.deltix.qsrv.hf.codec.cg.ObjectManager;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
 import com.epam.deltix.util.lang.Factory;
@@ -83,6 +84,7 @@ public class CachingCodecMetaFactory extends CodecMetaFactory {
 
     private Map <BoundKey, Factory <FixedBoundEncoder>>     fbeCache = null;
     private Map <BoundKey, Factory <FixedExternalDecoder>>  fedCache = null;
+    private Map <BoundKey, ExternalCodecFactory<FixedExternalDecoder>> fed2Cache = null;
     private Map <BoundKey, Factory <BoundDecoder>>          fbdCache = null;
     private Map <RecordClassDescriptor, Factory <UnboundDecoder>>      fudCache = null;
     private Map <RecordClassDescriptor, Factory <FixedUnboundEncoder>> fueCache = null;
@@ -93,6 +95,10 @@ public class CachingCodecMetaFactory extends CodecMetaFactory {
 
         if (fedCache != null)
             fedCache.clear ();
+
+        if (fed2Cache != null) {
+            fed2Cache.clear();
+        }
 
         if (fbdCache != null)
             fbdCache.clear ();
@@ -145,6 +151,26 @@ public class CachingCodecMetaFactory extends CodecMetaFactory {
         if (ret == null) {
             ret = delegate.createFixedExternalDecoderFactory (loader, cd);
             fedCache.put (key, ret);
+        }
+
+        return (ret);
+    }
+
+    @Override
+    public synchronized ExternalCodecFactory<FixedExternalDecoder> createFixedExternalDecoderFactory(
+        TypeLoader loader, RecordClassDescriptor cd, ObjectManager objectManager) {
+
+        ExternalCodecFactory<FixedExternalDecoder> ret = null;
+        BoundKey key = new BoundKey(loader, cd);
+
+        if (fed2Cache == null)
+            fed2Cache = new HashMap<>();
+        else
+            ret = fed2Cache.get(key);
+
+        if (ret == null) {
+            ret = delegate.createFixedExternalDecoderFactory(loader, cd, objectManager);
+            fed2Cache.put(key, ret);
         }
 
         return (ret);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -26,7 +26,7 @@ public class Sequence extends LongStatefulFunctionBase {
     private boolean reset = false;
 
     @Init
-    public void init(@Arg(defaultValue = "0") long start, @Arg(defaultValue = "false") boolean reset) {
+    public void init(@Arg(name = "start", defaultValue = "0") long start, @Arg(name = "reset", defaultValue = "false") boolean reset) {
         this.start = start;
         this.reset = reset;
         this.value = start - 1;

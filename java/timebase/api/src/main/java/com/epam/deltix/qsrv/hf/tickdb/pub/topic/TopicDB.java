@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -37,7 +37,7 @@ import java.util.concurrent.ThreadFactory;
  *
  * Topics are lightweight "Streams". Topics have much less functionality but may provide better latency for some applications.
  *
- * Please note, that most of patterns of interaction with topics assume that you can afford a dedicated CPU core for
+ * Please note, that most of the patterns of interaction with topics assume that you can afford a dedicated CPU core for
  * a thread that publishes data to a topic or reads it from a topic.
  *
  * @author Alexei Osipov

@@ -8,5 +8,5 @@ dependencies {
 
     implementation 'org.apache.commons:commons-lang3'
 
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.261'
+    implementation 'com.amazonaws:aws-java-sdk-s3'
 }

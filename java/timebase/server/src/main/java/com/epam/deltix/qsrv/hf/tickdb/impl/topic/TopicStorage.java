@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
+import com.epam.deltix.qsrv.hf.blocks.InstrumentKeyToIntegerHashMap;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.epam.deltix.gflog.api.Log;
@@ -23,7 +24,6 @@ import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.dtb.fs.local.LocalFS;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
-import com.epam.deltix.qsrv.hf.blocks.InstrumentKeyToIntegerHashMap;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.comm.TopicChannelOption;
 import com.epam.deltix.qsrv.hf.tickdb.impl.TickDBJAXBContext;
@@ -37,14 +37,13 @@ import com.epam.deltix.util.io.UncheckedIOException;
 import com.epam.deltix.util.text.SimpleStringCodec;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -95,7 +94,9 @@ public class TopicStorage {
         enabled = false; // Helps to avoid storing changes during the load process
         try {
             iterateStoredTopics(topic -> {
-                directTopicRegistry.createDirectTopic(topic.getTopicKey(), topic.getTypes(), topic.getChannel(), idGenerator, topic.getEntities(), topic.getTopicType(), parseChannelOptions(topic.getChannelSettings()), topic.getCopyToStream());
+                directTopicRegistry.createDirectTopic(topic.getTopicKey(),
+                        topic.getTypes(), topic.getChannel(), idGenerator,
+                        topic.getTopicType(), parseChannelOptions(topic.getChannelSettings()), topic.getCopyToStream(), topic.getCopyToSpace());
             });
         } finally {
             enabled = true;
@@ -128,7 +129,6 @@ public class TopicStorage {
         if (!topicDataFolder.exists()) {
             return;
         }
-        // TODO: @LEGACY
         //SchemaUpdater migrator = new SchemaUpdater(new ClassMappings());
         try {
 
@@ -219,7 +219,8 @@ public class TopicStorage {
     private final class TopicRegistryEventListenerImpl implements TopicRegistryEventListener {
 
         @Override
-        public void topicCreated(String topicKey, @Nullable String channel, ImmutableList<RecordClassDescriptor> types, InstrumentKeyToIntegerHashMap entities, TopicType topicType, Map<TopicChannelOption, String> channelOptions, @Nullable String copyToStreamKey) {
+        public void topicCreated(String topicKey, @Nullable String channel, ImmutableList<RecordClassDescriptor> types,
+                                 TopicType topicType, Map<TopicChannelOption, String> channelOptions, @Nullable String copyToStreamKey) {
             if (!enabled) {
                 return;
             }
@@ -228,7 +229,6 @@ public class TopicStorage {
             topic.setTopicKey(topicKey);
             topic.setChannel(channel);
             topic.setTypes(types);
-            topic.setEntities(Collections.list(entities.keys()));
             topic.setTopicType(topicType);
             topic.setMulticast(topicType == TopicType.MULTICAST); // Forward compatibility
             topic.setCopyToStream(copyToStreamKey);

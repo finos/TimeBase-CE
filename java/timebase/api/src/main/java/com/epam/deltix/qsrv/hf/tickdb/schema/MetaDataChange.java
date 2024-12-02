@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -82,6 +82,11 @@ public class MetaDataChange implements SchemaChange {
         return null;
     }
 
+    public void         add(ClassDescriptorChange change) {
+        if (change != null)
+            changes.add(change);
+    }
+
     public void                 invalidate(
             ClassSet<RecordClassDescriptor> source,
             MetaData<RecordClassDescriptor> target)
@@ -122,6 +127,11 @@ public class MetaDataChange implements SchemaChange {
      */
     public boolean isAcceptable() {
         return getChangeImpact() != Impact.DataLoss;
+    }
+
+    public boolean hasChanges() {
+        return (changes != null && !changes.isEmpty()) ||
+            (sourceType != targetType);
     }
 
     public enum ContentType {

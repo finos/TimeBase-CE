@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,7 +16,6 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
-import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 
 import javax.annotation.Nullable;
@@ -29,15 +28,13 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 public class AddTopicSubscriberResponse {
     private final TopicTransferType transferType;
-    private final List<ConstantIdentityKey> mapping;
     private final List<RecordClassDescriptor> types;
     private final String channel;
     private final String aeronDir;
     private final int dataStreamId;
 
-    public AddTopicSubscriberResponse(TopicTransferType transferType, List<ConstantIdentityKey> mapping, List<RecordClassDescriptor> types, String channel, @Nullable String aeronDir, int dataStreamId) {
+    public AddTopicSubscriberResponse(TopicTransferType transferType, List<RecordClassDescriptor> types, String channel, @Nullable String aeronDir, int dataStreamId) {
         this.transferType = transferType;
-        this.mapping = mapping;
         this.types = types;
         this.channel = channel;
         this.aeronDir = aeronDir;
@@ -46,14 +43,6 @@ public class AddTopicSubscriberResponse {
 
     public TopicTransferType getTransferType() {
         return transferType;
-    }
-
-    public List<ConstantIdentityKey> getMapping() {
-        return mapping;
-    }
-
-    public ConstantIdentityKey[] getMappingArray() {
-        return getMapping().toArray(new ConstantIdentityKey[0]);
     }
 
     public List<RecordClassDescriptor> getTypes() {

@@ -30,7 +30,7 @@ public interface TimeSaver {
 
     long getReady();
 
-    void reset(long start, long step);
+    void reset(long start, long step, long offset);
 
     default boolean putSimple(long timestamp) {
         return put(timestamp) > -1;

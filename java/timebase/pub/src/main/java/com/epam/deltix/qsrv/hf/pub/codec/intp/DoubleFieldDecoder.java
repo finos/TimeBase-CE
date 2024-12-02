@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -144,7 +144,7 @@ class DoubleFieldDecoder extends FieldDecoder {
     final String        getString (DecodingContext ctxt) {
         if (isDecimal) {
             long lv = getLong(ctxt);
-            return lv != Decimal64Utils.NULL ? Decimal64Utils.toString(lv) : null;
+            return lv != Decimal64Utils.NULL ? Decimal64Utils.toFloatString(lv) : null;
         } else {
             double v = getDouble(ctxt);
             return isNull(v) ? null : StringUtils.toDecimalString(v);
@@ -160,6 +160,9 @@ class DoubleFieldDecoder extends FieldDecoder {
     }
 
     public boolean      isNull(DecodingContext ctxt) {
+        if (isDecimal)
+            return getLong(ctxt) == Decimal64Utils.NULL;
+
         return isNull(getDouble(ctxt));
     }
 

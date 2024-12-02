@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -23,28 +23,31 @@ import com.epam.deltix.qsrv.dtb.store.pub.AbstractSingleEntityFilter;
 import com.epam.deltix.qsrv.dtb.store.pub.EntityFilter;
 import com.epam.deltix.qsrv.dtb.store.pub.ListEntityFilter;
 import com.epam.deltix.qsrv.dtb.store.pub.SingleEntityFilter;
+import com.epam.deltix.qsrv.hf.blocks.ObjectConcurrentPool;
 import com.epam.deltix.qsrv.hf.blocks.ObjectPool;
 import com.epam.deltix.util.collections.ByteArray;
 import com.epam.deltix.util.collections.generated.ByteArrayList;
 import com.epam.deltix.util.collections.generated.IntegerArrayList;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.collections.generated.ObjectHashSet;
+import net.jcip.annotations.GuardedBy;
 
 import java.io.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.epam.deltix.qsrv.dtb.store.impl.TSFState.*;
 
 /**
- *  Implementation of a time slice file. 
+ *  Implementation of a time slice file.
  *  All variables of this class are guarded by "this".
  */
+@SuppressWarnings("ForLoopReplaceableByForEach")
 final class TSFile extends TSFolderEntry implements TimeSlice {
 
     //private static final boolean            DEBUG_VERIFY_FILE_AFTER_STORE = false;
-
-    private static final ObjectPool<FileInput> inputs = new ObjectPool<FileInput>(10, 100) {
+    private static final ObjectConcurrentPool<FileInput> inputs = new ObjectConcurrentPool<FileInput>(10, 100) {
         @Override
         protected FileInput newItem() {
             return new FileInput();
@@ -74,12 +77,12 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         SPLIT
     }
 
-    private CopyOnWriteArrayList<DAPrivate> checkouts = null;
+    private CopyOnWriteArrayList<DAPrivate>     checkouts = null;
 
     private TSFState                            state = null;
 
     // Indicates that file belongs to the write queue. Guarded by PDSImpl.
-    // Added to resolve race condition when file processed by WriterThread and does not belong to queue.
+    // Added to resolve race condition when file processed by WriterThread and does not belongs to queue.
 
     volatile boolean                            queued;
 
@@ -94,6 +97,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     private boolean                             compressedOnDisk;
     private byte                                compressionCode;
     private int                                 uncompressedSize = -1;
+    private final AtomicLong                    allocatedSize = new AtomicLong();
 
     private ObjectArrayList <DataBlockInfo>     dbs = null;
 
@@ -107,9 +111,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
      */
     long                                        limitTimestamp = Long.MAX_VALUE;
 
-    private long                                allocatedSize;
-
-    private final ThreadLocal<SingleEntityFilter>     sef = new ThreadLocal<>();
+    //private final ThreadLocal<SingleEntityFilter>     sef = new ThreadLocal<>();
 
     //    @GuardedBy("this")
     private BlockDecompressor                   decompressor;
@@ -215,8 +217,6 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             if (acc != null && acc != accessor)
                 acc.asyncDataInserted(db, dataOffset, msgLength, timestamp);
         }
-
-        //assert checkedOut;
     }
 
     @Override
@@ -256,32 +256,36 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         return checkouts != null ? checkouts.toArray(new DAPrivate[checkouts.size()]) : null;
     }
 
-    public int              getUncompressedSize() {
+    public boolean          isCheckoutOnly(DAPrivate accessor) {
+        return checkoutsSnapshot.length == 1 && accessor.equals(checkoutsSnapshot[0]);
+    }
+
+    public int                  getUncompressedSize() {
         return uncompressedSize;
     }
 
-    public long              getAllocatedSize(boolean revalidate) {
+    public long                 getAllocatedSize(boolean revalidate) {
         if (revalidate)
-            allocatedSize = 0;
+            allocatedSize.set(0);
 
-        if (allocatedSize == 0) {
+        if (allocatedSize.get() == 0 || revalidate) {
             synchronized (this) {
                 if (dbs == null)
-                    return allocatedSize;
+                    return allocatedSize.get();
 
                 int numEntities = dbs.size();
                 for (int pos = 0; pos < numEntities; pos++) {
                     DataBlockInfo test = dbs.getObjectNoRangeCheck(pos);
-                    allocatedSize += test.getAllocatedLength();
+                    allocatedSize.addAndGet(test.getAllocatedLength());
                 }
             }
         }
 
-        return allocatedSize;
+        return allocatedSize.get();
     }
 
     boolean                 hasDataFor (EntityFilter filter)
-        throws IOException
+            throws IOException
     {
         ensureIndexAndDataLoaded (filter, null);
 
@@ -365,7 +369,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         }
 
         if (justCreated) {
-            root.acquireSharedLock();
+            root.acquireSharedLock(); // indexes affected only
 
             try {
                 TreeOps.propagateDataAddition (this, entity);
@@ -410,8 +414,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         root.acquireWriteLock();
 
         try {
+            // double check strategy under lock
             strategy = checkInsert (timestamp, addlLength);
-
             if (strategy == null)
                 return;
 
@@ -482,7 +486,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         updateStartTimestamp(time0 != Long.MAX_VALUE ? time0 : Long.MIN_VALUE);
     }
 
-    public boolean                    isEmpty() {
+    public synchronized boolean                    isEmpty() {
         int entities = dbs.size();
         long dataSize = 0;
 
@@ -594,7 +598,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     public  boolean       truncate(final long timestamp, int entity, final DataAccessorBase accessor) {
 
         assertCheckedOutTo(accessor);
-        root.acquireSharedLock();
+        root.acquireSharedLock(); // index and data modification - shared lock only
 
         AtomicBoolean changed = new AtomicBoolean(false);
 
@@ -621,10 +625,6 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                         else if (lastTimestamp < link.getEndTime())
                             setLastTimestamp(link.getEndTime());
                     }
-                }
-
-                @Override
-                public void complete() {
                 }
             });
         } finally {
@@ -783,7 +783,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     }
     //
     //  INTERFACE WITH PDS
-    // 
+    //
     @Override
     String                          getNormalName () {
         return (TSNames.buildFileName (getId ()));
@@ -933,14 +933,16 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             for (int ii = 0; ii < numEntities; ii++) {
                 final DataBlock       db = (DataBlock) dbs.getObjectNoRangeCheck (ii);
 
-                if (db.getDataLength() == 0)
-                    compLengths[ii] = 0;
-                else {
-                    ByteArray data = db.getData();
-                    compLengths[ii] = compressor.deflate(data.getArray(), data.getOffset(), db.getDataLength(), compressedData);
-                }
+                synchronized (db) {
+                    if (db.getDataLength() == 0)
+                        compLengths[ii] = 0;
+                    else {
+                        ByteArray data = db.getData();
+                        compLengths[ii] = compressor.deflate(data.getArray(), data.getOffset(), db.getDataLength(), compressedData);
+                    }
 
-                db.setClean();
+                    db.setClean();
+                }
             }
 
             sizeOnDisk = indexSize + compressedData.size ();
@@ -977,18 +979,20 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             int                     offset = indexSize;
 
             for (int ii = 0; ii < numEntities; ii++) {
-                DataBlock           db = (DataBlock) dbs.getObjectNoRangeCheck (ii);
+                final DataBlock           db = (DataBlock) dbs.getObjectNoRangeCheck (ii);
 
-                dos.writeInt (db.getEntity ());
-                dos.writeInt (db.getDataLength ());
+                synchronized (db) {
+                    dos.writeInt(db.getEntity());
+                    dos.writeInt(db.getDataLength());
 
-                if (compressedOnDisk)
-                    dos.writeInt (compLengths [ii]);
+                    if (compressedOnDisk)
+                        dos.writeInt(compLengths[ii]);
 
-                dos.writeLong (db.getStartTime ());
-                dos.writeLong (db.getEndTime ());
+                    dos.writeLong(db.getStartTime());
+                    dos.writeLong(db.getEndTime());
 
-                offset += db.getDataLength ();
+                    offset += db.getDataLength();
+                }
             }
 
             if (compressedOnDisk) {
@@ -1102,15 +1106,8 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     synchronized void               destroy(boolean force) {
         super.destroy(force);
 
-        state = null;
+        setState(null);
     }
-
-//    private boolean                 isCheckedOut () {
-//        return (
-//            state == TSFState.CLEAN_CHECKED_OUT ||
-//            state == TSFState.DIRTY_CHECKED_OUT
-//        );
-//    }
 
     private synchronized ExpansionStrategy  checkInsert (
         long                                    timestamp,
@@ -1135,7 +1132,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         }
 
         //
-        //  never create files smaller than max/2, even if next message takes 
+        //  never create files smaller than max/2, even if next message takes
         //  the size over maxSize.
         //
         if (newSize <= maxSize || uncompressedSize < maxSize / 2 || newSize - maxSize < maxSize / 10) {
@@ -1152,7 +1149,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             uncompressedSize = newSize;
             return (null);
         }
-        
+
         return (ExpansionStrategy.SPLIT);
     }
 
@@ -1203,25 +1200,25 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
             inputs.release(in);
         }
     }
-    
-    private DataBlock               processEntity (
-        FileInput                       in,
-        int                             pos,
-        DataBlockInfo                   dbi,
-        BlockProcessor                  bp
-    ) 
-        throws IOException         
-    {
 
-        assert Thread.holdsLock(this);
+    @GuardedBy("this")
+    private DataBlock               processEntity (
+            FileInput                       in,
+            int                             pos,
+            DataBlockInfo                   dbi,
+            BlockProcessor                  bp
+    )
+            throws IOException
+    {
+        assert !AccessorBlockLink.VALIDATE_LOCKS || Thread.holdsLock(this);
 
         DataBlock                   db;
 
         if (dbi instanceof DataBlock)
             db = (DataBlock) dbi;
-        else {        
+        else {
             DataBlockStub       dbx = (DataBlockStub) dbi;
-            
+
             openOrSeek (in, dbx.getOffsetInFile ());
 
             if (bp != null)
@@ -1240,7 +1237,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
 
         if (bp != null)
             bp.process(db);
-        
+
         return (db);
     }
     
@@ -1485,10 +1482,10 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     private boolean  isCheckedOutTo (DAPrivate accessor) {
         return (checkouts != null && checkouts.contains (accessor));
     }
-    
-    private int                     find (int entity) {
 
-        assert Thread.holdsLock(this);
+    @GuardedBy("this")
+    private int                     find (int entity) {
+        assert !AccessorBlockLink.VALIDATE_LOCKS || Thread.holdsLock(this);
 
         int         low = 0;
         int         high = dbs.size () - 1;
@@ -1496,7 +1493,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         while (low <= high) {
             int     mid = (low + high) >>> 1;
             int     midVal = dbs.getObjectNoRangeCheck (mid).getEntity ();
-            
+
             if (midVal < entity)
                 low = mid + 1;
             else if (midVal > entity)
@@ -1507,112 +1504,4 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
 
         return -(low + 1);
     }
-
-    public boolean          isCheckoutOnly(DAPrivate accessor) {
-        return checkoutsSnapshot.length == 1 && accessor.equals(checkoutsSnapshot[0]);
-    }
-
-   
-//    private final ObjectArrayList <DALinkPrivate>   bufLinks = 
-//        new ObjectArrayList <> ();        
-    
-//    private void                split (long newStartTs) 
-//        throws IOException, InterruptedException 
-//    {
-//        processBlocks (null, null);
-//        
-//        TSFile                  latter = 
-//            getRoot ().insertFileAfter (this, newStartTs);
-//                       
-//        int                     numEntities = dbs.size ();
-//        
-//        for (int pos = 0; pos < numEntities; pos++) {
-//            DataBlockStub       dbx = dbs.getObjectNoRangeCheck (pos);
-//            int                 entity = dbx.getEntity ();
-//            DataBlock           formerBlock = dbx.getBlock ();
-//            int                 oldBlockLength = formerBlock.getLength ();
-//            int                 splitOffset = formerBlock.findOffset (0, newStartTs + 1);
-//            int                 latterBlockLength = oldBlockLength - splitOffset;
-//            //
-//            //  Future optimization: 
-//            //      if (splitOffset == 0) then reuse (formerBlock)
-//            //
-//            DataBlock           latterBlock;
-//            
-//            if (latterBlockLength == 0)
-//                latterBlock = null;
-//            else {
-//                latterBlock = latter.getBlock (entity, true);
-//                latterBlock.setData (formerBlock.getBytes (), splitOffset, latterBlockLength);
-//            }
-//            
-//            if (splitOffset != oldBlockLength)
-//                formerBlock.shorten (splitOffset);  // can't remove!
-//            
-//            formerBlock.getCheckOuts (bufLinks);
-//            
-//            for (int ii = 0; ii < bufLinks.size (); ii++) {
-//                DALinkPrivate   link = bufLinks.getObjectNoRangeCheck (ii);                
-//                DAPrivate       accessor = link.getAccessor ();
-//                long            currentTimestamp = accessor.getCurrentTimestamp ();
-//                int             blockOffset = link.getBlockOffset ();
-//                
-//                if (blockOffset > oldBlockLength)
-//                    throw new RuntimeException (
-//                        link + " is at offset=" + blockOffset + 
-//                        " BEYOND block length=" + oldBlockLength
-//                    );                    
-//                //
-//                //  If this accessor is staying with the former TSF,
-//                //  nothing needs to be done. The block will be shortened.
-//                //
-//                if (currentTimestamp < newStartTs) {
-//                    if (blockOffset > splitOffset)  // Cannot be
-//                        throw new RuntimeException (
-//                            "Offset/timestamp discrepancy: " + link + 
-//                            " is at offset=" + blockOffset + 
-//                            ", which is AHEAD OF splitOffset=" + splitOffset +
-//                            " for splitTimestamp=" + newStartTs +
-//                            ", while the link's accessor " + accessor +
-//                            " reports EARLIER currentTimestamp=" + currentTimestamp                                                        
-//                        );
-//                    
-//                    if (splitOffset == 0)
-//                        link.kill ();
-//                    
-//                    //  else the block stays (shortened)
-//                }
-//                else {
-//                    //
-//                    //  This accessor is moving on. Is this is the first link,
-//                    //  switch the checkout
-//                    //                     
-//                    if (checkouts.remove (accessor)) {
-//                        latter.checkedOutTo (accessor);
-//                        
-//                        accessor.switchTimeSlice (latter);
-//                    }
-//                    
-//                    if (latterBlockLength == 0)
-//                        link.kill ();
-//                    else {
-//                        int         newOffset = blockOffset - splitOffset;
-//                        //
-//                        //  It's legal for links to lag with respect to 
-//                        //  the accessor's currentTimestamp. Such links will
-//                        //  be forcefully fast-forwarded here
-//                        //
-//                        if (newOffset < 0)  
-//                            newOffset = 0;
-//                    
-//                        link.switchBlock (latterBlock, newOffset);                                                                                    
-//                    }
-//                }
-//            }                                
-//        }
-//        
-//        if (checkouts.isEmpty ()) 
-//            getRoot ().getCache ().unreferenced (this);
-//    }
-
 }

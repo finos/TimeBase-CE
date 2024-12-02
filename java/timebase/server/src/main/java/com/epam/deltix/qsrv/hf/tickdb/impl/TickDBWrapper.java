@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.hf.tickdb.impl;
 import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.MetaData;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TickDBServer;
@@ -45,6 +46,7 @@ import java.security.AccessControlException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -349,6 +351,11 @@ public class TickDBWrapper
     @Override
     public InstrumentMessageSource executeQuery(String qql, SelectionOptions options, TickStream[] streams, CharSequence[] ids, long startTimestamp, long endTimestamp, Parameter... params) throws CompilationException {
         return null;
+    }
+
+    @Override
+    public void compileQuery(String query, List<Token> outTokens) {
+        delegate.compileQuery(query, outTokens);
     }
 
     private InstrumentMessageSource executeQuery(PQExecutor executor,

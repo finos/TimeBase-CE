@@ -47,6 +47,7 @@ import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.io.UncheckedIOException;
 import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.lang.Util;
+import com.epam.deltix.util.time.GMT;
 import com.epam.deltix.util.time.Interval;
 import com.epam.deltix.util.time.TimeKeeper;
 import com.epam.deltix.util.time.TimeUnit;
@@ -256,7 +257,7 @@ public class Test_Replicator {
 
             long time = 1108501140000L;
 
-            System.out.println("Truncating stream to " + time);
+            System.out.println("Truncating stream to " + GMT.formatDateTimeMillis(time));
             stream.truncate(time);
         }
 

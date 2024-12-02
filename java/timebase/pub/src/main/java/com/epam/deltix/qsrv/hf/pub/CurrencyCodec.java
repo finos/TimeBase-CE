@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -22,6 +22,8 @@ import java.io.IOException;
 
 /**
  *  Converts three-letter codes into a 16-bit number and back.
+ *
+ *  Does not support ALPHANUMERIC conversions
  */
 public class CurrencyCodec {
     private static final int          TEXT_MARKER = 0x8000;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,7 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.comm.client;
 
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLockImpl;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockOptions;
 
 /**
  * User: alex
@@ -27,8 +27,8 @@ class ClientLock extends DBLockImpl {
     private final TickStreamClient stream;
     private int usages = 1;
 
-    public ClientLock(TickStreamClient stream, LockType type, String guid) {
-        super(type, guid);
+    public ClientLock(TickStreamClient stream, LockOptions options, String guid) {
+        super(options, guid);
         this.stream = stream;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -27,8 +27,12 @@ import java.text.ParseException;
  *
  */
 class DateTimeFieldEncoder extends FieldEncoder {
+    private final boolean hasNanos;
+
     DateTimeFieldEncoder (NonStaticFieldLayout f) {
         super (f);
+
+        hasNanos = ((DateTimeDataType)f.getType()).hasNanosecondPrecision();
     }
 
     @Override
@@ -43,17 +47,20 @@ class DateTimeFieldEncoder extends FieldEncoder {
     }
 
     @Override
-    protected boolean isNull(long value) {
+    protected boolean       isNull(long value) {
         return value == DateTimeDataType.NULL; 
     }
 
     @Override
     void                    setString (CharSequence value, EncodingContext ctxt) {
-        long        t;
+        long        time;
         
         try {
-            t = GMT.parseDateTimeMillis (value.toString()).getTime ();
-            setLong (t, ctxt);
+            if (hasNanos)
+                time = GMT.parseDateTimeMillis (value.toString()).getTime ();
+            else
+                time = GMT.parseDateTimeMillis (value.toString()).getTime ();
+            setLong (time, ctxt);
         } catch (ParseException x) {
             throwConstraintViolationException(value);
         }

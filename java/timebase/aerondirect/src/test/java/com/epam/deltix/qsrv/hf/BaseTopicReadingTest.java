@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -22,10 +22,10 @@ import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.topic.loader.DirectLoaderFactory;
 import com.epam.deltix.timebase.messages.service.ErrorMessage;
+import com.epam.deltix.util.lang.Util;
 import io.aeron.CommonContext;
 import org.junit.Assert;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,26 +37,23 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Alexei Osipov
  */
 public abstract class BaseTopicReadingTest extends BaseAeronTest {
-
     private static final int TEST_DURATION_MS = 20 * 1000;
     static final int TEST_TIMEOUT = TEST_DURATION_MS + 6 * 1000;
 
     void executeTest() throws Exception {
         String channel = CommonContext.IPC_CHANNEL;
         int dataStreamId = new Random().nextInt();
-        int serverMetadataStreamId = dataStreamId + 1;
         List<RecordClassDescriptor> types = Collections.singletonList(Messages.ERROR_MESSAGE_DESCRIPTOR);
-        byte loaderNumber = 1;
 
         AtomicLong messagesSentCounter = new AtomicLong(0);
         AtomicLong messagesReceivedCounter = new AtomicLong(0);
         AtomicBoolean senderStopFlag = new AtomicBoolean(false);
 
-        List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<>());
 
         Thread loaderThread = new Thread(() -> {
 
-            MessageChannel<InstrumentMessage> messageChannel = new DirectLoaderFactory().create(aeron, false, channel, channel, dataStreamId, serverMetadataStreamId, types, loaderNumber, new ByteArrayOutputStream(8 * 1024), Collections.emptyList(), null, null);
+            MessageChannel<InstrumentMessage> messageChannel = new DirectLoaderFactory().create(aeron, false, channel, dataStreamId, types, null, null, null, false);
 
             ErrorMessage msg = new ErrorMessage();
             msg.setSymbol("ABC");
@@ -64,14 +61,23 @@ public abstract class BaseTopicReadingTest extends BaseAeronTest {
 
             while (!senderStopFlag.get()) {
                 messageSentCounter ++;
-                msg.setTimeStampMs(messageSentCounter); // Se store message number in the timestamp field.
+                msg.setTimeStampMs(messageSentCounter);
+                msg.setSeqNum(234567890); // Se store message number in the timestamp field.
                 messageChannel.send(msg);
                 messagesSentCounter.set(messageSentCounter);
             }
             messageChannel.close();
         });
         loaderThread.setName("SENDER");
-        loaderThread.setUncaughtExceptionHandler((t, e) -> exceptions.add(e));
+        Thread.UncaughtExceptionHandler exceptionHandler = (t, e) -> {
+            synchronized (System.out) {
+                System.out.println("Exception in thread " + t.getName() + ":");
+                e.printStackTrace(System.out);
+            }
+            exceptions.add(e);
+        };
+
+        loaderThread.setUncaughtExceptionHandler(exceptionHandler);
         loaderThread.start();
 
         MessageValidator messageValidator = new MessageValidator();
@@ -79,7 +85,7 @@ public abstract class BaseTopicReadingTest extends BaseAeronTest {
 
         Thread readerThread = new Thread(runnable);
         readerThread.setName("READER");
-        readerThread.setUncaughtExceptionHandler((t, e) -> exceptions.add(e));
+        readerThread.setUncaughtExceptionHandler(exceptionHandler);
         readerThread.start();
 
         // Let test to work
@@ -121,12 +127,12 @@ public abstract class BaseTopicReadingTest extends BaseAeronTest {
             if (msg.getTimeStampMs() != messageNumber) {
                 throw new IllegalStateException("Invalid message order");
             }
-            if (!msg.getSymbol().equals("ABC")) {
+            if (!Util.equals(msg.getSymbol(), "ABC")) {
                 throw new AssertionError("Wrong symbol");
             }
-//            if (msg.getOriginalTimestamp() != 234567890) {
-//                throw new AssertionError("Wrong OriginalTimestamp");
-//            }
+            if (msg.getSeqNum() != 234567890) {
+                throw new AssertionError("Wrong OriginalTimestamp");
+            }
         }
     }
 }

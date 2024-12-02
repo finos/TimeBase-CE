@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,17 +16,25 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http;
 
+import com.epam.deltix.qsrv.hf.pub.md.Introspector;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.json.SchemaBuilder;
 import com.epam.deltix.qsrv.hf.tickdb.comm.UnknownStreamException;
 import com.epam.deltix.qsrv.hf.tickdb.http.download.*;
 import com.epam.deltix.qsrv.hf.tickdb.http.stream.*;
 import com.epam.deltix.qsrv.hf.tickdb.http.upload.UploadHandler;
 import com.epam.deltix.qsrv.hf.tickdb.impl.TickDBWrapper;
+import com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicTransferType;
+import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.LoaderSubscriptionResult;
 import com.epam.deltix.qsrv.hf.tickdb.lang.parser.QQLParser;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TextMap;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.settings.TopicType;
 import com.epam.deltix.util.io.BasicIOUtil;
 import com.epam.deltix.util.lang.StringUtils;
+import com.epam.deltix.util.net.NetworkInterfaceUtil;
 import com.epam.deltix.util.parsers.CompilationException;
 
 import javax.servlet.ServletException;
@@ -38,6 +46,7 @@ import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.security.AccessControlException;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -46,8 +55,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import static com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler.*;
-import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.marshall;
-import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.LOGGER;
+import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.*;
 
 /**
  *
@@ -128,6 +136,22 @@ public class TimebaseServlet extends HttpServlet {
 
                     marshall(r, resp.getOutputStream());
                     resp.setStatus(HttpServletResponse.SC_OK);
+                } else if (body instanceof GenerateSchemaRequest) {
+                    GenerateSchemaRequest request = (GenerateSchemaRequest) body;
+
+                    RecordClassDescriptor[] descriptors = new RecordClassDescriptor[request.types.length];
+                    for (int i = 0; i < request.types.length; ++i) {
+                        descriptors[i] = Introspector.createEmptyMessageIntrospector().introspectRecordClass(
+                            Class.forName(request.types[i])
+                        );
+                    }
+
+                    GenerateSchemaResponse r = new GenerateSchemaResponse();
+                    r.schema = HTTPProtocol.JSON_MAPPER.writeValueAsString(
+                        SchemaBuilder.toSchemaDef(new RecordClassSet(descriptors), false)
+                    );
+
+                    marshall(r, resp.getOutputStream());
                 }
                 else if (body instanceof DownloadRequest) {
 
@@ -177,6 +201,10 @@ public class TimebaseServlet extends HttpServlet {
                         final ListEntitiesRequest r = (ListEntitiesRequest) body;
 
                         StreamHandler.processListEntities(db, r, resp);
+//                    } else if (body instanceof ListSymbolsRequest) {
+//                        final ListSymbolsRequest r = (ListSymbolsRequest) body;
+//
+//                        StreamHandler.processListSymbols(db, r, resp);
                     } else if (body instanceof LockStreamRequest) {
                         StreamHandler.processLock(db, (LockStreamRequest) body, resp);
                     } else if (body instanceof UnlockStreamRequest) {
@@ -187,6 +215,8 @@ public class TimebaseServlet extends HttpServlet {
                         StreamHandler.processTruncate(db, (TruncateRequest) body, resp);
                     } else if (body instanceof PurgeRequest) {
                         StreamHandler.processPurge(db, (PurgeRequest) body, resp);
+                    } else if (body instanceof DeleteDataRequest) {
+                        StreamHandler.processDeleteData(db, (DeleteDataRequest) body, resp);
                     } else if (body instanceof DeleteRequest) {
                         StreamHandler.processDelete(db, (DeleteRequest) body, resp);
                     } else if (body instanceof AbortBGProcessRequest) {
@@ -204,6 +234,24 @@ public class TimebaseServlet extends HttpServlet {
                         StreamHandler.processGetSpaceRange(db, (GetSpaceTimeRangeRequest) body, resp);
                     } else if (body instanceof DescribeStreamRequest) {
                         StreamHandler.processDescribeStreamRequest(db, (DescribeStreamRequest) body, resp);
+                    } else if (body instanceof SetNameRequest) {
+                        StreamHandler.setName(db, (SetNameRequest) body, resp);
+                    } else if (body instanceof SetDescriptionRequest) {
+                        StreamHandler.setDescription(db, (SetDescriptionRequest) body, resp);
+                    } else if (body instanceof SetOwnerRequest) {
+                        StreamHandler.setOwner(db, (SetOwnerRequest) body, resp);
+                    } else if (body instanceof SetDistributionFactorRequest) {
+                        StreamHandler.setDistributionFactor(db, (SetDistributionFactorRequest) body, resp);
+                    } else if (body instanceof SetHighAvailabilityRequest) {
+                        StreamHandler.setHighAvailability(db, (SetHighAvailabilityRequest) body, resp);
+                    } else if (body instanceof SetReplicaVersionRequest) {
+                        StreamHandler.setReplicaVersion(db, (SetReplicaVersionRequest) body, resp);
+                    } else if (body instanceof SetPeriodicityRequest) {
+                        StreamHandler.setPeriodicity(db, (SetPeriodicityRequest) body, resp);
+                    } else if (body instanceof SetBufferOptionsRequest) {
+                        StreamHandler.setBufferOptions(db, (SetBufferOptionsRequest) body, resp);
+                    } else if (body instanceof EnableVersioningRequest) {
+                        StreamHandler.enableVersioning(db, (EnableVersioningRequest) body, resp);
                     }
                 }
                 else if (body instanceof CursorRequest) {
@@ -250,6 +298,15 @@ public class TimebaseServlet extends HttpServlet {
                     }
 
                     marshall(response, resp.getOutputStream());
+                } else if (body instanceof CreateTopicPublisherRequest) {
+                    processCreateTopicPublisher((CreateTopicPublisherRequest) body, req, resp);
+                } else if (body instanceof CloseTopicPublisherRequest) {
+                    LOGGER.info("dxapi client closed topic publisher connection: " +
+                            "remote address=" + req.getRemoteAddr() +
+                            ", topic=" + ((CloseTopicPublisherRequest) body).key +
+                            ", id=" + ((CloseTopicPublisherRequest) body).id
+                    );
+                    resp.setStatus(HttpServletResponse.SC_OK);
                 }
                 else
                     throw new IllegalArgumentException("unknown request type " + body.getClass().getName());
@@ -281,6 +338,32 @@ public class TimebaseServlet extends HttpServlet {
                     sendError(resp, t);
                 }
             }
+        }
+    }
+
+    private void processCreateTopicPublisher(CreateTopicPublisherRequest body,
+                                             HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        try {
+            boolean local = NetworkInterfaceUtil.isLocal(req.getRemoteAddr());
+            LoaderSubscriptionResult result = TOPICS.topicRegistry().addLoader(body.key, local, TOPICS.aeronContext().getPublicAddress());
+            TopicTransferType transferType = result.getTopicType() == TopicType.IPC ? TopicTransferType.IPC : TopicTransferType.UDP;
+            String aeronDir = local ? TOPICS.aeronContext().getAeronDir() : null;
+
+            StringWriter writer = new StringWriter();
+            marshallUHF(new RecordClassSet(result.getTypes().toArray(new RecordClassDescriptor[0])), writer);
+
+            CreateTopicPublisherResponse response = new CreateTopicPublisherResponse();
+            response.transferType = transferType;
+            response.schema = writer.toString();
+            response.publisherChannel = result.getPublisherChannel();
+            response.aeronDir = aeronDir;
+            response.dataStreamId = result.getDataStreamId();
+
+            resp.setStatus(HttpServletResponse.SC_OK);
+            marshall(response, resp.getOutputStream());
+        } catch (Throwable t) {
+            sendError(resp, t);
+            HTTPProtocol.LOGGER.log(Level.SEVERE, "Failed to create topic publisher", t);
         }
     }
 

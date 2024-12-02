@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -26,14 +26,12 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.topic.settings.TopicType;
  */
 public class ReaderSubscriptionResult {
     private final TopicType topicType;
-    private final ConstantIdentityKey[] mapping;
     private final ImmutableList<RecordClassDescriptor> types;
     private final String subscriberChannel;
     private final int dataStreamId;
 
-    public ReaderSubscriptionResult(TopicType topicType, ConstantIdentityKey[] mapping, ImmutableList<RecordClassDescriptor> types, String subscriberChannel, int dataStreamId) {
+    public ReaderSubscriptionResult(TopicType topicType, ImmutableList<RecordClassDescriptor> types, String subscriberChannel, int dataStreamId) {
         this.topicType = topicType;
-        this.mapping = mapping;
         this.types = types;
         this.subscriberChannel = subscriberChannel;
         this.dataStreamId = dataStreamId;
@@ -53,9 +51,5 @@ public class ReaderSubscriptionResult {
 
     public int getDataStreamId() {
         return dataStreamId;
-    }
-
-    public ConstantIdentityKey[] getMapping() {
-        return mapping;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -29,15 +29,15 @@ import java.util.concurrent.ThreadFactory;
  * @author Alexei Osipov
  */
 public class AeronThreadTracker {
-    private static int MAX_LATENCY_CRITICAL_THREADS = Integer.getInteger("TimeBase.requestHandler.maxLatencyCriticalThreads", Runtime.getRuntime().availableProcessors() / 2); // Note: may be zero
+    private static final int MAX_LATENCY_CRITICAL_THREADS = Integer.getInteger("TimeBase.requestHandler.maxLatencyCriticalThreads", Runtime.getRuntime().availableProcessors() / 2); // Note: may be zero
 
     // These thread factories must be static to keep JVM unique thread names
-    private static ThreadFactory aeronUploaderThreadFactory = new ThreadFactoryBuilder().setNameFormat("Aeron-Uploader-%d").build();
-    private static ThreadFactory aeronDownloaderThreadFactory = new ThreadFactoryBuilder().setNameFormat("Aeron-Downloader-%d").build();
-    private static ThreadFactory aeronMulticastDownloaderThreadFactory = new ThreadFactoryBuilder().setNameFormat("Aeron-MDownloader-%d").build();
+    private static final ThreadFactory aeronUploaderThreadFactory = new ThreadFactoryBuilder().setNameFormat("Aeron-Uploader-%d").build();
+    private static final ThreadFactory aeronDownloaderThreadFactory = new ThreadFactoryBuilder().setNameFormat("Aeron-Downloader-%d").build();
+    private static final ThreadFactory aeronMulticastDownloaderThreadFactory = new ThreadFactoryBuilder().setNameFormat("Aeron-MDownloader-%d").build();
 
     // Threads that used to copy data from topics to streams
-    private static ThreadFactory copyTopicToStreamThreadFactory = new ThreadFactoryBuilder().setNameFormat("Copy-Topic-to-Stream-%d").build();
+    private static final ThreadFactory copyTopicToStreamThreadFactory = new ThreadFactoryBuilder().setNameFormat("Copy-Topic-to-Stream-%d").build();
 
 
     private final Set<Runnable> runningTasks = new HashSet<>();

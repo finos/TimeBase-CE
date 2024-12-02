@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -20,6 +20,7 @@ import com.epam.deltix.qsrv.hf.blocks.InstrumentIndex4;
 import com.epam.deltix.qsrv.hf.blocks.InstrumentToObjectMap;
 import com.epam.deltix.qsrv.hf.pub.*;
 import com.epam.deltix.qsrv.hf.pub.md.*;
+
 import com.epam.deltix.qsrv.hf.tickdb.impl.mon.*;
 import com.epam.deltix.qsrv.hf.tickdb.impl.multiplexer.PrioritizedMessageSourceMultiplexer;
 import com.epam.deltix.qsrv.hf.tickdb.impl.multiplexer.PrioritizedSource;
@@ -488,7 +489,11 @@ public class TickCursorImpl implements
         return index;
     }
 
-    public TickStream       getCurrentStream () {        
+//    public int              getCurrentStreamIndex () {
+//       return currentStream != null ? getStreamIndex(currentStream) : -1;
+//    }
+
+    public TickStream       getCurrentStream () {
         return currentStream;
     }
 

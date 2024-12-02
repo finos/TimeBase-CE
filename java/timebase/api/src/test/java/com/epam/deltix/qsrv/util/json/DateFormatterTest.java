@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -42,14 +42,14 @@ public class DateFormatterTest {
     private void testNanos(long nanoTime) throws ParseException {
         DateFormatter dateFormatter = new DateFormatter();
         String formatted = dateFormatter.toNanosDateString(nanoTime);
-        long parsed = dateFormatter.fromNanosDateString(formatted);
+        long parsed = dateFormatter.nanoFromDateString(formatted);
         assertEquals(String.format("Formatted: %s", formatted), parsed, nanoTime);
     }
 
     private void testMillis(long millis) throws ParseException {
         DateFormatter dateFormatter = new DateFormatter();
         String formatted = dateFormatter.toDateString(millis);
-        long parsed = dateFormatter.fromDateString(formatted);
+        long parsed = dateFormatter.msFromDateString(formatted);
         assertEquals(String.format("Formatted: %s", formatted), parsed, millis);
     }
 

@@ -18,6 +18,8 @@ Running QQL: select "field".name, "field"."type".baseName as 'fieldType', "field
 {"$type":"QUERY7806381371293046800","symbol":"","field.name":"originalStatus","fieldType":"VARCHAR","encoding":"UTF8"}
 {"$type":"QUERY7806381371293046800","symbol":"","field.name":"status","fieldType":"ENUM"}
 !END
-Running QQL: select ([] as array(decimal) if true) as a1, (null as array(int8) if true) as a2, (null as int8 if true) as a, (a + (1 as timestamp) if true) as a3, (a + (1 as int16) if true) as a4
-,<null>,A1:ARRAY,A2:ARRAY,A:<null>,A3:<null>,A4:<null>
+Running QQL: select s, sort(symbols(s)) array join sort(streams().key) as s limit 3
+{"$type":"QUERY1301562268710554756","symbol":"","S":"infoA","SORT (SYMBOLS (SORT (STREAMS ().key)))":["AAAA"]}
+{"$type":"QUERY1301562268710554756","symbol":"","S":"infoB","SORT (SYMBOLS (SORT (STREAMS ().key)))":["BBBB"]}
+{"$type":"QUERY1301562268710554756","symbol":"","S":"KRAKEN","SORT (SYMBOLS (SORT (STREAMS ().key)))":["ADA/BTC","BAT/BTC","BAT/ETH","BAT/USD","BCH/USD","BTC/EUR","BTC/GBP","BTC/USD","DOT/BTC","EOS/BTC","EOS/ETH","EOS/EUR","ETC/BTC","ETC/USD","ETH/BTC","ETH/EUR","ETH/GBP","ETH/USD","KNC/BTC","LTC/BTC","LTC/USD","OMG/BTC","OMG/ETH","TRX/BTC","TRX/ETH","TRX/EUR","XLM/BTC","XMR/BTC","XRP/BTC","XTZ/BTC","ZEC/BTC","ZRX/BTC","ADA/USDT","ALGO/BTC","ATOM/BTC","BTC/USDT","DASH/BTC","DOT/USDT","EOS/USDT","ETH/USDT","LINK/USD","LTC/USDT","MANA/BTC","QTUM/BTC","USDT/USD","XRP/USDT","DOGE/USDT","LINK/USDT","USDC/USDT"]}
 !END

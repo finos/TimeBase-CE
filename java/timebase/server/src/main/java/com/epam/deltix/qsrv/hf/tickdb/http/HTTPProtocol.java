@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -18,6 +18,8 @@ package com.epam.deltix.qsrv.hf.tickdb.http;
 
 import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptorArray;
 import com.epam.deltix.qsrv.hf.pub.md.UHFJAXBContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.xml.bind.marshaller.CharacterEscapeHandler;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -35,11 +37,35 @@ public abstract class HTTPProtocol {
 
     public static final Logger LOGGER = Logger.getLogger(HTTPProtocol.class.getPackage().getName());
 
-    public static final short VERSION = 32;
-    public static final short MIN_CLIENT_VERSION = 31;
-    public static final short CLIENT_ENTITYID32_SUPPORT_VERSION = 31;
+    public static final short VERSION = 104;
+    public static final short MIN_CLIENT_VERSION = 8;
+    public static final short CLIENT_SSL_SUPPORT_VERSION = 9;
+    public static final short CLIENT_ENTITYID32_SUPPORT_VERSION = 11;
+    public static final short CLIENT_LOCKS_SUPPORT_VERSION = 12;
+    public static final short CLIENT_APPLICATION_NAME_SUPPORT_VERSION = 13;
+    public static final short CLIENT_RANGED_LOCKS_SUPPORT_VERSION = 14;
+    public static final short CLIENT_SEPARATE_WEB_PORT_VERSION = 19;
+    public static final short CLIENT_SESSION_HANDLER_SUPPORT = 100;
 
     public static final byte PROTOCOL_INIT          = 0x18;
+
+
+    public static final int     REQ_GET_STREAMS =           1;
+    public static final int     REQ_GET_STREAM_PROPERTY =   2;
+    public static final int     REQ_CLOSE_SESSION =         3;
+    public static final int     REQ_GET_STREAMS_CHUNKED =   4;
+
+    public static final int     STREAM_PROPERTY_CHANGED =   11;
+    public static final int     STREAM_DELETED =            12;
+    public static final int     STREAM_CREATED =            13;
+    public static final int     STREAM_RENAMED =            14;
+    public static final int     STREAMS_DEFINITION =        15;
+    public static final int     STREAM_PROPERTY =           16;
+    public static final int     SESSION_CLOSED =            17;
+    public static final int     SESSION_STARTED =           18;
+    public static final int     STREAMS_CHANGED =           19;
+    public static final int     STREAMS_DEFINITION_CHUNKED = 20;
+    public static final int     END_STREAMS_DEFINITION_CHUNKED = 21;
 
     public static final byte REQ_UPLOAD_DATA        = 0x01;
     public static final byte REQ_CREATE_CURSOR      = 0x02;
@@ -63,8 +89,8 @@ public abstract class HTTPProtocol {
     public static final int CURSOR_MESSAGE_HEADER_SIZE = 8 + 2 + 1 + 1; // timestamp + instrument_index + type_index + stream_index
     public static final int LOADER_MESSAGE_HEADER_SIZE = 8 + 2 + 1; // timestamp + instrument_index + type_index
 
-    public static final int TERMINATOR_RECORD = 0xFFFFFFFF;
-    public static final int ERROR_BLOCK_ID_WIDE = 0xFFFFFFFE;
+    public static final int TERMINATOR_RECORD = 0xFFFF_FFFF;
+    public static final int ERROR_BLOCK_ID_WIDE = 0xFFFF_FFFE;
     public static final int MAX_MESSAGE_SIZE = 0x400000;
 
     public static final byte ERR_INVALID_ARGUMENTS = 1;
@@ -72,6 +98,10 @@ public abstract class HTTPProtocol {
 
     public static final String CONTENT_ENCODING = "Content-Encoding";
     public static final String GZIP = "gzip";
+
+    public static final String UNKNOWN_APPLICATION_NAME = "Unknown REST";
+
+    public static ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     public static void validateVersion(short clientVersion) {
         if (clientVersion < MIN_CLIENT_VERSION)
@@ -81,8 +111,7 @@ public abstract class HTTPProtocol {
 
     public static void marshall(Object o, OutputStream os) {
         try {
-            final Marshaller m = TBJAXBContext.createMarshaller();
-            m.marshal(o, os);
+            tbMarshaller().marshal(o, os);
         } catch (JAXBException x) {
             throw new UncheckedException(x);
         }
@@ -106,8 +135,7 @@ public abstract class HTTPProtocol {
 
     public static void marshallUHF(Object o, OutputStream os) {
         try {
-            final Marshaller m = UHFJAXBContext.createMarshaller();
-            m.marshal(o, os);
+            uhfMarshaller().marshal(o, os);
         } catch (JAXBException x) {
             throw new UncheckedException(x);
         }
@@ -115,10 +143,21 @@ public abstract class HTTPProtocol {
 
     public static void marshallUHF(Object o, Writer writer) {
         try {
-            final Marshaller m = UHFJAXBContext.createMarshaller();
-            m.marshal(o, writer);
+            uhfMarshaller().marshal(o, writer);
         } catch (JAXBException x) {
             throw new UncheckedException(x);
         }
+    }
+
+    private static Marshaller tbMarshaller() throws JAXBException {
+        final Marshaller m = TBJAXBContext.createMarshaller();
+        m.setProperty(CharacterEscapeHandler.class.getName(), EscapeSpacesHandler.theInstance);
+        return m;
+    }
+
+    private static Marshaller uhfMarshaller() throws JAXBException {
+        final Marshaller m = UHFJAXBContext.createMarshaller();
+        m.setProperty(CharacterEscapeHandler.class.getName(), EscapeSpacesHandler.theInstance);
+        return m;
     }
 }

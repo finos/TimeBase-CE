@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.comm.client;
 
 import com.epam.deltix.data.stream.ChannelPreferences;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.*;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.qsrv.hf.blocks.InstrumentToObjectMap;
@@ -41,9 +42,6 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.StreamScope;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickCursor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickLoader;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLock;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
-import com.epam.deltix.qsrv.hf.tickdb.pub.lock.StreamLockedException;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.SchemaChangeTask;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.TransformationTask;
 import com.epam.deltix.util.lang.Util;
@@ -103,7 +101,7 @@ class TickStreamClient implements DXTickStream {
     }
 
     void                        checkResponse (VSChannel ds) throws IOException {
-        TickDBClient.checkResponse(ds);
+        TickDBClient.checkResponse(ds, conn.getServerProtocolVersion());
     }
 
     public DXTickDB                 getDB () {
@@ -235,7 +233,7 @@ class TickStreamClient implements DXTickStream {
     @Override
     public synchronized StreamOptions            getStreamOptions() {
 
-        conn.getSession().getStreamProperty(key, TickStreamProperties.SCHEMA);
+        updateStreamProperties(TickStreamProperties.SCHEMA);
 
         StreamOptions so =
                 new StreamOptions (options.scope, getName(), getDescription(), getDistributionFactor());
@@ -246,6 +244,7 @@ class TickStreamClient implements DXTickStream {
         so.highAvailability = getHighAvailability();
         so.unique = options.unique;
         so.owner = options.owner;
+        so.version = options.version;
 
         BufferOptions bufferOptions = options.bufferOptions;
         if (bufferOptions != null) {
@@ -260,24 +259,18 @@ class TickStreamClient implements DXTickStream {
     }
 
     public String                   getName () {
-        synchronized (this) {
-            conn.getSession().getStreamProperty(key, TickStreamProperties.NAME);
-        }
+        updateStreamProperties(TickStreamProperties.NAME);
 
         return options.name;
     }
 
     public String                   getDescription () {
-        synchronized (this) {
-            conn.getSession().getStreamProperty(key, TickStreamProperties.DESCRIPTION);
-        }
+        updateStreamProperties(TickStreamProperties.DESCRIPTION);
         return options.description;
     }
 
     public String                   getOwner() {
-        synchronized (this) {
-            conn.getSession().getStreamProperty(key, TickStreamProperties.OWNER);
-        }
+        updateStreamProperties(TickStreamProperties.OWNER);
         return options.owner;
     }
 
@@ -372,23 +365,6 @@ class TickStreamClient implements DXTickStream {
         }
     }
 
-    private boolean     updateStreamProperties(int ...  properties) {
-        boolean[] states = new boolean[properties.length];
-
-        // complex code to overcome possible JIT optimization, we need to check each property
-        synchronized (this) {
-            for (int i = 0; i < properties.length; i++)
-                states[i] = conn.getSession().getStreamProperty(key, properties[i]);
-        }
-
-        for (boolean state : states) {
-            if (state)
-                return true;
-        }
-
-        return false;
-    }
-
     public long []                      getTimeRange (IdentityKey... ids) {
 
         if (!CACHE_ENTITIES)
@@ -464,6 +440,31 @@ class TickStreamClient implements DXTickStream {
         }
 
         return range.toArray();
+    }
+
+    private boolean     updateStreamProperties(int ...  properties) {
+        boolean[] states = new boolean[properties.length];
+
+        // complex code to overcome possible JIT optimization, we need to check each property
+        synchronized (this) {
+            for (int i = 0; i < properties.length; i++)
+                states[i] = conn.getSession().getStreamProperty(key, properties[i]);
+        }
+
+        for (boolean state : states) {
+            if (state)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void        invalidateProperties(int... properties) {
+        synchronized (this) {
+            for (int i = 0; i < properties.length; i++) {
+                conn.getSession().resetProperty(key, properties[i]);
+            }
+        }
     }
 
     @Override
@@ -553,10 +554,10 @@ class TickStreamClient implements DXTickStream {
         if (!CACHE_ENTITIES)
             return;
 
-        timeRange.invalidate = true;
-        timeRange.writers = writers;
-
         synchronized (entities) {
+
+            timeRange.invalidate = true;
+            timeRange.writers = writers;
 
             for (Map.Entry<IdentityKey, EntityTimeRange> id : ids.entrySet()) {
                 entities.put(id.getKey(), id.getValue());
@@ -600,7 +601,11 @@ class TickStreamClient implements DXTickStream {
             writeLock(out);
             out.flush();
 
+            conn.getSession().resetProperty(key, TickStreamProperties.ENTITIES);
+
             checkResponse(ds);
+
+            invalidateProperties(TickStreamProperties.ENTITIES);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {
@@ -665,9 +670,8 @@ class TickStreamClient implements DXTickStream {
 
     @Override
     public boolean                  getHighAvailability() {
-        synchronized (this) {
-            conn.getSession().getStreamProperty(key, TickStreamProperties.HIGH_AVAILABILITY);
-        }
+        updateStreamProperties(TickStreamProperties.HIGH_AVAILABILITY);
+
         return options.highAvailability;
     }
 
@@ -691,12 +695,13 @@ class TickStreamClient implements DXTickStream {
             out.writeInt (TDBProtocol.REQ_SET_STREAM_TYPE);
             out.writeUTF (key);
             out.writeBoolean (polymorphic);
-            TDBProtocol.writeClassSet (out, tmd);
+            TDBProtocol.writeClassSet (out, tmd, conn.getServerProtocolVersion());
             writeLock(out);
             out.flush ();
-            
-            checkResponse(ds);
 
+            invalidateProperties(TickStreamProperties.ENTITIES, TickStreamProperties.TIME_RANGE, TickStreamProperties.SCHEMA);
+
+            checkResponse(ds);
             options.setMetaData(polymorphic, tmd);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
@@ -713,7 +718,7 @@ class TickStreamClient implements DXTickStream {
     }
 
     synchronized RecordClassSet     getMetaData() {
-        conn.getSession().getStreamProperty(key, TickStreamProperties.SCHEMA);
+        updateStreamProperties(TickStreamProperties.SCHEMA);
         return options.getMetaData();
     }
 
@@ -745,7 +750,7 @@ class TickStreamClient implements DXTickStream {
     }
 
     public synchronized RecordClassDescriptor getFixedType () {
-        conn.getSession().getStreamProperty(key, TickStreamProperties.SCHEMA);
+        updateStreamProperties(TickStreamProperties.SCHEMA);
 
         if (!options.isFixedType())
             return (null);
@@ -755,7 +760,7 @@ class TickStreamClient implements DXTickStream {
     }
 
     public synchronized RecordClassDescriptor [] getPolymorphicDescriptors () {
-        conn.getSession().getStreamProperty(key, TickStreamProperties.SCHEMA);
+        updateStreamProperties(TickStreamProperties.SCHEMA);
 
         if (options.isFixedType())
             return (null);
@@ -764,19 +769,19 @@ class TickStreamClient implements DXTickStream {
     }
 
     public synchronized ClassDescriptor [] getAllDescriptors () {
-        conn.getSession().getStreamProperty(key, TickStreamProperties.SCHEMA);
+        updateStreamProperties(TickStreamProperties.SCHEMA);
 
         return options.getMetaData().getClassDescriptors();
     }
     
     public synchronized boolean    isFixedType () {
-        conn.getSession().getStreamProperty(key, TickStreamProperties.SCHEMA);
+        updateStreamProperties(TickStreamProperties.SCHEMA);
 
         return options.isFixedType();
     }
 
     public synchronized boolean    isPolymorphic () {
-        conn.getSession().getStreamProperty(key, TickStreamProperties.SCHEMA);
+        updateStreamProperties(TickStreamProperties.SCHEMA);
 
         return !options.isFixedType();
     }
@@ -871,6 +876,7 @@ class TickStreamClient implements DXTickStream {
             checkResponse(ds);
 
             setWriteMode(false);
+            invalidateProperties(TickStreamProperties.TIME_RANGE);
 
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
@@ -883,9 +889,7 @@ class TickStreamClient implements DXTickStream {
 
         assertWritable();
 
-        synchronized (this) {
-            conn.getSession().getStreamProperty(key, TickStreamProperties.ENTITIES);
-        }
+        updateStreamProperties(TickStreamProperties.ENTITIES, TickStreamProperties.TIME_RANGE);
 
         VSChannel                  ds = null;
 
@@ -901,6 +905,7 @@ class TickStreamClient implements DXTickStream {
             out.flush ();
 
             checkResponse(ds);
+            invalidateProperties(TickStreamProperties.ENTITIES, TickStreamProperties.TIME_RANGE);
 
             synchronized (entities) {
                 if (ids.length == 0)
@@ -927,7 +932,7 @@ class TickStreamClient implements DXTickStream {
 
             out.writeInt (TDBProtocol.REQ_RUN_TASK);
             out.writeUTF (key);
-            TDBProtocol.writeTransformationTask(task, out);
+            TDBProtocol.writeTransformationTask(task, out, conn.getServerProtocolVersion());
             writeLock(out);
             out.flush ();
 
@@ -966,7 +971,9 @@ class TickStreamClient implements DXTickStream {
             out.flush ();
 
             checkResponse(ds);
+
             setWriteMode(false);
+            invalidateProperties(TickStreamProperties.ENTITIES, TickStreamProperties.TIME_RANGE);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {
@@ -994,6 +1001,7 @@ class TickStreamClient implements DXTickStream {
             checkResponse(ds);
 
             setWriteMode(false);
+            invalidateProperties(TickStreamProperties.TIME_RANGE);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {
@@ -1023,6 +1031,9 @@ class TickStreamClient implements DXTickStream {
             conn.getSession().resetProperty(key, TickStreamProperties.BG_PROCESS);
 
             checkResponse(ds);
+
+            setWriteMode(false);
+            invalidateProperties(TickStreamProperties.TIME_RANGE);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
         } finally {
@@ -1031,9 +1042,7 @@ class TickStreamClient implements DXTickStream {
     }
 
     public BackgroundProcessInfo    getBackgroundProcess() {
-        synchronized (this) {
-            conn.getSession().getStreamProperty(key, TickStreamProperties.BG_PROCESS);
-        }
+        updateStreamProperties(TickStreamProperties.BG_PROCESS);
 
         if (bgProcess == null || bgProcess.isFinished())
             return bgProcess;
@@ -1081,9 +1090,7 @@ class TickStreamClient implements DXTickStream {
     }
 
     public Periodicity              getPeriodicity() {
-        synchronized (this) {
-            conn.getSession().getStreamProperty(key, TickStreamProperties.PERIODICITY);
-        }
+        updateStreamProperties(TickStreamProperties.PERIODICITY);
         return options.periodicity;
     }
 
@@ -1110,20 +1117,27 @@ class TickStreamClient implements DXTickStream {
         return key;
     }
 
-    private void                    assertLocked(LockType type) {
-        if (lock != null && lock.isValid() && lock.getType() != type)
+    private void                    assertLocked(LockOptions options) {
+        if (lock != null && lock.isValid() && !lock.getOptions().equals(options))
             throw new StreamLockedException("Stream '" + this + "' already has " + lock);
     }
 
     @Override
     public synchronized DBLock      lock(LockType type) throws StreamLockedException {
-        assertLocked(type);
+        return lock(LockOptions.create(type));
+    }
+
+    @Override
+    public synchronized DBLock lock(LockOptions options) throws StreamLockedException, UnsupportedOperationException {
+        assertLocked(options);
 
         if (lock != null) {
             lock.reuse();
             return lock;
         }
-        
+
+        checkIsServerSupportsRangedWriteLock(options);
+
         VSChannel                  ds = null;
 
         try {
@@ -1132,7 +1146,7 @@ class TickStreamClient implements DXTickStream {
 
             out.writeInt (TDBProtocol.REQ_LOCK_STREAM);
             out.writeUTF (key);
-            out.writeBoolean (type == LockType.READ);
+            writeLockOptions(out, options);
             out.flush ();
 
             checkResponse(ds);
@@ -1148,12 +1162,19 @@ class TickStreamClient implements DXTickStream {
 
     @Override
     public synchronized DBLock      tryLock(LockType type, long timeout) throws StreamLockedException {
-        assertLocked(type);
+        return tryLock(LockOptions.create(type), timeout);
+    }
+
+    @Override
+    public synchronized DBLock tryLock(LockOptions options, long timeout) throws StreamLockedException, UnsupportedOperationException {
+        assertLocked(options);
 
         if (lock != null) {
             lock.reuse();
             return lock;
         }
+
+        checkIsServerSupportsRangedWriteLock(options);
 
         VSChannel                  ds = null;
 
@@ -1163,7 +1184,7 @@ class TickStreamClient implements DXTickStream {
 
             out.writeInt (TDBProtocol.REQ_TRY_LOCK_STREAM);
             out.writeUTF (key);
-            out.writeBoolean (type == LockType.READ);
+            writeLockOptions(out, options);
             out.writeLong(timeout);
             out.flush ();
 
@@ -1193,8 +1214,10 @@ class TickStreamClient implements DXTickStream {
         dout.writeBoolean(lock != null);
         
         if (lock != null) {
+            checkIsServerSupportsRangedWriteLock(lock.getOptions());
+
             dout.writeUTF(lock.getGuid());
-            dout.writeBoolean(lock.getType() == LockType.READ);
+            writeLockOptions(dout, lock.getOptions());
         }
     }
 
@@ -1203,12 +1226,52 @@ class TickStreamClient implements DXTickStream {
         
         if (exists) {
             String guid = din.readUTF();
-            LockType type = din.readBoolean() ? LockType.READ : LockType.WRITE;
-
-            return new ClientLock(this, type, guid);
+            LockOptions options = readLockOptions(din);
+            return new ClientLock(this, options, guid);
         }
         
         return null;
+    }
+
+    private static LockOptions readLockOptions(DataInputStream din) throws IOException {
+        byte lockProtocolType = readLockProtocolType(din);
+        if (lockProtocolType == TDBProtocol.LOCK_TYPE_WRITE_RANGED) {
+            long startTime = din.readLong();
+            long endTime = din.readLong();
+            return WriteLockOptions.create(startTime, endTime);
+        } else {
+            return LockOptions.create(TDBProtocol.getLockType(lockProtocolType));
+        }
+    }
+
+    private static byte readLockProtocolType(DataInputStream din) throws IOException {
+        int typeId = din.readByte();
+        if (typeId < 0 || typeId >= TDBProtocol.LOCK_TYPE_MAX) {
+            throw new RuntimeException("Unsupported lock type id: " + typeId);
+        }
+
+        return (byte) typeId;
+    }
+
+    private static void writeLockOptions(DataOutputStream dout, LockOptions options) throws IOException {
+        byte lockProtocolType = TDBProtocol.getLockProtocolType(options);
+        dout.writeByte(lockProtocolType);
+        if (lockProtocolType == TDBProtocol.LOCK_TYPE_WRITE_RANGED) {
+            if (options instanceof WriteLockOptions) {
+                dout.writeLong(((WriteLockOptions) options).getStartTime());
+                dout.writeLong(((WriteLockOptions) options).getEndTime());
+            } else {
+                throw new IllegalStateException("Invalid options type of write lock.");
+            }
+        }
+    }
+
+    private void checkIsServerSupportsRangedWriteLock(LockOptions options) {
+        if (options instanceof WriteLockOptions) {
+            if (((WriteLockOptions) options).isRanged() && conn.getServerProtocolVersion() < TDBProtocol.WRITE_RANGED_LOCKS_SUPPORT_VERSION) {
+                throw new IllegalArgumentException("Ranged WRITE locks is not supported by server (version: " + conn.getServerVersion() + ")");
+            }
+        }
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,10 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http.rest;
 
+import com.epam.deltix.qsrv.hf.pub.md.json.SchemaBuilder;
+import com.epam.deltix.qsrv.hf.pub.util.SerializationUtils;
+import com.epam.deltix.qsrv.hf.tickdb.http.stream.GetBGProcessResponse;
+import com.epam.deltix.qsrv.hf.tickdb.http.stream.GetRangeResponse;
 import com.epam.deltix.qsrv.hf.tickdb.impl.ServerStreamWrapper;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
@@ -32,6 +36,7 @@ import com.epam.deltix.util.concurrent.QuickExecutor;
 import com.epam.deltix.util.io.ByteArrayOutputStreamEx;
 import com.epam.deltix.util.io.GUID;
 import com.epam.deltix.util.io.LittleEndianDataInputStream;
+import com.epam.deltix.util.time.Periodicity;
 
 import java.io.*;
 import java.net.Socket;
@@ -39,9 +44,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
 
-import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.marshallUHF;
-import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.marshall;
-import static com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol.*;
+import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.*;
 
 public class SessionHandler extends RestHandler implements StreamStateListener {
 
@@ -50,9 +53,11 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
     private final DataOutputStream  out;
     private final DXTickDB          db;
     private final GUID              guid;
+    private final short             clientVersion;
     private final ContextContainer contextContainer;
 
     private final ByteArrayOutputStreamEx buffer = new ByteArrayOutputStreamEx(8192);
+    private final ByteArrayOutputStreamEx propertyBuffer = new ByteArrayOutputStreamEx(8192);
     //private final DataOutputStream dout = new DataOutputStream(buffer);
 
     private final Map<String, StreamState> states = new HashMap<>();
@@ -97,6 +102,115 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
     }
     private volatile ControlTask controlTask;
 
+    // Events processor
+    public enum EventType {
+        RENAMED, CREATED, DELETED, WRITER_CLOSED, WRITER_CREATED, PROPERTY_CHANGED, RELOAD,
+        GET_STREAMS_REQ, GET_PROPERTY_REQ
+    }
+
+    public static class Event {
+        public final EventType type;
+
+        public Event(EventType type) {
+            this.type = type;
+        }
+    }
+
+    public static class ChangeEvent extends Event {
+        public final String stream;
+
+        public ChangeEvent(EventType type, String stream) {
+            super(type);
+            this.stream = stream;
+        }
+    }
+
+    public static class PropertyChangedEvent extends ChangeEvent {
+        public final int property;
+
+        public PropertyChangedEvent(String stream, int property) {
+            super(EventType.PROPERTY_CHANGED, stream);
+            this.property = property;
+        }
+    }
+
+    public static class WriterActionEvent extends ChangeEvent {
+        public final IdentityKey[] ids;
+
+        public WriterActionEvent(String stream, boolean created, IdentityKey[] ids) {
+            super(created ? EventType.WRITER_CREATED : EventType.WRITER_CLOSED, stream);
+            this.ids = ids;
+        }
+    }
+
+    public static class RenamedActionEvent extends ChangeEvent {
+        public final String oldKey;
+
+        public RenamedActionEvent(String stream, String previous) {
+            super(EventType.RENAMED, stream);
+            this.oldKey = previous;
+        }
+    }
+
+    public static class RequestEvent extends Event {
+        public final long serial;
+
+        public RequestEvent(EventType eventType, long serial) {
+            super(eventType);
+            this.serial = serial;
+        }
+    }
+
+    public static class GetStreamsRequestEvent extends RequestEvent {
+        public final List<String> streams;
+        public final int chunkSize; // <= 0 means "no chunks"
+
+        public GetStreamsRequestEvent(long serial, List<String> streams, int chunkSize) {
+            super(EventType.GET_STREAMS_REQ, serial);
+            this.streams = streams;
+            this.chunkSize = chunkSize;
+        }
+    }
+
+    public static class GetPropertyRequestEvent extends RequestEvent {
+        public final String stream;
+        public final int property;
+
+        public GetPropertyRequestEvent(long serial, String stream, int property) {
+            super(EventType.GET_PROPERTY_REQ, serial);
+            this.stream = stream;
+            this.property = property;
+        }
+    }
+
+    private final class ProcessEventsTask extends QuickExecutor.QuickTask {
+        public ProcessEventsTask(QuickExecutor exe) {
+            super(exe);
+        }
+
+        @Override
+        public String toString() {
+            return ("Event Process Task for " + SessionHandler.this);
+        }
+
+        @Override
+        public void run() {
+            try {
+                processEvents();
+            } catch (EOFException iox) {
+                // valid close
+                closeAll ();
+            } catch (IOException iox) {
+                HTTPProtocol.LOGGER.log (Level.INFO, "Exception in " + toString(), iox);
+                closeAll ();
+            }
+        }
+    }
+
+    private final ProcessEventsTask processEventsTask;
+
+    private final LinkedList<Event> events = new LinkedList<>();
+
     private final Runnable reloadListener = new Runnable() {
         @Override
         public void run() {
@@ -104,12 +218,15 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
         }
     };
 
-    public SessionHandler(DXTickDB db, Socket socket, InputStream input, OutputStream output, ContextContainer contextContainer) throws IOException {
+    public SessionHandler(DXTickDB db, Socket socket, InputStream input, OutputStream output, short clientVersion,
+                          ContextContainer contextContainer) throws IOException {
         super(contextContainer.getQuickExecutor());
         this.db = db;
         this.socket = socket;
         this.out = new DataOutputStream(output);
+        this.clientVersion = clientVersion;
         this.contextContainer = contextContainer;
+        this.processEventsTask = new ProcessEventsTask(contextContainer.getQuickExecutor());
 
         boolean useCompression = (input.read() == 1);
         InputStream is = useCompression ? new GZIPInputStream(input) : input;
@@ -141,6 +258,9 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
             case REQ_GET_STREAMS:
                 processGetStreams(); break;
 
+            case REQ_GET_STREAMS_CHUNKED:
+                processGetStreamsChunked(); break;
+
             case REQ_GET_STREAM_PROPERTY:
                 processGetProperty(); break;
 
@@ -152,28 +272,70 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
         return 0;
     }
 
-    private void processGetStreams() throws IOException {
+    private void processEvents() throws IOException {
+        while (true) {
+            Event event;
+            synchronized (events) {
+                event = events.poll();
+            }
 
-        long serial = din.readLong();
-        int count = din.readInt();
+            if (event == null) {
+                break;
+            }
 
-        List<DXTickStream> streams;
-
-        if (count == 0)
-            streams = Arrays.asList(db.listStreams());
-        else {
-            streams = new ArrayList<>();
-            for (int i = 0; i < count; i++) {
-                DXTickStream stream = db.getStream(din.readUTF());
-
-                // protocol may ask for non-existent streams
-                if (stream != null)
-                    streams.add(stream);
+            // process actions
+            switch (event.type) {
+                case RENAMED:
+                    sendRenamed(((ChangeEvent) event).stream, ((RenamedActionEvent) event).oldKey);
+                    break;
+                case CREATED:
+                    sendCreated(((ChangeEvent) event).stream);
+                    break;
+                case DELETED:
+                    sendDeleted(((ChangeEvent) event).stream);
+                    break;
+                case WRITER_CLOSED:
+                    sendWriterClosed(((ChangeEvent) event).stream, ((WriterActionEvent) event).ids);
+                    break;
+                case WRITER_CREATED:
+                    sendWriterCreated(((ChangeEvent) event).stream, ((WriterActionEvent) event).ids);
+                    break;
+                case PROPERTY_CHANGED:
+                    sendChanged(((ChangeEvent) event).stream, ((PropertyChangedEvent) event).property);
+                    break;
+                case GET_STREAMS_REQ:
+                    GetStreamsRequestEvent getStreams = (GetStreamsRequestEvent) event;
+                    if (getStreams.chunkSize > 0) {
+                        sendGetStreamsChunked(getStreams.serial, getStreams.streams, getStreams.chunkSize);
+                    } else {
+                        sendGetStreams(getStreams.serial, getStreams.streams);
+                    }
+                    break;
+                case GET_PROPERTY_REQ:
+                    GetPropertyRequestEvent getProperty = (GetPropertyRequestEvent) event;
+                    sendGetProperty(getProperty.serial, getProperty.stream, getProperty.property);
+                    break;
             }
         }
+    }
 
-        writeStreams(buffer, streams);
+    private void submitEvent(Event event) {
+        synchronized (events) {
+            events.add(event);
+        }
 
+        processEventsTask.submit();
+    }
+
+    private void processGetStreams() throws IOException {
+        long serial = din.readLong();
+        List<String> streams = readStreamKeys();
+        submitEvent(new GetStreamsRequestEvent(serial, streams, -1));
+    }
+
+    private void sendGetStreams(long serial, List<String> streamKeys) throws IOException {
+        List<DXTickStream> streams = getStreams(streamKeys);
+        writeStreams(buffer, streams, 0, streams.size());
         synchronized (out) {
             out.writeInt(STREAMS_DEFINITION);
             out.writeLong(serial);
@@ -184,15 +346,84 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
         }
     }
 
-    /*
-        Returns number of valid stream written into buffer
-     */
-    private void        writeStreams(ByteArrayOutputStreamEx buffer, List<DXTickStream> streams) throws IOException {
+    private void processGetStreamsChunked() throws IOException {
+        long serial = din.readLong();
+        int chunkSize = din.readInt();
+        List<String> streams = readStreamKeys();
+        submitEvent(new GetStreamsRequestEvent(serial, streams, chunkSize));
+    }
+
+    private void sendGetStreamsChunked(long serial, List<String> streamKeys, int chunkSize) throws IOException {
+        List<DXTickStream> streams = getStreams(streamKeys);
+
+        synchronized (out) {
+            out.writeInt(STREAMS_DEFINITION_CHUNKED);
+            out.writeLong(serial);
+            out.writeInt(streams.size());
+            out.flush();
+        }
+
+        int offset = 0;
+        while (offset < streams.size()) {
+            writeStreams(buffer, streams, offset, chunkSize);
+
+            synchronized (out) {
+                out.writeInt(STREAMS_DEFINITION);
+                out.writeLong(serial);
+                out.writeInt(buffer.size());
+                buffer.writeTo(out);
+                buffer.reset();
+                out.flush();
+                offset += chunkSize;
+            }
+        }
+
+        synchronized (out) {
+            out.writeInt(END_STREAMS_DEFINITION_CHUNKED);
+            out.writeLong(serial);
+            out.flush();
+        }
+    }
+
+    private List<String> readStreamKeys() throws IOException {
+        List<String> streams = new ArrayList<>();
+        int count = din.readInt();
+        if (count > 0) {
+            for (int i = 0; i < count; i++) {
+                streams.add(din.readUTF());
+            }
+        }
+
+        return streams;
+    }
+
+    private List<DXTickStream> getStreams(List<String> streamKeys) {
+        List<DXTickStream> streams;
+        if (streamKeys.isEmpty()) {
+            streams = Arrays.asList(db.listStreams());
+        } else {
+            streams = new ArrayList<>();
+            for (int i = 0; i < streamKeys.size(); i++) {
+                DXTickStream stream = db.getStream(streamKeys.get(i));
+
+                // protocol may ask for non-existent streams
+                if (stream != null) {
+                    streams.add(stream);
+                }
+            }
+        }
+
+        return streams;
+    }
+
+    private void        writeStreams(ByteArrayOutputStreamEx buffer, List<DXTickStream> streams, int offset, int length) {
         StringWriter writer = new StringWriter();
+        HashMap<String, StreamDef> data = new HashMap<>();
 
-        HashMap<String, StreamDef> data = new HashMap<String, StreamDef>();
+        int size = Math.min(streams.size(), offset + length);
+        for (int i = offset; i < size; i++) {
+            DXTickStream stream = streams.get(i);
 
-        for (DXTickStream stream : streams) {
             try {
                 String key = stream.getKey();
 
@@ -201,6 +432,11 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
                 writer.getBuffer().setLength(0);
                 marshallUHF(stream.getStreamOptions().getMetaData(), writer);
                 streamDef.metadata = writer.getBuffer().toString();
+                streamDef.metadataJson = HTTPProtocol.JSON_MAPPER.writeValueAsString(
+                    SchemaBuilder.toSchemaDef(
+                        stream.getStreamOptions().getMetaData(), false
+                    )
+                );
 
                 data.put(key, streamDef);
 
@@ -223,26 +459,22 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
         marshall(r, buffer);
     }
 
-    private void writePropertyHeader(String key, int property, long serial) throws IOException {
-        out.writeInt(TDBProtocol.STREAM_PROPERTY);
-        out.writeLong(serial);
-        out.writeUTF(key);
-        out.writeByte(property);
-    }
-
     private void processGetProperty() throws IOException {
         long serial = din.readLong();
-
         String key = din.readUTF();
         int property = din.readByte();
 
+        submitEvent(new GetPropertyRequestEvent(serial, key, property));
+    }
+
+    private void sendGetProperty(long serial, String key, int property) throws IOException {
         DXTickStream stream = db.getStream(key);
 
         //TickDBServer.LOGGER.info("getProperty(" + key + ", "  + property + ")");
 
         switch (property) {
             case TickStreamProperties.NAME:
-                String name = stream.getName();
+                String name = stream != null ? stream.getName() : null;
                 synchronized (out) {
                     writePropertyHeader(key, property, serial);
                     out.writeUTF(name != null ? name : "<NULL>");
@@ -251,7 +483,7 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
                 break;
 
             case TickStreamProperties.DESCRIPTION:
-                String description = stream.getDescription();
+                String description = stream != null ? stream.getDescription() : null;
                 synchronized (out) {
                     writePropertyHeader(key, property, serial);
                     out.writeUTF(description != null ? description : "<NULL>");
@@ -260,21 +492,37 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
                 break;
 
             case TickStreamProperties.PERIODICITY:
+                Periodicity p = stream != null ? stream.getPeriodicity() : null;
                 synchronized (out) {
                     writePropertyHeader(key, property, serial);
-                    out.writeUTF(stream.getPeriodicity().toString());
+                    out.writeUTF(p != null ? p.toString() : "<NULL>");
                     out.flush();
                 }
                 break;
 
             case TickStreamProperties.SCHEMA:
-                boolean polymorphic = stream.isPolymorphic();
+                StreamOptions options = stream != null ? stream.getStreamOptions() : new StreamOptions();
+
+                boolean polymorphic = options.isPolymorphic();
+                RecordClassSet schema = options.getMetaData();
 
                 synchronized (out) {
                     writePropertyHeader(key, property, serial);
                     out.writeBoolean(polymorphic);
-                    RecordClassSet rcs = stream.getStreamOptions().getMetaData();
-                    marshallUHF(rcs, out);
+
+                    // write xml schema
+                    propertyBuffer.reset();
+                    marshallUHF(schema, propertyBuffer);
+                    out.writeInt(propertyBuffer.size());
+                    propertyBuffer.writeTo(out);
+                    propertyBuffer.reset();
+
+                    SerializationUtils.writeUTFString(out,
+                        HTTPProtocol.JSON_MAPPER.writeValueAsString(
+                            SchemaBuilder.toSchemaDef(schema, false)
+                        )
+                    );
+
                     out.flush();
                 }
                 break;
@@ -284,46 +532,141 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
 
                 synchronized (out) {
                     writePropertyHeader(key, property, serial);
-                    marshall(new ListEntitiesResponse(ids), out);
+                    marshalAndWrite(new ListEntitiesResponse(ids), out);
                     out.flush();
                 }
                 break;
 
             case TickStreamProperties.TIME_RANGE:
-                long[] range = stream.getTimeRange();
+                long[] range = stream != null ? stream.getTimeRange() : null;
 
                 synchronized (out) {
                     writePropertyHeader(key, property, serial);
-                    if (range != null)
-                        marshall(new TimeRange(range[0], range[1]), out);
-                    else
-                        marshall(new TimeRange(Long.MIN_VALUE, Long.MAX_VALUE), out);
+                    TimeRange timeRange = range != null ?
+                        new TimeRange(range[0], range[1]) :
+                        new TimeRange(Long.MIN_VALUE, Long.MAX_VALUE);
+                    marshalAndWrite(new GetRangeResponse(timeRange), out);
 
                     out.flush();
                 }
                 break;
 
             case TickStreamProperties.BG_PROCESS:
-                BackgroundProcessInfo process = stream.getBackgroundProcess();
+                BackgroundProcessInfo process = stream != null ? stream.getBackgroundProcess() : null;
 
                 synchronized (out) {
                     writePropertyHeader(key, property, serial);
-                    marshall(process, out);
+                    out.writeBoolean(process != null);
+                    if (process != null) {
+                        marshalAndWrite(new GetBGProcessResponse(process), out);
+                    }
                     out.flush();
                 }
                 break;
 
             case TickStreamProperties.OWNER:
-                String owner = stream.getOwner();
+                String owner = stream != null ? stream.getOwner() : null;
                 synchronized (out) {
                     writePropertyHeader(key, property, serial);
                     out.writeUTF(owner != null ? owner : "<NULL>");
                     out.flush();
                 }
                 break;
+
+            case TickStreamProperties.HIGH_AVAILABILITY:
+                boolean ha = stream != null ? stream.getHighAvailability() : null;
+                synchronized (out) {
+                    writePropertyHeader(key, property, serial);
+                    out.writeBoolean(ha);
+                    out.flush();
+                }
+                break;
+
+            case TickStreamProperties.UNIQUE:
+                boolean unique = stream != null && stream.getStreamOptions().unique;
+                synchronized (out) {
+                    writePropertyHeader(key, property, serial);
+                    out.writeBoolean(unique);
+                    out.flush();
+                }
+                break;
+
+            case TickStreamProperties.VERSIONING:
+                synchronized (out) {
+                    writePropertyHeader(key, property, serial);
+                    out.writeBoolean(true);
+                    out.flush();
+                }
+                break;
+
+            case TickStreamProperties.BUFFER_OPTIONS:
+                BufferOptions bufferOptions = stream != null ? stream.getStreamOptions().bufferOptions : null;
+                synchronized (out) {
+                    writePropertyHeader(key, property, serial);
+                    out.writeBoolean(bufferOptions != null);
+                    if (bufferOptions != null) {
+                        out.writeInt(bufferOptions.initialBufferSize);
+                        out.writeInt(bufferOptions.maxBufferSize);
+                        out.writeLong(bufferOptions.maxBufferTimeDepth);
+                        out.writeBoolean(bufferOptions.lossless);
+                    }
+                    out.flush();
+                }
+                break;
+
+            case TickStreamProperties.DATA_VERSION:
+                long dataVersion = stream != null ? stream.getDataVersion() : -1;
+                synchronized (out) {
+                    writePropertyHeader(key, property, serial);
+                    out.writeLong(dataVersion);
+                    out.flush();
+                }
+                break;
+
+            case TickStreamProperties.REPLICA_VERSION:
+                long replicaVersion = stream != null ? stream.getReplicaVersion() : -1;
+                synchronized (out) {
+                    writePropertyHeader(key, property, serial);
+                    out.writeLong(replicaVersion);
+                    out.flush();
+                }
+                break;
+
+            case TickStreamProperties.DF:
+                int df = stream != null ? stream.getDistributionFactor() : 0;
+                synchronized (out) {
+                    writePropertyHeader(key, property, serial);
+                    out.writeInt(df);
+                    out.flush();
+                }
+                break;
+
+            case TickStreamProperties.SCOPE:
+                int scope = stream != null ? stream.getScope().ordinal() : -1;
+                synchronized (out) {
+                    writePropertyHeader(key, property, serial);
+                    out.writeInt(scope);
+                    out.flush();
+                }
+                break;
         }
 
-        getState(key).reset(property);
+        resetState(key, property);
+    }
+
+    private void writePropertyHeader(String key, int property, long serial) throws IOException {
+        out.writeInt(TDBProtocol.STREAM_PROPERTY);
+        out.writeLong(serial);
+        out.writeUTF(key);
+        out.writeByte(property);
+    }
+
+    private void marshalAndWrite(Object o, DataOutputStream out) throws IOException {
+        propertyBuffer.reset();
+        marshall(o, propertyBuffer);
+        out.writeInt(propertyBuffer.size());
+        propertyBuffer.writeTo(out);
+        propertyBuffer.reset();
     }
 
     private StreamState     getState(String key) {
@@ -332,16 +675,27 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
         }
     }
 
+    private void resetState(String key, int property) {
+        synchronized (states) {
+            StreamState state = states.get(key);
+            if (state != null) {
+                state.reset(property);
+            }
+        }
+    }
+
     @Override
     public void run() throws InterruptedException {
         if (controlTask != null)
             throw new IllegalStateException("Already started");
 
-        if (db instanceof StreamStateNotifier)
-            ((StreamStateNotifier)db).addStreamStateListener(this);
+        processEventsTask.submit();
 
         controlTask = new ControlTask(contextContainer.getQuickExecutor());
         controlTask.submit();
+
+        if (db instanceof StreamStateNotifier)
+            ((StreamStateNotifier)db).addStreamStateListener(this);
     }
 
     @Override
@@ -353,27 +707,27 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
     private void        closeAll () {
         //TickDBServer.LOGGER.info("Closing server session: " + ds);
 
-        if (isClosed)
+        if (!markClosed()) {
             return;
+        }
 
-            isClosed = true;
+        if (db instanceof StreamStateNotifier)
+            ((StreamStateNotifier) db).removeStreamStateListener(this);
 
-            if (db instanceof StreamStateNotifier)
-                ((StreamStateNotifier) db).removeStreamStateListener(this);
+        try {
+            socket.close();
+        } catch (IOException e) {
+            HTTPProtocol.LOGGER.log(Level.WARNING, "Session: Closing error:", e);
+        }
 
-            try {
-                socket.close();
-            } catch (IOException e) {
-                HTTPProtocol.LOGGER.log(Level.WARNING, "Session: Closing error:", e);
-            }
+        if (controlTask != null)
+            controlTask.unschedule();
+        processEventsTask.unschedule();
 
-            if (controlTask != null)
-                controlTask.unschedule();
+        String id = guid.toString();
 
-            String id = guid.toString();
-
-            // clear all stream locks
-            DXTickStream[] streams = db.listStreams();
+        // clear all stream locks
+        DXTickStream[] streams = db.listStreams();
         for (DXTickStream stream : streams) {
             if (stream instanceof ServerStreamWrapper)
                 stream = ((ServerStreamWrapper)stream).getNestedInstance();
@@ -381,6 +735,22 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
             if (stream instanceof TickStreamImpl)
                 ((TickStreamImpl) stream).clearLocks(id);
         }
+
+        // TODO: MODULARIZATION
+
+//        if (GlobalQuantServer.MAC != null)
+//            GlobalQuantServer.MAC.connected(user, ds.getRemoteAddress());
+
+        //TickDBServer.LOGGER.info("Closing db session");
+    }
+
+    private synchronized boolean markClosed() {
+        if (isClosed) {
+            return false;
+        }
+
+        isClosed = true;
+        return true;
     }
 
     @Override
@@ -390,17 +760,21 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
         StreamState state = getState(key);
 
         if (state != null && state.set(property)) {
-            try {
-                synchronized (out) {
-                    out.writeInt(STREAM_PROPERTY_CHANGED);
-                    out.writeUTF(key);
-                    out.writeByte(property);
-                    out.flush();
-                }
-            } catch (IOException e) {
-                if (!socket.isClosed())
-                    HTTPProtocol.LOGGER.log(Level.FINE, "Session notification STREAM_PROPERTY_CHANGED(" + property + ") failed.", e);
+            submitEvent(new PropertyChangedEvent(key, property));
+        }
+    }
+
+    private void sendChanged(String key, int property) {
+        try {
+            synchronized (out) {
+                out.writeInt(STREAM_PROPERTY_CHANGED);
+                out.writeUTF(key);
+                out.writeByte(property);
+                out.flush();
             }
+        } catch (IOException e) {
+            if (!socket.isClosed())
+                HTTPProtocol.LOGGER.log(Level.FINE, "Session notification STREAM_PROPERTY_CHANGED(" + property + ") failed.", e);
         }
     }
 
@@ -413,6 +787,12 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
             states.put(key, state);
         }
 
+        if (getState(key) != null) {
+            submitEvent(new RenamedActionEvent(key, oldKey));
+        }
+    }
+
+    private void sendRenamed(String key, String oldKey) {
         try {
             synchronized (out) {
                 out.writeInt(STREAM_RENAMED);
@@ -428,21 +808,56 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
 
     @Override
     public void writerCreated(DXTickStream stream, IdentityKey[] ids) {
+        if (clientVersion < CLIENT_SESSION_HANDLER_SUPPORT) {
+            return;
+        }
 
+        submitEvent(new WriterActionEvent(stream.getKey(), true, ids));
+    }
+
+    private void sendWriterCreated(String key, IdentityKey[] ids) {
+        try {
+            synchronized (out) {
+                writePropertyHeader(key, TickStreamProperties.WRITER_CREATED, -1);
+                TDBProtocol.writeInstrumentIdentities(ids, out);
+                out.flush();
+            }
+        } catch (IOException e) {
+            if (!socket.isClosed()) {
+                HTTPProtocol.LOGGER.log(Level.FINE, "Session notification STREAM_PROPERTY_CHANGED(WRITER_CREATED) failed.", e);
+            }
+        }
     }
 
     @Override
     public void writerClosed(DXTickStream stream, IdentityKey[] ids) {
+        if (clientVersion < CLIENT_SESSION_HANDLER_SUPPORT) {
+            return;
+        }
 
+        submitEvent(new WriterActionEvent(stream.getKey(), false, ids));
+    }
+
+    private void sendWriterClosed(String key, IdentityKey[] ids) {
+        try {
+            synchronized (out) {
+                writePropertyHeader(key, TickStreamProperties.WRITER_CLOSED, -1);
+                TDBProtocol.writeInstrumentIdentities(ids, out);
+                out.flush();
+            }
+        } catch (IOException e) {
+            if (!socket.isClosed()) {
+                HTTPProtocol.LOGGER.log(Level.FINE, "Session notification STREAM_PROPERTY_CHANGED(WRITER_CLOSED) failed.", e);
+            }
+        }
     }
 
     @Override
     public void created(DXTickStream stream) {
-        String key = stream.getKey();
-//        synchronized (states) {
-//            states.put(stream.getKey(), new StreamState());
-//        }
+        submitEvent(new ChangeEvent(EventType.CREATED, stream.getKey()));
+    }
 
+    private void sendCreated(String key) {
         try {
             synchronized (out) {
                 out.writeInt(STREAM_CREATED);
@@ -463,6 +878,10 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
             states.remove(key);
         }
 
+        submitEvent(new ChangeEvent(EventType.DELETED, key));
+    }
+
+    private void sendDeleted(String key) {
         try {
             synchronized (out) {
                 out.writeInt(STREAM_DELETED);

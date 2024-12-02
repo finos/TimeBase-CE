@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -196,6 +196,12 @@ public class TimeCodec {
     public static long         readNanoTime (MemoryDataInput in) {
         byte    head = in.readByte();
         int     scale = head & 0xE0;
+
+        if (scale == TIME_SCALE_SPECIAL) {
+            long ret = head & 0x1F;
+            if (ret == 0)
+                return (TimeConstants.TIMESTAMP_UNKNOWN);
+        }
 
         if (scale == TIME_SCALE_NANOS) {
             long ret = head & 0x1F;
@@ -412,11 +418,11 @@ public class TimeCodec {
     }
 
     public static void          writeNanoTime (long nanos, MemoryDataOutput out) {
-        long nanosComponenet = nanos % TimeStamp.NANOS_PER_MS;
-        if (nanosComponenet != 0)
+        long nanosComponent = nanos % TimeStamp.NANOS_PER_MS;
+        if (nanosComponent != 0)
             writeNanos(nanos, out, false);
         else
-            writeTime((nanos - nanosComponenet) / TimeStamp.NANOS_PER_MS, out);
+            writeTime((nanos - nanosComponent) / TimeStamp.NANOS_PER_MS, out);
     }
 
     /**
@@ -431,10 +437,7 @@ public class TimeCodec {
     }
 
     public static void          writeTime (MessageInfo msg, MemoryDataOutput out) {
-        if (msg.hasNanoTime())
-            writeNanos(msg.getNanoTime(), out, false);
-        else
-            writeTime(msg.getTimeStampMs(), out);
+        writeNanoTime(msg.getNanoTime(), out);
     }
 
     /**

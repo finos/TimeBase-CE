@@ -23,5 +23,5 @@ dependencies {
     testImplementation 'commons-io:commons-io'
 
     // TODO: Replace by JSR305
-    testCompile 'com.intellij:annotations'
+    implementation 'org.jetbrains:annotations'
 }

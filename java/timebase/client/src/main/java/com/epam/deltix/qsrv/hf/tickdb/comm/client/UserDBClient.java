@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -21,6 +21,7 @@ import com.epam.deltix.qsrv.hf.pub.ChannelCompression;
 import com.epam.deltix.qsrv.hf.pub.ChannelQualityOfService;
 import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
 import com.epam.deltix.qsrv.hf.pub.md.MetaData;
@@ -36,6 +37,7 @@ import com.epam.deltix.util.vsocket.VSChannel;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.List;
 
 public class UserDBClient implements DXRemoteDB {
 
@@ -82,6 +84,11 @@ public class UserDBClient implements DXRemoteDB {
     @Override
     public int getServerProtocolVersion() {
         return delegate.getServerProtocolVersion();
+    }
+
+    @Override
+    public String getServerVersion() {
+        return delegate.getServerVersion();
     }
 
     @Override
@@ -159,6 +166,11 @@ public class UserDBClient implements DXRemoteDB {
     }
 
     @Override
+    public void compileQuery(String query, List<Token> outTokens) {
+        delegate.compileQuery(query, outTokens);
+    }
+
+    @Override
     public long getMetaDataVersion() {
         return delegate.getMetaDataVersion();
     }
@@ -182,7 +194,6 @@ public class UserDBClient implements DXRemoteDB {
         return (executeQuery (qql, null, null, params));
     }
 
-    @Override
     public InstrumentMessageSource          executeQuery (
             String                                  qql,
             SelectionOptions                        options,

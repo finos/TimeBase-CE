@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -32,6 +32,9 @@ public class ChangeSchemaRequest extends StreamRequest {
 
     @XmlElement()
     public String               schema;
+
+    @XmlElement()
+    public String               schemaJson;
 
     /*
         Default values for the fields (if required), field name included fully qualified class name (ClassName:FieldName)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -29,6 +29,7 @@ public abstract class AbstractHandler  {
 
     public static DXTickDB                      TDB;
     public static SecurityController            SC;
+    public static TopicContext                  TOPICS;
 
     public static void          sendError(HttpServletResponse response, Throwable ex) throws IOException {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Encode.forHtml(ex.getClass().getName() + ":" + Util.printStackTrace(ex)));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.hf.tickdb.pub;
 import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.ClassSet;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.timebase.messages.IdentityKey;
@@ -316,6 +317,12 @@ public class DirectTickDBClient implements DXTickDB {
     {
         assertOpen ();
         return server.executeQuery (qql, options, ids, params);
+    }
+
+    @Override
+    public void compileQuery(String query, List<Token> outTokens) {
+        assertOpen();
+        server.compileQuery(query, outTokens);
     }
 
     @Override

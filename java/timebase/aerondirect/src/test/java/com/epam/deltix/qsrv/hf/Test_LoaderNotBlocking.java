@@ -45,11 +45,9 @@ public class Test_LoaderNotBlocking extends BaseAeronTest {
     public void testMissingConsumer() {
         String channel = CommonContext.IPC_CHANNEL;
         int dataStreamId = new Random().nextInt();
-        int serverMetadataStreamId = dataStreamId + 1;
         List<RecordClassDescriptor> types = Collections.singletonList(Messages.ERROR_MESSAGE_DESCRIPTOR);
-        byte loaderNumber = 1;
 
-        MessageChannel<InstrumentMessage> messageChannel = new DirectLoaderFactory().create(aeron, false, channel, channel, dataStreamId, serverMetadataStreamId, types, loaderNumber, new ByteArrayOutputStream(8 * 1024), Collections.emptyList(), null, null);
+        MessageChannel<InstrumentMessage> messageChannel = new DirectLoaderFactory().create(aeron, false, channel, dataStreamId, types, null, null, null, false);
 
         ErrorMessage msg = new ErrorMessage();
         msg.setSymbol("ABC");

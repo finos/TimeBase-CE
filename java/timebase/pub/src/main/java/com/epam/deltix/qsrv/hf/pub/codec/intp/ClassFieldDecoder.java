@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -172,6 +172,8 @@ public class ClassFieldDecoder extends FieldDecoder {
             } else {
                 decoder.decode(ctx, value);
             }
+
+            decoder.setStaticFields(value);
 
             return value;
         }

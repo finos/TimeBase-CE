@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -71,9 +71,9 @@ public final class Min {
     @Function("MIN")
     @Decimal
     public static long minDecimal(@Decimal long v1, @Decimal long v2) {
-        if (Decimal64Utils.isNull(v1)) {
+        if (Decimal64Utils.isNaN(v1)) {
             return v2;
-        } else if (Decimal64Utils.isNull(v2)) {
+        } else if (Decimal64Utils.isNaN(v2)) {
             return v1;
         } else {
             return Decimal64Utils.min(v1, v2);
@@ -266,7 +266,7 @@ public final class Min {
             return Decimal64Utils.NULL;
         long value = Decimal64Utils.NULL;
         for (int i = 0; i < list.size(); i++) {
-            if (value == Decimal64Utils.NULL || Decimal64Utils.isLess(list.getLong(i), value))
+            if (Decimal64Utils.isNaN(value) || Decimal64Utils.isLess(list.getLong(i), value))
                 value = list.getLong(i);
         }
         return value;

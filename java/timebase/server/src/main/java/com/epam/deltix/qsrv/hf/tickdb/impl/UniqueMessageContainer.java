@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -79,14 +79,12 @@ class UniqueMessageContainer extends MessageContainer {
 
             public int skipHeader(MemoryDataInput in, StringBuilder sb) {
                sb.setLength(0);
-               try {
-                   TimeCodec.skipTime(in); // time
-                   int type = in.readByte(); // message type
-                   IOUtil.readUTF(in, sb);
-                   return type;
-               } catch (IOException e) {
-                   throw new UncheckedIOException(e);
-               }
+
+               TimeCodec.skipTime(in); // time
+               int type = in.readByte(); // message type
+               in.readStringBuilder(sb); // symbol
+               //IOUtil.readUTF(in, sb);
+               return type;
             }
         };
 
@@ -96,7 +94,9 @@ class UniqueMessageContainer extends MessageContainer {
     }
 
     public DataContainer           getMessageData(int index) {
-        return data.get(index);
+        synchronized (data) {
+            return data.get(index);
+        }
     }
 
     public boolean                  hasData(int index) {

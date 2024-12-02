@@ -65,7 +65,7 @@ public class BooleanFunctions {
         int size = Math.max(l1.size(), l2.size());
         result.setSize(size);
         for (int i = 0; i < size; i++) {
-            result.set(i, band(l1.getByte(i), l2.getByte(i)));
+            result.set(i, band(i < l1.size() ? l1.getByte(i) : -1, i < l2.size() ? l2.getByte(i) : -1));
         }
     }
 
@@ -88,7 +88,7 @@ public class BooleanFunctions {
         int size = Math.max(l1.size(), l2.size());
         result.setSize(size);
         for (int i = 0; i < size; i++) {
-            result.set(i, bor(l1.getByte(i), l2.getByte(i)));
+            result.set(i, bor(i < l1.size() ? l1.getByte(i) : -1, i < l2.size() ? l2.getByte(i) : -1));
         }
     }
 

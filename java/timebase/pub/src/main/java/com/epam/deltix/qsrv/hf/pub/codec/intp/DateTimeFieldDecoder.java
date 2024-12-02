@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -27,8 +27,11 @@ import java.lang.reflect.InvocationTargetException;
  *
  */
 class DateTimeFieldDecoder extends FieldDecoder {
+    private final boolean hasNanos;
+
     DateTimeFieldDecoder (NonStaticFieldLayout f) {
         super (f);
+        hasNanos = ((DateTimeDataType)f.getType()).hasNanosecondPrecision();
     }
 
     @Override
@@ -63,7 +66,7 @@ class DateTimeFieldDecoder extends FieldDecoder {
     public String   getString (DecodingContext ctxt) {
         final long v = getLong(ctxt);
         assert isNullable || !isNull(v) : getNotNullableMsg();
-        return (isNull(v) ? null : GMT.formatDateTimeMillis(v));
+        return isNull(v) ? null : (hasNanos ? GMT.formatNanos(v) : GMT.formatDateTimeMillis(v));
     }
 
     @Override

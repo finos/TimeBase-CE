@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,6 +17,8 @@
 package com.epam.deltix.qsrv.hf.tickdb.impl;
 
 import com.epam.deltix.data.stream.ChannelPreferences;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockOptions;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
@@ -27,13 +29,6 @@ import com.epam.deltix.qsrv.hf.pub.md.ClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.Introspector;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
-import com.epam.deltix.qsrv.hf.tickdb.pub.LoadingOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.SelectionOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
-import com.epam.deltix.qsrv.hf.tickdb.pub.StreamScope;
-import com.epam.deltix.qsrv.hf.tickdb.pub.TickCursor;
-import com.epam.deltix.qsrv.hf.tickdb.pub.TickLoader;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLock;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.StreamLockedException;
@@ -306,8 +301,38 @@ class StubTimeStream extends ServerStreamImpl implements Disposable {
     }
 
     @Override
+    public DBLock tryLock(LockOptions options, long timeout) throws StreamLockedException, UnsupportedOperationException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public DBLock verify(DBLock lock, LockType type) throws StreamLockedException, UnsupportedOperationException {
         return null;
+    }
+
+    @Override
+    public DBLock lock(LockOptions options) throws StreamLockedException, UnsupportedOperationException {
+        return null;
+    }
+
+    @Override
+    public void checkExclusiveWrite(DBLock lock) throws StreamLockedException {
+
+    }
+
+    @Override
+    public void checkSharedWrite(DBLock lock) throws StreamLockedException {
+
+    }
+
+    @Override
+    public void checkWriteRange(DBLock lock, long startTime, long endTime) throws StreamLockedException {
+
+    }
+
+    @Override
+    public boolean checkWrite(LoadingErrorListener listener, DBLock lock, long time) {
+        return false;
     }
 
     @Override

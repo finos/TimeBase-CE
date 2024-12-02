@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -92,6 +92,10 @@ public class JavaBeanGenerator extends BeanGenerator {
             return (pack + "." + className);
         }
 
+        public JVariable findField(String name) {
+            return cimpl.getVar(name);
+        }
+
         public String       getSourceCode () {
             if (state != PState.PROCESSED)
                 throw new IllegalStateException (state.name ());
@@ -134,6 +138,9 @@ public class JavaBeanGenerator extends BeanGenerator {
     }
 
     private final HashMap <ClassDescriptor, Bean>   beans =
+        new HashMap <> ();
+
+    private final HashMap <ClassDescriptor, Bean>   concreteBeans =
         new HashMap <> ();
 
     private final HashMap <String, Bean>            beansByNativeClassName =
@@ -591,15 +598,12 @@ public class JavaBeanGenerator extends BeanGenerator {
                 variable = cimpl.addVar(Modifier.PUBLIC, ecimpl, fjname, null, edt.isNullable());
             }
         } else if (ftype instanceof BooleanDataType) {
-            if (ftype.isNullable())
-                variable = cimpl.addVar(
-                        Modifier.PUBLIC,
-                        isArray ? ByteArrayList.class : byte.class,
-                        fjname,
-                        isArray ? null : cgx.staticVarRef(BooleanDataType.class, "NULL")
-                );
-            else
-                cimpl.addVar(Modifier.PUBLIC, byte.class, fjname);
+            variable = cimpl.addVar(
+                Modifier.PUBLIC,
+                isArray ? ByteArrayList.class : byte.class,
+                fjname,
+                isArray ? null : cgx.staticVarRef(BooleanDataType.class, "NULL")
+            );
         } else if (ftype instanceof IntegerDataType) {
             IntegerDataType idt = (IntegerDataType) ftype;
             int size = idt.getSize();
@@ -799,6 +803,11 @@ public class JavaBeanGenerator extends BeanGenerator {
 
         } else if (ftype instanceof EnumDataType) {
             EnumDataType edt = (EnumDataType) ftype;
+            // enum arrays are generated incorrectly
+            if (isArray) {
+                bean.ignoreFields(fjname);
+                return null;
+            }
             //Don't generate enum class, if there is java enum
             try {
                 Class<?> clazz = CL.loadClass(edt.getBaseName());

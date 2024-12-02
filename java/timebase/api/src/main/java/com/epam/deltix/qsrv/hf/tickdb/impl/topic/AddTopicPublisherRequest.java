@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,12 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic;
 
-import com.epam.deltix.timebase.messages.IdentityKey;
-
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author Alexei Osipov
@@ -29,21 +24,12 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 public class AddTopicPublisherRequest {
     private final String topicKey;
-    private final List<? extends IdentityKey> initialEntitySet;
 
-    public AddTopicPublisherRequest(String topicKey, @Nullable List<? extends IdentityKey> initialEntitySet) {
+    public AddTopicPublisherRequest(String topicKey) {
         this.topicKey = topicKey;
-        if (initialEntitySet == null) {
-            initialEntitySet = Collections.emptyList();
-        }
-        this.initialEntitySet = initialEntitySet;
     }
 
     public String getTopicKey() {
         return topicKey;
-    }
-
-    public List<? extends IdentityKey> getInitialEntitySet() {
-        return initialEntitySet;
     }
 }

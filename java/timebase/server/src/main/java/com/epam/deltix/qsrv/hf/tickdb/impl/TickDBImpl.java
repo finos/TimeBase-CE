@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -28,14 +28,15 @@ import com.epam.deltix.qsrv.dtb.fs.pub.FSFactory;
 import com.epam.deltix.qsrv.dtb.store.impl.PDSFactory;
 import com.epam.deltix.qsrv.dtb.store.pub.PersistentDataStore;
 import com.epam.deltix.qsrv.hf.pub.ChannelQualityOfService;
+import com.epam.deltix.qsrv.hf.pub.TimeSource;
 import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.parser.QQLParser;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol;
 import com.epam.deltix.qsrv.hf.tickdb.impl.mon.TBMonitorImpl;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.qcache.PQCache;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CompilerUtil;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.ParamSignature;
 import com.epam.deltix.qsrv.hf.tickdb.pub.BufferOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
@@ -74,6 +75,7 @@ import com.epam.deltix.util.parsers.CompilationException;
 import com.epam.deltix.util.parsers.Element;
 import com.epam.deltix.util.runtime.Shutdown;
 import com.epam.deltix.util.text.SimpleStringCodec;
+import com.epam.deltix.util.time.KeeperTimeSource;
 import com.epam.deltix.util.time.Periodicity;
 import net.jcip.annotations.GuardedBy;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -84,7 +86,7 @@ import javax.annotation.Nullable;
 import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.locks.ReadWriteLock;
+
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -124,6 +126,7 @@ public class TickDBImpl
 
     public static final String                  VERSION_PROPERTY = "TimeBase.version";
     public static final String                  SAFE_MODE_PROPERTY = "TimeBase.safeMode";
+    public static final String                  UPDATE_METADATA_PROPERTY = "TimeBase.updateMetadata";
     public static final String                  OLD_DATA_FORMAT_VERSION = "4.3";
 
     public static final String                  STREAM_EXTENSION = ".uhfq.xml";
@@ -138,12 +141,14 @@ public class TickDBImpl
     public static final String                  INDEX_FILE = "index.dat";
 
     public static final String                  EVENTS_STREAM_NAME = "events#";
+    public static final String                  METRICS_STREAM_NAME = "metrics#";
 
     @Deprecated
     static final Logger                         LOGGER = //TODO: Replace with GFLog
         Logger.getLogger ("deltix.tickdb");
 
-    static final Log LOG = LogFactory.getLog("deltix.tickdb");
+    static final Log                            LOG = LogFactory.getLog("deltix.tickdb");
+    static final Log                            QQL_LOG = LogFactory.getLog("deltix.tickdb.qql");
 
     final RAMDisk                               ramdisk;
     private final File []                       dbDirs;
@@ -158,7 +163,7 @@ public class TickDBImpl
     private final Map <String, ServerStreamImpl>    streams =
         new HashMap<>();
 
-    private final ReadWriteLock                 streamsLock = new ReentrantReadWriteLock();
+    final ReentrantReadWriteLock                streamsLock = new ReentrantReadWriteLock();
 
     @GuardedBy ("dataFiles")
     private final Map <String, File>            dataFiles =
@@ -187,14 +192,14 @@ public class TickDBImpl
     private TickLoader                          logLoader; // loader for the event stream
     Timer                                       streamSaver = null;
     ThrottlingExecutor                          saver;
-    private PQCache                             pqCache = new PQCache (this);
+    private final PQCache                       pqCache = new PQCache (this);
 
     final PersistentDataStore                   store;
     private FSLocator                           locator;
     FSOptions                                   fs;
     private final ContextContainer              contextContainer;
 
-    // Note: this implementation supports only one remote FS at at time. To use multiple FS we need a collection here.
+    // Note: this implementation supports only one remote FS at time. To use multiple FS we need a collection here.
     private RemoteStreamSyncChecker remoteStreamSyncChecker;
     private AbstractPath remoteStreamRootPath;
 
@@ -206,6 +211,8 @@ public class TickDBImpl
     private final Object openCloseLock = new Object();
 
     private final Thread emergencyShutdownThread = createEmergencyShutdownThread();
+
+    private final TimeSource timeSource;
 
     // If true then TimeBase must be closed and can't be re-opened anymore
     private volatile boolean criticalFailure = false;
@@ -225,10 +232,10 @@ public class TickDBImpl
     }
 
     public TickDBImpl (DataCacheOptions options, File ... dbDirs) {
-        this(null, options, dbDirs);
+        this(null, options, KeeperTimeSource.INSTANCE, dbDirs);
     }
 
-    public TickDBImpl (String uid, DataCacheOptions options, File ... dbDirs) {
+    public TickDBImpl (String uid, DataCacheOptions options, TimeSource timeSource, File ... dbDirs) {
 
         if (dbDirs.length == 0)
             throw new IllegalArgumentException ("Must supply a folder list.");
@@ -263,6 +270,7 @@ public class TickDBImpl
         }
 
         this.fs = options.fs != null ? options.fs : new FSOptions();
+        this.timeSource = timeSource;
     }
 
     /**
@@ -325,6 +333,10 @@ public class TickDBImpl
         return new CacheQuotaSettings(allocatedToRamDisk, allocatedToLocalCache, allocatedToDfs);
     }
 
+    TimeSource getTimeSource() {
+        return timeSource;
+    }
+
     static class CacheQuotaSettings {
         final long ramdiskSize;
         final long localFsCacheSize;
@@ -373,6 +385,8 @@ public class TickDBImpl
             streamsLock.writeLock().unlock();
         }
 
+        assertNotHoldsStreamLock(stream);
+
         invalidateQueryCache(stream);
 
         if (stream != null)
@@ -380,12 +394,18 @@ public class TickDBImpl
     }
 
     void                                    streamRenamed (String newKey, String key) {
+        boolean locked = streamsLock.isWriteLockedByCurrentThread();
+
         ServerStreamImpl tickStream;
         streamsLock.writeLock().lock();
         try {
             tickStream = streams.remove(key);
-            if (tickStream != null)
+            if (tickStream != null) {
+                if (!locked)
+                    assertNotHoldsStreamLock(tickStream);
+
                 streams.put(newKey, tickStream);
+            }
         } finally {
             streamsLock.writeLock().unlock();
         }
@@ -557,6 +577,15 @@ public class TickDBImpl
         return MD_FILE_NAME.equals(name)||CATALOG_NAME.equals(name) ||
                LOCK_FILE_NAME.equals(name) || name.contains(STREAM_EXTENSION) ||
                SYMBOLS_FILE.equals(name) || CONFIG_FILE.equals(name);
+    }
+
+    public static boolean                   isDataFile(File dir, String name) {
+        if (name.endsWith(DATA_EXTENSION))
+            return name.startsWith("x.") || name.startsWith("x1.") ||
+                    name.startsWith("m.") || name.startsWith("m1.") ||
+                    name.startsWith("z") || name.equals(INDEX_FILE);
+
+        return false;
     }
 
     public void                open (boolean readOnly) {
@@ -1855,6 +1884,23 @@ public class TickDBImpl
 
         return ids;
     }
+
+    @Override
+    public synchronized void compileQuery(String query, List<Token> outTokens) {
+        TextMap map = QQLParser.createTextMap();
+        try {
+            Object sx = CompilerUtil.parse(query, map);
+
+            if (sx instanceof Expression) {
+                // TODO: Optimize - creating compiler takes a lot of time
+                QuantQueryCompiler compiler = CompilerUtil.createCompiler(this);
+                compiler.compile((Expression) sx, StandardTypes.CLEAN_QUERY);
+            }
+        } finally {
+            // Add parsed tokens to output even in case of exception
+            outTokens.addAll(Arrays.asList(map.getTokens()));
+        }
+    }
     
     void                                    invalidateQueryCache(ServerStreamImpl stream) {
         // TODO: find related queries
@@ -2055,5 +2101,9 @@ public class TickDBImpl
         public void releaseSilent() {
             // Do nothing
         }
+    }
+
+    private void assertNotHoldsStreamLock(DXTickStream stream) {
+        //assert stream == null || !Thread.holdsLock(stream) : stream + " is locked.";
     }
 }

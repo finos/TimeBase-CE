@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -34,19 +34,22 @@ import com.epam.deltix.qsrv.hf.topic.consumer.DirectReaderFactory;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.CreateTopicResult;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.DirectTopicRegistry;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.ReaderSubscriptionResult;
-import com.epam.deltix.qsrv.hf.topic.consumer.MappingProvider;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLock;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.MessagePoller;
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.MessageProcessor;
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDataLossHandler;
+import com.epam.deltix.qsrv.hf.topic.consumer.DirectReaderFactory;
+import com.epam.deltix.timebase.messages.InstrumentMessage;
 import io.aeron.Aeron;
 import org.agrona.concurrent.IdleStrategy;
 import org.agrona.concurrent.SleepingIdleStrategy;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -72,10 +75,10 @@ public class CopyTopicToStreamTaskManager {
     /**
      * Starts thread that copies data from topic to stream. If this operation fails then rollbacks topic creation (i.e) deletes topic.
      */
-    public void subscribeToStreamCopyOrRollback(String topicKey, List<RecordClassDescriptor> types, String copyToStreamKey, CreateTopicResult createTopicResult, MappingProvider mappingProvider) {
+    public void subscribeToStreamCopyOrRollback(String topicKey, List<RecordClassDescriptor> types, String copyToStreamKey, @Nullable String copyToSpace, CreateTopicResult createTopicResult) {
         boolean success = false;
         try {
-            subscribeToStreamCopy(topicKey, types, copyToStreamKey, createTopicResult.getTopicDeletedSignal(), createTopicResult.getCopyToThreadStopLatch(), mappingProvider);
+            subscribeToStreamCopy(topicKey, types, copyToStreamKey, copyToSpace, createTopicResult.getTopicDeletedSignal(), createTopicResult.getCopyProcessStoppedFuture());
             success = true;
         } finally {
             if (!success) {
@@ -84,120 +87,134 @@ public class CopyTopicToStreamTaskManager {
         }
     }
 
-    private void subscribeToStreamCopy(String topicKey, List<RecordClassDescriptor> typeList, String targetStreamKey, AtomicBoolean topicDeletedSignal, CountDownLatch copyToThreadStopLatch, MappingProvider mappingProvider) {
-        ReaderSubscriptionResult result = topicRegistry.addReader(topicKey, true, aeronContext.getPublicAddress(), null);
+    private void subscribeToStreamCopy(String topicKey, List<RecordClassDescriptor> typeList, String targetStreamKey, @Nullable String targetSpace, AtomicBoolean topicDeletedSignal, CompletableFuture<Void> copyProcessStoppedFuture) {
+        CompletableFuture<Void> copyThreadStopped = new CompletableFuture<>();
+
+        // This queue accumulates actions that should be done when copy process stops.
+        // If start of the process fails, only already added actions have to be executed.
+        // Order of actions must be the opposite the order of creation:
+        // stop thread, close loader, release lock, close source (this one can be in different place), resolve "copyProcessStoppedFuture"
+        // This is necessary to guarantee that when somebody deletes a topic, all operations (including stream unlock)
+        // would be fully complete at the moment when "delete()" call returns.
+        Deque<Runnable> shutdownActions = new ArrayDeque<>(3);
+
+        boolean successfulStart = false;
+        try {
+            ReaderSubscriptionResult result = topicRegistry.addReader(topicKey, true, aeronContext.getPublicAddress(), null);
 
         DirectReaderFactory factory = new DirectReaderFactory();
 
-        Aeron aeron = aeronContext.getAeron();
+            Aeron aeron = aeronContext.getAeron();
 
-        // We create poller in the thread that just created this topic (not in the copy-to-stream thread).
-        // This way we can be sure that when we return response with created topic the copy-to-thread will be
-        // already subscribed so to it. So if client starts to send messages immediately then we still can be sure that
-        // copy-to-stream not missed any messages.
-        MessagePoller source = factory.createPoller(aeron, true, result.getSubscriberChannel(), result.getDataStreamId(), result.getTypes(), mappingProvider);
+            TopicDataLossHandler topicDataLossHandler = () -> {
+                LOGGER.warn("Data loss detected in topic \"%s\" (unexpected producer termination)").with(topicKey);
 
-        DXTickStream stream = getOrCreateStreamForTopic(typeList, targetStreamKey);
+                // We do not want to stop "copy thread" even if we got data loss
+                return true;
+            };
 
-        startTopicToStreamCopyThread(topicKey, targetStreamKey, source, stream, typeList, topicDeletedSignal, copyToThreadStopLatch);
-    }
-
-    public void startCopyToStreamThreadsForAllTopics() {
-        topicRegistry.iterateCopyToStreamTopics((topicKey, types, copyToStream, topicDeletedSignal, copyToThreadStopLatch) -> {
-            MappingProvider mappingProvider = topicRegistry.getMappingProvider(topicKey);
-            try {
-                subscribeToStreamCopy(topicKey, types, copyToStream, topicDeletedSignal, copyToThreadStopLatch, mappingProvider);
-            } catch (Exception e) {
-                LOGGER.error("Failed to start data copy from topic to a stream: %s").with(e);
-            }
-        });
-    }
-
-    private void startTopicToStreamCopyThread(String topicKey, String targetStreamKey, MessagePoller source, DXTickStream stream, List<RecordClassDescriptor> topicTypeList, AtomicBoolean topicDeletedSignal, CountDownLatch copyToThreadStopLatch) {
-        LoadingOptions options = new LoadingOptions();
-        options.raw = true;
-        TickLoader loader = stream.createLoader(options);
-        MessageProcessor messageProcessor = createTypeTransformingMessageProcessor(loader::send, topicTypeList, stream.getTypes());
-
-        Thread thread = aeronThreadTracker.newCopyTopicToStreamThread(() -> {
-            try {
-                LOGGER.info("Started thread to copy data from topic \"%s\" to stream \"%s\"").with(topicKey).with(targetStreamKey);
-
-                IdleStrategy idleStrategy = new SleepingIdleStrategy(TimeUnit.MICROSECONDS.toNanos(100));
-                while (aeronContext.copyThreadsCanRun() && !Thread.currentThread().isInterrupted()) {
-                    int workCount = source.processMessages(100, messageProcessor);
-                    if (workCount == 0 && topicDeletedSignal.get()) {
-                        // No data in the topic right now and we got stop signal => break
-                        break;
-                    }
-                    idleStrategy.idle(workCount);
-                }
-
-                LOGGER.info("Stopped thread that copied data from topic \"%s\" to stream \"%s\"").with(topicKey).with(targetStreamKey);
-            } catch (Exception e) {
-                LOGGER.error("Exception in the thread that copied data from topic \"%s\" to stream \"%s\": %s").with(topicKey).with(targetStreamKey).with(e);
-            } finally {
+            // We create poller in the thread that just created this topic (not in the copy-to-stream thread).
+            // This way we can be sure that when we return response with created topic the copy-to-thread will be
+            // already subscribed so to it. So if client starts to send messages immediately then we still can be sure that
+            // copy-to-stream not missed any messages.
+            MessagePoller source = factory.createPoller(aeron, true, result.getSubscriberChannel(), result.getDataStreamId(), result.getTypes(), topicDataLossHandler);
+            shutdownActions.addFirst(() -> {
                 try {
                     source.close();
                 } catch (Exception e) {
                     LOGGER.log(LogLevel.WARN).append("Failed to close source: ").append(e).commit();
                 }
+            });
+
+
+            DXTickStream stream = getOrCreateStreamForTopic(typeList, targetStreamKey);
+            // At this point stream schema may not match topic schema. We will validate it during type mapping step.
+
+            // Lock is needed to ensure that stream schema will not be changed while we copy data to it.
+            // We use read locks so other topics would be able to write data into different spaces.
+            DBLock lock = stream.lock(LockType.READ);
+            shutdownActions.addFirst(() -> {
+                try {
+                    lock.release();
+                } catch (Exception e) {
+                    LOGGER.log(LogLevel.WARN).append("Failed to release lock: ").append(e).commit();
+                }
+            });
+
+            // Setups type mapping.
+            // Also validates that all types from topic are supported by stream.
+            Map<RecordClassDescriptor, RecordClassDescriptor> typeTransformationMap = TopicReplicationUtil.findTypeMatches(typeList, stream.getTypes());
+
+            LoadingOptions options = new LoadingOptions(true, LoadingOptions.WriteMode.REWRITE);
+            if (targetSpace != null) {
+                options.space = targetSpace;
+            }
+            @SuppressWarnings({"unchecked", "resource"})
+            TickLoader<InstrumentMessage> loader = stream.createLoader(options);
+            shutdownActions.addFirst(() -> {
                 try {
                     loader.close();
                 } catch (Exception e) {
                     LOGGER.log(LogLevel.WARN).append("Failed to close loader: ").append(e).commit();
                 }
-                copyToThreadStopLatch.countDown();
+            });
+            MessageProcessor messageProcessor = TopicReplicationUtil.createTypeTransformingMessageProcessor(loader::send, typeTransformationMap);
+
+            Thread thread = aeronThreadTracker.newCopyTopicToStreamThread(() -> {
+                try {
+                    LOGGER.info("Started thread to copy data from topic \"%s\" to stream \"%s\"").with(topicKey).with(targetStreamKey);
+
+                    IdleStrategy idleStrategy = aeronContext.getCopyToStreamIdleStrategyFactory().create();
+                    while (aeronContext.copyThreadsCanRun() && !Thread.currentThread().isInterrupted()) {
+                        int workCount = source.processMessages(100, messageProcessor);
+                        if (workCount == 0 && topicDeletedSignal.get()) {
+                            // No data in the topic right now and we got stop signal => break
+                            break;
+                        }
+                        idleStrategy.idle(workCount);
+                    }
+
+                    LOGGER.info("Stopped thread that copied data from topic \"%s\" to stream \"%s\"").with(topicKey).with(targetStreamKey);
+                    copyThreadStopped.complete(null); // Graceful stop
+                } catch (Exception e) {
+                    LOGGER.error("Exception in the thread that copied data from topic \"%s\" to stream \"%s\": %s").with(topicKey).with(targetStreamKey).with(e);
+                    copyThreadStopped.completeExceptionally(e);
+                } finally {
+                    if (!copyThreadStopped.isDone()) {
+                        copyThreadStopped.completeExceptionally(new IllegalStateException("Copy thread stopped unexpectedly"));
+                    }
+                }
+            });
+            thread.start();
+            successfulStart = true;
+        } finally {
+            if (!successfulStart) {
+                copyThreadStopped.completeExceptionally(new IllegalStateException("Failed to start copy thread"));
+            }
+
+            copyThreadStopped.whenComplete((aVoid, throwable) -> {
+                for (Runnable shutdownAction : shutdownActions) {
+                    shutdownAction.run();
+                }
+
+                // Propagate completion status from copyProcessShutdownChain to copyProcessStoppedFuture
+                if (throwable != null) {
+                    copyProcessStoppedFuture.completeExceptionally(throwable);
+                } else {
+                    copyProcessStoppedFuture.complete(null);
+                }
+            });
+        }
+    }
+
+    public void startCopyToStreamThreadsForAllTopics() {
+        topicRegistry.iterateCopyToStreamTopics((topicKey, types, copyToStream, copyToSpace, topicDeletedSignal, copyProcessStoppedFuture) -> {
+            try {
+                subscribeToStreamCopy(topicKey, types, copyToStream, copyToSpace, topicDeletedSignal, copyProcessStoppedFuture);
+            } catch (Exception e) {
+                LOGGER.error("Failed to start data copy from topic to a stream: %s").with(e);
             }
         });
-        thread.start();
-    }
-
-    // Transforms message type according to provided mapping.
-    private MessageProcessor createTypeTransformingMessageProcessor(MessageProcessor baseMessageProcessor, List<RecordClassDescriptor> topicTypeList, RecordClassDescriptor[] streamTypes) {
-        Map<RecordClassDescriptor, RecordClassDescriptor> typeTransformationMap = findTypeMatches(topicTypeList, streamTypes);
-
-        // In trace level mode we can log messages
-        MessageProcessor messageProcessor;
-        if (LOGGER.isEnabled(LogLevel.TRACE)) {
-            messageProcessor = message -> {
-                baseMessageProcessor.process(message);
-                LOGGER.log(LogLevel.TRACE,"Message copied to stream: ts=%s and symbol=%s").with(message.getTimeStampMs()).with(message.getSymbol());
-            };
-        } else {
-            messageProcessor = baseMessageProcessor;
-        }
-
-        return message -> {
-            RawMessage raw = (RawMessage) message;
-            RecordClassDescriptor oldType = raw.type;
-            RecordClassDescriptor newType = typeTransformationMap.get(oldType);
-            if (newType == null) {
-                throw new IllegalStateException("Unexpected type:" + oldType);
-            }
-            raw.type = newType; // Update type on message
-            messageProcessor.process(raw);
-        };
-    }
-
-    /**
-     * Returns map with type matches between topicTypeList and streamTypes.
-     *
-     * @param topicTypeList list of types ma search match for
-     * @param streamTypes list of types ma search match in
-     * @return mapping between topic types and stream types.
-     * @throws IllegalArgumentException if there is no match for some types from topicTypeList in streamTypes
-     */
-    private Map<RecordClassDescriptor, RecordClassDescriptor> findTypeMatches(List<RecordClassDescriptor> topicTypeList, RecordClassDescriptor[] streamTypes) {
-        if (topicTypeList.size() == 1) {
-            RecordClassDescriptor topicType = topicTypeList.get(0);
-            return Collections.singletonMap(topicType, findTypeMatch(topicType, streamTypes));
-        }
-        Map<RecordClassDescriptor, RecordClassDescriptor> result = new HashMap<>(topicTypeList.size());
-        for (RecordClassDescriptor topicType : topicTypeList) {
-            result.put(topicType, findTypeMatch(topicType, streamTypes));
-        }
-        return result;
     }
 
     /**
@@ -219,9 +236,6 @@ public class CopyTopicToStreamTaskManager {
                 streamOptions.setFixedType(typeList.get(0));
             }
             stream = db.createStream(targetStreamKey, streamOptions);
-        } else {
-            // Check if stream can accept all types
-            validateExistingStream(stream, typeList);
         }
         return stream;
     }
@@ -245,16 +259,9 @@ public class CopyTopicToStreamTaskManager {
     private static void validateExistingStream(DXTickStream stream, List<RecordClassDescriptor> typeList) {
         RecordClassDescriptor[] streamTypes = stream.getTypes();
         for (RecordClassDescriptor topicType : typeList) {
-            RecordClassDescriptor match = findTypeMatch(topicType, streamTypes);
+            RecordClassDescriptor match = TopicReplicationUtil.findTypeMatch(topicType, streamTypes);
             assert match != null;
         }
     }
 
-    private static RecordClassDescriptor findTypeMatch(RecordClassDescriptor topicType, RecordClassDescriptor[] streamTypes) {
-        RecordClassDescriptor match = com.epam.deltix.qsrv.hf.stream.MessageProcessor.findMatch(topicType, streamTypes);
-        if (match == null) {
-            throw new IllegalArgumentException("Destination stream does not support all topic's types. Missing type: " + topicType.getName());
-        }
-        return match;
-    }
 }

@@ -47,7 +47,7 @@ public class Test_DirectChannelListener extends BaseTopicReadingTest {
                 messageValidator.validate(message);
                 ratePrinter.inc();
                 messagesReceivedCounter.incrementAndGet();
-            }, null, StubData.getStubMappingProvider());
+            }, null, null);
             ratePrinter.start();
             directMessageListener.processMessagesWhileTrue(runningFlag::get);
         };

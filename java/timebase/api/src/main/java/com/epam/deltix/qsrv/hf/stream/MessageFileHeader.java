@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -24,11 +24,11 @@ import com.epam.deltix.util.time.Interval;
  */
 public class MessageFileHeader {
 
-    private final ClassSet              classes;
+    private final ClassSet<RecordClassDescriptor>              classes;
     public final int                    version;
     public Interval                     periodicity;
 
-    public MessageFileHeader(int version, ClassSet set, Interval periodicity) {
+    public MessageFileHeader(int version, ClassSet<RecordClassDescriptor> set, Interval periodicity) {
         this.version = version;
         this.classes = set;
         this.periodicity = periodicity;
@@ -37,8 +37,13 @@ public class MessageFileHeader {
     public MessageFileHeader(int version, RecordClassDescriptor[] descriptors, Interval periodicity) {
         this.version = version;
         this.periodicity = periodicity;
-        (this.classes = new ClassSet()).addContentClasses(descriptors);
+        (this.classes = new MixedClassSet()).addContentClasses(descriptors);
     }
+
+//    private static MixedClassSet update(MixedClassSet set)  throws Introspector.IntrospectionException, ClassNotFoundException {
+//        RecordClassDescriptor[] updated = new SchemaUpdater(new ClassMappings()).update(set.getContentClasses(), null);
+//        return new MixedClassSet(updated);
+//    }
 
     public static MessageFileHeader                         migrate(MessageFileHeader header) {
         return header;

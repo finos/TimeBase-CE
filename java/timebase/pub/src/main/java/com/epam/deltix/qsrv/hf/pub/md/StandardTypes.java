@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -23,14 +23,14 @@ import java.util.function.Function;
  *
  */
 public class StandardTypes {
-    public static final DataType CLEAN_BOOLEAN = new BooleanDataType (false);
-    public static final DataType NULLABLE_BOOLEAN = new BooleanDataType (true);
+    public static final DataType CLEAN_BOOLEAN = new BooleanDataType(false);
+    public static final DataType NULLABLE_BOOLEAN = new BooleanDataType(true);
 
-    public static final DataType CLEAN_INTEGER = new IntegerDataType (IntegerDataType.ENCODING_INT64, false);
-    public static final DataType NULLABLE_INTEGER = new IntegerDataType (IntegerDataType.ENCODING_INT64, true);
+    public static final DataType CLEAN_INTEGER = new IntegerDataType(IntegerDataType.ENCODING_INT64, false);
+    public static final DataType NULLABLE_INTEGER = new IntegerDataType(IntegerDataType.ENCODING_INT64, true);
 
-    public static final DataType CLEAN_FLOAT = new FloatDataType (FloatDataType.ENCODING_FIXED_DOUBLE, false);
-    public static final DataType NULLABLE_FLOAT = new FloatDataType (FloatDataType.ENCODING_FIXED_DOUBLE, true);
+    public static final DataType CLEAN_FLOAT = new FloatDataType(FloatDataType.ENCODING_FIXED_DOUBLE, false);
+    public static final DataType NULLABLE_FLOAT = new FloatDataType(FloatDataType.ENCODING_FIXED_DOUBLE, true);
 
     public static final DataType CLEAN_DECIMAL = new FloatDataType(FloatDataType.ENCODING_DECIMAL64, false);
     public static final DataType NULLABLE_DECIMAL = new FloatDataType(FloatDataType.ENCODING_DECIMAL64, true);
@@ -38,20 +38,23 @@ public class StandardTypes {
     public static final DataType CLEAN_VARCHAR = new VarcharDataType(VarcharDataType.ENCODING_INLINE_VARSIZE, false, true);
     public static final DataType NULLABLE_VARCHAR = new VarcharDataType(VarcharDataType.ENCODING_INLINE_VARSIZE, true, true);
 
-    public static final DataType CLEAN_CHAR = new CharDataType (false);
-    public static final DataType NULLABLE_CHAR = new CharDataType (true);
+    public static final DataType CLEAN_CHAR = new CharDataType(false);
+    public static final DataType NULLABLE_CHAR = new CharDataType(true);
 
-    public static final DataType CLEAN_TIMESTAMP = new DateTimeDataType (false);
-    public static final DataType NULLABLE_TIMESTAMP = new DateTimeDataType (true);
+    public static final DataType CLEAN_TIMESTAMP = new DateTimeDataType(false);
+    public static final DataType NULLABLE_TIMESTAMP = new DateTimeDataType(true);
 
-    public static final DataType CLEAN_TIMEOFDAY = new TimeOfDayDataType (false);
-    public static final DataType NULLABLE_TIMEOFDAY = new TimeOfDayDataType (true);
+    public static final DataType CLEAN_TIMESTAMP_NS = new DateTimeDataType(false, DateTimeDataType.ENCODING_NANOSECONDS);
+    public static final DataType NULLABLE_TIMESTAMP_NS = new DateTimeDataType(true, DateTimeDataType.ENCODING_NANOSECONDS);
 
-    public static final DataType CLEAN_BINARY = new BinaryDataType (false, 0);
-    public static final DataType NULLABLE_BINARY = new BinaryDataType (true, 0);
+    public static final DataType CLEAN_TIMEOFDAY = new TimeOfDayDataType(false);
+    public static final DataType NULLABLE_TIMEOFDAY = new TimeOfDayDataType(true);
 
-    public static final DataType CLEAN_QUERY = new QueryDataType (false, null);
-    public static final DataType NULLABLE_QUERY = new QueryDataType (true, null);
+    public static final DataType CLEAN_BINARY = new BinaryDataType(false, 0);
+    public static final DataType NULLABLE_BINARY = new BinaryDataType(true, 0);
+
+    public static final DataType CLEAN_QUERY = new QueryDataType(false, null);
+    public static final DataType NULLABLE_QUERY = new QueryDataType(true, null);
 
     public static final DataType ARR = new ArrayDataType(true, null);
     public static final DataType CLASS = new ClassDataType(true);
@@ -77,6 +80,8 @@ public class StandardTypes {
             nullable -> new VarcharDataType(VarcharDataType.ENCODING_INLINE_VARSIZE, nullable, true));
     public static final TypesContainer<CharDataType> CHAR_CONTAINER = new TypesContainer<>("CHAR", CharDataType::new);
     public static final TypesContainer<DateTimeDataType> DATE_TIME_CONTAINER = new TypesContainer<>("TIMESTAMP", DateTimeDataType::new);
+    public static final TypesContainer<DateTimeDataType> DATE_TIME_NS_CONTAINER = new TypesContainer<>("TIMESTAMP",
+        (nullable) -> new DateTimeDataType(nullable, DateTimeDataType.ENCODING_NANOSECONDS));
     public static final TypesContainer<TimeOfDayDataType> TIME_OF_DAY_CONTAINER = new TypesContainer<>("TIMEOFDAY", TimeOfDayDataType::new);
     public static final TypesContainer<ClassDataType> OBJECT_CONTAINER = new TypesContainer<>("OBJECT", ClassDataType::new);
 
@@ -97,49 +102,49 @@ public class StandardTypes {
         }
     }
 
-    public static final String []  PRIMITIVE_FIELD_TYPE_NAMES = {
-            CLEAN_BOOLEAN.getBaseName (),
-            CLEAN_INTEGER.getBaseName (),
-            CLEAN_FLOAT.getBaseName (),
+    public static final String[] PRIMITIVE_FIELD_TYPE_NAMES = {
+            CLEAN_BOOLEAN.getBaseName(),
+            CLEAN_INTEGER.getBaseName(),
+            CLEAN_FLOAT.getBaseName(),
             CLEAN_DECIMAL.getBaseName(),
-            CLEAN_VARCHAR.getBaseName (),
-            CLEAN_CHAR.getBaseName (),
-            CLEAN_TIMESTAMP.getBaseName (),
-            CLEAN_TIMEOFDAY.getBaseName (),
-            CLEAN_BINARY.getBaseName (),
+            CLEAN_VARCHAR.getBaseName(),
+            CLEAN_CHAR.getBaseName(),
+            CLEAN_TIMESTAMP.getBaseName(),
+            CLEAN_TIMEOFDAY.getBaseName(),
+            CLEAN_BINARY.getBaseName(),
     };
 
-    public static String        toSimpleName (DataType type) {
-        String  s = type.getBaseName ();
+    public static String toSimpleName(DataType type) {
+        String s = type.getBaseName();
 
-        if (type.isNullable ())
+        if (type.isNullable())
             s += "?";
 
         return (s);
     }
 
-    public static DataType      forName (String name) {
-        name = name.trim ();
+    public static DataType forName(String name) {
+        name = name.trim();
 
         if (name.startsWith("FINAL "))
             name = name.substring(6);
 
-        if (name.equals ("BOOLEAN"))
+        if (name.equals("BOOLEAN"))
             return (CLEAN_BOOLEAN);
 
-        if (name.equals ("BOOLEAN?"))
+        if (name.equals("BOOLEAN?"))
             return (NULLABLE_BOOLEAN);
 
-        if (name.equals ("INTEGER"))
+        if (name.equals("INTEGER"))
             return (CLEAN_INTEGER);
 
-        if (name.equals ("INTEGER?"))
+        if (name.equals("INTEGER?"))
             return (NULLABLE_INTEGER);
 
-        if (name.equals ("FLOAT"))
+        if (name.equals("FLOAT"))
             return (CLEAN_FLOAT);
 
-        if (name.equals ("FLOAT?"))
+        if (name.equals("FLOAT?"))
             return (NULLABLE_FLOAT);
 
         if (name.equals("DECIMAL"))
@@ -148,40 +153,40 @@ public class StandardTypes {
         if (name.equals("DECIMAL?"))
             return (NULLABLE_DECIMAL);
 
-        if (name.equals ("VARCHAR"))
+        if (name.equals("VARCHAR"))
             return (CLEAN_VARCHAR);
 
-        if (name.equals ("VARCHAR?"))
+        if (name.equals("VARCHAR?"))
             return (NULLABLE_VARCHAR);
 
-        if (name.equals ("CHAR"))
+        if (name.equals("CHAR"))
             return (CLEAN_CHAR);
 
-        if (name.equals ("CHAR?"))
+        if (name.equals("CHAR?"))
             return (NULLABLE_CHAR);
 
-        if (name.equals ("TIMESTAMP"))
+        if (name.equals("TIMESTAMP"))
             return (CLEAN_TIMESTAMP);
 
-        if (name.equals ("TIMESTAMP?"))
+        if (name.equals("TIMESTAMP?"))
             return (NULLABLE_TIMESTAMP);
 
-        if (name.equals ("TIMEOFDAY"))
+        if (name.equals("TIMEOFDAY"))
             return (CLEAN_TIMEOFDAY);
 
-        if (name.equals ("TIMEOFDAY?"))
+        if (name.equals("TIMEOFDAY?"))
             return (NULLABLE_TIMEOFDAY);
 
-        if (name.equals ("BINARY"))
+        if (name.equals("BINARY"))
             return (CLEAN_BINARY);
 
-        if (name.equals ("BINARY?"))
+        if (name.equals("BINARY?"))
             return (NULLABLE_BINARY);
 
-        if (name.equals ("QUERY"))
+        if (name.equals("QUERY"))
             return (CLEAN_QUERY);
 
-        if (name.equals ("QUERY?"))
+        if (name.equals("QUERY?"))
             return (NULLABLE_QUERY);
 
         return TYPES_MAP.get(name);
@@ -283,7 +288,7 @@ public class StandardTypes {
             case 8:
                 return INT64_CONTAINER.getType(isNullable);
             default:
-                throw new IllegalArgumentException("Unsupported native size " + nativeSize + " for IntegerDataType");
+                return INT64_CONTAINER.getType(isNullable);
         }
     }
 }

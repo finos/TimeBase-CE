@@ -96,18 +96,6 @@ public class Test_QQL extends TDBRunnerBase {
         test(getTickDb());
     }
 
-    private BackgroundProcessInfo waitForExecution(DXTickStream stream) throws InterruptedException {
-
-        boolean complete = false;
-        while (!complete) {
-            BackgroundProcessInfo process = stream.getBackgroundProcess();
-            complete = process != null && process.isFinished();
-            Thread.sleep(100);
-        }
-
-        return stream.getBackgroundProcess();
-    }
-
     public void test(DXTickDB db) throws InterruptedException {
 
         try( InstrumentMessageSource source = db.executeQuery(CREATE_STATEMENT, new SelectionOptions(true, false)) ) {
@@ -133,7 +121,7 @@ public class Test_QQL extends TDBRunnerBase {
         // execution runs in background - wait for it
         waitForExecution(stream);
 
-        assertEquals(null, stream.getName());
+        assertEquals("bbo", stream.getName());
         stream.delete();
     }
 }

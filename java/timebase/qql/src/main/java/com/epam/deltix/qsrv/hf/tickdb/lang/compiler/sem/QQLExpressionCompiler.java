@@ -1,0 +1,3136 @@
+/*
+ * Copyright 2024 EPAM Systems, Inc
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Licensed under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem;
+
+import com.epam.deltix.dfp.Decimal;
+import com.epam.deltix.dfp.Decimal64Utils;
+import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.errors.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.SelectionMode;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers.ByteInstanceArray;
+import com.epam.deltix.qsrv.hf.tickdb.pub.TickStream;
+import com.epam.deltix.util.collections.generated.ByteArrayList;
+import com.epam.deltix.util.lang.StringUtils;
+import com.epam.deltix.util.parsers.CompilationException;
+
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.QQLCompiler.*;
+import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.functions.StatefulFunctionDescriptor.types;
+
+@SuppressWarnings("rawtypes")
+public class QQLExpressionCompiler {
+
+    private static long MILLIS_IN_DAY = 24 * 60 * 60 * 1000;
+
+    private Environment env;
+    private ClassMap classMap;
+
+    public QQLExpressionCompiler(Environment env) {
+        this.env = env;
+        this.classMap = new ClassMap(env);
+    }
+
+    public void register(ClassDescriptor cd) {
+        classMap.register(cd);
+    }
+
+    public CompiledExpression compile(Expression e, DataType expectedType) {
+        CompiledExpression ce;
+
+        if (e instanceof ComplexExpression)
+            ce = compileComplexExpression((ComplexExpression) e, expectedType);
+        else if (e instanceof FieldAccessExpression)
+            ce = compileFieldAccessExpression((FieldAccessExpression) e);
+        else if (e instanceof Identifier)
+            ce = compileIdentifier((Identifier) e);
+        else if (e instanceof Constant)
+            ce = compileConstant((Constant) e, expectedType);
+        else if (e instanceof ArrayConstant)
+            ce = compileArrayConstant((ArrayConstant) e, expectedType);
+        else
+            throw new UnsupportedOperationException(e.getClass().getName());
+
+        if (expectedType != null && !isCompatibleWithoutConversion(ce.type, expectedType))
+            throw new UnexpectedTypeException(e, ce.type, expectedType);
+
+        return (ce);
+    }
+
+    private static void checkType(
+            DataType knownType,
+            DataType expectedType,
+            Expression e
+    )
+            throws UnexpectedTypeException {
+        if (expectedType != null && !isCompatibleWithoutConversion(knownType, expectedType))
+            throw new UnexpectedTypeException(e, knownType, expectedType);
+    }
+
+    private static void checkBooleanType(
+            DataType expectedType,
+            Expression e
+    )
+            throws UnexpectedTypeException {
+        checkType(StandardTypes.CLEAN_BOOLEAN, expectedType, e);
+    }
+
+    private CompiledExpression compileComplexExpression(ComplexExpression e, DataType expectedType) {
+        if (e instanceof UnionExpression) {
+            return compileSelectUnion((UnionExpression) e);
+        }
+
+        if (e instanceof UnionStreamsExpression) {
+            return compileStreamUnion((UnionStreamsExpression) e);
+        }
+
+        if (e instanceof StreamWithSpacesExpression) {
+            return compileStreamSelectorSpaces((StreamWithSpacesExpression) e);
+        }
+
+        if (e instanceof SelectExpression)
+            return (compileSelect((SelectExpression) e));
+
+        if (e instanceof FieldAccessorExpression) {
+            return compileFieldAccessorExpression((FieldAccessorExpression) e);
+        }
+
+        if (e instanceof AsExpression) {
+            return compileCastAsExpression((AsExpression) e, expectedType);
+        }
+
+        if (e instanceof PredicateExpression) {
+            return compileArrayPredicateExpression((PredicateExpression) e);
+        }
+
+        if (e instanceof RelationExpression)
+            return (compileRelationExpression((RelationExpression) e, expectedType));
+
+        if (e instanceof BetweenExpression)
+            return (compileBetweenExpression((BetweenExpression) e, expectedType));
+
+        if (e instanceof EqualsExpression)
+            return (compileEqualsExpression((EqualsExpression) e, expectedType));
+
+        if (e instanceof LikeExpression)
+            return (compileLikeExpression((LikeExpression) e, expectedType));
+
+        if (e instanceof ArithmeticExpression)
+            return (compileArithmeticExpression((ArithmeticExpression) e, expectedType));
+
+        if (e instanceof UnaryMinusExpression)
+            return (compileUnaryMinusExpression((UnaryMinusExpression) e, expectedType));
+
+        if (e instanceof AndExpression)
+            return (compileAndExpression((AndExpression) e, expectedType));
+
+        if (e instanceof OrExpression)
+            return (compileOrExpression((OrExpression) e, expectedType));
+
+        if (e instanceof NotExpression)
+            return (compileNotExpression((NotExpression) e, expectedType));
+
+        if (e instanceof NamedExpression)
+            return (compileNamedExpression((NamedExpression) e, expectedType));
+
+        if (e instanceof NamedFieldExpression) {
+            return compileNamedFieldExpression((NamedFieldExpression) e, expectedType);
+        }
+
+        if (e instanceof CallExpression)
+            return (compileCallExpression((CallExpression) e, expectedType));
+
+        if (e instanceof CallExpressionWithDict) {
+            return compileCallExpression((CallExpressionWithDict) e, expectedType);
+        }
+
+        if (e instanceof CallExpressionWithInit) {
+            return compileCallExpression((CallExpressionWithInit) e, expectedType);
+        }
+
+        if (e instanceof TypeCheckExpression)
+            return (compileTypeCheckExpression((TypeCheckExpression) e, expectedType));
+
+        if (e instanceof InExpression)
+            return (compileInExpression((InExpression) e, expectedType));
+
+        if (e instanceof NullCheckExpression)
+            return (compileNullCheckExpression((NullCheckExpression) e, expectedType));
+
+        if (e instanceof NanCheckExpression)
+            return compileNanCheckExpression((NanCheckExpression) e, expectedType);
+
+        if (e instanceof IfExpression) {
+            return compileIfExpression((IfExpression) e, expectedType);
+        }
+
+        if (e instanceof CaseExpression) {
+            return compileCaseExpression((CaseExpression) e, expectedType);
+        }
+
+//        if (e instanceof SelectorExpression)
+//            return (compileSelectorExpression ((SelectorExpression) e, expectedType));
+//
+//        if (e instanceof CastExpression)
+//            return (compileCastExpression ((CastExpression) e, expectedType));
+
+        throw new UnsupportedOperationException(e.getClass().getName());
+    }
+
+    private CompiledConstant compileConstant(Constant e, DataType expectedType) {
+        if (e instanceof BooleanConstant)
+            return (new CompiledConstant(StandardTypes.NULLABLE_BOOLEAN, ((BooleanConstant) e).value));
+
+        if (e instanceof IntegerConstant) {
+            long value = ((IntegerConstant) e).value;
+
+            if (expectedType instanceof FloatDataType)
+                return (new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, Long.toString(value)));
+            else if (expectedType instanceof IntegerDataType)
+                return (new CompiledConstant(expectedType, value));
+
+            if (value > Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
+                return new CompiledConstant(StandardTypes.INT32_CONTAINER.getType(true), value);
+            } else {
+                return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(true), value);
+            }
+        }
+
+        if (e instanceof LongConstant) {
+            long value = ((LongConstant) e).value;
+
+            if (expectedType instanceof FloatDataType)
+                return (new CompiledConstant(StandardTypes.CLEAN_DECIMAL, Long.toString(value)));
+            else if (expectedType instanceof IntegerDataType)
+                return (new CompiledConstant(expectedType, value));
+            return new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(true), value);
+        }
+
+        if (e instanceof FloatConstant) {
+            if (!(expectedType instanceof FloatDataType)) {
+                if (((FloatConstant) e).isDecimal64()) {
+                    return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, ((FloatConstant) e).toFloatString());
+                } else {
+                    return new CompiledConstant(StandardTypes.NULLABLE_FLOAT, ((FloatConstant) e).toFloatString());
+                }
+            } else if (((FloatDataType) expectedType).isDecimal64()) {
+                return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, ((FloatConstant) e).toFloatString());
+            } else {
+                return new CompiledConstant(StandardTypes.NULLABLE_FLOAT, ((FloatConstant) e).toFloatString());
+            }
+        }
+
+        if (e instanceof StringConstant)
+            return (new CompiledConstant(StandardTypes.NULLABLE_VARCHAR, ((StringConstant) e).value));
+
+        if (e instanceof DateConstant) {
+            DateConstant dateConstant = (DateConstant) e;
+            return dateConstant.hasNanoseconds() ?
+                new CompiledConstant(
+                    StandardTypes.CLEAN_TIMESTAMP_NS,
+                    dateConstant.getTimestampNs()
+                ) :
+                new CompiledConstant(
+                    StandardTypes.CLEAN_TIMESTAMP,
+                    dateConstant.getTimestampMs()
+                );
+        }
+
+        if (e instanceof TimeConstant) {
+            CompiledConstant result = new CompiledConstant(
+                            StandardTypes.NULLABLE_TIMEOFDAY,
+                (int) (((TimeConstant) e).nanoseconds / 1000000)
+            );
+            result.setTimeIntervalNanos(((TimeConstant) e).nanoseconds);
+            return result;
+        }
+
+        if (e instanceof BinConstant)
+            return (
+                    new CompiledConstant(
+                            StandardTypes.NULLABLE_BINARY,
+                            ((BinConstant) e).bytes
+                    )
+            );
+
+        if (e instanceof CharConstant)
+            return (
+                    new CompiledConstant(
+                            StandardTypes.NULLABLE_CHAR,
+                            ((CharConstant) e).ch
+                    )
+            );
+
+        if (e instanceof TimeIntervalConstant) {
+            CompiledConstant result;
+            result = new CompiledConstant(StandardTypes.INT64_CONTAINER.getType(false), ((TimeIntervalConstant) e).getTimeStampMs());
+            result.setTimeIntervalNanos(((TimeIntervalConstant) e).getTimeStampNs());
+            return result;
+        }
+
+        if (e instanceof Null) {
+            if (expectedType != null && !expectedType.isNullable())
+                throw new UnacceptableNullException((Null) e);
+
+            return (new CompiledConstant(expectedType, null));
+        }
+
+        if (e instanceof Nan) {
+            if (expectedType != null && !(expectedType instanceof FloatDataType)) {
+                throw new UnacceptableNanException((Nan) e);
+            }
+
+            return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, "NaN");
+        }
+
+        throw new UnsupportedOperationException(e.getClass().getName());
+    }
+
+    private CompiledArrayConstant<?, ?, ?> compileArrayConstant(ArrayConstant arrayConstant, DataType expectedType) {
+        CompiledConstant[] array = arrayConstant.getExpressions().stream()
+                .map(e -> (CompiledConstant) compile(e, null))
+                .toArray(CompiledConstant[]::new);
+        if (arrayConstant instanceof NumericArrayConstant) {
+            return compileArrayConstant((NumericArrayConstant) arrayConstant, expectedType, array);
+        } else if (arrayConstant instanceof StringArrayConstant) {
+            return compileStringArrayConstant(expectedType, array);
+        } else if (arrayConstant instanceof BooleanArrayConstant) {
+            return compileBooleanArrayConstant(expectedType, array);
+        } else if (arrayConstant instanceof CharArrayConstant) {
+            return compileCharArrayConstant(expectedType, array);
+        } else if (arrayConstant instanceof DateArrayConstant) {
+            return compileDateArrayConstant(expectedType, array);
+        }
+
+        throw new UnsupportedOperationException(arrayConstant.getClass().getName());
+    }
+
+    private CompiledArrayConstant<?, ?, ?> compileArrayConstant(NumericArrayConstant arrayConstant,
+                                                                DataType expectedType, CompiledConstant[] constants) {
+        int intSize = 1;
+        boolean isDecimal = true;
+        boolean isFloat = false;
+        boolean nullable = false;
+        boolean isTimeInterval = false;
+        for (CompiledConstant e : constants) {
+            if (e.type == null || e.value == null) {
+                nullable = true;
+                continue;
+            }
+            if (e.isTimeInterval()) {
+                isTimeInterval = true;
+            }
+            if (!(e.type instanceof IntegerDataType) && !(e.type instanceof FloatDataType)) {
+                throw new NumericTypeRequiredException(arrayConstant, e.type);
+            }
+            if (e.type instanceof IntegerDataType) {
+                intSize = Math.max(intSize, ((IntegerDataType) e.type).getNativeTypeSize());
+            } else {
+                isFloat = true;
+                if (!((FloatDataType) e.type).isDecimal64()) {
+                    isDecimal = false;
+                }
+            }
+        }
+        if (isFloat) {
+            return CompiledArrayConstant.createFloatArrayConstant(isDecimal, constants, nullable);
+        } else {
+            return CompiledArrayConstant.createIntegerArrayConstant(intSize, constants, nullable, isTimeInterval);
+        }
+    }
+
+    private CompiledArrayConstant<Byte, ByteArrayList, ByteInstanceArray> compileBooleanArrayConstant(
+            DataType expectedType, CompiledConstant[] constants
+    ) {
+        boolean nullable = false;
+        for (CompiledConstant constant : constants) {
+            if (constant.getValue() == null || constant.type == null) {
+                nullable = true;
+            }
+        }
+        return CompiledArrayConstant.createBooleanArrayConstant(constants, nullable);
+    }
+
+    private CompiledArrayConstant<?, ?, ?> compileStringArrayConstant(DataType expectedType, CompiledConstant[] constants) {
+        boolean nullable = false;
+        for (CompiledConstant constant : constants) {
+            if (constant.getValue() == null || constant.type == null) {
+                nullable = true;
+            }
+        }
+        return CompiledArrayConstant.createStringArrayConstant(constants, nullable);
+    }
+
+    private CompiledArrayConstant<?, ?, ?> compileCharArrayConstant(DataType expectedType, CompiledConstant[] constants) {
+        boolean nullable = false;
+        for (CompiledConstant constant : constants) {
+            if (constant.getValue() == null || constant.type == null) {
+                nullable = true;
+            }
+        }
+        return CompiledArrayConstant.createCharArrayConstant(constants, nullable);
+    }
+
+    private CompiledArrayConstant<?, ?, ?> compileDateArrayConstant(DataType expectedType,
+                                                                    CompiledConstant[] constants) {
+        boolean nullable = false;
+        boolean hasNanos = false;
+        for (CompiledConstant constant : constants) {
+            if (constant.getValue() == null || constant.type == null) {
+                nullable = true;
+            }
+            if (constant.type instanceof DateTimeDataType) {
+                DateTimeDataType dateTimeDataType = (DateTimeDataType) constant.type;
+                if (dateTimeDataType.hasNanosecondPrecision()) {
+                    hasNanos = true;
+                }
+            }
+        }
+        // convert to nanos
+        if (hasNanos) {
+            for (int i = 0; i < constants.length; ++i) {
+                if (constants[i].type instanceof DateTimeDataType) {
+                    DateTimeDataType dateTimeDataType = (DateTimeDataType) constants[i].type;
+                    if (!dateTimeDataType.hasNanosecondPrecision()) {
+                        constants[i] = new CompiledConstant(
+                            TimebaseTypes.DATE_TIME_NS_CONTAINER.getType(true),
+                            QQLCompilerUtils.msToNs(constants[i].getLong())
+                        );
+                    }
+                }
+            }
+        }
+
+        return CompiledArrayConstant.createDateArrayConstant(constants, nullable, hasNanos);
+    }
+
+    private CompiledExpression convertIfNecessary(
+            CompiledExpression x,
+            CompiledExpression other
+    ) {
+        DataType xt = x.type;
+        DataType ot = other.type;
+
+        if (xt instanceof IntegerDataType && ot instanceof FloatDataType) {
+
+            if (x instanceof CompiledConstant) {
+                CompiledConstant c = (CompiledConstant) x;
+
+                if (((FloatDataType) ot).isDecimal64()) {
+                    return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, c.getString());
+                } else {
+                    return new CompiledConstant(StandardTypes.NULLABLE_FLOAT, c.getString());
+                }
+            }
+
+            if (((FloatDataType) ot).isDecimal64()) {
+                return new SimpleFunction(SimpleFunctionCode.INTEGER_TO_DECIMAL, x);
+            } else {
+                return (new SimpleFunction(SimpleFunctionCode.INTEGER_TO_FLOAT, x));
+            }
+        } else if (xt instanceof FloatDataType && ot instanceof FloatDataType) {
+            if (x instanceof CompiledConstant) {
+                if (!((FloatDataType) xt).isDecimal64() && ((FloatDataType) ot).isDecimal64()) {
+                    return new CompiledConstant(StandardTypes.NULLABLE_DECIMAL, ((CompiledConstant) x).getString());
+                } else if (((FloatDataType) xt).isDecimal64() && !((FloatDataType) ot).isDecimal64()) {
+                    return new CompiledConstant(StandardTypes.NULLABLE_FLOAT, ((CompiledConstant) x).getString());
+                }
+            } else if (!(other instanceof CompiledConstant) && ((FloatDataType) xt).isDecimal64()
+                    && !((FloatDataType) ot).isDecimal64()) {
+                return new SimpleFunction(SimpleFunctionCode.DECIMAL_TO_FLOAT, x);
+            }
+        } else if (xt instanceof DateTimeDataType && !((DateTimeDataType) xt).hasNanosecondPrecision() &&
+                   DataTypeHelper.isTimestampNsOrTimestampNsArray(ot)) {
+
+            if (x instanceof CompiledConstant) {
+                return new CompiledConstant(
+                    xt.isNullable() ? StandardTypes.NULLABLE_TIMESTAMP_NS : StandardTypes.CLEAN_TIMESTAMP_NS,
+                    QQLCompilerUtils.msToNs(((CompiledConstant) x).getLong()));
+            } else {
+                return new SimpleFunction(SimpleFunctionCode.MS_TO_NS, x);
+            }
+        } else if (xt instanceof IntegerDataType && x instanceof CompiledConstant &&
+                   DataTypeHelper.isTimestampNsOrTimestampNsArray(ot)) {
+
+            CompiledConstant constX = (CompiledConstant) x;
+            if (constX.isTimeInterval()) {
+                return new CompiledConstant(constX.type, constX.getNanoTime());
+            }
+        }
+
+        return (x);
+    }
+
+    private DataType intersectTypes(Expression e, DataType a, DataType b) {
+        if (a == null)
+            return (b);
+
+        if (b == null)
+            return (a);
+
+        checkType(b, a, e);
+
+        return (a);
+    }
+
+    private CompiledExpression compileNamedExpression(NamedExpression e, DataType expectedType) {
+        String name = e.name;
+
+        switch (name) {
+            case KEYWORD_TIMESTAMP:
+                expectedType = intersectTypes(e, expectedType, StandardTypes.NULLABLE_TIMESTAMP);
+                break;
+
+            case KEYWORD_TIMESTAMPNS:
+                expectedType = intersectTypes(e, expectedType, StandardTypes.NULLABLE_TIMESTAMP_NS);
+
+            case KEYWORD_SYMBOL:
+                expectedType = intersectTypes(e, expectedType, StandardTypes.CLEAN_VARCHAR);
+                break;
+
+//            case KEYWORD_TYPE:
+//                expectedType = intersectTypes(e, expectedType, StdEnvironment.INSTR_TYPE_ENUM);
+//                break;
+//
+//            case KEYWORD_INSTRUMENT_TYPE:
+//                expectedType = intersectTypes(e, expectedType, StdEnvironment.INSTR_TYPE_ENUM);
+//                break;
+        }
+
+        // unbind alias name to prevent recursive compilation
+        // todo: refactor this
+        boolean removed = ((EnvironmentFrame) env).unbind(NamedObjectType.VARIABLE, e.name);
+        try {
+            CompiledExpression ret = compile(e.getArgument(), expectedType);
+            ret.name = name;
+            return (ret);
+        } finally {
+            if (removed) {
+                ((EnvironmentFrame) env).bindNoDup(NamedObjectType.VARIABLE, e.name, e.location, e);
+            }
+        }
+    }
+
+    private CompiledExpression compileNamedFieldExpression(NamedFieldExpression e, DataType expectedType) {
+        String fieldName = e.fieldName;
+
+        switch (fieldName) {
+            case KEYWORD_TIMESTAMP:
+                expectedType = intersectTypes(e, expectedType, StandardTypes.NULLABLE_TIMESTAMP);
+                break;
+
+            case KEYWORD_TIMESTAMPNS:
+                expectedType = intersectTypes(e, expectedType, StandardTypes.NULLABLE_TIMESTAMP_NS);
+                break;
+
+            case KEYWORD_SYMBOL:
+                expectedType = intersectTypes(e, expectedType, StandardTypes.CLEAN_VARCHAR);
+                break;
+
+//            case KEYWORD_TYPE:
+//                expectedType = intersectTypes(e, expectedType, StdEnvironment.INSTR_TYPE_ENUM);
+//                break;
+//
+//            case KEYWORD_INSTRUMENT_TYPE:
+//                expectedType = intersectTypes(e, expectedType, StdEnvironment.INSTR_TYPE_ENUM);
+//                break;
+        }
+
+        CompiledExpression ret = compile(e.getArgument(), expectedType);
+        ret.fieldName = fieldName;
+        return ret;
+    }
+
+    private CompiledExpression compileBetweenExpression(BetweenExpression e, DataType expectedType) {
+        checkBooleanType(expectedType, e);
+
+        CompiledExpression arg = compile(e.args[0], null);
+        CompiledExpression min = compile(e.args[1], null);
+        CompiledExpression max = compile(e.args[2], null);
+
+        return (
+                processAnd(
+                        processRelation(e, OrderRelation.GE, arg, min),
+                        processRelation(e, OrderRelation.LE, arg, max)
+                )
+        );
+    }
+
+    private CompiledExpression<?> processRelation(Expression e, OrderRelation relation, CompiledExpression<?> left,
+                                                  CompiledExpression<?> right) {
+        left = convertIfNecessary(left, right);
+        right = convertIfNecessary(right, left);
+
+        if (left instanceof CompiledConstant && right instanceof CompiledConstant)
+            return (computeRelationExpression(e, relation, (CompiledConstant) left, (CompiledConstant) right));
+
+        return new ComparisonOperation(relation, left, right);
+    }
+
+    private CompiledExpression<?> compileRelationExpression(RelationExpression e, DataType expectedType) {
+        CompiledExpression<?> left = compile(e.getLeft(), null);
+        CompiledExpression<?> right = compile(e.getRight(), null);
+
+        ComparisonOperation.validate(e, left, right);
+
+        return (processRelation(e, e.relation, left, right));
+    }
+
+    private CompiledConstant computeRelationExpression(
+            Expression e,
+            OrderRelation relation,
+            CompiledConstant left,
+            CompiledConstant right
+    ) {
+        DataType leftType = left.type;
+        DataType rightType = right.type;
+        boolean ret;
+
+        if (leftType instanceof IntegerDataType && rightType instanceof IntegerDataType ||
+                leftType instanceof DateTimeDataType && rightType instanceof DateTimeDataType ||
+                leftType instanceof TimeOfDayDataType && rightType instanceof TimeOfDayDataType) {
+            long a = left.getLong();
+            long b = right.getLong();
+
+            switch (relation) {
+                case GT:
+                    ret = a > b;
+                    break;
+                case GE:
+                    ret = a >= b;
+                    break;
+                case LE:
+                    ret = a <= b;
+                    break;
+                case LT:
+                    ret = a < b;
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+        } else if (leftType instanceof FloatDataType && rightType instanceof FloatDataType) {
+            // assuming both are DECIMAL
+            @Decimal long a = left.getLong();
+            @Decimal long b = left.getLong();
+
+            switch (relation) {
+                case GT:
+                    ret = Decimal64Utils.isGreater(a, b);
+                    break;
+                case GE:
+                    ret = Decimal64Utils.isGreaterOrEqual(a, b);
+                    break;
+                case LE:
+                    ret = Decimal64Utils.isLessOrEqual(a, b);
+                    break;
+                case LT:
+                    ret = Decimal64Utils.isLess(a, b);
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+        } else if (leftType instanceof VarcharDataType && rightType instanceof VarcharDataType) {
+            String a = (String) left.value;
+            String b = (String) right.value;
+
+            switch (relation) {
+                case GT:
+                    ret = a.compareTo(b) > 0;
+                    break;
+                case GE:
+                    ret = a.compareTo(b) >= 0;
+                    break;
+                case LE:
+                    ret = a.compareTo(b) <= 0;
+                    break;
+                case LT:
+                    ret = a.compareTo(b) < 0;
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+        } else if (leftType instanceof CharDataType && rightType instanceof CharDataType) {
+            char a = left.getChar();
+            char b = right.getChar();
+
+            switch (relation) {
+                case GT:
+                    ret = a > b;
+                    break;
+                case GE:
+                    ret = a >= b;
+                    break;
+                case LE:
+                    ret = a <= b;
+                    break;
+                case LT:
+                    ret = a < b;
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+        } else
+            throw new IllegalTypeCombinationException(e, leftType, rightType);
+
+        return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, ret));
+    }
+
+    private CompiledExpression<?> compileEqualsExpression(EqualsExpression e, DataType expectedType) {
+        CompiledExpression<?> left = compile(e.getLeft(), null);
+        CompiledExpression<?> right = compile(e.getRight(), null);
+
+        left = convertIfNecessary(left, right);
+        right = convertIfNecessary(right, left);
+
+        if (e.isStrict()) {
+            return compileStrictEqualityTest(e, left, right, expectedType);
+        } else {
+            return (compileEqualityTest(e, e.isEqual, left, right));
+        }
+    }
+
+    private CompiledExpression<?> compileStrictEqualityTest(EqualsExpression e, CompiledExpression<?> left,
+                                                            CompiledExpression<?> right, DataType expectedType) {
+        checkBooleanType(expectedType, e);
+        if (QQLPostProcessingPatterns.isNull(left)) {
+            return (processNullCheckExpression(right, e.isEqual()));
+        } else if (QQLPostProcessingPatterns.isNull(right)) {
+            return (processNullCheckExpression(left, e.isEqual()));
+        } else if (QQLPostProcessingPatterns.isNan(left)) {
+            return processNanCheckExpression(right, e.isEqual());
+        } else if (QQLPostProcessingPatterns.isNan(right)) {
+            return processNanCheckExpression(left, e.isEqual());
+        }
+
+        return new StrictEqualityCheckOperation(e.isEqual(), left, right);
+    }
+
+    private CompiledExpression<?> compileEqualityTest(Expression e, boolean positive, CompiledExpression<?> left,
+                                                      CompiledExpression<?> right) {
+        if (QQLPostProcessingPatterns.isNull(left)) {
+            return processNullCheckExpression(right, positive);
+        } else if (QQLPostProcessingPatterns.isNull(right)) {
+            return processNullCheckExpression(left, positive);
+        } else if (QQLPostProcessingPatterns.isNan(left)) {
+            return processNanCheckExpression(right, positive);
+        } else if (QQLPostProcessingPatterns.isNan(right)) {
+            return processNanCheckExpression(left, positive);
+        }
+
+        EqualityCheckOperation.validate(e, left.type, right.type);
+
+        if (left instanceof CompiledConstant && right instanceof CompiledConstant) {
+            return computeEqualityTest(e, positive, (CompiledConstant) left, (CompiledConstant) right);
+        }
+        return new EqualityCheckOperation(positive, left, right);
+    }
+
+
+    private CompiledConstant computeEqualityTest(
+            Expression e,
+            boolean positive,
+            CompiledConstant left,
+            CompiledConstant right
+    ) {
+        DataType leftType = left.type;
+        DataType rightType = right.type;
+        boolean ret;
+
+        if (left.isNull())
+            if (right.isNull())
+                ret = true;
+            else
+                ret = false;
+        else if (right.isNull())
+            ret = false;
+        else if (left.isNan()) {
+            if (right.isNan()) {
+                ret = true;
+            } else {
+                ret = false;
+            }
+        } else if (right.isNan()) {
+            ret = false;
+        } else if (leftType instanceof IntegerDataType && rightType instanceof IntegerDataType ||
+                leftType instanceof DateTimeDataType && rightType instanceof DateTimeDataType ||
+                leftType instanceof TimeOfDayDataType && rightType instanceof TimeOfDayDataType)
+            ret = positive == (left.getLong() == right.getLong());
+        else if (leftType instanceof FloatDataType && rightType instanceof FloatDataType) {
+            if (!((FloatDataType) leftType).isDecimal64() || !((FloatDataType) rightType).isDecimal64()) {
+                ret = positive == (left.getDouble() == right.getDouble());
+            } else {
+                ret = positive == (Decimal64Utils.isEqual(left.getLong(), right.getLong()));
+            }
+        } else if (leftType instanceof VarcharDataType && rightType instanceof VarcharDataType)
+            ret = positive == (left.getString().equals(right.getString()));
+        else if (leftType instanceof CharDataType && rightType instanceof CharDataType)
+            ret = positive == (left.getChar() == right.getChar());
+        else if (leftType instanceof BooleanDataType && rightType instanceof BooleanDataType)
+            ret = positive == (left.getBoolean() == right.getBoolean());
+        else
+            throw new IllegalTypeCombinationException(e, leftType, rightType);
+
+        return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, ret));
+    }
+
+    private CompiledExpression compileLikeExpression(LikeExpression e, DataType expectedType) {
+        checkBooleanType(expectedType, e);
+
+        CompiledExpression left = compile(e.getLeft(), null);
+        CompiledExpression right = compile(e.getRight(), null);
+
+        left = convertIfNecessary(left, right);
+        right = convertIfNecessary(right, left);
+
+        DataType leftType = left.type;
+        DataType rightType = right.type;
+
+        if (left instanceof CompiledConstant && right instanceof CompiledConstant) {
+            return (computeLikeExpression(e, (CompiledConstant) left, (CompiledConstant) right));
+        } else if (QQLPostProcessingPatterns.isNull(left)) {
+            return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, false));
+        } else if (QQLPostProcessingPatterns.isNull(right)) {
+            return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, false));
+        } else if (QQLPostProcessingPatterns.isNan(left)) {
+            return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, false));
+        } else if (QQLPostProcessingPatterns.isNan(right)) {
+            return (new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, false));
+        }
+
+        SimpleFunctionCode f = null;
+        if (leftType instanceof VarcharDataType && rightType instanceof VarcharDataType)
+            f = e.isNegative ? SimpleFunctionCode.VARCHAR_NLIKE : SimpleFunctionCode.VARCHAR_LIKE;
+
+        if (f == null)
+            throw new IllegalTypeCombinationException(e, leftType, rightType);
+
+        return (new SimpleFunction(f, left, right));
+    }
+
+    private CompiledConstant computeLikeExpression(LikeExpression e, CompiledConstant left, CompiledConstant right) {
+        boolean result;
+
+        DataType leftType = left.type;
+        DataType rightType = right.type;
+        if (leftType instanceof VarcharDataType && rightType instanceof VarcharDataType) {
+            result = StringUtils.wildcardMatch(left.getString(), right.getString(), false);
+        } else
+            throw new IllegalTypeCombinationException(e, leftType, rightType);
+
+        return new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, result);
+    }
+
+    private CompiledExpression<?> compileArithmeticExpression(ArithmeticExpression e, DataType expectedType) {
+
+        CompiledExpression<?> left = compile(e.getLeft(), null);
+        CompiledExpression<?> right = compile(e.getRight(), null);
+
+        ArithmeticOperation.validateArgs(e, left, right);
+
+        left = convertIfNecessary(left, right);
+        right = convertIfNecessary(right, left);
+
+        if (left instanceof CompiledConstant && right instanceof CompiledConstant) {
+            return ConstantsProcessor.compute(e, (CompiledConstant) left, (CompiledConstant) right);
+        } else if (left instanceof CompiledArrayConstant && right instanceof CompiledConstant) {
+            return ConstantsProcessor.compute(e, (CompiledArrayConstant<?, ?, ?>) left, (CompiledConstant) right, false);
+        } else if (right instanceof CompiledArrayConstant && left instanceof CompiledConstant) {
+            return ConstantsProcessor.compute(e, (CompiledArrayConstant<?, ?, ?>) right, (CompiledConstant) left, true);
+        } else if (left instanceof CompiledArrayConstant && right instanceof CompiledArrayConstant) {
+            return ConstantsProcessor.compute(e, (CompiledArrayConstant<?, ?, ?>) left, (CompiledArrayConstant<?, ?, ?>) right);
+        }
+
+        if (ArithmeticOperation.isVarcharConcat(e, left, right)) {
+            return compile(
+                new CallExpression(e.location, "concat", e.getLeft(), e.getRight()), expectedType
+            );
+        }
+
+        return new ArithmeticOperation(e.function, left, right);
+    }
+
+    private CompiledExpression<?> compileUnaryMinusExpression(UnaryMinusExpression e, DataType expectedType) {
+        CompiledExpression<?> arg = compile(e.getArgument(), null);
+
+        NegateOperation.validate(e, arg);
+
+        if (arg instanceof CompiledConstant)
+            return (computeUnaryMinusExpression(e, (CompiledConstant) arg));
+
+        return new NegateOperation(arg, arg.type);
+    }
+
+    private CompiledConstant computeUnaryMinusExpression(
+            UnaryMinusExpression e,
+            CompiledConstant arg
+    ) {
+        DataType argType = arg.type;
+
+        if (argType instanceof IntegerDataType) {
+            long a = arg.getLong();
+
+            return new CompiledConstant(
+                StandardTypes.getIntegerDataType(((IntegerDataType) argType).getNativeTypeSize(), argType.isNullable()), -a
+            );
+        } else if (argType instanceof FloatDataType) {
+            if (((FloatDataType) argType).isDecimal64()) {
+                @Decimal long a = arg.getLong();
+                return new CompiledConstant(StandardTypes.CLEAN_DECIMAL, Decimal64Utils.toFloatString(Decimal64Utils.negate(a)));
+            } else {
+                double a = arg.getDouble();
+                return (new CompiledConstant(StandardTypes.CLEAN_FLOAT, Double.toString(-a)));
+            }
+        } else
+            throw new UnexpectedTypeException(e, argType, StandardTypes.CLEAN_FLOAT);
+    }
+
+    private CompiledExpression<?> compileAndExpression(AndExpression e, DataType expectedType) {
+        CompiledExpression<?> left = compile(e.getLeft(), null);
+        CompiledExpression<?> right = compile(e.getRight(), null);
+
+        LogicalOperation.validate(e, left, right);
+
+        return (processAnd(left, right));
+    }
+
+    private CompiledExpression<?> processAnd(CompiledExpression<?> left, CompiledExpression<?> right) {
+        if (left instanceof CompiledConstant && right instanceof CompiledConstant) {
+            CompiledConstant cleft = (CompiledConstant) left;
+            CompiledConstant cright = (CompiledConstant) right;
+
+            return (CompiledConstant.trueOrFalse(cleft.getBoolean() && cright.getBoolean()));
+        }
+
+        return new LogicalOperation(BinaryLogicalOperation.AND, left, right);
+    }
+
+    private CompiledExpression<?> compileOrExpression(OrExpression e, DataType expectedType) {
+        CompiledExpression<?> left = compile(e.getLeft(), null);
+        CompiledExpression<?> right = compile(e.getRight(), null);
+
+        LogicalOperation.validate(e, left, right);
+
+        return (processOr(left, right));
+    }
+
+    private CompiledExpression<?> processOr(CompiledExpression<?> left, CompiledExpression<?> right) {
+        if (left instanceof CompiledConstant && right instanceof CompiledConstant) {
+            CompiledConstant cleft = (CompiledConstant) left;
+            CompiledConstant cright = (CompiledConstant) right;
+            return (CompiledConstant.trueOrFalse(cleft.getBoolean() || cright.getBoolean()));
+        }
+
+        return new LogicalOperation(BinaryLogicalOperation.OR, left, right);
+    }
+
+    private CompiledExpression<?> compileNotExpression(NotExpression e, DataType expectedType) {
+        CompiledExpression<?> arg = compile(e.getArgument(), null);
+
+        NotOperation.validate(e, arg);
+
+        if (arg instanceof CompiledConstant) {
+            CompiledConstant carg = (CompiledConstant) arg;
+            return (CompiledConstant.trueOrFalse(!carg.getBoolean()));
+        }
+
+        return new NotOperation(arg);
+    }
+
+    private CompiledExpression compileNullCheckExpression(
+            NullCheckExpression e,
+            DataType expectedType
+    ) {
+        checkBooleanType(expectedType, e);
+
+        CompiledExpression arg = compile(e.getArgument(), null);
+
+        return (processNullCheckExpression(arg, e.checkIsNull));
+    }
+
+    private CompiledExpression processNullCheckExpression(
+            CompiledExpression arg,
+            boolean positive
+    ) {
+        DataType argType = arg.type;
+
+        if (!argType.isNullable())
+            return (CompiledConstant.trueOrFalse(!positive));
+
+        if (arg instanceof CompiledConstant) {
+            CompiledConstant carg = (CompiledConstant) arg;
+
+            if (carg.isNull())
+                return (carg);
+
+            return (CompiledConstant.trueOrFalse(carg.isNull() == positive));
+        }
+
+        SimpleFunctionCode code =
+                positive ?
+                        SimpleFunctionCode.IS_NULL :
+                        SimpleFunctionCode.IS_NOT_NULL;
+
+        return (new SimpleFunction(code, arg));
+    }
+
+    private CompiledExpression compileNanCheckExpression(NanCheckExpression e, DataType expectedType) {
+        checkBooleanType(expectedType, e);
+        CompiledExpression arg = compile(e.getArgument(), null);
+        return processNanCheckExpression(arg, e.checkIsNan);
+    }
+
+    private CompiledExpression processNanCheckExpression(CompiledExpression arg, boolean positive) {
+        DataType argType = arg.type;
+        // only decimal type has separate value for NaN
+        // for float types (except decimals) NaN == NULL
+        if (argType instanceof FloatDataType) {
+            if (arg instanceof CompiledConstant) {
+                CompiledConstant carg = (CompiledConstant) arg;
+                return CompiledConstant.trueOrFalse(carg.isNan() == positive);
+            }
+
+            SimpleFunctionCode code =
+                    positive ?
+                            SimpleFunctionCode.IS_NAN :
+                            SimpleFunctionCode.IS_NOT_NAN;
+
+            return new SimpleFunction(code, arg);
+        } else {
+            return CompiledConstant.trueOrFalse(!positive);
+        }
+    }
+
+    private CompiledIfExpression compileIfExpression(IfExpression ifExpression, DataType expectedType) {
+        CompiledExpression<?> compiledCondition = compile(ifExpression.condition, StandardTypes.CLEAN_BOOLEAN);
+        CompiledExpression<?> compiledThen = compile(ifExpression.thenExpression, expectedType);
+        CompiledExpression<?> compiledElse = ifExpression.elseExpression != null ?
+                compile(ifExpression.elseExpression, expectedType) : new CompiledConstant(expectedType, null);
+
+        List<CompiledExpression<?>> outputExpressions = alignExpressionResultTypes(
+            Arrays.asList(ifExpression.thenExpression, ifExpression.elseExpression),
+            Arrays.asList(compiledThen, compiledElse)
+        );
+        DataType outputType = outputExpressions.get(0).type;
+        compiledThen = outputExpressions.get(0);
+        compiledElse = outputExpressions.get(1);
+        return new CompiledIfExpression(
+                outputType != null ? outputType.nullableInstance(true) : StandardTypes.NULLABLE_FLOAT,
+                compiledCondition, compiledThen, compiledElse
+        );
+    }
+
+    private CompiledCaseExpression compileCaseExpression(CaseExpression e, DataType expectedType) {
+        if (e.whenExpressions.isEmpty()) {
+            throw new CompilationException("Empty WHEN condition", e);
+        }
+
+        CompiledExpression<?> compiledCase = e.caseExpression != null ?
+                compile(e.caseExpression, null) :
+                new CompiledConstant(StandardTypes.CLEAN_BOOLEAN, true);
+
+        List<CompiledExpression<?>> compiledWhens = new ArrayList<>();
+        List<CompiledExpression<?>> compiledThens = new ArrayList<>();
+        for (int i = 0; i < e.whenExpressions.size(); ++i) {
+            WhenExpression whenExpression = e.whenExpressions.get(i);
+            compiledWhens.add(compile(whenExpression.whenExpression, compiledCase.type));
+            compiledThens.add(compile(whenExpression.thenExpression, expectedType));
+        }
+        CompiledExpression<?> compiledElse = e.elseExpression != null ?
+                compile(e.elseExpression, expectedType) : new CompiledConstant(expectedType, null);
+
+        List<CompiledExpression<?>> outputCompiledExpressions = new ArrayList<>(compiledThens);
+        outputCompiledExpressions.add(compiledElse);
+        List<CompiledExpression<?>> outputExpressions = alignExpressionResultTypes(
+            e.getOutputExpressions(), outputCompiledExpressions
+        );
+        compiledElse = outputExpressions.remove(outputExpressions.size() - 1);
+        DataType outputType = outputExpressions.get(0).type;
+
+        List<CompiledWhenExpression> compiledWhenExpressions = new ArrayList<>();
+        for (int i = 0; i < compiledWhens.size(); ++i) {
+            compiledWhenExpressions.add(
+                new CompiledWhenExpression(compiledThens.get(i).type, compiledWhens.get(i), outputExpressions.get(i))
+            );
+        }
+
+        return new CompiledCaseExpression(
+                outputType != null ? outputType.nullableInstance(true) : StandardTypes.NULLABLE_FLOAT,
+                compiledCase, compiledWhenExpressions, compiledElse
+        );
+    }
+
+    private CompiledExpression<?> applyNumericCastIfNeed(Expression e, CompiledExpression<?> ce, DataType resultType) {
+        if (NumericType.isNumericOrNumericArray(resultType)) {
+            NumericType type = NumericType.forType(resultType);
+            NumericType expressionType = NumericType.forType(ce.type);
+            if (type != expressionType) {
+                return compileCastExpression(e, (CompiledExpression<DataType>) ce, resultType);
+            }
+        }
+
+        return ce;
+    }
+
+    private List<CompiledExpression<?>> alignExpressionResultTypes(List<Expression> expressions,
+                                                                   List<CompiledExpression<?>> compiledExpressions) {
+
+        if (isAllNumericTypes(compiledExpressions) || isAllNumericArrayTypes(compiledExpressions)) {
+            DataType resultType = getNumericResultType(compiledExpressions);
+            return castNumericTypes(expressions, compiledExpressions, resultType);
+        } else {
+            DataType resultType = getFirstNotNullOutputType(compiledExpressions);
+            return validateAndCastResultTypes(expressions, compiledExpressions, resultType);
+        }
+    }
+
+    private List<CompiledExpression<?>> castNumericTypes(List<Expression> expressions,
+                                                         List<CompiledExpression<?>> compiledExpressions,
+                                                         DataType outputType) {
+        List<CompiledExpression<?>> outputExpressions = new ArrayList<>();
+        for (int i = 0; i < compiledExpressions.size(); ++i) {
+            Expression expression = expressions.get(i);
+            CompiledExpression<?> compiledExpression = compiledExpressions.get(i);
+            if (isUntypedNullLiteral(compiledExpression)) {
+                outputExpressions.add(new CompiledConstant(outputType, null));
+            } else {
+                outputExpressions.add(applyNumericCastIfNeed(expression, compiledExpression, outputType));
+            }
+        }
+
+        return outputExpressions;
+    }
+
+    private List<CompiledExpression<?>> validateAndCastResultTypes(List<Expression> expressions,
+                                                                   List<CompiledExpression<?>> compiledExpressions,
+                                                                   DataType resultType) {
+        List<CompiledExpression<?>> outputExpressions = new ArrayList<>();
+        for (int i = 0; i < compiledExpressions.size(); ++i) {
+            Expression expression = expressions.get(i);
+            CompiledExpression<?> compiledExpression = compiledExpressions.get(i);
+            if (isUntypedNullLiteral(compiledExpression)) {
+                outputExpressions.add(new CompiledConstant(resultType, null));
+            } else {
+                checkTypesAreCompatible(expression, compiledExpression.type, resultType);
+                outputExpressions.add(compiledExpression);
+            }
+        }
+
+        return outputExpressions;
+    }
+
+    private boolean isAllNumericTypes(List<CompiledExpression<?>> expressions) {
+        for (int i = 0; i < expressions.size(); ++i) {
+            CompiledExpression<?> e = expressions.get(i);
+            if (e.type == null) {
+                continue;
+            }
+            if (!NumericType.isNumericType(e.type)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isAllNumericArrayTypes(List<CompiledExpression<?>> expressions) {
+        for (int i = 0; i < expressions.size(); ++i) {
+            CompiledExpression<?> e = expressions.get(i);
+            if (e.type == null) {
+                continue;
+            }
+            if (!NumericType.isNumericArrayType(e.type)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private DataType getNumericResultType(List<CompiledExpression<?>> expressions) {
+        DataType outputType = null;
+        for (int i = 0; i < expressions.size(); ++i) {
+            CompiledExpression<?> e = expressions.get(i);
+            if (e.type == null || NumericType.forType(e.type) == null) {
+                continue;
+            }
+            if (outputType == null) {
+                outputType = e.type;
+            } else {
+                outputType = NumericType.resultType(outputType, e.type);
+            }
+        }
+
+        return outputType == null ? StandardTypes.NULLABLE_FLOAT : outputType;
+    }
+
+    private DataType getFirstNotNullOutputType(List<CompiledExpression<?>> expressions) {
+        for (int i = 0; i < expressions.size(); ++i) {
+            CompiledExpression<?> e = expressions.get(i);
+            if (e.type != null) {
+                return e.type;
+            }
+        }
+
+        return StandardTypes.NULLABLE_FLOAT;
+    }
+
+    private boolean isUntypedNullLiteral(CompiledExpression<?> e) {
+        return isNullLiteral(e) && e.type == null;
+    }
+
+    private boolean isNullLiteral(CompiledExpression<?> e) {
+        return e instanceof CompiledConstant && ((CompiledConstant) e).isNull();
+    }
+
+    private void checkTypesAreCompatible(Expression e, DataType actual, DataType required) {
+        if (actual != null && required != null) {
+            if (!QQLCompiler.isStrictCompatibleWithoutConversion(actual, required)) {
+                throw new UnexpectedTypeException(e, actual, required);
+            } else if (actual instanceof ClassDataType && required instanceof ClassDataType) {
+                if (isCastRequired((ClassDataType) actual, (ClassDataType) required)) {
+                    throw new UnexpectedTypeException(e, actual, required);
+                }
+            } else if (actual instanceof ArrayDataType && required instanceof ArrayDataType) {
+                DataType actualArrayType = ((ArrayDataType) actual).getElementDataType();
+                DataType requiredArrayType = ((ArrayDataType) required).getElementDataType();
+                if (!QQLCompiler.isStrictCompatibleWithoutConversion(actualArrayType, requiredArrayType)) {
+                    throw new UnexpectedTypeException(e, actualArrayType, requiredArrayType);
+                } else if (actualArrayType instanceof ClassDataType && requiredArrayType instanceof ClassDataType) {
+                    if (isCastRequired((ClassDataType) actualArrayType, (ClassDataType) requiredArrayType)) {
+                        throw new UnexpectedTypeException(e, actualArrayType, requiredArrayType);
+                    }
+                }
+            }
+        }
+    }
+
+    //  SIDE EFFECT env=...
+    private void setUpQueryEnv(CompiledQuery q) {
+        Set<ClassDescriptor> cds = new HashSet<>();
+
+        q.getAllTypes(cds);
+
+        for (ClassDescriptor cd : cds)
+            classMap.register(cd);
+
+        RecordClassDescriptor[] types = q.getConcreteOutputTypes();
+
+        EnvironmentFrame selectorEnv = new EnvironmentFrame(env);
+
+        selectorEnv.bind(NamedObjectType.VARIABLE, KEYWORD_THIS, new ThisRef(new ClassDataType(false, types)));
+
+        for (ClassDescriptor cd : classMap.getAllDescriptors())
+            setUpEnv(selectorEnv, cd);
+
+        selectorEnv.setTopTypes(types);
+
+        env = selectorEnv;
+    }
+
+    private void setUpPredicateEnv(DataType type) {
+        RecordClassDescriptor[] descriptors = new RecordClassDescriptor[0];
+        if (type instanceof ClassDataType) {
+            ClassDataType classDataType = (ClassDataType) type;
+            descriptors = classDataType.getDescriptors();
+        }
+
+        EnvironmentFrame predicateEnv = new EnvironmentFrame(env);
+        predicateEnv.bind(NamedObjectType.VARIABLE, KEYWORD_THIS, new PredicateIterator(type));
+        Set<String> boundFields = new HashSet<>();
+        for (int i = 0; i < descriptors.length; ++i) {
+            for (DataField f : QQLCompilerUtils.collectFields(descriptors[i], true)) {
+                if (!boundFields.contains((f.getName().toUpperCase()))) {
+                    predicateEnv.bind(
+                            NamedObjectType.VARIABLE, f.getName(), new PredicateFieldRef(f)
+                    );
+                    boundFields.add(f.getName().toUpperCase());
+                }
+            }
+        }
+        predicateEnv.setTopTypes(descriptors);
+
+        env = predicateEnv;
+    }
+
+    private void setUpAliasEnv(List<Expression> expressions) {
+        EnvironmentFrame aliasEnv = new EnvironmentFrame(env);
+        expressions.forEach(e -> compileAliases(aliasEnv, e));
+        env = aliasEnv;
+    }
+
+    private void compileAliases(EnvironmentFrame env, Expression expression) {
+        if (expression instanceof ComplexExpression) {
+            ComplexExpression complexExpression = (ComplexExpression) expression;
+            for (int i = 0; i < complexExpression.args.length; ++i) {
+                compileAliases(env, complexExpression.args[i]);
+            }
+        }
+
+        NamedExpression namedExpression = getAlias(expression);
+        if (namedExpression != null) {
+            env.bindNoDup(
+                    NamedObjectType.VARIABLE, namedExpression.name, namedExpression.location, namedExpression
+            );
+        }
+    }
+
+    private NamedExpression getAlias(Expression expression) {
+        if (expression instanceof NamedExpression) {
+            return (NamedExpression) expression;
+        }
+
+        if (expression instanceof AsExpression) {
+            return getNamedExpression((AsExpression) expression);
+        }
+
+        return null;
+    }
+
+    //  SIDE EFFECT env=...
+    public void setUpClassSetEnv(RecordClassDescriptor... types) {
+        for (RecordClassDescriptor cd : types)
+            classMap.register(cd);
+
+        EnvironmentFrame selectorEnv = new EnvironmentFrame(env);
+
+        selectorEnv.bind(NamedObjectType.VARIABLE, KEYWORD_THIS, new ThisRef(new ClassDataType(false, types)));
+
+        for (ClassDescriptor cd : classMap.getAllDescriptors())
+            setUpEnv(selectorEnv, cd);
+
+        env = selectorEnv;
+    }
+
+    @SuppressWarnings("ConvertToStringSwitch")
+    private TupleConstructor createAnonymousTuple(
+            Expression[] origExpressions,
+            CompiledExpression[] args,
+            boolean clearTimeAndIdentity,
+            TypeIdentifier typeId
+    ) {
+        int n = args.length;
+        ArrayList<DataField> fields = new ArrayList<>(n);
+        ArrayList<CompiledExpression<?>> nsInits = new ArrayList<>(n);
+        CompiledExpression tsInit = null;
+        CompiledExpression symbolInit = null;
+        CompiledExpression typeInit = null;
+        HashSet<String> namesInUse = new HashSet<>();
+        Map<RecordClassDescriptor, List<CompiledExpression<?>>> typeToInitializers = new LinkedHashMap<>();
+
+        for (int ii = 0; ii < n; ii++) {
+            CompiledExpression e = args[ii];
+            Expression oe = origExpressions[ii];
+            DataType type = e.type;
+            String name = e.getFieldName();
+
+            // no switch! - could be null
+            if (KEYWORD_TIMESTAMP.equals(name)) {
+                if (tsInit != null)
+                    throw new DuplicateNameException(oe, name);
+
+                tsInit = e;
+            } else if (KEYWORD_SYMBOL.equals(name)) {
+                if (symbolInit != null)
+                    throw new DuplicateNameException(oe, name);
+
+                symbolInit = e;
+            } else if (KEYWORD_INSTRUMENT_TYPE.equals(name)) {
+                if (typeInit != null)
+                    throw new DuplicateNameException(oe, name);
+
+                typeInit = e;
+            } else {
+                if (isNamedExpression(oe)) {
+                    if (!namesInUse.add(name.toUpperCase()))
+                        throw new DuplicateNameException(oe, name);
+                } else {
+                    // name was implied; make unambiguous
+                    if (name == null || !namesInUse.add(name.toUpperCase())) {
+                        if (name == null)
+                            name = "$";
+
+                        for (int jj = 1; ; jj++) {
+                            String test = name + jj;
+
+                            if (namesInUse.add(test.toUpperCase())) {
+                                name = test;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (e instanceof CompiledConstant) {
+                    CompiledConstant c = (CompiledConstant) e;
+
+                    if (type == null) {
+                        assert c.isNull();
+                        type = StandardTypes.NULLABLE_VARCHAR;
+                    }
+
+                    fields.add(new StaticDataField(name, name, type, type.toString(c.getValue())));
+                } else {
+                    fields.add(new NonStaticDataField(name, name, type));
+                    nsInits.add(e);
+                }
+
+            }
+        }
+
+        if (clearTimeAndIdentity) {
+            if (tsInit == null)
+                tsInit = new CompiledConstant(StandardTypes.NULLABLE_TIMESTAMP, null);
+
+            if (symbolInit == null)
+                symbolInit = new CompiledConstant(StandardTypes.CLEAN_VARCHAR, "");
+
+//            if (typeInit == null)
+//                typeInit = new CompiledConstant(StdEnvironment.INSTR_TYPE_ENUM, InstrumentType.SYSTEM.ordinal());
+        }
+
+        String typeName = typeId != null ? typeId.typeName : null;
+        if (typeName == null)
+            typeName = getQueryID(fields);
+
+        RecordClassDescriptor rcd = new RecordClassDescriptor(
+                typeName, null, false, null,
+                fields.toArray(new DataField[fields.size()])
+        );
+        typeToInitializers.put(rcd, new ArrayList<>(nsInits));
+
+        ClassDataType type = new ClassDataType(false, rcd);
+
+        return new TupleConstructor(type, tsInit, symbolInit, typeToInitializers);
+    }
+
+    public static String getQueryID(List<DataField> fields) {
+        String id = fields.stream().map(f -> (f.getName() + "-" + f.getType().getCode())).collect(Collectors.joining(";"));
+        long hash = hashCode(id.toUpperCase());
+        return "QUERY" + hash;
+    }
+
+    public static long hashCode(CharSequence value) {
+        if (value == null)
+            return (0);
+
+        int         len = value.length ();
+        long         hc = 0;
+
+        for (int i = 0; i < len; i++)
+            hc = 31 * hc + value.charAt (i);
+
+        return (hc);
+    }
+
+    private CompiledExpression<?> compileStreamUnion(UnionStreamsExpression e) {
+        try {
+            return compileStreamUnion(e.expressions);
+        } catch (CompilationException ex) {
+            throw QQLCompilerUtils.withLocation(ex, e);
+        }
+    }
+
+    private CompiledExpression<?> compileSelectUnion(UnionExpression e) {
+        try {
+            return compileSelectUnion(e, e.flatten());
+        } catch (CompilationException ex) {
+            throw QQLCompilerUtils.withLocation(ex, e);
+        }
+    }
+
+    private CompiledExpression<?> compileStreamUnion(Expression[] subSelects) {
+        if (subSelects.length < 2) {
+            throw new CompilationException("Invalid stream count: " + subSelects.length, subSelects);
+        }
+
+        if (UnionHelper.isIdentifiers(subSelects)) {
+            List<StreamSelector> streamSelectors = new ArrayList<>();
+            for (Expression source : subSelects) {
+                if (source instanceof Identifier) {
+                    CompiledExpression<?> compiledSource = compileIdentifier((Identifier) source);
+                    if (compiledSource instanceof StreamSelector) {
+                        streamSelectors.add((StreamSelector) compiledSource);
+                    } else {
+                        throw new CompilationException("Union source must be stream", source);
+                    }
+                } else {
+                    throw new CompilationException("Union source must be identifier", source);
+                }
+            }
+
+            return UnionHelper.unionStreamSelectors(streamSelectors.toArray(new StreamSelector[0]));
+        }
+
+        throw new CompilationException("Invalid stream union", subSelects);
+    }
+
+    private CompiledUnion compileSelectUnion(UnionExpression e, Expression[] subSelects) {
+        CompiledQuery[] compiledQueries = new CompiledQuery[subSelects.length];
+        for (int i = 0; i < subSelects.length; ++i) {
+            if (subSelects[i] instanceof SelectExpression) {
+                compiledQueries[i] = compileSelect((SelectExpression) subSelects[i]);
+            } else {
+                throw new CompilationException("Invalid Select expression type", subSelects[i]);
+            }
+        }
+
+        boolean forward = compiledQueries[0].isForward();
+        for (int i = 1; i < compiledQueries.length; ++i) {
+            if (compiledQueries[i].isForward() != forward) {
+                throw new CompilationException("Can't union queries with different reverse type", e);
+            }
+        }
+
+        SelectLimit limit = (e.limit != null ? compileLimit(e.limit) : null);
+
+        return UnionHelper.unionCompiledQueries(compiledQueries, limit);
+    }
+
+    private CompiledQuery compileSelect(SelectExpression e) {
+        Expression src = e.getSource();
+        Expression fe = e.getFilter();
+        Expression having = e.getHaving();
+        Expression[] with = e.getWithExpressions();
+        ArrayJoin arrayJoinExpression = e.getArrayJoin();
+        Expression[] selectors = e.getSelectors();
+        LimitExpression limit = e.getLimit();
+        boolean selectFirst = false;
+        boolean selectLast = false;
+        boolean selectCurrent = false;
+        boolean someFormOfSelectStar = false;
+        boolean selectRecords = selectors.length > 0 && selectors[0] instanceof SelectRecordExpression;
+        boolean selectInner = src instanceof SelectExpression;
+
+        if (selectors.length == 1) {
+            Expression se = selectors[0];
+
+            if (QQLPreProcessingPatterns.isThis(se)) {
+                selectCurrent = true;
+                someFormOfSelectStar = true;
+            } else if (QQLPreProcessingPatterns.isFirstThis(se)) {
+                selectFirst = true;
+                someFormOfSelectStar = true;
+            } else if (QQLPreProcessingPatterns.isLastThis(se)) {
+                selectLast = true;
+                someFormOfSelectStar = true;
+            }
+        }
+
+        CompiledQuery q;
+
+        if (src == null) {
+            q = new SingleMessageSource();
+            if (someFormOfSelectStar) {
+                throw new CompilationException("Can't use * without source", selectors[0]);
+            }
+        } else {
+            CompiledExpression csrc = compile(src, null);
+
+            if (csrc != null && !(csrc instanceof CompiledQuery))
+                throw new IllegalMessageSourceException(src);
+
+            if (src instanceof UnionExpression) {
+                if (((UnionExpression) src).limit != null && limit == null) {
+                    limit = ((UnionExpression) src).limit;
+                }
+            }
+
+            q = (CompiledQuery) csrc;
+        }
+
+        if (someFormOfSelectStar && e.typeId != null) {
+            RecordClassDescriptor[] descriptors = q.getConcreteOutputTypes();
+            if (descriptors.length > 1) {
+                throw new CompilationException("Can't use TYPE with polymorphic output", e.typeId);
+            }
+
+            someFormOfSelectStar = false;
+            long location = selectors[0].location;
+            selectors = QQLCompilerUtils.collectFields(descriptors[0]).stream()
+                    .map(f -> new Identifier(location, f.getName()))
+                    .toArray(Expression[]::new);
+        }
+
+        if (!selectCurrent || fe != null || having != null || arrayJoinExpression != null ||
+            e.getOverExpression() != null || e.typeId != null || limit != null || e.groupBy != null) {
+
+            Environment saveEnv = env;
+
+            CompiledExpression cond = null;
+            CompiledExpression compiledHaving = null;
+            TupleConstructor compiledSelector = null;
+            TimestampLimits tslimits = null;
+            SymbolLimits symbolLimits = null;
+            GroupBySpec groupBy;
+            Map<CompiledExpression<DataType>, Expression> compiledArrayJoins = new HashMap<>();
+
+            try {
+                setUpQueryEnv(q);
+
+                // compile
+                List<Expression> allExpressions = new ArrayList<>();
+                if (with != null) {
+                    allExpressions.addAll(Arrays.asList(with));
+                }
+                allExpressions.add(fe);
+                allExpressions.add(having);
+                allExpressions.addAll(Arrays.asList(selectors));
+                if (e.groupBy != null && !isEntityGroupBy(e.groupBy)) {
+                    allExpressions.addAll(Arrays.asList(e.groupBy));
+                }
+                setUpAliasEnv(allExpressions);
+
+                // compile array join
+                if (arrayJoinExpression != null) {
+                    compiledArrayJoins = compileArrayJoinExpression(arrayJoinExpression);
+                    compiledArrayJoins.forEach(this::validateArrayJoin);
+                }
+
+                // compile filter
+                if (fe != null) {
+                    cond = compile(fe, StandardTypes.NULLABLE_BOOLEAN);
+
+                    // do not apply subscription optimization if selecting from inner select
+                    if (!selectInner) {
+                        List<CompiledExpression> flatCond =
+                            QQLPostProcessingPatterns.flattenConjunction(cond);
+
+                        tslimits =
+                            QQLPostProcessingPatterns.adjustTimestampLimits(flatCond, e.getEndTime());
+
+                        List<CompiledExpression> matchedConditions = new ArrayList<>();
+                        symbolLimits = QQLPostProcessingPatterns.symbolLimits(cond, matchedConditions);
+                        if (!symbolLimits.isSubscribeAll()) {
+                            matchedConditions.forEach(flatCond::remove);
+                        }
+
+                        cond = QQLPostProcessingPatterns.reconstructConjunction(flatCond);
+                    }
+                } else if (!selectInner) {
+                    tslimits = QQLPostProcessingPatterns.adjustTimestampLimits(Collections.emptyList(), e.getEndTime());
+                }
+
+                if (having != null) {
+                    compiledHaving = compile(having, StandardTypes.NULLABLE_BOOLEAN);
+                }
+
+                // compile selectors
+                if (!someFormOfSelectStar) {
+                    if (selectRecords) {
+                        compiledSelector = compileSelectRecords(selectors, e.typeId, e.isDistinct());
+                    } else {
+                        List<Expression> outSelectors = buildSelectorsList(selectors);
+                        List<CompiledExpression> compiledSelectors = outSelectors.stream()
+                                .map(s -> compile(s, null))
+                                .collect(Collectors.toList());
+
+                        if (outSelectors.size() == 1 && (compiledSelectors.get(0) instanceof TupleConstructor)) {
+                            compiledSelector = (TupleConstructor) compiledSelectors.get(0);
+                        } else {
+                            compiledSelector = createAnonymousTuple(
+                                    outSelectors.toArray(new Expression[0]),
+                                    compiledSelectors.toArray(new CompiledExpression[0]),
+                                    e.isDistinct(),
+                                    e.typeId
+                            );
+                        }
+                    }
+                } else if (arrayJoinExpression != null) {
+                    compiledSelector = new QQLTupleBuilder(this)
+                            .createTupleWithArrayJoins(q, compiledArrayJoins, e.isDistinct());
+                }
+
+                groupBy = compileGroupBy(e.groupBy);
+            } finally {
+                env = saveEnv;
+                classMap = new ClassMap(env);
+            }
+
+            boolean aggregate = !e.isRunning() &&
+                    ((compiledSelector != null && compiledSelector.impliesAggregation()) || groupBy != null);
+
+            CompiledFilter.RunningFilter runningFilter =
+                    selectFirst ?
+                            CompiledFilter.RunningFilter.FIRST_ONLY :
+                            e.isDistinct() ?
+                                    CompiledFilter.RunningFilter.DISTINCT :
+                                    CompiledFilter.RunningFilter.NONE;
+
+            SelectLimit compiledLimit = limit != null ? compileLimit(limit) : null;
+            q = new CompiledFilter(
+                q,
+                QQLCompilerUtils.addQueryStatusType(
+                        compiledSelector == null ?
+                                q.type :
+                                new QueryDataType(false, (ClassDataType) compiledSelector.type),
+                        groupBy
+                ),
+                cond,
+                compiledHaving,
+                runningFilter,
+                aggregate,
+                e.isRunning(),
+                groupBy,
+                compiledSelector,
+                tslimits,
+                symbolLimits,
+                compiledLimit,
+                e.getOverExpression(),
+                new ArrayList<>(compiledArrayJoins.keySet())
+            );
+            ((CompiledFilter) q).someFormOfSelectStar = someFormOfSelectStar;
+        }
+
+        return (q);
+    }
+
+    private TupleConstructor compileSelectRecords(Expression[] selectors, TypeIdentifier typeId, boolean isDistinct) {
+        if (typeId != null) {
+            throw new CompilationException("Illegal type clause", typeId);
+        }
+
+        TupleConstructor[] tuples = new TupleConstructor[selectors.length];
+        Map<String, CompiledExpression<?>> conditions = new HashMap<>();
+        for (int i = 0; i < selectors.length; ++i) {
+            SelectRecordExpression selector = (SelectRecordExpression) selectors[i];
+            List<Expression> outSelectors = Arrays.asList(selector.getSelectors());
+            if (outSelectors.size() == 0) {
+                throw new CompilationException("Selectors list is empty", selector);
+            }
+
+            if (QQLPreProcessingPatterns.isThis(outSelectors.get(0)) ||
+                    QQLPreProcessingPatterns.isFirstThis(outSelectors.get(0)) ||
+                    QQLPreProcessingPatterns.isLastThis(outSelectors.get(0))) {
+
+                throw new CompilationException("Illegal selector in record", outSelectors.get(0));
+            }
+
+            if (conditions.get(selector.getTypeId().typeName) != null) {
+                throw new CompilationException("Duplicate type", selector);
+            } else {
+                conditions.put(selector.getTypeId().typeName, compile(selector.getWhen(), StandardTypes.NULLABLE_BOOLEAN));
+            }
+
+            List<CompiledExpression> compiledSelectors = outSelectors.stream()
+                    .map(s -> compile(s, null))
+                    .collect(Collectors.toList());
+            tuples[i] = createAnonymousTuple(
+                    outSelectors.toArray(new Expression[0]),
+                    compiledSelectors.toArray(new CompiledExpression[0]),
+                    isDistinct,
+                    selector.getTypeId()
+            );
+        }
+
+        return TupleConstructor.polymorphicTuple(tuples, conditions);
+    }
+
+    private void validateArrayJoin(CompiledExpression compiledExpression, Expression expression) {
+        if (compiledExpression instanceof CompiledComplexExpression) {
+            CompiledComplexExpression complexExpression = (CompiledComplexExpression) compiledExpression;
+            for (int i = 0; i < complexExpression.args.length; ++i) {
+                if (complexExpression.args[i] instanceof ArrayJoinElement) {
+                    throw new CompilationException("Array join can't depend on another array join", expression.location);
+                } else {
+                    validateArrayJoin(complexExpression.args[i], expression);
+                }
+            }
+        }
+    }
+
+    private GroupBySpec compileGroupBy(Expression[] groups) {
+        if (groups != null && groups.length > 0) {
+            if (isEntityGroupBy(groups)) {
+                return new GroupByEntity();
+            }
+
+            CompiledExpression<?>[] expressions = new CompiledExpression[groups.length];
+            for (int i = 0; i < groups.length; ++i) {
+                expressions[i] = compile(groups[i], null);
+                if (expressions[i].impliesAggregation()) {
+                    throw new CompilationException("Can't use aggregation expressions in group by", groups[i]);
+                }
+                if (expressions[i].type instanceof ClassDataType) {
+                    throw new CompilationException("Invalid aggregation expression type", groups[i]);
+                }
+                if (expressions[i].type instanceof ArrayDataType) {
+                    throw new CompilationException("Invalid aggregation expression type", groups[i]);
+                }
+                if (expressions[i].type instanceof FloatDataType) {
+                    throw new CompilationException("Invalid aggregation expression type", groups[i]);
+                }
+                if (expressions[i].type instanceof QueryDataType) {
+                    throw new CompilationException("Invalid aggregation expression type", groups[i]);
+                }
+            }
+            return new GroupByExpressions(expressions);
+        }
+
+        return null;
+    }
+
+    private boolean isEntityGroupBy(Expression[] groups) {
+        if (groups != null && groups.length == 1) {
+            if (groups[0] instanceof Identifier && KEYWORD_SYMBOL.equalsIgnoreCase(((Identifier) groups[0]).id)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private SelectLimit compileLimit(LimitExpression limitExpression) {
+        long limit = 0;
+        long offset = 0;
+
+        limit = compileLimitOffset(limitExpression.limit);
+        if (limitExpression.offset != null) {
+            offset = compileLimitOffset(limitExpression.offset);
+        }
+
+        return new SelectLimit(limit, offset);
+    }
+
+    private long compileLimitOffset(Expression expression) {
+        CompiledExpression<?> compiledExpression = compile(expression, null);
+        if (compiledExpression instanceof CompiledConstant) {
+            if (compiledExpression.type instanceof IntegerDataType) {
+                return  ((CompiledConstant) compiledExpression).getLong();
+            } else {
+                throw new CompilationException("Expression should have integer type", expression);
+            }
+        } else {
+            throw new CompilationException("Expression should be constant", expression);
+        }
+    }
+
+    private Map<CompiledExpression<DataType>, Expression> compileArrayJoinExpression(ArrayJoin arrayJoinExpression) {
+        Map<CompiledExpression<DataType>, Expression> compiledArrayJoins = new HashMap<>();
+        for (int i = 0; i < arrayJoinExpression.args.length; ++i) {
+            CompiledExpression<DataType> compiledArrayJoin = compile(arrayJoinExpression.args[i], null);
+            if (compiledArrayJoin.type instanceof ArrayDataType) {
+                ArrayJoinElement arrayJoinElement = new ArrayJoinElement(
+                        compiledArrayJoin,
+                        compiledArrayJoin.name != null ? compiledArrayJoin.name : ("$arrayjoin$" + i),
+                        arrayJoinExpression.left
+                );
+                compiledArrayJoins.put(arrayJoinElement, arrayJoinExpression.args[i]);
+                ((EnvironmentFrame) env).bindNoDup(
+                        NamedObjectType.VARIABLE, arrayJoinElement.name, arrayJoinExpression.args[i].location, arrayJoinElement
+                );
+            } else {
+                throw new IllegalDataTypeException(arrayJoinExpression, compiledArrayJoin.type, StandardTypes.ARR);
+            }
+        }
+
+        return compiledArrayJoins;
+    }
+
+    private List<Expression> buildSelectorsList(Expression[] selectors) {
+        List<Expression> outSelectors = new ArrayList<>();
+        for (int i = 0; i < selectors.length; ++i) {
+            if (selectors[i] instanceof ThisObject) {
+                outSelectors.addAll(buildThisSelector((ThisObject) selectors[i]));
+            } else {
+                outSelectors.add(selectors[i]);
+            }
+        }
+
+        return outSelectors;
+    }
+
+    private List<Expression> buildThisSelector(ThisObject selector) {
+        class FieldType {
+            private DataField field;
+            private Set<TypeIdentifier> types = new LinkedHashSet<>();
+
+            FieldType(DataField field, TypeIdentifier typeIdentifier) {
+                this.field = field;
+                this.types.add(typeIdentifier);
+            }
+
+            Expression makeExpression(ThisObject selector, String selectorName, boolean disambiguate, int i) {
+                return disambiguate ?
+                        new NamedExpression(
+                                selector.location,
+                                new FieldAccessorExpression(
+                                        new AsExpression(
+                                                selector.location,
+                                                selector.parent,
+                                                new CastObjectTypeExpression(
+                                                        selector.location,
+                                                        types.stream()
+                                                                .map(t -> new CastTypeIdExpression(selector.location, t))
+                                                                .collect(Collectors.toList()),
+                                                        true
+                                                )
+                                        ),
+                                        new FieldIdentifier(selector.location, field.getName())
+                                ),
+                                selectorName + "." + field.getName() + (i > 0 ? String.valueOf(i) : "")
+                        ) :
+                        new FieldAccessorExpression(
+                                selector.parent, new FieldIdentifier(selector.location, field.getName())
+                        );
+            }
+        }
+
+        List<Expression> outSelectors = new ArrayList<>();
+        CompiledExpression compiled = compile(selector.parent, null);
+        if (compiled.type instanceof ClassDataType) {
+            ClassDataType type = (ClassDataType) compiled.type;
+            RecordClassDescriptor[] descriptors = type.getDescriptors();
+            Map<String, List<FieldType>> fieldTypesMap = new LinkedHashMap<>();
+            for (int i = 0; i < descriptors.length; ++i) {
+                TypeIdentifier typeIdentifier = new TypeIdentifier(descriptors[i].getName());
+                for (DataField field : QQLCompilerUtils.collectFields(descriptors[i])) {
+                    if (field instanceof NonStaticDataField) {
+                        List<FieldType> fieldTypes = fieldTypesMap.computeIfAbsent(field.getName(), k -> new ArrayList<>());
+                        boolean addNewType = true;
+                        for (FieldType fieldType : fieldTypes) {
+                            try {
+                                QQLCompilerUtils.checkTypesAreEqual(
+                                        selector.parent,
+                                        new DataType[]{field.getType(), fieldType.field.getType()}
+                                );
+                                fieldType.types.add(typeIdentifier);
+                                addNewType = false;
+                            } catch (Throwable t) {
+                            }
+                        }
+
+                        if (addNewType) {
+                            fieldTypes.add(new FieldType(field, typeIdentifier));
+                        }
+                    }
+                }
+            }
+
+            fieldTypesMap.forEach((name, fieldTypes) -> {
+                for (int i = 0; i < fieldTypes.size(); ++i) {
+                    FieldType fieldType = fieldTypes.get(i);
+                    String compiledName = compiled.name != null ? compiled.name : compiled.toString();
+                    outSelectors.add(fieldType.makeExpression(selector, compiledName, fieldTypes.size() > 1, i));
+                }
+            });
+        } else {
+            throw new IllegalDataTypeException(selector.parent, compiled.type, StandardTypes.CLASS);
+        }
+
+        return outSelectors;
+    }
+
+    private CompiledExpression compileIdentifier(Identifier id) {
+        final String text = id.id;
+
+        if (text.equals(KEYWORD_SYMBOL))
+            return (new SymbolSelector());
+
+        if (text.equals(KEYWORD_TIMESTAMP))
+            return (new TimestampSelector());
+
+        if (text.equals(KEYWORD_TIMESTAMPNS)) {
+            return (new TimestampSelector(true));
+        }
+
+//        if (text.equals(KEYWORD_TYPE))
+//            return (new InstrumentTypeSelector());
+//
+//        if (text.equals(KEYWORD_INSTRUMENT_TYPE)) {
+//            return new InstrumentTypeSelector();
+//        }
+
+        Object obj = lookUpVariable(env, id);
+
+        if (obj instanceof TickStream)
+            return (compileStreamSelector((TickStream) obj));
+
+        if (obj instanceof DataFieldRef)
+            return (compileFieldSelector(id, (DataFieldRef) obj));
+
+        if (obj instanceof PredicateFieldRef) {
+            return compileFieldAccessorExpression(
+                    new FieldAccessorExpression(
+                            id.location, thisIdentifier(), new FieldIdentifier(id.location, ((PredicateFieldRef) obj).field.getName())
+                    )
+            );
+        }
+
+        if (obj instanceof EnumValueRef)
+            return (compileEnumValueRef((EnumValueRef) obj));
+
+        if (obj instanceof ParamRef)
+            return (new ParamAccess((ParamRef) obj));
+
+        if (obj instanceof ThisRef) {
+            return (new ThisSelector(((ThisRef) obj).type));
+        }
+
+        if (obj instanceof PredicateIterator) {
+            return (PredicateIterator) obj;
+        }
+
+        if (obj instanceof ArrayJoinElement) {
+            return (ArrayJoinElement) obj;
+        }
+
+        if (obj instanceof NamedExpression) {
+            return compileNamedExpression((NamedExpression) obj, null);
+        }
+
+        if (obj instanceof NamedFieldExpression) {
+            return compileNamedFieldExpression((NamedFieldExpression) obj, null);
+        }
+
+        throw new IllegalObjectException(id, obj);
+    }
+
+    private CompiledExpression compileFieldSelector(Expression e, DataFieldRef dfr) {
+        DataField df = dfr.field;
+
+        RecordClassDescriptor[] concreteTypes = env.getTopTypes();
+        if (concreteTypes != null && !QQLCompilerUtils.findType(concreteTypes, dfr.parent)) {
+            throw new UnknownIdentifierException(dfr.field.getName(), e.location);
+        }
+
+        if (df instanceof NonStaticDataField)
+            return (new FieldSelector(dfr));
+
+        StaticDataField sdf = (StaticDataField) df;
+        DataType dt = sdf.getType();
+
+        return (new CompiledConstant(dt, sdf.getBoxedStaticValue(), sdf.getName()));
+    }
+
+    private CompiledExpression<DataType> compileFieldAccessor(
+            FieldAccessorExpression e, DataFieldRef[] dfr, CompiledExpression<DataType> parent
+    ) {
+        if (parent == null && dfr.length == 1) {
+            return compileFieldSelector(e, dfr[0]);
+        }
+
+        List<DataType> types = Arrays.stream(dfr).map(d -> d.field.getType()).collect(Collectors.toList());
+        DataType outputType = types.get(0);
+        if (types.size() > 1) {
+            outputType = QQLCompilerUtils.combinePolymorphicTypes(types);
+        }
+
+        DataType slicedType = null;
+        if (parent != null && parent.type instanceof ArrayDataType) {
+            slicedType = outputType;
+            outputType = QQLCompilerUtils.makeSlicedType(outputType);
+        }
+
+        if (e.fetchNulls && !(outputType instanceof ArrayDataType)) {
+            throw new CompilationException("Operator .? can be applied only for arrays", e);
+        }
+
+        return new FieldAccessor(dfr, outputType, parent, slicedType, e.fetchNulls);
+    }
+
+    private CompiledExpression compileEnumValueRef(EnumValueRef evr) {
+        return (
+                new CompiledConstant(
+                        new EnumDataType(false, evr.parent),
+                        evr.field.value,
+                        evr.field.symbol
+                )
+        );
+    }
+
+    private StreamSelector compileStreamSelector(TickStream s) {
+        return (new StreamSelector(s));
+    }
+
+    private StreamSelector compileStreamSelectorSpaces(StreamWithSpacesExpression e) {
+        CompiledExpression<?> selector = compile(e.stream, null);
+        if (selector instanceof StreamSelector) {
+            return compileStreamSelectorSpaces((StreamSelector) selector, e.spaces);
+        }
+
+        throw new CompilationException("Stream with spaces expression required", e);
+    }
+
+    private StreamSelector compileStreamSelectorSpaces(StreamSelector streamSelector, Expression[] spaceExpressions) {
+        String[] spaces = new String[spaceExpressions.length];
+        for (int i = 0; i < spaceExpressions.length; ++i) {
+            if (spaceExpressions[i] instanceof StringConstant) {
+                spaces[i] = ((StringConstant) spaceExpressions[i]).value;
+            } else {
+                throw new CompilationException("Invalid type (expected constant string)", spaceExpressions[i]);
+            }
+        }
+
+        return new StreamSelector(streamSelector, spaces);
+    }
+
+//    private CompiledExpression      compileSelectorExpression (
+//        SelectorExpression              e,
+//        DataType                        expectedType
+//    )
+//    {
+//        Expression                      arg = e.getInput ();
+//        CompiledExpression              carg = compile (arg, null);
+//        DataType                        argType = carg.type;
+//
+//        if (!(argType instanceof ClassDataType))
+//            throw new ClassTypeExpectedException (arg, argType);
+//
+//        ClassDataType                   cargType = (ClassDataType) argType;
+//
+//        if (!cargType.isFixed ())
+//            throw new PolymorphicTypeException (arg, cargType);
+//
+//        RecordClassDescriptor           rcd = cargType.getFixedDescriptor ();
+//
+//        DataField                       field = rcd.getField (e.fieldId);
+//
+//        if (field == null)
+//            throw new UnknownIdentifierException (e.fieldId, e.fieldIdLocation);
+//
+//        DataFieldRef                    dfr = new DataFieldRef (rcd, field);
+//
+//        return (new FieldSelector (dfr));
+//    }
+//
+
+    private CompiledExpression compileTypeCheckExpression(TypeCheckExpression e, DataType expectedType) {
+        checkBooleanType(expectedType, e);
+
+        CompiledExpression carg = compile(e.getArgument(), null);
+        ClassMap.ClassInfo ci = classMap.lookUpClass(e.typeId);
+
+        if (!(carg.type instanceof ClassDataType)) {
+            throw new IllegalDataTypeException(e.getArgument(), carg.type, StandardTypes.CLASS);
+        }
+
+        return new TypeCheck(carg, ci.cd,
+            ci instanceof ClassMap.RecordClassInfo ?
+                getSubclasses((ClassMap.RecordClassInfo) ci, new ArrayList<>()) :
+                new ArrayList<>()
+        );
+    }
+
+    private List<RecordClassDescriptor> getSubclasses(ClassMap.RecordClassInfo recordClassInfo, List<RecordClassDescriptor> subclasses) {
+        subclasses.add(recordClassInfo.cd);
+
+        for (ClassMap.RecordClassInfo subclass : recordClassInfo.directSubclasses) {
+            getSubclasses(subclass, subclasses);
+        }
+
+        return subclasses;
+    }
+
+//    private CompiledExpression      compileCastExpression (
+//        CastExpression                  e,
+//        DataType                        expectedType
+//    )
+//    {
+//        CompiledExpression              carg = compile (e.getInput (), null);
+//        TypeIdResolver                  resolver = new TypeIdResolver (e, carg, e.typeId);
+//        ... use TypeIdResolver ...
+//
+//        ClassDataType                   outputType =
+//            new ClassDataType (cargType.isNullable (), outputCD);
+//
+//        return (new TypeCast (carg, outputType));
+//    }
+
+    private CompiledExpression compileFieldAccessExpression(
+            FieldAccessExpression e
+    ) {
+
+        ClassMap.ClassInfo ci = classMap.lookUpClass(e.typeId);
+
+        if (ci instanceof ClassMap.RecordClassInfo) {
+            ClassMap.RecordClassInfo rci = (ClassMap.RecordClassInfo) ci;
+            DataFieldRef dfr = rci.lookUpField(e.fieldId);
+
+            return (compileFieldSelector(e, dfr));
+        }
+
+        if (ci instanceof ClassMap.EnumClassInfo) {
+            ClassMap.EnumClassInfo eci = (ClassMap.EnumClassInfo) ci;
+            EnumValueRef evr = eci.lookUpValue(e.fieldId);
+
+            return (compileEnumValueRef(evr));
+        }
+
+        throw new RuntimeException(ci.toString());
+    }
+
+    private CompiledExpression<DataType> compileCastAsExpression(AsExpression e, DataType expectedType) {
+        NamedExpression namedExpression = getNamedExpression(e);
+        if (namedExpression != null) {
+            return compileNamedExpression(namedExpression, expectedType);
+        }
+
+        return compileCastExpression(e);
+    }
+
+    private NamedExpression getNamedExpression(AsExpression e) {
+        if (e.castType instanceof CastTypeIdExpression) {
+            CastTypeIdExpression castTypeId = (CastTypeIdExpression) e.castType;
+            try {
+                lookUpType(castTypeId);
+            } catch (Throwable t) {
+                return new NamedExpression(e.location, e.expression, castTypeId.typeId.typeName);
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isNamedExpression(Expression e) {
+        if (e instanceof NamedFieldExpression) {
+            return true;
+        }
+
+        if (e instanceof NamedExpression) {
+            return true;
+        }
+
+        if (e instanceof AsExpression) {
+            return getNamedExpression((AsExpression) e) != null;
+        }
+
+        return false;
+    }
+
+    private CompiledExpression<DataType> compileCastExpression(AsExpression e) {
+        CompiledExpression<DataType> parent = compile(e.expression, null);
+        DataType castDataType = getCastDataType(e, parent.type == null || parent.type.isNullable());
+        return compileCastExpression(e, parent, castDataType);
+    }
+
+    private CompiledExpression<DataType> compileCastExpression(Expression e, CompiledExpression<DataType> parent, DataType castDataType) {
+        if (isNullLiteral(parent)) {
+            return new CompiledConstant(castDataType, null);
+        }
+
+        if (castDataType == null) {
+            throw new CompilationException("Unknown target data type.", e);
+        }
+
+        castDataType = castDataType.nullableInstance(true);
+
+        if (parent instanceof CompiledConstant) {
+            CompiledExpression<DataType> result = compileConstantCast((CompiledConstant) parent, castDataType);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        if (parent.type instanceof ArrayDataType && castDataType instanceof ArrayDataType) {
+            DataType parentElementType = ((ArrayDataType) parent.type).getElementDataType();
+            DataType castElementType = ((ArrayDataType) castDataType).getElementDataType();
+
+            if (parentElementType instanceof ClassDataType && castElementType instanceof ClassDataType) {
+                if (isCastRequired((ClassDataType) parentElementType, (ClassDataType) castElementType)) {
+                    return new CastArrayClassType(parent, (ArrayDataType) parent.type, castDataType);
+                } else {
+                    return parent;
+                }
+            }
+
+            NumericType sourceNumeric = getNumericType(parentElementType);
+            NumericType numeric = getNumericType(castElementType);
+            if (sourceNumeric != null && numeric != null) {
+                return new CastPrimitiveType(parent, parent.type, castDataType, sourceNumeric, numeric, true);
+            }
+        }
+
+        if (parent.type instanceof ClassDataType && castDataType instanceof ClassDataType) {
+            if (isCastRequired((ClassDataType) parent.type, (ClassDataType) castDataType)) {
+                return new CastClassType(parent, (ClassDataType) parent.type, castDataType);
+            } else {
+                return parent;
+            }
+        }
+
+        NumericType numeric = getNumericType(castDataType);
+        NumericType sourceNumeric = getNumericType(parent.type);
+        if (sourceNumeric != null && numeric != null) {
+            return new CastPrimitiveType(parent, parent.type, castDataType, sourceNumeric, numeric, false);
+        }
+
+        if (castDataType instanceof VarcharDataType) {
+            return new CastToVarchar(castDataType, parent);
+        }
+
+        if (parent.type instanceof VarcharDataType && castDataType instanceof DateTimeDataType) {
+            DateTimeDataType dateTimeDataType = (DateTimeDataType) castDataType;
+            return new ParseTimestampFunction(dateTimeDataType.hasNanosecondPrecision(), parent);
+        }
+
+        if (parent.type instanceof VarcharDataType &&
+            (castDataType instanceof IntegerDataType || castDataType instanceof FloatDataType)) {
+
+            return new ParsePrimitive(castDataType, parent);
+        }
+
+        throw new CompilationException("Can't cast " + parent.type.getBaseName() + " to " + castDataType.getBaseName(), e);
+    }
+
+    private CompiledExpression<DataType> compileConstantCast(CompiledConstant parent, DataType targetType) {
+        DataType sourceType = parent.type;
+        if (sourceType instanceof DateTimeDataType && targetType instanceof IntegerDataType && ((IntegerDataType) targetType).getSize() == 8) {
+            return new CompiledConstant(targetType, parent.getValue());
+        } else if (sourceType instanceof IntegerDataType && targetType instanceof DateTimeDataType) {
+            return new CompiledConstant(targetType, parent.getValue());
+        }
+
+        return null;
+    }
+
+    private NumericType getNumericType(DataType type) {
+        if (type instanceof IntegerDataType) {
+            int size = ((IntegerDataType) type).getNativeTypeSize();
+            switch (size) {
+                case 1:
+                    return NumericType.Int8;
+                case 2:
+                    return NumericType.Int16;
+                case 4:
+                    return NumericType.Int32;
+                case 8:
+                    return NumericType.Int64;
+            }
+        } else if (type instanceof FloatDataType) {
+            if (((FloatDataType) type).isDecimal64()) {
+                return NumericType.Decimal64;
+            } else if (((FloatDataType) type).isFloat()) {
+                return NumericType.Float32;
+            } else {
+                return NumericType.Float64;
+            }
+        } else if (type instanceof BooleanDataType) {
+            return NumericType.Int8;
+        } else if (type instanceof CharDataType) {
+            return NumericType.Char;
+        } else if (type instanceof DateTimeDataType) {
+            return ((DateTimeDataType) type).hasNanosecondPrecision() ? NumericType.TimestampNs : NumericType.Timestamp;
+        }
+
+        return null;
+    }
+
+    private boolean isCastRequired(ClassDataType sourceType, ClassDataType type) {
+        return !Arrays.equals(sourceType.getDescriptors(), type.getDescriptors());
+    }
+
+    private DataType getCastDataType(AsExpression e, boolean isNullable) {
+        if (e.castType instanceof CastTypeIdExpression) {
+            return compileCastTypeIdExpression((CastTypeIdExpression) e.castType, isNullable);
+        } else if (e.castType instanceof CastObjectTypeExpression) {
+            CastObjectTypeExpression castObjectType = (CastObjectTypeExpression) e.castType;
+            return new ClassDataType(
+                    true,
+                    collectDescriptors(castObjectType.typeIdList)
+            );
+        } else if (e.castType instanceof CastArrayTypeExpression) {
+            CastArrayTypeExpression castArrayType = (CastArrayTypeExpression) e.castType;
+            List<CastTypeIdExpression> castTypeIds = castArrayType.typeIdList;
+
+            if (castTypeIds.size() > 1) {
+                return new ArrayDataType(
+                    isNullable,
+                        new ClassDataType(true, collectDescriptors(castTypeIds))
+                );
+            } else {
+                return new ArrayDataType(
+                    isNullable,
+                    compileCastTypeIdExpression(castTypeIds.get(0), isNullable)
+                );
+            }
+        }
+
+        return null;
+    }
+
+    private Object lookUpType(CastTypeIdExpression castTypeId) {
+        try {
+            Object type = ReflectionUtils.forName(castTypeId.typeId.typeName.trim().toUpperCase());
+            if (type == null) {
+                throw new RuntimeException();
+            }
+            return type;
+        } catch (Throwable t) {
+            return classMap.lookUpClass(castTypeId.typeId);
+        }
+    }
+
+    private DataType compileCastTypeIdExpression(CastTypeIdExpression castTypeId, boolean nullable) {
+        Object type = lookUpType(castTypeId);
+        if (type instanceof DataType) {
+            return ((DataType) type).nullableInstance(nullable);
+        } else if (type instanceof ClassMap.RecordClassInfo) {
+            return new ClassDataType(true, ((ClassMap.RecordClassInfo) type).cd);
+        } else if (type instanceof ClassMap.EnumClassInfo) {
+            return new EnumDataType(true, ((ClassMap.EnumClassInfo) type).cd);
+        } else {
+            throw new CompilationException("Unknown type: " + castTypeId.typeId, castTypeId);
+        }
+    }
+
+    private RecordClassDescriptor[] collectDescriptors(List<CastTypeIdExpression> castTypeIds) {
+        List<RecordClassDescriptor> descriptors = new ArrayList<>();
+        for (int i = 0; i < castTypeIds.size(); ++i) {
+            CastTypeIdExpression castTypeId = castTypeIds.get(i);
+            Object type = lookUpType(castTypeId);
+            if (type instanceof ClassMap.RecordClassInfo) {
+                RecordClassDescriptor descriptor = ((ClassMap.RecordClassInfo) type).cd;
+                if (descriptors.contains(descriptor)) {
+                    throw new CompilationException("Duplicate descriptor", castTypeId);
+                } else {
+                    descriptors.add(descriptor);
+                }
+            } else {
+                throw new CompilationException("Invalid object type: " + castTypeId.typeId, castTypeId);
+            }
+        }
+
+        return descriptors.toArray(new RecordClassDescriptor[0]);
+    }
+
+    private CompiledExpression<DataType> compileFieldAccessorExpression(FieldAccessorExpression e) {
+        CompiledExpression<DataType> parent = null;
+        List<String> parentTypes = new ArrayList<>();
+
+        if (e.parent != null) {
+            parent = compile(e.parent, null);
+        }
+
+        List<ClassMap.ClassInfo<?>> cis = new ArrayList<>();
+        if (parentTypes.size() > 0) {
+            for (int i = 0; i < parentTypes.size(); ++i) {
+                cis.add(classMap.lookUpClass(parentTypes.get(i)));
+            }
+        } else if (parent != null) {
+            DataType type = parent.type;
+
+            if (type instanceof ArrayDataType) {
+                type = ((ArrayDataType) type).getElementDataType();
+            }
+
+            if (type instanceof ClassDataType) {
+                ClassDataType classType = (ClassDataType) type;
+                for (RecordClassDescriptor rcd : classType.getDescriptors()) {
+                    cis.add(classMap.lookUpClass(rcd.getName()));
+                }
+            } else {
+                throw new IllegalDataTypeException(e, type, StandardTypes.CLASS);
+            }
+        } else {
+            return compileIdentifier(new Identifier(e.location, e.identifier.fieldName));
+        }
+
+        List<DataFieldRef> dfrs = new ArrayList<>();
+        for (ClassMap.ClassInfo<?> ci : cis) {
+            if (ci instanceof ClassMap.RecordClassInfo) {
+                DataFieldRef newDfr;
+                try {
+                    newDfr = ((ClassMap.RecordClassInfo) ci).lookUpField(e.identifier);
+                } catch (Throwable t) {
+                    continue;
+                }
+
+                if (!dfrs.contains(newDfr)) {
+                    dfrs.add(newDfr);
+                }
+            } else {
+                throw new RuntimeException("Type is not RecordClassInfo: " + ci);
+            }
+        }
+
+        if (dfrs.size() == 0) {
+            throw new UnknownIdentifierException(e.identifier.fieldName, e.location);
+        }
+
+        QQLCompilerUtils.checkTypesCompatibility(e, dfrs);
+
+        return compileFieldAccessor(e, dfrs.toArray(new DataFieldRef[0]), parent);
+    }
+
+    private CompiledExpression<?> compileArrayPredicateExpression(PredicateExpression e) {
+        CompiledExpression<?> selector = compile(e.selectorExpression, null);
+        CompiledExpression<DataType> compiledSelector = (CompiledExpression<DataType>) selector;
+
+        if (e.predicateExpressions.length > 1) {
+            throw new CompilationException("Multiple expressions are not allowed", e.predicateExpressions);
+        }
+
+        Expression predicateExpression = e.predicateExpressions[0];
+        if (compiledSelector.type instanceof ArrayDataType) {
+            if (predicateExpression instanceof ArraySlicingExpression) {
+                return compileArraySliceExpression(e, compiledSelector, (ArraySlicingExpression) predicateExpression);
+            }
+
+            if (QQLCompilerUtils.containsThis(predicateExpression)) {
+                return compilePredicateWithIterator(compiledSelector, predicateExpression);
+            }
+
+            ArrayDataType arrayDataType = (ArrayDataType) compiledSelector.type;
+            DataType type = detectTypeOfPredicate(compiledSelector, predicateExpression);
+
+            if (type instanceof BooleanDataType) {
+                CompiledExpression<DataType> compiledPredicate = compileWithContext(
+                        predicateExpression, arrayDataType.getElementDataType()
+                );
+
+                return new ArrayPredicate(compiledSelector, compiledPredicate);
+            } else if (type instanceof IntegerDataType) {
+                CompiledExpression<DataType> compiledPredicate = compile(predicateExpression, null);
+                return new ArrayIndexer(compiledSelector, compiledPredicate);
+            } else if (type instanceof ArrayDataType && ((ArrayDataType) type).getElementDataType() instanceof BooleanDataType) {
+                CompiledExpression<DataType> compiledPredicate = compile(predicateExpression, null);
+                return new ArrayBooleanIndexer(compiledSelector, compiledPredicate);
+            } else if (type instanceof ArrayDataType && ((ArrayDataType) type).getElementDataType() instanceof IntegerDataType) {
+                CompiledExpression<DataType> compiledPredicate = compile(predicateExpression, null);
+                return new ArrayIntegerIndexer(compiledSelector, compiledPredicate);
+            }
+
+            throw new IllegalDataTypeException(e, type, StandardTypes.CLEAN_BOOLEAN, StandardTypes.CLEAN_INTEGER);
+        } else {
+            return compilePredicateWithIterator(compiledSelector, predicateExpression);
+        }
+    }
+
+    private DataType detectTypeOfPredicate(
+            CompiledExpression<DataType> compiledSelector, Expression predicateExpression
+    ) {
+        DataType type;
+        try {
+            type = compile(predicateExpression, null).type;
+            if (type instanceof IntegerDataType) {
+                return type;
+            } else if (type instanceof ArrayDataType && ((ArrayDataType) type).getElementDataType() instanceof BooleanDataType) {
+                return type;
+            } else if (type instanceof ArrayDataType && ((ArrayDataType) type).getElementDataType() instanceof IntegerDataType) {
+                return type;
+            } else {
+                throw new RuntimeException();
+            }
+        } catch (Throwable t) {
+            try {
+                ArrayDataType arrayDataType = ((ArrayDataType) compiledSelector.type);
+                type = compileWithContext(predicateExpression, arrayDataType.getElementDataType()).type;
+                if (type instanceof BooleanDataType) {
+                    return type;
+                }
+            } catch (Throwable tt) {
+                throw tt;
+            }
+        }
+
+        throw new IllegalDataTypeException(predicateExpression, type, StandardTypes.CLEAN_BOOLEAN);
+    }
+
+    private CompiledExpression<DataType> compilePredicateWithIterator(
+            CompiledExpression<DataType> compiledSelector, Expression predicateExpression
+    ) {
+        DataType iteratorType;
+        if (compiledSelector.type instanceof ArrayDataType) {
+            iteratorType = ((ArrayDataType) compiledSelector.type).getElementDataType();
+        } else {
+            iteratorType = compiledSelector.type;
+        }
+        CompiledExpression<DataType> compiledPredicate = compileWithContext(predicateExpression, iteratorType);
+
+        if (compiledPredicate.type instanceof BooleanDataType) {
+            if (compiledSelector.type instanceof ArrayDataType) {
+                return new ArrayPredicate(compiledSelector, compiledPredicate);
+            } else {
+                return new Predicate(compiledSelector, compiledPredicate);
+            }
+        } else {
+            throw new IllegalDataTypeException(predicateExpression, compiledPredicate.type, StandardTypes.CLEAN_BOOLEAN);
+        }
+    }
+
+    private CompiledExpression<DataType> compileArraySliceExpression(
+            PredicateExpression e, CompiledExpression<DataType> selector, ArraySlicingExpression arraySlicingExpression
+    ) {
+        CompiledExpression<DataType> compiledFrom = null;
+        if (arraySlicingExpression.args[0] != null) {
+            compiledFrom = compile(arraySlicingExpression.args[0], null);
+            if (!(compiledFrom.type instanceof IntegerDataType)) {
+                throw new IllegalDataTypeException(e, compiledFrom.type, StandardTypes.CLEAN_INTEGER);
+            }
+        }
+
+        CompiledExpression<DataType> compiledTo = null;
+        if (arraySlicingExpression.args[1] != null) {
+            compiledTo = compile(arraySlicingExpression.args[1], null);
+            if (!(compiledTo.type instanceof IntegerDataType)) {
+                throw new IllegalDataTypeException(e, compiledTo.type, StandardTypes.CLEAN_INTEGER);
+            }
+        }
+
+        CompiledExpression<DataType> compiledStep = null;
+        if (arraySlicingExpression.args[2] != null) {
+            compiledStep = compile(arraySlicingExpression.args[2], null);
+            if (!(compiledStep.type instanceof IntegerDataType)) {
+                throw new IllegalDataTypeException(e, compiledStep.type, StandardTypes.CLEAN_INTEGER);
+            }
+        }
+
+        return new ArraySlice(
+                selector, compiledFrom, compiledTo, compiledStep
+        );
+    }
+
+    private TypeOfFunction compileTypeOfFunction(CallExpression e) {
+        if (e.args.length != 1) {
+            throw new CompilationException("Invalid numer of arguments: " + e.args.length + ". Required: 1.", e);
+        }
+
+        return new TypeOfFunction(compile(e.args[0], null));
+    }
+
+    private ParseTimestampFunction compileToTimestamp(CallExpression e, boolean nanos) {
+        if (e.args.length == 1) {
+            return new ParseTimestampFunction(nanos, compile(e.args[0], StandardTypes.NULLABLE_VARCHAR));
+        } else if (e.args.length == 2) {
+            CompiledExpression<?> compiledPattern = compile(e.args[1], StandardTypes.NULLABLE_VARCHAR);
+            if (!(compiledPattern instanceof CompiledConstant)) {
+                throw new CompilationException("Constant string literal expected.", e.args[1]);
+            }
+
+            CompiledConstant patternConst = (CompiledConstant) compiledPattern;
+            String pattern = patternConst.getString();
+            checkPatternFormat(pattern, e.args[1]);
+            return new ParseTimestampFunction(nanos, compile(e.args[0], StandardTypes.NULLABLE_VARCHAR), patternConst);
+        } else {
+            throw new CompilationException("Invalid numer of arguments: " + e.args.length + ". Required: 1 or 2.", e);
+        }
+    }
+
+    private void checkPatternFormat(String pattern, Expression e) {
+        try {
+            new DateTimeFormatterBuilder().appendPattern(pattern).toFormatter();
+        } catch (Throwable t) {
+            throw new CompilationException("Invalid pattern format: " + t.getMessage(), e);
+        }
+    }
+
+    private PredicateFunction compilePredicateFunction(Expression e, PredicateFunction.FunctionName functionName) {
+        if (!isPredicateContext()) {
+            throw new CompilationException("Can't use predicate function outside predicate expression.", e);
+        }
+
+        return new PredicateFunction(getPredicateContext(), functionName);
+    }
+
+    private CompiledExpression<DataType> compileWithContext(Expression e, DataType contextType) {
+        Environment savedEnv = env;
+        setUpPredicateEnv(contextType);
+        try {
+            return compile(e, null);
+        } catch (CompilationException ex) {
+            throw new PredicateCompilationException(ex, e);
+        } catch (RuntimeException ex) {
+            throw new PredicateCompilationException(ex, e);
+        } finally {
+            env = savedEnv;
+        }
+    }
+
+    private boolean isPredicateContext() {
+        return getPredicateContext() != null;
+    }
+
+    private PredicateIterator getPredicateContext() {
+        try {
+            Object obj = lookUpVariable(env, thisIdentifier());
+            if (obj instanceof PredicateIterator) {
+                return (PredicateIterator) obj;
+            }
+        } catch (Throwable t) {
+        }
+
+        return null;
+    }
+
+    private Identifier thisIdentifier() {
+        return new Identifier(KEYWORD_THIS);
+    }
+
+    private CompiledExpression compileCallExpression(
+            CallExpression e,
+            DataType expectedType
+    ) {
+        Object func = env.lookUp(NamedObjectType.FUNCTION, e.name, e.location);
+
+        if (func == KEYWORD_LAST) {
+            if (isPredicateContext()) {
+                return compilePredicateFunction(e, PredicateFunction.FunctionName.LAST);
+            } else {
+                return (compileLast(e, expectedType));
+            }
+        }
+
+        if (func == KEYWORD_REVERSE)
+            return (compileModalStreamSelector(e, expectedType, SelectionMode.REVERSE));
+
+        if (func == KEYWORD_LIVE)
+            return (compileModalStreamSelector(e, expectedType, SelectionMode.LIVE));
+
+        if (func == KEYWORD_HYBRID)
+            return (compileModalStreamSelector(e, expectedType, SelectionMode.HYBRID));
+
+        if (func == KEYWORD_POSITION) {
+            return compilePredicateFunction(e, PredicateFunction.FunctionName.POSITION);
+        }
+
+        if (func == KEYWORD_NOW) {
+            return new CompiledConstant(TimebaseTypes.DATE_TIME_CONTAINER.getType(false), System.currentTimeMillis());
+        }
+
+        if (func == KEYWORD_TYPE_OF) {
+            return compileTypeOfFunction(e);
+        }
+
+        if (func == KEYWORD_TO_TIMESTAMP) {
+            return compileToTimestamp(e, false);
+        }
+
+        if (func == KEYWORD_TO_TIMESTAMP_NS) {
+            return compileToTimestamp(e, true);
+        }
+
+        int numArgs = e.args.length;
+
+        OverloadedFunctionSet ofd = (OverloadedFunctionSet) func;
+
+        CompiledExpression<?>[] args = new CompiledExpression[numArgs];
+        FunctionDescriptorInfo fd;
+
+        DataType[] signature = ofd.getSignature(numArgs);
+
+        if (signature == null)
+            throw new WrongNumArgsException(e, numArgs);
+
+        DataType[] actualArgTypes = new DataType[numArgs];
+
+        for (int ii = 0; ii < numArgs; ii++) {
+            CompiledExpression<?> arg = compile(e.args[ii], null);
+
+            args[ii] = arg;
+            actualArgTypes[ii] = arg.type;
+        }
+
+        fd = ofd.getDescriptor(actualArgTypes);
+
+        if (fd == null)
+            throw new WrongArgTypesException(e, actualArgTypes);
+
+        if (fd.returnType() instanceof ClassDataType) {
+            ClassDataType cdt = (ClassDataType) fd.returnType();
+            for (int i = 0; i < cdt.getDescriptors().length; i++) {
+                classMap.register(cdt.getDescriptors()[i]);
+            }
+        }
+        if (fd.returnType() instanceof ArrayDataType &&
+                ((ArrayDataType) fd.returnType()).getElementDataType() instanceof ClassDataType) {
+            ClassDataType cdt = (ClassDataType) ((ArrayDataType) fd.returnType()).getElementDataType();
+            for (int i = 0; i < cdt.getDescriptors().length; i++) {
+                classMap.register(cdt.getDescriptors()[i]);
+            }
+        }
+
+        if (fd instanceof StatelessFunctionDescriptor) {
+            return new PluginSimpleFunction((StatelessFunctionDescriptor) fd, args);
+        } else if (fd instanceof FunctionInfoDescriptor) {
+            return (new PluginFunction((FunctionInfoDescriptor) fd, args));
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    private CompiledExpression<?> compileCallExpression(CallExpressionWithInit e, DataType expectedType) {
+        StatefulFunctionsSet func = getContextSet(e.getName(), e.location);
+
+        CompiledExpression<?>[] args = new CompiledExpression[e.getNonInitArgsLength()];
+        DataType[] argTypes = new DataType[e.getNonInitArgsLength()];
+        CompiledExpression<?>[] initArgs = new CompiledExpression[e.getInitArgsLength()];
+        DataType[] initArgTypes = new DataType[e.getInitArgsLength()];
+
+        for (int i = 0; i < e.getNonInitArgsLength(); i++) {
+            args[i] = compile(e.getNonInitArgs()[i], null);
+            argTypes[i] = args[i].type;
+        }
+
+        for (int i = 0; i < e.getInitArgsLength(); i++) {
+            initArgs[i] = compile(e.getInitArgs()[i], null);
+            initArgTypes[i] = initArgs[i].type;
+        }
+
+        StatefulFunctionDescriptor function = func.getDescriptor(argTypes, initArgTypes);
+
+        if (function == null)
+            throw new WrongArgTypesException(e, argTypes);
+
+        if (function.returnType() instanceof ClassDataType) {
+            RecordClassDescriptor[] descriptors = ((ClassDataType) function.returnType()).getDescriptors();
+            for (int i = 0; i < descriptors.length; ++i) {
+                classMap.registerNew(descriptors[i]);
+            }
+        }
+        if (function.returnType() instanceof ArrayDataType) {
+            DataType elementType = ((ArrayDataType) function.returnType()).getElementDataType();
+            if (elementType instanceof ClassDataType) {
+                RecordClassDescriptor[] descriptors = ((ClassDataType) elementType).getDescriptors();
+                for (int i = 0; i < descriptors.length; ++i) {
+                    classMap.registerNew(descriptors[i]);
+                }
+            }
+        }
+
+        return new PluginStatefulFunction(function,
+                captureClassTypes(function.returnType(types(initArgs), types(args))),
+                initArgs, args);
+    }
+
+    private StatefulFunctionsSet getContextSet(String name, long location) {
+        return (StatefulFunctionsSet) env.lookUp(NamedObjectType.STATEFUL_FUNCTION, name, location);
+    }
+
+    private static boolean isSpecialLast(CallExpressionWithDict e) {
+        return e.getName().equals(KEYWORD_LAST) && e.getDict().isEmpty() && e.getNonInitArgs().length == 1;
+    }
+
+    private static boolean isSpecialFirst(CallExpressionWithDict e) {
+        return e.getName().equals(KEYWORD_FIRST) && e.getDict().isEmpty() && e.getNonInitArgs().length == 1;
+    }
+
+    // select total/running
+    private CompiledExpression<?> compileCallExpression(CallExpressionWithDict e, DataType expectedType) {
+        if (isSpecialLast(e)) {
+            return compileLast(e, expectedType);
+        } else if (isSpecialFirst(e)) {
+            return compileFirst(e, expectedType);
+        }
+
+        StatefulFunctionsSet func = getContextSet(e.getName(), e.location);
+
+        CompiledExpression<?>[] args = new CompiledExpression[e.getNonInitArgsLength()];
+        DataType[] argTypes = new DataType[e.getNonInitArgsLength()];
+        Map<String, CompiledExpression<?>> initArgs = new HashMap<>();
+        Map<String, DataType> initArgTypes = new HashMap<>();
+
+        for (int i = 0; i < e.getNonInitArgs().length; i++) {
+            args[i] = compile(e.getNonInitArgs()[i], null);
+            argTypes[i] = args[i].type;
+        }
+
+        e.getDict().forEach((k, v) -> {
+            CompiledExpression<?> ce = compile(v, null);
+            initArgs.put(k, ce);
+            initArgTypes.put(k, ce.type);
+        });
+
+        StatefulFunctionDescriptor function = func.getDescriptor(argTypes, initArgTypes);
+
+        if (function == null)
+            throw new WrongArgTypesException(e, argTypes);
+
+        if (function.returnType() instanceof ClassDataType) {
+            RecordClassDescriptor[] descriptors = ((ClassDataType) function.returnType()).getDescriptors();
+            for (int i = 0; i < descriptors.length; ++i) {
+                classMap.registerNew(descriptors[i]);
+            }
+        }
+        if (function.returnType() instanceof ArrayDataType) {
+            DataType elementType = ((ArrayDataType) function.returnType()).getElementDataType();
+            if (elementType instanceof ClassDataType) {
+                RecordClassDescriptor[] descriptors = ((ClassDataType) elementType).getDescriptors();
+                for (int i = 0; i < descriptors.length; ++i) {
+                    classMap.registerNew(descriptors[i]);
+                }
+            }
+        }
+
+        CompiledExpression<?>[] actualInitArgs = new CompiledExpression[function.initArgs().size()];
+        for (int i = 0; i < function.initArgs().size(); i++) {
+            InitArgument arg = function.initArgs().get(i);
+            CompiledExpression<?> ce = initArgs.get(arg.getName());
+            if (ce == null) {
+                ce = compile(arg.getDefaultValueAsConstant(), arg.getDataType());
+            }
+            actualInitArgs[i] = ce;
+
+            if (ce instanceof CompiledConstant) {
+                ((CompiledConstant) ce).preserveType = true;
+            }
+        }
+
+        return new PluginStatefulFunction(function,
+                captureClassTypes(function.returnType(types(actualInitArgs), types(args))),
+                actualInitArgs, args);
+    }
+
+    private static boolean areConstants(CompiledExpression<?>[] args) {
+        return Arrays.stream(args).allMatch(arg -> arg instanceof CompiledConstant);
+    }
+
+    private CompiledExpression<?> compileLast(
+            CallExpression e,
+            DataType expectedType
+    ) {
+        int numArgs = e.args.length;
+        if (numArgs != 1)
+            throw new WrongNumArgsException(e, numArgs);
+
+        CompiledExpression<?> arg = compile(e.args[0], expectedType);
+        arg.impliesAggregation = true;
+        return arg;
+    }
+
+    private CompiledExpression<?> compileLast(
+            CallExpressionWithDict e,
+            DataType expectedType
+    ) {
+        CompiledExpression<?> arg = compile(e.args[0], expectedType);
+        arg.impliesAggregation = true;
+        return arg;
+    }
+
+    private CompiledExpression<?> compileFirst(
+            CallExpressionWithDict e,
+            DataType expectedType
+    ) {
+        CompiledExpression<?> arg = compile(e.args[0], expectedType);
+        FirstFunctionDescriptor fd = new FirstFunctionDescriptor(arg.type, arg);
+        DataType returnType = captureClassTypes(
+                fd.returnType(types(new CompiledExpression[0]), types(new CompiledExpression[]{arg}))
+        );
+        return new PluginStatefulFunction(fd, returnType, new CompiledExpression[0], new CompiledExpression[]{arg});
+    }
+
+    private CompiledExpression compileModalStreamSelector(
+            CallExpression e,
+            DataType expectedType,
+            SelectionMode mode
+    ) {
+        int numArgs = e.args.length;
+
+        if (numArgs != 1)
+            throw new WrongNumArgsException(e, numArgs);
+
+        Expression earg = e.getArgument();
+        CompiledExpression arg = compile(earg, expectedType);
+
+        if (!(arg instanceof StreamSelector))
+            throw new IllegalStreamSelectorException(earg);
+
+        StreamSelector ss = (StreamSelector) arg;
+
+        if (ss.mode != SelectionMode.NORMAL)
+            throw new IllegalStreamSelectorException(earg);
+
+        return (new StreamSelector(ss, mode));
+    }
+
+    private CompiledExpression compileInExpression(InExpression e, DataType expectedType) {
+        checkBooleanType(expectedType, e);
+
+        CompiledExpression carg = compile(e.getArgument(), null);
+        int numTests = e.getNumTests();
+
+        if (numTests == 0)  // allowed in QQL
+            return (CompiledConstant.B_False);
+
+        ArrayList<CompiledExpression> constants = new ArrayList<>();
+        ArrayList<CompiledExpression> other = new ArrayList<>();
+
+        for (int ii = 0; ii < numTests; ii++) {
+            CompiledExpression compiled = compile(e.getTest(ii), carg.type);
+
+            if (compiled instanceof CompiledConstant)
+                constants.add(compiled);
+            else
+                other.add(compiled);
+        }
+
+        for (int ii = 0; ii < constants.size(); ii++)
+            carg = convertIfNecessary(carg, constants.get(ii));
+        for (int ii = 0; ii < other.size(); ii++)
+            carg = convertIfNecessary(carg, other.get(ii));
+
+        for (int ii = 0; ii < constants.size(); ii++)
+            constants.set(ii, convertIfNecessary(constants.get(ii), carg));
+        for (int ii = 0; ii < other.size(); ii++)
+            other.set(ii, convertIfNecessary(other.get(ii), carg));
+
+//        if (left instanceof CompiledConstant && right instanceof CompiledConstant)
+//            return (computeEqualsExpression (e, (CompiledConstant) left, (CompiledConstant) right));
+
+        CompiledExpression ret = null;
+
+        for (int ii = 0; ii < other.size(); ii++) {
+            CompiledExpression x = compileEqualityTest(e, e.positive, carg, other.get(ii));
+
+            ret = ret == null ? x : e.positive ? processOr(ret, x) : processAnd(ret, x);
+        }
+
+        // adding argument into constants
+        int constantsCount = constants.size();
+        constants.add(0, carg);
+
+        ConnectiveExpression expr = new ConnectiveExpression(!e.positive,
+                StandardTypes.CLEAN_BOOLEAN, constants.toArray(new CompiledExpression[constants.size()]));
+
+        if (ret == null) {
+            ret = expr;
+        } else if (constantsCount > 0) {
+            ret = e.positive ? processOr(ret, expr) : processAnd(ret, expr);
+        }
+
+        return ret;
+    }
+
+    //
+    //  STATIC COMPUTE
+    //
+    public long computeStaticInt(Expression value) {
+        return (computeStatic(value, StandardTypes.CLEAN_INTEGER).getLong());
+    }
+
+    public double computeStaticFloat(Expression value) {
+        return (computeStatic(value, StandardTypes.CLEAN_FLOAT).getDouble());
+    }
+
+    public Long computeStaticIntOrStar(Expression value) {
+        if (value == null || QQLPreProcessingPatterns.isThis(value))
+            return (null);
+
+        return (computeStaticInt(value));
+    }
+
+    public Double computeStaticFloatOrStar(Expression value) {
+        if (value == null || QQLPreProcessingPatterns.isThis(value))
+            return (null);
+
+        return (computeStaticFloat(value));
+    }
+
+    public CompiledConstant computeStatic(Expression value, DataType type) {
+        CompiledExpression e;
+        if (type instanceof EnumDataType) {
+            e = compileStaticEnum(value, type);
+        } else {
+            e = compile(value, type);
+        }
+
+        if (e instanceof CompiledConstant)
+            return ((CompiledConstant) e);
+
+        throw new NonStaticExpressionException(value);
+    }
+
+    private CompiledExpression compileStaticEnum(Expression value, DataType type) {
+        ClassMap.ClassInfo classInfo = classMap.lookUpClass(type.getBaseName());
+        if (classInfo instanceof ClassMap.EnumClassInfo && value instanceof Identifier) {
+            ClassMap.EnumClassInfo enumClassInfo = (ClassMap.EnumClassInfo) classInfo;
+            EnumValueRef enumValueRef = enumClassInfo.lookUpValue((Identifier) value);
+            if (enumValueRef != null) {
+                return compileEnumValueRef(enumValueRef);
+            }
+        }
+
+        return compile(value, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void processOptions(
+            OptionProcessor[] processors,
+            OptionElement[] opts,
+            Object target
+    ) {
+        if (opts == null)
+            return;
+
+        for (OptionElement opt : opts) {
+            OptionProcessor found = null;
+            Identifier id = opt.id;
+
+            for (OptionProcessor p : processors) {
+                if (id.id.equalsIgnoreCase(p.key)) {
+                    found = p;
+                    break;
+                }
+            }
+
+            if (found == null)
+                throw new UnknownIdentifierException(id);
+
+            CompiledConstant value;
+
+            if (opt.value == null)
+                value = null;
+            else
+                value = computeStatic(opt.value, found.valueType);
+
+            found.process(opt, value, target);
+        }
+    }
+
+    private DataType captureClassTypes(DataType type) {
+        if (type instanceof ArrayDataType) {
+            ArrayDataType arrayDataType = (ArrayDataType) type;
+            DataType elementType = arrayDataType.getElementDataType();
+            if (elementType instanceof ClassDataType) {
+                ClassDataType classElementType = (ClassDataType) elementType;
+                ClassDataType capturedType = captureClassType(classElementType);
+                if (classElementType != capturedType) {
+                    return new ArrayDataType(type.isNullable(), capturedType);
+                }
+            }
+        } else if (type instanceof ClassDataType) {
+            return captureClassType((ClassDataType) type);
+        }
+
+        return type;
+    }
+
+    private ClassDataType captureClassType(ClassDataType type) {
+        RecordClassDescriptor[] descriptors = type.getDescriptors();
+        RecordClassDescriptor[] capturedDescriptors = new RecordClassDescriptor[descriptors.length];
+        boolean changed = false;
+        for (int i = 0; i < descriptors.length; ++i) {
+            ClassDescriptor mappedDescriptor = classMap.getDescriptor(descriptors[i].getName());
+            if (mappedDescriptor instanceof RecordClassDescriptor) {
+                capturedDescriptors[i] = (RecordClassDescriptor) mappedDescriptor;
+                changed = true;
+            } else {
+                capturedDescriptors[i] = descriptors[i];
+            }
+        }
+
+        if (changed) {
+            return new ClassDataType(type.isNullable(), capturedDescriptors);
+        }
+
+        return type;
+    }
+}

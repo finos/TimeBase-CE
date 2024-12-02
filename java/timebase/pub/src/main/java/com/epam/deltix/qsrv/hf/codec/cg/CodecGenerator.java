@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -213,7 +213,8 @@ public class CodecGenerator {
                     cache.decode(in0, elseStmt);
 
                 // #12059: make exception for boolean
-                final boolean makeException = (type instanceof QBooleanType) && ! (type.isNullable()) && f.hasAccessMethods() && f.getSetterType() == boolean.class && ! f.hasSmartProperties();
+                final boolean makeException = (type instanceof QBooleanType) &&
+                        !type.isNullable() && f.hasAccessMethods() && f.getSetterType() == boolean.class && !f.hasSmartProperties();
                 // java boolean and .NET enum have no NULL constant
                 final boolean hasNullLiteral = cache.hasNullLiteral();
 

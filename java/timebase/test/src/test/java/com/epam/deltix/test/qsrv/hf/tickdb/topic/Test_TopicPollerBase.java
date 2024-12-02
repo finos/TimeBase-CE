@@ -16,19 +16,22 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb.topic;
 
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.ConsumerPreferences;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.MessagePoller;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.MessageProcessor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDB;
 import com.epam.deltix.util.io.idlestrat.YieldingIdleStrategy;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Alexei Osipov
  */
-@Ignore // TODO: ENABLE
+@Ignore
 public abstract class Test_TopicPollerBase extends BaseTimeBaseTopicReadingTest {
     private AtomicBoolean running;
 
@@ -40,13 +43,15 @@ public abstract class Test_TopicPollerBase extends BaseTimeBaseTopicReadingTest 
     }
 
     @Override
-    protected Runnable createReader(AtomicLong messagesReceivedCounter, MessageValidator messageValidator, String topicKey, TopicDB topicDB) {
+    protected Runnable createReader(AtomicLong messagesReceivedCounter,
+                                    MessageValidator messageValidator, String topicKey, TopicDB topicDB, CountDownLatch readerReady) {
         AtomicBoolean runningFlag = new AtomicBoolean(true);
         running = runningFlag;
 
         return () -> {
             System.out.println("Creating poller...");
-            MessagePoller messagePoller = topicDB.createPollingConsumer(topicKey, null);
+            ConsumerPreferences consumerPreferences = getConsumerPreferences();
+            MessagePoller messagePoller = topicDB.createPollingConsumer(topicKey, consumerPreferences);
             System.out.println("Poller created");
 
             RatePrinter ratePrinter = new RatePrinter("Reader");
@@ -58,6 +63,8 @@ public abstract class Test_TopicPollerBase extends BaseTimeBaseTopicReadingTest 
                 ratePrinter.inc();
             };
 
+            readerReady.countDown();
+
             while (runningFlag.get()) {
                 idleStrategy.idle(
                         messagePoller.processMessages(100, processor)
@@ -65,6 +72,11 @@ public abstract class Test_TopicPollerBase extends BaseTimeBaseTopicReadingTest 
             }
             messagePoller.close();
         };
+    }
+
+    @NotNull
+    protected ConsumerPreferences getConsumerPreferences() {
+        return new ConsumerPreferences();
     }
 
     @Override

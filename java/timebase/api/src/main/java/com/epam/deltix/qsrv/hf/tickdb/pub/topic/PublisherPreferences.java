@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -21,6 +21,7 @@ import com.epam.deltix.timebase.messages.IdentityKey;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -29,22 +30,51 @@ import java.util.List;
  * @author Alexei Osipov
  */
 public class PublisherPreferences extends TopicChannelPreferences<PublisherPreferences> {
-    private List<? extends IdentityKey> initialEntitySet;
+    /**
+     * If disabled, the loader will replace {@link com.epam.deltix.timebase.messages.TimeStampedMessage#TIMESTAMP_UNKNOWN} with the current time on client side.
+     * So topic consumer always receives messages with valid timestamps.
+     *
+     * <p>If enabled, the loader will propagate {@link com.epam.deltix.timebase.messages.TimeStampedMessage#TIMESTAMP_UNKNOWN} to all consumers.
+     * This may be useful in scenarios when there are multiple producers for single topic, and you want to write
+     * data from all of them to a carbon copy stream. So you want to allow TimeBase server to set timestamps.
+     * Keep in mind that other topic consumers will get messages with {@link com.epam.deltix.timebase.messages.TimeStampedMessage#TIMESTAMP_UNKNOWN}.
+     */
+    private boolean preserveNullTimestamp = false;
+
 
     public PublisherPreferences() {
     }
 
     /**
-     * @param initialEntitySet initial entry set (may be empty) - list of known {@link IdentityKey} to be used
+     * @param initialEntitySet initial entry set (it may be empty) - list of known {@link IdentityKey} to be used
+     *
+     * @deprecated This method is deprecated. Entity data is not used anymore.
      */
-    public PublisherPreferences setInitialEntitySet(@Nonnull List<? extends IdentityKey> initialEntitySet) {
-        this.initialEntitySet = initialEntitySet;
+    @Deprecated
+    public PublisherPreferences setInitialEntitySet(@SuppressWarnings("unused") @Nonnull List<? extends IdentityKey> initialEntitySet) {
         return this;
     }
 
+    /**
+     * @deprecated This method is deprecated. Entity data is not used anymore.
+     */
     @Nullable
+    @Deprecated
     public List<? extends IdentityKey> getInitialEntitySet() {
-        return initialEntitySet;
+        return Collections.emptyList();
+    }
+
+    public boolean isPreserveNullTimestamp() {
+        return preserveNullTimestamp;
+    }
+
+    /**
+     * {@link #preserveNullTimestamp}
+     */
+
+    public PublisherPreferences setPreserveNullTimestamp(boolean preserveNullTimestamp) {
+        this.preserveNullTimestamp = preserveNullTimestamp;
+        return this;
     }
 
     public static PublisherPreferences from(ChannelPreferences channelPreferences) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -44,20 +44,18 @@ import java.util.Random;
 public class DirectChannelPollerWithSpeedControlBenchmark extends BaseAeronTest {
 
     @Test
-    public void testSpeedControlWithFastAndSlowConsumers() throws Exception {
+    public void testSpeedControlWithFastAndSlowConsumers() {
 
         String channel = CommonContext.IPC_CHANNEL;
         int dataStreamId = new Random().nextInt();
-        int serverMetadataStreamId = dataStreamId + 1;
         List<RecordClassDescriptor> types = Collections.singletonList(Messages.ERROR_MESSAGE_DESCRIPTOR);
-        byte loaderNumber = 1;
 
-        Thread loaderThread = new Thread(new MessageSenderRunnable(aeron, channel, dataStreamId, serverMetadataStreamId, types, loaderNumber));
+        Thread loaderThread = new Thread(new MessageSenderRunnable(aeron, channel, dataStreamId, types));
         loaderThread.setName("SENDER");
         loaderThread.start();
 
         RatePrinter ratePrinter = new RatePrinter("Reader");
-        MessagePoller messagePoller = new DirectReaderFactory().createPoller(aeron, false, channel, dataStreamId, types, StubData.getStubMappingProvider());
+        MessagePoller messagePoller = new DirectReaderFactory().createPoller(aeron, false, channel, dataStreamId, types, null);
         ratePrinter.start();
         YieldingIdleStrategy idleStrategy = new YieldingIdleStrategy();
 
@@ -92,20 +90,18 @@ public class DirectChannelPollerWithSpeedControlBenchmark extends BaseAeronTest 
     }
 
     @Test
-    public void testSpeedControlWithDiscardOnSlow() throws Exception {
+    public void testSpeedControlWithDiscardOnSlow() {
 
         String channel = CommonContext.IPC_CHANNEL;
         int dataStreamId = new Random().nextInt();
-        int serverMetadataStreamId = dataStreamId + 1;
         List<RecordClassDescriptor> types = Collections.singletonList(Messages.ERROR_MESSAGE_DESCRIPTOR);
-        byte loaderNumber = 1;
 
-        Thread loaderThread = new Thread(new MessageSenderRunnable(aeron, channel, dataStreamId, serverMetadataStreamId, types, loaderNumber));
+        Thread loaderThread = new Thread(new MessageSenderRunnable(aeron, channel, dataStreamId, types));
         loaderThread.setName("SENDER");
         loaderThread.start();
 
         RatePrinter ratePrinter = new RatePrinter("Reader");
-        MessagePoller messagePoller = new DirectReaderFactory().createPoller(aeron, false, channel, dataStreamId, types, StubData.getStubMappingProvider());
+        MessagePoller messagePoller = new DirectReaderFactory().createPoller(aeron, false, channel, dataStreamId, types, null);
         ratePrinter.start();
         YieldingIdleStrategy idleStrategy = new YieldingIdleStrategy();
 
@@ -136,23 +132,19 @@ public class DirectChannelPollerWithSpeedControlBenchmark extends BaseAeronTest 
         private final Aeron aeron;
         private final String channel;
         private final int dataStreamId;
-        private final int serverMetadataStreamId;
         private final List<RecordClassDescriptor> types;
-        private final byte loaderNumber;
 
-        MessageSenderRunnable(Aeron aeron, String channel, int dataStreamId, int serverMetadataStreamId, List<RecordClassDescriptor> types, byte loaderNumber) {
+        MessageSenderRunnable(Aeron aeron, String channel, int dataStreamId, List<RecordClassDescriptor> types) {
             this.aeron = aeron;
             this.channel = channel;
             this.dataStreamId = dataStreamId;
-            this.serverMetadataStreamId = serverMetadataStreamId;
             this.types = types;
-            this.loaderNumber = loaderNumber;
         }
 
         @Override
         public void run() {
 
-            MessageChannel<InstrumentMessage> channel2 = new DirectLoaderFactory().create(aeron, false, channel, channel, dataStreamId, serverMetadataStreamId, types, loaderNumber, new ByteArrayOutputStream(8 * 1024), Collections.emptyList(), null, null);
+            MessageChannel<InstrumentMessage> channel2 = new DirectLoaderFactory().create(aeron, false, channel, dataStreamId, types, null, null, null, false);
 
             ErrorMessage msg = new ErrorMessage();
             msg.setSymbol("ABC");

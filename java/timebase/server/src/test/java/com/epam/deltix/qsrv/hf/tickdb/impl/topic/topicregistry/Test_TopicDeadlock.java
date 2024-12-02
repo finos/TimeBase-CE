@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -49,26 +49,21 @@ public class Test_TopicDeadlock {
     public void test() throws Exception {
         TopicTestUtils.initTempQSHome();
 
-        Aeron aeron = TopicTestUtils.createAeron();
-
         DirectTopicRegistry directTopicRegistry = new DirectTopicRegistry();
-        List<RecordClassDescriptor> types = Collections.singletonList(Messages.ERROR_MESSAGE_DESCRIPTOR);
+        List<RecordClassDescriptor> types = Collections.singletonList(StubData.makeErrorMessageDescriptor());
 
         String topicName = "testTopic";
         AtomicInteger streamIdGenerator = new AtomicInteger(new Random().nextInt());
 
-        ConstantIdentityKey key = new ConstantIdentityKey("ABC");
-        directTopicRegistry.createDirectTopic(topicName, types, null, streamIdGenerator::incrementAndGet, Collections.singletonList(key), TopicType.IPC, null, null);
+        directTopicRegistry.createDirectTopic(topicName, types, null, streamIdGenerator::incrementAndGet, TopicType.IPC, null, null, null);
 
         CountDownLatch latch = new CountDownLatch(1);
-        QuickExecutor newInstance = QuickExecutor.createNewInstance("Test Executor", null);
 
         List<Thread> threads = new ArrayList<>();
         for (int i = 1; i <= 10; i++) {
             int index = i;
             Thread thread = new Thread(() -> {
                 CommunicationPipe pipe = new CommunicationPipe();
-                InputStream loaderInputStream = pipe.getInputStream();
 
                 try {
                     latch.await();
@@ -76,10 +71,7 @@ public class Test_TopicDeadlock {
                     e.printStackTrace();
                 }
 
-                List<IdentityKey> keys = Collections.singletonList(
-                        new ConstantIdentityKey("TEST-" + index)
-                );
-                directTopicRegistry.addLoader(topicName, loaderInputStream, keys, newInstance, aeron, true, null);
+                directTopicRegistry.addLoader(topicName, true, null);
             });
             thread.setName("Test thread " + i);
             thread.start();

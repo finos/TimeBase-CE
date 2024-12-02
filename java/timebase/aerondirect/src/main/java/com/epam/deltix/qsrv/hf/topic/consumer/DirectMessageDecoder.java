@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -47,7 +47,6 @@ import static com.epam.deltix.qsrv.hf.topic.DirectProtocol.*;
  * @author Alexei Osipov
  */
 class DirectMessageDecoder {
-    private static final Log LOG = LogFactory.getLog(DirectMessageDecoder.class.getName());
 
     private final DirectBuffer arrayBuffer; // Contains only current message
 
@@ -62,22 +61,19 @@ class DirectMessageDecoder {
 
     // Index mapping
     private final TypeSet types = new TypeSet(null);
-    private final ObjectArrayList<ConstantIdentityKey> entities = new ObjectArrayList<>();
-    private final IntegerToObjectHashMap<ConstantIdentityKey> tempEntities = new IntegerToObjectHashMap<>();
+    private final StringBuilder symbolSb = new StringBuilder(); // Flyweight for symbol
 
     // Aeron sessionId that represent gracefully closed publications.
     private final IntegerArrayList finishedSessions = new IntegerArrayList();
-    private final MappingProvider mappingProvider;
 
     // If true then only metadata processed (all data messages are skipped). This mode is used during the initialization process.
     // private boolean skipDataMode = false;
 
     /**
      * @param arrayBuffer array buffer that works as source of data. It's supposed to be shared with holding class
-     * @param mappingProvider
      */
     DirectMessageDecoder(DirectBuffer arrayBuffer, boolean raw, CodecFactory codecFactory, TypeLoader typeLoader,
-                         List<RecordClassDescriptor> types, ConstantIdentityKey[] mapping, MappingProvider mappingProvider) {
+                         List<RecordClassDescriptor> types) {
         if (!ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
             throw new IllegalArgumentException("Only LITTLE_ENDIAN byte order supported");
         }
@@ -87,7 +83,6 @@ class DirectMessageDecoder {
         this.raw = raw;
         this.codecFactory = codecFactory;
         this.typeLoader = typeLoader;
-        this.mappingProvider = mappingProvider;
 
         if (this.raw) {
             this.rawMessage = new RawMessage();
@@ -99,7 +94,6 @@ class DirectMessageDecoder {
         this.mdi = new MemoryDataInput(arrayBuffer.byteArray(), 0, 0);
 
         initTypes(types);
-        initEntities(mapping);
     }
 
     /**
@@ -114,14 +108,6 @@ class DirectMessageDecoder {
         switch (code) {
             case DirectProtocol.CODE_MSG:
                 return processMessage(length);
-
-            case DirectProtocol.CODE_METADATA:
-                processMetadata(length);
-                return null;
-
-            case DirectProtocol.CODE_TEMP_INDEX_REMOVED:
-                processIndexRemoved(length);
-                return null;
 
             case DirectProtocol.CODE_END_OF_STREAM:
                 processEndOfStream(length);
@@ -181,17 +167,26 @@ class DirectMessageDecoder {
             return null;
         }
         */
-        int typeIndex = arrayBuffer.getByte(TYPE_OFFSET);
-        int entityIndex = arrayBuffer.getInt(ENTITY_OFFSET);
+        assert messageLength >= DATA_MSG_MIN_HEAD_SIZE;
         long nanoTime = arrayBuffer.getLong(TIME_OFFSET);
-        int dataLength = messageLength - DATA_OFFSET;
+        int typeIndex = arrayBuffer.getByte(TYPE_OFFSET);
+        //int instrumentIndex = arrayBuffer.getByte(INSTRUMENT_OFFSET);
+        int symbolAndDataLength = messageLength - SYMBOL_OFFSET;
 
-        ConstantIdentityKey entity = getEntityByEntityIndex(entityIndex);
+
+        int variableLengthDataOffset = arrayBuffer.wrapAdjustment() + SYMBOL_OFFSET;
+        mdi.setBytes(arrayBuffer.byteArray(), variableLengthDataOffset, symbolAndDataLength);
+        @Nullable
+        StringBuilder symbolValue = mdi.readStringBuilder(symbolSb);
+        RecordClassDescriptor type = getTypeByTypeIndex(typeIndex);
 
         InstrumentMessage curMsg;
         if (raw) {
-            rawMessage.type = getTypeByTypeIndex(typeIndex);
-            rawMessage.setBytes(arrayBuffer.byteArray(), arrayBuffer.wrapAdjustment() + DATA_OFFSET, dataLength);
+            int dataPosition = mdi.getPosition(); // Effectively contains number of bytes taken for "symbol" field
+            int dataLength = symbolAndDataLength - dataPosition;
+
+            rawMessage.type = type;
+            rawMessage.setBytes(arrayBuffer.byteArray(), variableLengthDataOffset + dataPosition, dataLength);
             curMsg = rawMessage;
         } else {
             BoundDecoder decoder;
@@ -204,68 +199,32 @@ class DirectMessageDecoder {
             }
 
             if (decoder == null) {
-                decoder = codecFactory.createFixedBoundDecoder(typeLoader, getTypeByTypeIndex(typeIndex));
+                decoder = codecFactory.createFixedBoundDecoder(typeLoader, type);
                 decoders.set(typeIndex, decoder);
             }
 
             assert decoder != null;
 
-            mdi.setBytes(arrayBuffer.byteArray(), arrayBuffer.wrapAdjustment() + DATA_OFFSET, dataLength);
             curMsg = (InstrumentMessage) decoder.decode(mdi);
         }
 
         curMsg.setNanoTime(nanoTime);
-        curMsg.setSymbol(entity.symbol);
+        //curMsg.setInstrumentType(instrumentType);
+        curMsg.setSymbol(symbolValue);
 
         return curMsg;
     }
 
-    private void processMetadata(int length) {
-        mdi.setBytes(arrayBuffer.byteArray(), arrayBuffer.wrapAdjustment() + METADATA_OFFSET, length - METADATA_OFFSET);
-        int recordCount = mdi.readInt();
-        for (int i = 0; i < recordCount; i++) {
-            int entityIndex = mdi.readInt();
-            String symbol = mdi.readCharSequence().toString().intern();
-
-            ConstantIdentityKey key = new ConstantIdentityKey(symbol);
-            addEntity(entityIndex, key);
-        }
-    }
-
-    private void processIndexRemoved(int length) {
-        mdi.setBytes(arrayBuffer.byteArray(), arrayBuffer.wrapAdjustment() + TEMP_INDEX_REMOVED_DATA_OFFSET, length - TEMP_INDEX_REMOVED_DATA_OFFSET);
-        int recordCount = mdi.readInt();
-        for (int i = 0; i < recordCount; i++) {
-            int entityIndex = mdi.readInt();
-            tempEntities.remove(entityIndex);
-        }
-    }
-
     private void processEndOfStream(int length) {
-        mdi.setBytes(arrayBuffer.byteArray(), arrayBuffer.wrapAdjustment() + END_OF_STREAM_DATA_OFFSET, length - END_OF_STREAM_DATA_OFFSET);
-        int sessionId = mdi.readInt();
+        assert length == END_OF_STREAM_MSG_SIZE;
+
+        int sessionId = arrayBuffer.getInt(SESSION_ID_OFFSET);
 
         synchronized (finishedSessions) {
             finishedSessions.add(sessionId);
         }
     }
 
-    private void addEntity(int entityIndex, ConstantIdentityKey key) {
-        if (DirectProtocol.isTempIndex(entityIndex)) {
-            // This is temp index
-
-            //int pos = -entityIndex;
-            //int prodNum = pos >> 24;
-            //int indx = pos & 0xFFFFFF;
-            tempEntities.put(entityIndex, key);
-        } else {
-            // Permanent index
-            if (entityIndex >= entities.size()) {
-                entities.setSize(entityIndex + 1);
-            }
-            entities.set(entityIndex, key);
-        }
-    }
 
     private void addType(int typeIndex, RecordClassDescriptor type) {
         try {
@@ -276,62 +235,6 @@ class DirectMessageDecoder {
         }
     }
 
-    private ConstantIdentityKey getEntityByEntityIndex(int entityIndex) {
-        if (DirectProtocol.isTempIndex(entityIndex)) {
-            ConstantIdentityKey instrumentKey = tempEntities.get(entityIndex, null);
-            if (instrumentKey == null) {
-                // This means we missed temp key during registration
-                return handleMissingTempIndex(entityIndex);
-            }
-            return instrumentKey;
-        }
-        if (entityIndex < entities.size()) {
-            return entities.get(entityIndex);
-        } else {
-            // No mapping for that entity index
-            return missingEntityIndex(entityIndex);
-        }
-    }
-
-    private ConstantIdentityKey handleMissingTempIndex(int entityIndex) {
-        assert DirectProtocol.isTempIndex(entityIndex);
-
-        // Warning: this is blocking operation
-        IntegerToObjectHashMap<ConstantIdentityKey> tempMappingSnapshot = mappingProvider.getTempMappingSnapshot(entityIndex);
-
-        LOG.debug("Got temp index snapshot with %s records").with(tempMappingSnapshot.size());
-        addTempMapping(tempMappingSnapshot);
-
-        ConstantIdentityKey instrumentKey = tempEntities.get(entityIndex, null);
-        if (instrumentKey != null) {
-            // We successfully loaded needed entry
-            return instrumentKey;
-        } else {
-            // "Failed to obtain data for entry with temp index"
-            LOG.warn("Topic consumer closed due to failure to get temp index mapping");
-            throw new ClosedDueToDataLossException();
-        }
-    }
-
-    private void addTempMapping(IntegerToObjectHashMap<ConstantIdentityKey> tempMappingSnapshot) {
-        ElementsEnumeration<ConstantIdentityKey> elements = tempMappingSnapshot.elements();
-        IntegerEntry entry = (IntegerEntry) elements;
-        while (elements.hasMoreElements()) {
-            int key = entry.keyInteger();
-            ConstantIdentityKey value = elements.nextElement();
-            if (!DirectProtocol.isValidTempIndex(key)) {
-                throw new IllegalArgumentException("Invalid temp index: " + key);
-            }
-            addEntity(key, value);
-        }
-    }
-
-    private ConstantIdentityKey missingEntityIndex(int entityIndex) {
-        // TODO: Handle the case when a new entity id is added just after the consumer registration (but before consumer can start to listen data). In this case consumer may miss mapping data.
-        // This case is rare and may happen only during short period just after the start but we still have to address it.
-        throw new IllegalStateException("Unexpected entityIndex: " + entityIndex);
-    }
-
     private RecordClassDescriptor getTypeByTypeIndex(int typeIndex) {
         return types.getConcreteTypeByIndex(typeIndex);
     }
@@ -339,20 +242,6 @@ class DirectMessageDecoder {
     private void initTypes(List<RecordClassDescriptor> types) {
         for (int i = 0; i < types.size(); i++) {
             addType(i, types.get(i));
-        }
-    }
-
-    /**
-     * Initializes or updates entity mapping.
-     *
-     * @param mapping arrays of instrument keys, each key have same mapping index as position in that array
-     */
-    private void initEntities(ConstantIdentityKey[] mapping) {
-        if (mapping.length >= entities.size()) {
-            entities.setSize(mapping.length);
-        }
-        for (int i = 0; i < mapping.length; i++) {
-            addEntity(i, mapping[i]);
         }
     }
 }

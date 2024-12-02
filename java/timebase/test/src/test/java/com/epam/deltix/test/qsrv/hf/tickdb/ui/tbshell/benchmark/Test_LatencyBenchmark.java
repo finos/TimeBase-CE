@@ -17,6 +17,7 @@
 package com.epam.deltix.test.qsrv.hf.tickdb.ui.tbshell.benchmark;
 
 import com.epam.deltix.qsrv.hf.pub.ChannelPerformance;
+import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.test.qsrv.hf.tickdb.TDBRunnerBase;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.RemoteTickDB;
@@ -25,6 +26,7 @@ import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.benchmark.LatencyBenchmark;
 import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.benchmark.channel.ChannelAccessor;
 import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.benchmark.channel.StreamAccessor;
 import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.benchmark.channel.TopicAccessor;
+import com.epam.deltix.test.qsrv.hf.tickdb.TDBTestBase;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,7 +35,12 @@ import org.junit.experimental.categories.Category;
  * @author Alexei Osipov
  */
 @Category(Long.class)
-public class Test_LatencyBenchmark extends TDBRunnerBase {
+public class Test_LatencyBenchmark extends TDBTestBase {
+
+    public Test_LatencyBenchmark() {
+        super(true, true, getTemporaryLocation(),
+                new TomcatServer(null, 0, 0, true), true);
+    }
 
     private static final int WARM_UP_TIME_MS = 10_000;
     private static final int MEASUREMENT_TIME_MS = 30_000;

@@ -18,13 +18,8 @@ package com.epam.deltix.test.qsrv.hf.tickdb;
 
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
-import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
-import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
-import com.epam.deltix.util.concurrent.QuickExecutor;
-import com.epam.deltix.util.io.GUID;
-import com.epam.deltix.util.io.Home;
-import com.epam.deltix.util.io.IOUtil;
+import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.util.lang.Util;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -64,5 +59,42 @@ public abstract class TDBRunnerBase {
             stream.delete();
 
         return db.createStream(key, so);
+    }
+
+    public static int             countMessages (TickCursor cursor) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            int                 count = 0;
+
+            while (cursor.next ()) {
+                try {
+                    sb.append(cursor.getMessage());
+                    count++;
+                } catch (Throwable ex) {
+                    ex.printStackTrace(System.out);
+                }
+            }
+
+            return (count);
+        } finally {
+            Util.close(cursor);
+        }
+    }
+
+    public static BackgroundProcessInfo waitForExecution(DXTickStream stream) throws InterruptedException {
+
+        if (stream.getFormatVersion() >= 5)
+            return null;
+
+        while (true) {
+            BackgroundProcessInfo process = stream.getBackgroundProcess();
+
+            if (process == null || process.isFinished ())
+                break;
+
+            Thread.sleep(100);
+        }
+
+        return stream.getBackgroundProcess();
     }
 }

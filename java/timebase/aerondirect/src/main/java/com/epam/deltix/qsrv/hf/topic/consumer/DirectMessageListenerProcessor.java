@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,14 +16,16 @@
  */
 package com.epam.deltix.qsrv.hf.topic.consumer;
 
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.hf.pub.*;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.MessageProcessor;
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDataLossHandler;
 import com.epam.deltix.qsrv.hf.topic.consumer.annotation.AeronClientThread;
 import com.epam.deltix.qsrv.hf.topic.consumer.annotation.AnyThread;
 import com.epam.deltix.qsrv.hf.topic.consumer.annotation.ReaderThreadOnly;
-import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.util.concurrent.CursorIsClosedException;
 import com.epam.deltix.util.concurrent.UncheckedInterruptedException;
 import com.epam.deltix.util.io.idlestrat.IdleStrategy;
@@ -31,6 +33,7 @@ import io.aeron.Aeron;
 import io.aeron.ControlledFragmentAssembler;
 import io.aeron.Image;
 import io.aeron.Subscription;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteOrder;
 import java.util.List;
@@ -41,11 +44,14 @@ import java.util.function.BooleanSupplier;
  * @author Alexei Osipov
  */
 class DirectMessageListenerProcessor implements SubscriptionWorker {
+    private static final Log LOG = LogFactory.getLog(DirectMessageListenerProcessor.class);
+
     private static final int MESSAGES_PER_POLL = 100;
 
     private final Subscription subscription;
     private final IdleStrategy idleStrategy;
     private final MessageFragmentHandler fragmentHandler;
+    private final TopicDataLossHandler topicDataLossHandler;
 
     // Indicates that poller should be stopped OR already stopped
     private volatile boolean stopFlag = false;
@@ -58,19 +64,18 @@ class DirectMessageListenerProcessor implements SubscriptionWorker {
 
     DirectMessageListenerProcessor(MessageProcessor processor, Aeron aeron, boolean raw, String channel, int dataStreamId,
                                    CodecFactory codecFactory, TypeLoader typeLoader, List<RecordClassDescriptor> types,
-                                   IdleStrategy idleStrategy, MappingProvider mappingProvider) {
+                                   IdleStrategy idleStrategy, @Nullable TopicDataLossHandler topicDataLossHandler) {
         // TODO: Implement loading of temp indexes from server
 
         if (!ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
             throw new IllegalArgumentException("Only LITTLE_ENDIAN byte order supported");
         }
+        this.topicDataLossHandler = topicDataLossHandler;
 
         this.subscription = aeron.addSubscription(channel, dataStreamId, null, this::onUnavailableImage);
-        // We must get mapping after we completed subscription
-        ConstantIdentityKey[] mappingSnapshot = mappingProvider.getMappingSnapshot();
 
         this.idleStrategy = idleStrategy;
-        this.fragmentHandler = new MessageFragmentHandler(raw, codecFactory, typeLoader, types, mappingSnapshot, mappingProvider);
+        this.fragmentHandler = new MessageFragmentHandler(raw, codecFactory, typeLoader, types);
         this.fragmentHandler.setProcessor(processor);
     }
 
@@ -145,6 +150,13 @@ class DirectMessageListenerProcessor implements SubscriptionWorker {
     @AeronClientThread
     // That will be executed from an Aeron's thread
     private void onDataLossDetected() {
+        LOG.debug("Data loss detected for subscriber with dataStreamId=%s").with(subscription.streamId());
+        if (topicDataLossHandler != null) {
+            boolean continuePolling = topicDataLossHandler.handleDataLoss();
+            if (continuePolling) {
+                return;
+            }
+        }
         dataLoss = true;
         stopFlag = true;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -40,7 +40,7 @@ public abstract class TopicChannelPreferences<T extends TopicChannelPreferences>
     }
 
     /**
-     * @param raw input message type ({@code true} means {@link deltix.qsrv.hf.pub.RawMessage}
+     * @param raw input message type ({@code true} means {@link com.epam.deltix.qsrv.hf.pub.RawMessage}
      */
     public T setRaw(boolean raw) {
         this.raw = raw;
@@ -65,7 +65,7 @@ public abstract class TopicChannelPreferences<T extends TopicChannelPreferences>
      */
     public T copyFrom(ChannelPreferences channelPreferences) {
         this.setRaw(channelPreferences.raw);
-        this.setTypeLoader(channelPreferences.getTypeLoader());
+        this.setTypeLoader(channelPreferences.typeLoader);
         this.setChannelPerformance(channelPreferences.channelPerformance);
         return (T) this;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -20,15 +20,26 @@ import com.epam.deltix.qsrv.hf.pub.md.*;
 
 public class FieldTypeChange extends FieldChange {
 
+    private Impact known;
+
     protected FieldTypeChange() { } // for jaxb
 
     public FieldTypeChange(DataField source, DataField target) {
+        this(source, target, null);
+    }
+
+    public FieldTypeChange(DataField source, DataField target, Impact impact) {
         super(source, target, FieldAttribute.DataType);
+        known = impact;
     }
 
     @Override
     public Impact getChangeImpact() {
-        
+
+        // return predefined impact if exists
+        if (known != null)
+            return known;
+
         DataType srcType = getSource().getType();
         DataType trgType = getTarget().getType();
 

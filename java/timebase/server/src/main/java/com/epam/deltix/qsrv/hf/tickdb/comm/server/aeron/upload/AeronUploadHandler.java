@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -29,7 +29,6 @@ import com.epam.deltix.qsrv.hf.tickdb.comm.server.aeron.download.unicast.AeronDo
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLock;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockHandler;
-import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.util.vsocket.VSChannel;
 import io.aeron.Aeron;
 import io.aeron.Subscription;

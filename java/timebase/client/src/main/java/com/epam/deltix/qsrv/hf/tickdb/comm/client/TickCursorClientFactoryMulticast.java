@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -82,7 +82,7 @@ public class TickCursorClientFactoryMulticast {
                 int aeronDataStreamId = in.readInt();
 
                 Aeron aeron;
-                if (StringUtils.isNotBlank(aeronDir)) {
+                if (!StringUtils.isEmpty(aeronDir)) {
                     aeron = aeronContext.getServerSharedAeronInstance(aeronDir);
                 } else {
                     aeron = aeronContext.getStandaloneAeronInstance();

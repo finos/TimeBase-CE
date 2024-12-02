@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -30,7 +30,7 @@ public class MaxDecimal extends DecimalToDecimalStatefulFunctionBase {
     @Compute
     @Override
     public void compute(@BuiltInTimestampMs long timestamp, @Decimal long v) {
-        if (TimebaseTypes.isDecimalNull(v)) {
+        if (Decimal64Utils.isNaN(v)) {
             return;
         }
         if (TimebaseTypes.isDecimalNull(value) || Decimal64Utils.isGreater(v, value)) {

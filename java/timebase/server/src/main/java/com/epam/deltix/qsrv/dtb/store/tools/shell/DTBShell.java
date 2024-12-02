@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,7 +16,6 @@
  */
 package com.epam.deltix.qsrv.dtb.store.tools.shell;
 
-import com.epam.deltix.qsrv.dtb.fs.local.*;
 import com.epam.deltix.qsrv.dtb.fs.pub.*;
 import com.epam.deltix.qsrv.dtb.store.impl.SymbolRegistryImpl;
 import com.epam.deltix.qsrv.dtb.store.raw.*;

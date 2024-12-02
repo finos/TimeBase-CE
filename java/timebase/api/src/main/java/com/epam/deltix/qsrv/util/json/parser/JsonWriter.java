@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -32,8 +32,11 @@ import com.epam.deltix.util.time.TimeFormatter;
 import org.apache.commons.io.output.StringBuilderWriter;
 
 import java.nio.ByteBuffer;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.util.Collections;
+import java.util.Locale;
 
 public class JsonWriter {
 
@@ -44,13 +47,28 @@ public class JsonWriter {
     private final MemoryDataOutput output = new MemoryDataOutput();
     private ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
     private final DateFormatter dateFormatter = new DateFormatter();
+    private final ObjectToObjectHashMap<String, FixedUnboundEncoder> encoders = new ObjectToObjectHashMap<String, FixedUnboundEncoder>();
+    private DecimalFormat decimalFormat;
+    private String decimalSeparator;
 
     public JsonWriter(JsonPool pool, String typeField) {
-        this.jsonPool = pool;
-        this.typeField = typeField;
+        this(pool, typeField, Locale.getDefault(Locale.Category.FORMAT));
     }
 
-    private final ObjectToObjectHashMap<String, FixedUnboundEncoder> encoders = new ObjectToObjectHashMap<String, FixedUnboundEncoder>();
+    public JsonWriter(JsonPool pool, String typeField, Locale locale) {
+        this.jsonPool = pool;
+        this.typeField = typeField;
+        decimalFormat = new DecimalFormat("#.#", DecimalFormatSymbols.getInstance(locale));
+        updateDecimalSeparator();
+    }
+    private void updateDecimalSeparator() {
+        decimalSeparator = Character.toString(decimalFormat.getDecimalFormatSymbols().getDecimalSeparator());
+    }
+
+    public void setDecimalFormat(DecimalFormat decimalFormat) {
+        this.decimalFormat = decimalFormat;
+        updateDecimalSeparator();
+    }
 
     public void writeValues(RawMessage msg, ObjectToObjectHashMap<String, Object> values) {
         if (values == null)
@@ -89,7 +107,7 @@ public class JsonWriter {
                 else if (type instanceof CharDataType)
                     writeVarchar((StringBuilderWriter) value, encoder);
                 else if (type instanceof DateTimeDataType)
-                    writeDateTime((StringBuilderWriter) value, encoder);
+                    writeDateTime((StringBuilderWriter) value, encoder, (DateTimeDataType) type);
                 else if (type instanceof TimeOfDayDataType) {
                     if (value instanceof Number) {
                         encoder.writeInt(((Number) value).intValue());
@@ -133,14 +151,23 @@ public class JsonWriter {
     }
 
     private void writeFloat(StringBuilderWriter writer, WritableValue encoder, FloatDataType type) {
+        String stringValue = writer.getBuilder().toString();
         if (type.isFloat()) {
-            encoder.writeFloat(CharSequenceParser.parseFloat(writer.getBuilder()));
+            encoder.writeFloat(getNumber(stringValue).floatValue());
         } else if (type.isDecimal64()) {
-            encoder.writeLong(Decimal64Utils.parse(writer.getBuilder()));
+            encoder.writeLong(Decimal64Utils.parse(stringValue, decimalSeparator));
         } else {
-            encoder.writeDouble(CharSequenceParser.parseDouble(writer.getBuilder()));
+            encoder.writeDouble(getNumber(stringValue).doubleValue());
         }
         jsonPool.returnToPool(writer);
+    }
+
+    private Number getNumber(String strValue) {
+        try {
+            return decimalFormat.parse(strValue);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Failed to convert the '" + strValue + "' to a numeric value", e);
+        }
     }
 
     private void writeVarchar(StringBuilderWriter writer, WritableValue encoder) {
@@ -164,8 +191,10 @@ public class JsonWriter {
         jsonPool.returnToPool(bytes);
     }
 
-    private void writeDateTime(StringBuilderWriter writer, WritableValue encoder) throws ParseException {
-        encoder.writeLong(dateFormatter.fromDateString(writer.getBuilder().toString()));
+    private void writeDateTime(StringBuilderWriter writer, WritableValue encoder, DateTimeDataType type) throws ParseException {
+        String value = writer.getBuilder().toString();
+        long timestamp = type.hasNanosecondPrecision() ? dateFormatter.nanoFromDateString(value) : dateFormatter.msFromDateString(value);
+        encoder.writeLong(timestamp);
         jsonPool.returnToPool(writer);
     }
 
@@ -198,7 +227,7 @@ public class JsonWriter {
         } else if (elementType instanceof ClassDataType) {
             writeClassArray((ObjectArrayList<Object>) value, encoder, (ClassDataType) elementType);
         } else if (elementType instanceof DateTimeDataType) {
-            writeDateTimeArray((ObjectArrayList<Object>) value, encoder);
+            writeDateTimeArray((ObjectArrayList<Object>) value, encoder, (DateTimeDataType) elementType);
         } else if (elementType instanceof TimeOfDayDataType) {
             if (value instanceof LongArrayList) {
                 writeTimeOfDayArray((LongArrayList) value, encoder);
@@ -283,14 +312,14 @@ public class JsonWriter {
         }
     }
 
-    private void writeDateTimeArray(ObjectArrayList<Object> list, WritableValue encoder) throws ParseException {
+    private void writeDateTimeArray(ObjectArrayList<Object> list, WritableValue encoder, DateTimeDataType elementType) throws ParseException {
         encoder.setArrayLength(list.size());
         for (Object o : list) {
             WritableValue writable = encoder.nextWritableElement();
             if (o == null) {
                 writable.writeNull();
             } else {
-                writeDateTime((StringBuilderWriter) o, writable);
+                writeDateTime((StringBuilderWriter) o, writable, (DateTimeDataType) elementType);
             }
         }
         jsonPool.returnToPool(list);

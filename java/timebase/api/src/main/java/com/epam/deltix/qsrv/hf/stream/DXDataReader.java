@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -36,7 +36,7 @@ import java.util.zip.GZIPInputStream;
 public class DXDataReader implements Disposable {
 
     private final DXDataInputStream     in;
-    private ClassSet                    classes;
+    private MixedClassSet classes;
     private DXDataEntry                 current;
     
     private final long[]                range = new long[2];

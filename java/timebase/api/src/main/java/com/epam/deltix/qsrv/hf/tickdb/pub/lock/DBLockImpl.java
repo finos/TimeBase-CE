@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,12 +16,19 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.pub.lock;
 
+import java.util.Objects;
+
 public abstract class DBLockImpl implements DBLock {
     private final String    guid; // client id
-    private LockType        type;
+    private final LockOptions options;
 
     public DBLockImpl(LockType type, String guid) {
-        this.type = type;
+        this(LockOptions.create(type), guid);
+    }
+
+    public DBLockImpl(LockOptions options, String guid) {
+        Objects.requireNonNull(options);
+        this.options = options;
         this.guid = guid;
     }
 
@@ -31,7 +38,12 @@ public abstract class DBLockImpl implements DBLock {
 
     @Override
     public LockType     getType() {
-        return type;
+        return options.getType();
+    }
+
+    @Override
+    public LockOptions getOptions() {
+        return options;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.http;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  *
@@ -24,5 +25,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 public class XmlRequest {
     @XmlAttribute()
     public short    version = HTTPProtocol.VERSION;
+
+    @XmlElement(name = "applicationName")
+    public String   applicationName = HTTPProtocol.UNKNOWN_APPLICATION_NAME;
 
 }

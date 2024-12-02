@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.impl;
 
 import com.epam.deltix.qsrv.hf.tickdb.impl.mon.TBMonitorImpl;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
 import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBLock;
 import com.epam.deltix.util.lang.DisposableListener;
@@ -38,6 +39,12 @@ class StreamLockImpl extends ServerLock implements TBLock {
 
     StreamLockImpl(ServerStreamImpl stream, LockType type, String guid) {
         super(type, guid);
+        this.stream = stream;
+        this.monId = getMonId();
+    }
+
+    StreamLockImpl(ServerStreamImpl stream, LockOptions options, String guid) {
+        super(options, guid);
         this.stream = stream;
         this.monId = getMonId();
     }
@@ -105,6 +112,6 @@ class StreamLockImpl extends ServerLock implements TBLock {
 
     @Override
     public String toString() {
-        return "Lock [" + stream.getKey() + ", " + getType() + ", " + getGuid() + "] from " + clientId;
+        return "Lock [" + stream.getKey() + ", " + getOptions() + ", " + getGuid() + "] from " + clientId;
     }
 }

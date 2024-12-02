@@ -38,8 +38,12 @@ public class Test_DirectChannelCursor extends BaseTopicReadingTest {
     }
 
     @NotNull
-    protected Runnable createReader(AtomicLong messagesReceivedCounter, String channel, int dataStreamId, List<RecordClassDescriptor> types, MessageValidator messageValidator) {
-        this.messageSource = new DirectReaderFactory().createMessageSource(aeron, false, channel, dataStreamId, types, null, StubData.getStubMappingProvider());
+    protected Runnable createReader(AtomicLong messagesReceivedCounter,
+                                    String channel,
+                                    int dataStreamId,
+                                    List<RecordClassDescriptor> types,
+                                    MessageValidator messageValidator) {
+        this.messageSource = new DirectReaderFactory().createMessageSource(aeron, false, channel, dataStreamId, types, null, null);
 
         return () -> {
             RatePrinter ratePrinter = new RatePrinter("Reader");

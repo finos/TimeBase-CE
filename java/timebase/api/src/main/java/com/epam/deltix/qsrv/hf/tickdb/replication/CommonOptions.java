@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -23,17 +23,50 @@ import com.epam.deltix.timebase.messages.IdentityKey;
  */
 public class CommonOptions {
 
+    /**
+     * Entities for the replication/backup
+     */
     public IdentityKey[] entities; // selected entities
 
+    /**
+     * Message types for the replication/backup
+     */
     public String[]             types; // selected entities
 
-    public long[]               range; // selected time range
+    /**
+     * Time range for the replication/backup
+     */
+    public long[]               range;
 
+    /**
+     * Reload mode for the replication/backup. 'allow' by default
+     */
     public ReloadMode           mode = ReloadMode.allow;
 
-    public int                  retries = 0;    // number of reconnect attempts
+    /**
+     * Number of reconnect attempts. 0 by default.
+     */
+    public int                  retries = 0;
 
-    public long                 retryTimeout = 5000; // period of time in milliseconds between reconnect attempts
+    /**
+     * Period of time in milliseconds between reconnect attempts. 5000 ms by default.
+     */
+    public long                 retryTimeout = 5000;
 
-    public boolean              async = false; // run replication process asynchronously in separate thread
+    /**
+     * Run replication process asynchronously in separate thread
+     */
+    public boolean              async = false;
+
+    /**
+     * Low latency mode. if true, enables ChannelPerformance.LOW_LATENCY for SelectionOptions.channelPerformance;
+     */
+
+    public boolean              lowLatency = false;
+
+    /**
+     * Replication space
+     */
+
+    public String               space;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -24,6 +24,7 @@ import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.qsrv.hf.tickdb.schema.encoders.MixedWritableValue;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
+import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.util.collections.SmallArrays;
 import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
 import com.epam.deltix.util.memory.MemoryDataOutput;
@@ -45,7 +46,7 @@ public class SchemaConverter {
             ObjectToObjectHashMap<>();
 
     public SchemaConverter(MetaDataChange change) {
-        this.change = change;        
+        this.change = change;
         
         // create mappings
         RecordClassDescriptor[] input = change.source.getContentClasses();
@@ -109,21 +110,21 @@ public class SchemaConverter {
             result.setSymbol(msg.getSymbol());
             result.setNanoTime(msg.getNanoTime());
 
-            if (mapping.hasChanges) {
-            buffer.reset(0);
-            mapping.encoder.beginWrite(buffer);
+            if (mapping.hasChanges()) {
+                buffer.reset(0);
+                mapping.encoder.beginWrite(buffer);
 
-            msg.setUpMemoryDataInput(input);
-            mapping.decoder.beginRead(input);
+                msg.setUpMemoryDataInput(input);
+                mapping.decoder.beginRead(input);
 
-            for (FieldMapping fieldMapping : mapping.mappings) {
-                mapping.encoder.nextField();
+                for (FieldMapping fieldMapping : mapping.mappings) {
+                    mapping.encoder.nextField();
 
-                convertField(fieldMapping, mapping.decoder, mapping.encoder);
-            }
+                    convertField(fieldMapping, mapping.decoder, mapping.encoder);
+                }
 
-            mapping.encoder.endWrite();
-            result.setBytes(buffer, 0);
+                mapping.encoder.endWrite();
+                result.setBytes(buffer, 0);
             } else {
                 result.setBytes(msg.data, msg.offset, msg.length);
             }
@@ -152,6 +153,13 @@ public class SchemaConverter {
                     convertField(fieldMapping, decoder, encoder);
                 }
                 encoder.endWrite();
+
+                if (mapping.mappings.length != decoder.getClassInfo().getNonStaticFields().length) {
+                    // in case of field removal we should skip all fields in decoder
+                    while (decoder.nextField())
+                        decoder.getString();
+                }
+
             } else {
                 return false;
             }
@@ -239,8 +247,25 @@ public class SchemaConverter {
                     switch (to) {
                         case Boolean: out.writeBoolean(lValue != 0); break;
                         case Int: out.writeInt(lValue); break;
-                        case Long: out.writeLong(lValue); break;
+                        case Long: {
+                            if (outType instanceof DateTimeDataType && inType instanceof DateTimeDataType) {
+                                DateTimeDataType inDT = (DateTimeDataType) inType;
+                                DateTimeDataType outDT = (DateTimeDataType) outType;
 
+                                if (lValue == Long.MIN_VALUE)
+                                    out.writeLong(lValue);
+                                else if (DateTimeDataType.isEquals(inDT.getEncoding(), outDT.getEncoding()))
+                                    out.writeLong(lValue);
+                                else if (inDT.hasNanosecondPrecision()) { // nanos -> millis
+                                    out.writeLong(lValue / TimeStamp.NANOS_PER_MS);
+                                } else if (outDT.hasNanosecondPrecision()) { // millis -> nanos
+                                    out.writeLong(lValue * TimeStamp.NANOS_PER_MS);
+                                }
+                            } else {
+                                out.writeLong(lValue);
+                            }
+                            break;
+                        }
                         case Float: {
                             if (isDecimal64(inType))
                                 out.writeFloat(Decimal64Utils.toDouble(lValue));
@@ -312,12 +337,14 @@ public class SchemaConverter {
                         DataTypeIndex outArrayTypeIndex = FieldMapping.getTypeIndex(outArrayType);
 
                         int count = 0;
-                        out.setArrayLength(in.getArrayLength());
+
+                        int arrayLength = in.getArrayLength();
+                        out.setArrayLength(arrayLength);
 
                         MixedWritableValue element = null;
                         boolean converted = true;
 
-                        for (int i = 0, length = in.getArrayLength(); i < length; i++) {
+                        for (int i = 0; i < arrayLength; i++) {
 
                             // move to next element when previous was converter only
                             if (converted)
@@ -375,6 +402,6 @@ public class SchemaConverter {
     }
 
     public enum DataTypeIndex {
-        Boolean, Int, Long, Float, Double, Enum, String, Array, Object, Binary
+        Boolean, Int, Long, Float, Double, Enum, String, Array, Object, Binary, DateTime
     }
 }

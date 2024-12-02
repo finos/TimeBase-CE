@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -86,11 +86,11 @@ public interface TimeSlice {
 
     public void             dataDropped (DAPrivate accessor, DataBlock db, int dataOffset, int length, long timestamp);
     
-    public boolean             truncate(long timestamp, int entity, DataAccessorBase accessor);
+    public boolean          truncate(long timestamp, int entity, DataAccessorBase accessor);
 
-    public boolean             cut(long[] range, int[] entities, DataAccessorBase accessor);
+    public boolean          cut(long[] range, int[] entities, DataAccessorBase accessor);
 
-    public boolean             cut(long startTime, long endTime, DataAccessorBase accessor);
+    public boolean          cut(long startTime, long endTime, DataAccessorBase accessor);
 
     /**
      * Checks that time slice is checkout by this accessor only.

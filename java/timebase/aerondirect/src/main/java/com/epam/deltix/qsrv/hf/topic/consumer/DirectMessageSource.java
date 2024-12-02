@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,15 +16,17 @@
  */
 package com.epam.deltix.qsrv.hf.topic.consumer;
 
-import com.epam.deltix.streaming.MessageSource;
-import com.epam.deltix.timebase.messages.ConstantIdentityKey;
-import com.epam.deltix.timebase.messages.InstrumentMessage;
+import com.epam.deltix.gflog.api.Log;
+import com.epam.deltix.gflog.api.LogFactory;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDataLossHandler;
 import com.epam.deltix.qsrv.hf.topic.consumer.annotation.AeronClientThread;
 import com.epam.deltix.qsrv.hf.topic.consumer.annotation.AnyThread;
 import com.epam.deltix.qsrv.hf.topic.consumer.annotation.ReaderThreadOnly;
+import com.epam.deltix.streaming.MessageSource;
+import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.util.BitUtil;
 import com.epam.deltix.util.concurrent.CursorIsClosedException;
 import com.epam.deltix.util.concurrent.IntermittentlyAvailableCursor;
@@ -53,6 +55,8 @@ import static org.agrona.BitUtil.isAligned;
 class DirectMessageSource implements MessageSource<InstrumentMessage>, IntermittentlyAvailableCursor {
     private static final int MESSAGES_PER_POLL = 100;
 
+    private static final Log LOG = LogFactory.getLog(DirectMessageSource.class);
+
     // Alignment of messages in the message buffer.
     // We align size heater to ints (4) and body to longs (8),
     // We align to long to make sure that we can read long value without alignment issues
@@ -71,6 +75,7 @@ class DirectMessageSource implements MessageSource<InstrumentMessage>, Intermitt
 
     private final Subscription subscription;
     private final IdleStrategy idleStrategy;
+    private final TopicDataLossHandler topicDataLossHandler;
 
     private volatile boolean closed = false;
 
@@ -85,24 +90,21 @@ class DirectMessageSource implements MessageSource<InstrumentMessage>, Intermitt
     private volatile boolean dataLoss = false;
 
     DirectMessageSource(Aeron aeron, boolean raw, String channel, int dataStreamId, CodecFactory codecFactory,
-                        TypeLoader typeLoader, List<RecordClassDescriptor> types, IdleStrategy idleStrategy,
-                        MappingProvider mappingProvider) {
+                        TypeLoader typeLoader, List<RecordClassDescriptor> types, IdleStrategy idleStrategy, TopicDataLossHandler topicDataLossHandler) {
         // TODO: Implement loading of temp indexes from server
 
         if (!ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
             throw new IllegalArgumentException("Only LITTLE_ENDIAN byte order supported");
         }
-
+        this.topicDataLossHandler = topicDataLossHandler;
         this.subscription = aeron.addSubscription(channel, dataStreamId, null, this::onUnavailableImage);
         this.messageBuffer = new UnsafeBuffer(new byte[INITIAL_BUFFER_SIZE]);
         this.arrayBuffer = new UnsafeBuffer(this.messageBuffer.byteArray(), 0, 0);
         this.idleStrategy = idleStrategy;
 
         this.fragmentHandler = new ControlledFragmentAssembler(new FragmentHandler());
-        // We must get mapping after we completed subscription
-        ConstantIdentityKey[] mappingSnapshot = mappingProvider.getMappingSnapshot();
 
-        this.decoder = new DirectMessageDecoder(arrayBuffer, raw, codecFactory, typeLoader, types, mappingSnapshot, mappingProvider);
+        this.decoder = new DirectMessageDecoder(arrayBuffer, raw, codecFactory, typeLoader, types);
     }
 
     @ReaderThreadOnly
@@ -248,6 +250,13 @@ class DirectMessageSource implements MessageSource<InstrumentMessage>, Intermitt
     @AeronClientThread
     // That will be executed from an Aeron's thread
     private void onDataLossDetected() {
+        LOG.debug("Data loss detected for subscriber with dataStreamId=%s").with(subscription.streamId());
+        if (topicDataLossHandler != null) {
+            boolean continuePolling = topicDataLossHandler.handleDataLoss();
+            if (continuePolling) {
+                return;
+            }
+        }
         dataLoss = true;
         subscription.close();
     }

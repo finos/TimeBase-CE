@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -33,7 +33,7 @@ public class JSONRawMessagePrinterFactory {
 
     public static JSONRawMessagePrinter createForTickDBShell() {
         return new JSONRawMessagePrinter(false, true, DataEncoding.STANDARD, true,
-            false, PrintType.FULL, true, "$type") {
+                false, PrintType.FULL, true, "$type") {
             @Override
             protected void appendType(StringBuilder sb, String fullType) {
                 if (fullType != null && fullType.startsWith("QUERY"))

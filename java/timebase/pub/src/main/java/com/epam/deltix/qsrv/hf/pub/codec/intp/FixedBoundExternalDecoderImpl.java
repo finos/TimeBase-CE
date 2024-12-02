@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -70,8 +70,6 @@ public class FixedBoundExternalDecoderImpl implements FixedExternalDecoder {
                 if (truncated || (truncated = ctxt.in.getAvail() <= 0)) {
                     if (f.isBound()) {
                         assert f.isNullable : f.getNotNullableMsg();
-                        if (!f.isNullable)
-                            throw new IllegalArgumentException(f.getNotNullableMsg());
                         f.setNull(msgObject);
                     }
                 } else {
@@ -81,7 +79,7 @@ public class FixedBoundExternalDecoderImpl implements FixedExternalDecoder {
                     else
                         f.copy(ctxt, msgObject);
                 }
-            } catch (InvocationTargetException | IllegalAccessException ex) {
+            } catch (IllegalArgumentException |  InvocationTargetException | IllegalAccessException ex) {
                 throw new RuntimeException (f.toString (), ex);
             }
         }

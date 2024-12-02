@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -76,7 +76,7 @@ public class SourceCodePrinter {
     public void                     printRefClassName (String cn) throws IOException {
         print (cn);
     }
-    
+
     public void                     printRefClassName (String className, String[] typeArgs) throws IOException {
         print(className, "<", String.join(",", typeArgs), ">");
     }

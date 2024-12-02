@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -34,13 +34,15 @@ public class SecuredDbClient extends TickDBClient {
 
     public SecuredDbClient(TickDBClient client) {
         super(client.getHost(), client.getPort(), client.enableSSL, new UserPrincipal(client.getUser()));
+        this.setApplicationId(client.getApplicationId());
     }
 
     public VSChannel               connect(ChannelType type, boolean autoCommit, boolean noDelay, ChannelCompression c, int channelBufferSize)
             throws IOException
     {
+        UserPrincipal user = userPrincipalResolver.resolve(getUser());
         VSChannel channel = createChannel(type, autoCommit, noDelay, c, 0);
-        TDBProtocol.writeCredentials(channel, getUser(), UserContext.get());
+        TDBProtocol.writeCredentials(channel, user, UserContext.get());
         return channel;
     }
 }

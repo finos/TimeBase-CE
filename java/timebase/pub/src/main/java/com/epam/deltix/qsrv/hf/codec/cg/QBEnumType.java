@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -26,6 +26,9 @@ import com.epam.deltix.util.collections.generated.LongArrayList;
 import com.epam.deltix.util.collections.generated.LongEnumeration;
 import com.epam.deltix.util.collections.generated.LongToObjectHashMap;
 import com.epam.deltix.util.jcg.*;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 import static com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg.QCGHelpers.CTXT;
 import static java.lang.reflect.Modifier.FINAL;
@@ -56,11 +59,17 @@ public class QBEnumType extends QBoundType<QEnumType> {
     // primitive integer type corresponding to size value
     private Class<?> primitiveClass = null;
 
+    private static final long MAX_SPARSE_ARRAY_SIZE = Integer.getInteger("TimeBase.codecs.enum.maxSpaseArraySize", 1024);
+    private final boolean useSparseArray;
+    private final long sparseArraySize;
+
 
     public QBEnumType(QEnumType qType, Class<?> javaType, QAccessor accessor, QVariableContainerLookup lookupContainer) {
         super(qType, javaType, accessor);
 
         size = qType.getEncodedFixedSize();
+        sparseArraySize = findMaxValue(qType.dt.descriptor) + 1;
+        useSparseArray = sparseArraySize <= MAX_SPARSE_ARRAY_SIZE && !hasNegativeValues(qType.dt.descriptor);
 
         initHelperMembers(lookupContainer);
     }
@@ -169,13 +178,25 @@ public class QBEnumType extends QBoundType<QEnumType> {
                 final String name = "enum_strings_" + trimBadChars(ecd.getName());
                 JVariable var = lookupContainer.lookupVar(name);
                 if (var == null) {
-                    final JClass mapStrings = CTXT.newClass(0, LongArrayList.class.getPackage().getName(), "LongToObjectHashMap<CharSequence>", (JClass) null);
-                    var = lookupContainer.addVar(mapStrings, name, CTXT.newExpr(mapStrings, CTXT.intLiteral(enumValues.length)));
-                    strings = lookupContainer.access(var);
+                    if (useSparseArray) {
+                        var = lookupContainer.addVar(CharSequence[].class, name, CTXT.newArrayExpr(CharSequence.class, (int) sparseArraySize));
+                        strings = lookupContainer.access(var);
 
-                    final JCompoundStatement stmt = lookupContainer.getInitStmt();
-                    for (EnumValue enumValue : enumValues) {
-                        stmt.add(strings.call("put", CTXT.longLiteral(enumValue.value), CTXT.stringLiteral(enumValue.symbol)));
+                        final JCompoundStatement stmt = lookupContainer.getInitStmt();
+                        for (EnumValue enumValue : enumValues) {
+                            stmt.add(
+                                strings.index(CTXT.intLiteral((int) enumValue.value)).assign(CTXT.stringLiteral(enumValue.symbol))
+                            );
+                        }
+                    } else {
+                        final JClass mapStrings = CTXT.newClass(0, LongArrayList.class.getPackage().getName(), "LongToObjectHashMap<CharSequence>", (JClass) null);
+                        var = lookupContainer.addVar(mapStrings, name, CTXT.newExpr(mapStrings, CTXT.intLiteral(enumValues.length)));
+                        strings = lookupContainer.access(var);
+
+                        final JCompoundStatement stmt = lookupContainer.getInitStmt();
+                        for (EnumValue enumValue : enumValues) {
+                            stmt.add(strings.call("put", CTXT.longLiteral(enumValue.value), CTXT.stringLiteral(enumValue.symbol)));
+                        }
                     }
                 }
                 strings = lookupContainer.access(var);
@@ -194,17 +215,32 @@ public class QBEnumType extends QBoundType<QEnumType> {
                         throw new IllegalArgumentException("Class " + javaBaseType.getName() + " must contains all schema values for decoding!");
                     final LongToObjectHashMap<Enum> mappingEnums = ea.getEnumValues();
 
-                    final JClass mapClass = CTXT.newClass(0, LongArrayList.class.getPackage().getName(), "LongToObjectHashMap<Enum>", (JClass) null);
-                    var = lookupContainer.addVar(mapClass, name, CTXT.newExpr(mapClass, CTXT.intLiteral(mappingEnums.size())));
-                    values = lookupContainer.access(var);
+                    if (useSparseArray) {
+                        Class<?> javaBaseTypeArray = Array.newInstance(javaBaseType, 0).getClass();
+                        var = lookupContainer.addVar(javaBaseTypeArray, name, CTXT.newArrayExpr(javaBaseType, (int) sparseArraySize));
+                        values = lookupContainer.access(var);
 
-                    final JCompoundStatement stmt = lookupContainer.getInitStmt();
-                    final LongEnumeration enumeration = mappingEnums.keys();
-                    while (enumeration.hasMoreElements()) {
-                        long key = enumeration.nextLongElement();
-                        stmt.add(values.call("put", CTXT.longLiteral(key), CTXT.enumLiteral(mappingEnums.get(key, null))));
+                        final JCompoundStatement stmt = lookupContainer.getInitStmt();
+                        final LongEnumeration enumeration = mappingEnums.keys();
+                        while (enumeration.hasMoreElements()) {
+                            long key = enumeration.nextLongElement();
+                            stmt.add(
+                                values.index(CTXT.intLiteral((int) key)).assign(CTXT.enumLiteral(mappingEnums.get(key, null)))
+                            );
+                        }
+                    } else {
+                        final JClass mapClass = CTXT.newClass(0, LongToObjectHashMap.class.getPackage().getName(),
+                            "LongToObjectHashMap<" + javaBaseType.getCanonicalName() + ">", (JClass) null);
+                        var = lookupContainer.addVar(mapClass, name, CTXT.newExpr(mapClass, CTXT.intLiteral(mappingEnums.size())));
+                        values = lookupContainer.access(var);
+
+                        final JCompoundStatement stmt = lookupContainer.getInitStmt();
+                        final LongEnumeration enumeration = mappingEnums.keys();
+                        while (enumeration.hasMoreElements()) {
+                            long key = enumeration.nextLongElement();
+                            stmt.add(values.call("put", CTXT.longLiteral(key), CTXT.enumLiteral(mappingEnums.get(key, null))));
+                        }
                     }
-
                 } else {
                     final EnumAnalyzer ea = new EnumAnalyzer();
                     ea.analyze(javaBaseType, qType.dt.descriptor, false);
@@ -306,22 +342,13 @@ public class QBEnumType extends QBoundType<QEnumType> {
         // TODO: why I did it for?
 
         if (strings != null) {
-            final JLocalVariable var = addTo.addVar(0, int.class, "i", initValue);
+            final JLocalVariable var = addTo.addVar(0, getPrimitiveClass(), "b", initValue);
 
-            JExpr validate = CTXT.binExpr(
-                    CTXT.binExpr(var, "!=", CTXT.intLiteral(-1)), "&&",
-                    strings.call("containsKey", var).not());
-            addTo.add(CTXT.ifStmt(validate,
-                    CTXT.newExpr(IllegalArgumentException.class,
-                            CTXT.sum(CTXT.stringLiteral("value is out of range "), var)).throwStmt()
-            ));
-
-            addTo.add(
-                    accessor.write(CTXT.condExpr(CTXT.binExpr(var, "==", CTXT.intLiteral(-1)),
-                            CTXT.nullLiteral(),
-                            strings.call("get", var, CTXT.nullLiteral()))
-                    )
-            );
+            if (useSparseArray) {
+                generateDecodeSparseArray(addTo, var, strings);
+            } else {
+                generateDecodeMap(addTo, var, strings);
+            }
             return;
         } else if (MdUtil.isIntegerType(javaBaseType)) {
             addTo.add(accessor.write(initValue));
@@ -333,30 +360,79 @@ public class QBEnumType extends QBoundType<QEnumType> {
         if (valuesMap != null) {
             addTo.add(accessor.write(CTXT.staticCall(CodecUtils.class, "get", valuesMap, initValue).cast(javaBaseType)));
         } else if (values != null) {
-            final JCompoundStatement stmt = CTXT.compStmt();
-            final JLocalVariable var = stmt.addVar(FINAL, getPrimitiveClass(), "b", initValue);
-
-            // validate ordinal value
-                JExpr validate = CTXT.binExpr(
-                        CTXT.binExpr(var, "!=", CTXT.intLiteral(-1)), "&&",
-                        values.call("containsKey", var).not());
-                stmt.add(CTXT.ifStmt(validate,
-                        CTXT.newExpr(IllegalArgumentException.class,
-                                CTXT.sum(CTXT.stringLiteral("value is out of range "), var)).throwStmt()
-                ));
-
             if (javaBaseType.isEnum()) {
-                final JExpr value = CTXT.condExpr(CTXT.binExpr(var, "==", CTXT.intLiteral(-1)),
-                    CTXT.nullLiteral(),
-                    // this cast imposes some overhead
-                    values.call("get", var, CTXT.nullLiteral()).cast(javaBaseType)
-                );
-                stmt.add(accessor.write(value));
-                addTo.add(stmt);
-            } else
+                if (useSparseArray) {
+                    final JLocalVariable var = addTo.addVar(0, getPrimitiveClass(), "b", initValue);
+                    generateDecodeSparseArray(addTo, var, values);
+                } else {
+                    final JLocalVariable var = addTo.addVar(FINAL, getPrimitiveClass(), "b", initValue);
+                    generateDecodeMap(addTo, var, values);
+                }
+            } else {
                 addTo.add(accessor.write(values.index(initValue)));
+            }
         } else
             super.decode(input, addTo);
+    }
+
+    private void generateDecodeSparseArray(JCompoundStatement addTo, JLocalVariable value, JExpr collection) {
+        /*
+            final byte b = in0.readByte ();
+            if (b == -1) {
+                msg.side == null;
+            } else if (b >= 0 && b < enum_values_MyQuoteSide.length) {
+                msg.side = enum_values_MyQuoteSide[b];
+                if (msg.side == null) {
+                    throw new java.lang.IllegalArgumentException ("value is out of range "+b);
+                }
+            } else {
+                throw new java.lang.IllegalArgumentException ("value is out of range "+b);
+            }
+         */
+        JStatement then1 = accessor.write(CTXT.nullLiteral());
+        JCompoundStatement then2 = CTXT.compStmt();
+        then2.add(accessor.write(collection.index(value.cast(int.class))));
+        then2.add(CTXT.ifStmt(
+            CTXT.binExpr(accessor.read(), "==", CTXT.nullLiteral()),
+            CTXT.newExpr(IllegalArgumentException.class,
+                CTXT.sum(CTXT.stringLiteral("value is out of range "), value)).throwStmt()
+        ));
+
+        addTo.add(
+            CTXT.ifStmt(
+                CTXT.binExpr(value, "==", CTXT.intLiteral(-1)), then1,
+                CTXT.binExpr(
+                    CTXT.binExpr(value, ">=", CTXT.intLiteral(0)),
+                    "&&",
+                    CTXT.binExpr(value, "<", collection.field("length"))
+                ), then2,
+                CTXT.newExpr(IllegalArgumentException.class,
+                    CTXT.sum(CTXT.stringLiteral("value is out of range "), value)).throwStmt()
+            )
+        );
+    }
+
+    private void generateDecodeMap(JCompoundStatement addTo, JLocalVariable value, JExpr collection) {
+        /*
+            final byte b = in0.readByte ();
+            if (b == -1) {
+                msg.side == null;
+            } else {
+                msg.side = this.enum_values_MyQuoteSide.get (b, null);
+                if (msg.side == null) {
+                    throw new java.lang.IllegalArgumentException ("value is out of range "+b);
+                }
+            }
+         */
+        JStatement then = accessor.write(CTXT.nullLiteral());
+        JCompoundStatement elseStmt = CTXT.compStmt();
+        elseStmt.add(accessor.write(collection.call("get", value, CTXT.nullLiteral())));
+        elseStmt.add(CTXT.ifStmt(
+            CTXT.binExpr(accessor.read(), "==", CTXT.nullLiteral()),
+            CTXT.newExpr(IllegalArgumentException.class,
+                CTXT.sum(CTXT.stringLiteral("value is out of range "), value)).throwStmt()
+        ));
+        addTo.add(CTXT.ifStmt(CTXT.binExpr(value, "==", CTXT.intLiteral(-1)), then, elseStmt));
     }
 
     @Override
@@ -455,6 +531,21 @@ public class QBEnumType extends QBoundType<QEnumType> {
             default:
                 throw new IllegalStateException("unexpected size " + size);
         }
+    }
+
+    public long findMaxValue(EnumClassDescriptor descriptor) {
+        return Arrays.stream(descriptor.getValues())
+            .mapToLong(v -> v.value).max().orElse(0);
+    }
+
+    public boolean hasNegativeValues(EnumClassDescriptor descriptor) {
+        for (EnumValue v : descriptor.getValues()) {
+            if (v.value < 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -45,7 +45,8 @@ class AeronWorkDirManager {
             .withZone(ZoneId.systemDefault());
 
     // If set then TB uses external Aeron driver instead of running it's own embedded driver.
-    private static final String EXTERNAL_AERON_DIR = System.getProperty("TimeBase.transport.aeron.external.driver.dir", null);
+    public static final String PROP_TIME_BASE_TRANSPORT_AERON_EXTERNAL_DRIVER_DIR = "TimeBase.transport.aeron.external.driver.dir";
+    private static final String EXTERNAL_AERON_DIR = System.getProperty(PROP_TIME_BASE_TRANSPORT_AERON_EXTERNAL_DRIVER_DIR, null);
     private static final String EXPLICIT_STREAM_ID_COUNTER_FILE = QSHome.getPath("timebase" + File.separator + "id.sequence");
 
     // Base dir for auto-generated folder
@@ -55,6 +56,9 @@ class AeronWorkDirManager {
     // We will delete older folders if they at least this old (seconds).
     // This is needed to avoid some corner cases when there 3 or more instances of time start at same time with same port and same DeltixHome.
     private static final int SAFETY_INTERVAL = 10;
+
+    private AeronWorkDirManager() {
+    }
 
     /**
      * Returns path like "C:\dev\main\temp\dxaeron\8057\20170314_152847\driver".
@@ -84,6 +88,10 @@ class AeronWorkDirManager {
 
     public static boolean useEmbeddedDriver() {
         return EXTERNAL_AERON_DIR == null;
+    }
+
+    public static boolean isExternalDriverConfigured() {
+        return EXTERNAL_AERON_DIR != null;
     }
 
     public static String getExplicitStreamIdCounterFile() {

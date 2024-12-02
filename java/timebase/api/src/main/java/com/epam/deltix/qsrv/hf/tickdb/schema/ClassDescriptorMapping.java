@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -29,9 +29,7 @@ class ClassDescriptorMapping {
 
     public UnboundDecoder               decoder;
     public FixedUnboundEncoder          encoder;
-
-    public boolean                      hasChanges = true;
-
+    private SchemaChange.Impact         impact = SchemaChange.Impact.DataConvert;
     public ClassDescriptorMapping(RecordClassDescriptor source) {
         this.source = source;
         this.mappings = new FieldMapping[0];
@@ -60,12 +58,18 @@ class ClassDescriptorMapping {
                     mapping.source != null ? mapping.source.getField() : null,
                     mapping.target != null ? mapping.target.getField() : null);
 
-            // assuming we ca have only 1 change
-            for (AbstractFieldChange fieldChange : fieldChanges)
-                mapping.resolution = fieldChange.resolution;
+            // assuming we can have only 1 change with resolution which requires default value
+            for (AbstractFieldChange fieldChange : fieldChanges) {
+                if (fieldChange.resolution != null)
+                    mapping.resolution = fieldChange.resolution;
+            }
         }
 
-        hasChanges = change.getChangeImpact() != SchemaChange.Impact.None;
+        impact = change.getChangeImpact();
+    }
+
+    public boolean hasChanges() {
+        return impact != SchemaChange.Impact.None;
     }
 
     public boolean      isValid() {

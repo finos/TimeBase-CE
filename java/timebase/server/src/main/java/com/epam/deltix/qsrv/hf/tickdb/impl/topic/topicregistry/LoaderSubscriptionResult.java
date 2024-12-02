@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -29,39 +29,20 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 public class LoaderSubscriptionResult {
     private final TopicType topicType;
-    private final ConstantIdentityKey[] mapping;
     private final List<RecordClassDescriptor> types;
     private final String publisherChannel;
-    private final String metadataSubscriberChannel;
     private final int dataStreamId;
-    private final int serverMetadataStreamId;
-    private final byte loaderNumber;
-    private final int minTempEntityIndex;
-    private final int maxTempEntityIndex;
-    private final Runnable dataAvailabilityCallback;
 
-    public LoaderSubscriptionResult(TopicType topicType, ConstantIdentityKey[] mapping, List<RecordClassDescriptor> types,
-                                    String publisherChannel, String metadataSubscriberChannel, int dataStreamId, int serverMetadataStreamId,
-                                    byte loaderNumber, int minTempEntityIndex, int maxTempEntityIndex, Runnable dataAvailabilityCallback) {
+    public LoaderSubscriptionResult(TopicType topicType, List<RecordClassDescriptor> types,
+                                    String publisherChannel, int dataStreamId) {
         this.topicType = topicType;
         this.types = types;
         this.publisherChannel = publisherChannel;
-        this.metadataSubscriberChannel = metadataSubscriberChannel;
         this.dataStreamId = dataStreamId;
-        this.serverMetadataStreamId = serverMetadataStreamId;
-        this.loaderNumber = loaderNumber;
-        this.minTempEntityIndex = minTempEntityIndex;
-        this.maxTempEntityIndex = maxTempEntityIndex;
-        this.mapping = mapping;
-        this.dataAvailabilityCallback = dataAvailabilityCallback;
     }
 
     public TopicType getTopicType() {
         return topicType;
-    }
-
-    public ConstantIdentityKey[] getMapping() {
-        return mapping;
     }
 
     public List<RecordClassDescriptor> getTypes() {
@@ -72,31 +53,7 @@ public class LoaderSubscriptionResult {
         return publisherChannel;
     }
 
-    public String getMetadataSubscriberChannel() {
-        return metadataSubscriberChannel;
-    }
-
     public int getDataStreamId() {
         return dataStreamId;
-    }
-
-    public int getServerMetadataStreamId() {
-        return serverMetadataStreamId;
-    }
-
-    public byte getLoaderNumber() {
-        return loaderNumber;
-    }
-
-    public int getMinTempEntityIndex() {
-        return minTempEntityIndex;
-    }
-
-    public int getMaxTempEntityIndex() {
-        return maxTempEntityIndex;
-    }
-
-    public Runnable getDataAvailabilityCallback() {
-        return dataAvailabilityCallback;
     }
 }

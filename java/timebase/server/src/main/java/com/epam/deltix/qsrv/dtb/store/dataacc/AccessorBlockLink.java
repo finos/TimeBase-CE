@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -20,13 +20,16 @@ import com.epam.deltix.qsrv.dtb.store.codecs.SymmetricSizeCodec;
 import com.epam.deltix.qsrv.dtb.store.pub.*;
 import com.epam.deltix.qsrv.hf.pub.codec.TimeCodec;
 import com.epam.deltix.util.memory.MemoryDataInput;
+import net.jcip.annotations.GuardedBy;
 
 /**
  *
  */
 public final class AccessorBlockLink {
+    public static final boolean     VALIDATE_LOCKS = Boolean.getBoolean("Timebase.AccessorBlockLink.VALIDATE_LOCKS");
+
     public static final long        NO_NEXT_TIMESTAMP = Long.MAX_VALUE;
-    
+
     private final BlockAccessorBase accessor;
     private final int               entity;
     private final DataBlock         block;
@@ -373,12 +376,12 @@ public final class AccessorBlockLink {
             return hasMore ? (result | NextState.HAS_MORE) : result;
         }
     }
-    
+
+    @GuardedBy("block")
     MemoryDataInput                 getMDI () {
-        assert Thread.holdsLock (block);
+        assert !AccessorBlockLink.VALIDATE_LOCKS || Thread.holdsLock(block);
 
         MemoryDataInput     mdi = accessor.mdi;
-        //System.out.println(Thread.currentThread() + " reading " + input.hashCode());
         block.configure (mdi, offset);
         return (mdi);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.dtb.store.impl;
 
+import com.epam.deltix.qsrv.hf.pub.TimeSource;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.qsrv.dtb.store.pub.DataWriter;
 import com.epam.deltix.qsrv.dtb.store.pub.IllegalMessageAppend;
@@ -24,6 +25,7 @@ import com.epam.deltix.qsrv.hf.tickdb.impl.MessageProducer;
 import com.epam.deltix.qsrv.hf.tickdb.impl.RegistryCache;
 import com.epam.deltix.qsrv.hf.tickdb.pub.OutOfSequenceMessageException;
 import com.epam.deltix.qsrv.hf.tickdb.pub.WriterClosedException;
+import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.timebase.messages.TimeStampedMessage;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.time.TimeKeeper;
@@ -35,16 +37,18 @@ public class WriterChannel implements MessageChannel<InstrumentMessage> {
 
     private final MessageProducer       producer;
     private final RegistryCache         cache;
+    private final TimeSource timeSource;
     private boolean                     opened = false;
     private final MutableBoolean        exists = new MutableBoolean(false);
 
     public WriterChannel(DataWriter writer,
-                    MessageProducer<? extends InstrumentMessage> producer,
-                    RegistryCache cache)
+                         MessageProducer<? extends InstrumentMessage> producer,
+                         RegistryCache cache, TimeSource timeSource)
     {
         this.writer = writer;
         this.producer = producer;
         this.cache = cache;
+        this.timeSource = timeSource;
     }
 
     @Override
@@ -53,9 +57,8 @@ public class WriterChannel implements MessageChannel<InstrumentMessage> {
         if (writer == null) // closed state
             throw new WriterClosedException(this + " is closed");
 
-        boolean undefined = msg.getTimeStampMs() == TimeStampedMessage.TIMESTAMP_UNKNOWN;
-
-        long nstime = undefined ? TimeKeeper.currentTimeNanos : msg.getNanoTime();
+        boolean undefined = TimeStamp.isUndefined(msg.getNanoTime());
+        long nstime = undefined ? timeSource.currentTimeNanos() : msg.getNanoTime();
 
         assert nstime != Long.MAX_VALUE; // temporary
 

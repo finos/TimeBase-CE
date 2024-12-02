@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -125,7 +125,7 @@ public final class FSFactory {
         synchronized (cache) {
             AbstractFileSystem fs = cache.get(address);
             if (fs == null) {
-                fs = createDistributedFS(scheme, address);
+                fs = createDistributedFS(scheme, address, uri);
                 if (dfsCacheSizeInBytes > 0) {
                     fs = wrapChunkedCache(fs, dfsCacheSizeInBytes);
                 }
@@ -135,9 +135,10 @@ public final class FSFactory {
         }
     }
 
-    private static AbstractFileSystem   createDistributedFS(String scheme, String address) throws IOException {
+    private static AbstractFileSystem   createDistributedFS(String scheme, String address, String fullPath) throws IOException {
         if (isAzureFSScheme(scheme)) {
-            // Use new Azure client
+            // Choose AzureFs implementation
+           // Use new Azure client
             return Azure2FS.create();
         }
 

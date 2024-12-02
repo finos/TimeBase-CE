@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -100,6 +100,33 @@ public class CompiledCodecMetaFactory extends CodecMetaFactory {
             );
         } catch (NoSuchMethodException x) {
             throw new RuntimeException (x);
+        }
+    }
+
+    @Override
+    public ExternalCodecFactory<FixedExternalDecoder> createFixedExternalDecoderFactory(
+        TypeLoader loader, RecordClassDescriptor cd, ObjectManager objectManager) {
+
+        if (!canCompile(cd))
+            return (super.createFixedExternalDecoderFactory(loader, cd, objectManager));
+
+        final RecordLayout layout = new RecordLayout(loader, cd);
+
+        final SpecialClassLoader classLoader = hasObjectField(cd) ?
+            new SpecialClassLoader(layout.getTargetClass().getClassLoader() != null ?
+                layout.getTargetClass().getClassLoader() : ClassCodecFactory.class.getClassLoader()
+            ) :
+            null;
+
+        try {
+            return (
+                new ClassAsFactoryExternal<>(
+                    ClassCodecFactory.createFixedExternalDecoder(loader, layout, classLoader),
+                    new Object[]{ layout }, objectManager
+                )
+            );
+        } catch (NoSuchMethodException x) {
+            throw new RuntimeException(x);
         }
     }
 

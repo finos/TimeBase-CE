@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -31,10 +31,10 @@ public class AeronPublicationMDOAdapter {
     private final ExclusivePublication publication;
 
     // Publication buffers
-    private final MemoryDataOutput mdi = new MemoryDataOutput();
+    private final MemoryDataOutput mdo = new MemoryDataOutput();
 
 
-    private final UnsafeBuffer outUnsafeBuffer = new UnsafeBuffer(mdi.getBuffer(), 0, 0);
+    private final UnsafeBuffer outUnsafeBuffer = new UnsafeBuffer(mdo.getBuffer(), 0, 0);
 
     private final IdleStrategy publicationIdleStrategy;
 
@@ -48,9 +48,9 @@ public class AeronPublicationMDOAdapter {
 
     public MemoryDataOutput getMemoryDataOutput() {
         assert !flushNeeded;
-        mdi.reset();
+        mdo.reset();
         flushNeeded = true;
-        return mdi;
+        return mdo;
     }
 
     /**
@@ -74,10 +74,10 @@ public class AeronPublicationMDOAdapter {
 
     private boolean sendBuffer(int startingOffset, boolean retryIfNotConnected) {
         assert flushNeeded;
-        int dataLength = mdi.getPosition() - startingOffset;
+        int dataLength = mdo.getPosition() - startingOffset;
         assert dataLength <= publication.maxMessageLength();
 
-        outUnsafeBuffer.wrap(mdi.getBuffer(), startingOffset, dataLength);
+        outUnsafeBuffer.wrap(mdo.getBuffer(), startingOffset, dataLength);
 
         flushNeeded = false;
         publicationIdleStrategy.reset();
@@ -99,12 +99,12 @@ public class AeronPublicationMDOAdapter {
     }
 
     /**
-     * Depending on message size sends it as as or splits it into multiple parts. See {@link #sendMultipartMessage(int, byte, byte)}
+     * Depending on message size sends it as is or splits it into multiple parts. See {@link #sendMultipartMessage(int, byte, byte)}
      *
      * @throws PublicationClosedException if publication is already closed
      */
     public void sendMessage(int offset, byte multipartMessageHeader, byte multipartAdditionalPartHeader) {
-        int length = mdi.getPosition();
+        int length = mdo.getPosition();
         int maxMessageLength = publication.maxMessageLength();
         if (length > maxMessageLength) {
             sendMultipartMessage(offset, multipartMessageHeader, multipartAdditionalPartHeader);
@@ -120,7 +120,7 @@ public class AeronPublicationMDOAdapter {
      * <b>First byte of original message data is discarded (byte at {@code offset}.</b>
      * Remaining parts start with {@code multipartAdditionalPartHeader} 1 byte code.
      *
-     * Data offset must be at least 4. First 4 bytes of buffer content will be overwritten.
+     * <p>Data offset must be at least 4. First 4 bytes of buffer content will be overwritten.
      *
      * <p>
      * Expected input buffer content:
@@ -144,9 +144,9 @@ public class AeronPublicationMDOAdapter {
             throw new IllegalArgumentException("At least " + extraSpaceForMessageSize + " of extra padding for message size required");
         }
         int maxMessageLength = publication.maxMessageLength();
-        byte[] buffer = mdi.getBuffer();
+        byte[] buffer = mdo.getBuffer();
 
-        int endPosition = mdi.getPosition();
+        int endPosition = mdo.getPosition();
         int originalMessageLength = endPosition - offset; // Original message length (including first header byte)
         int dataLength = originalMessageLength - partHeaderSize; // Data length
 
@@ -154,9 +154,9 @@ public class AeronPublicationMDOAdapter {
         assert endPosition - offset == partHeaderSize + extraSpaceForMessageSize + dataLength;
         outUnsafeBuffer.wrap(buffer);
 
-        mdi.seek(offset);
-        mdi.writeByte(multipartMessageHeader);
-        mdi.writeInt(dataLength);
+        mdo.seek(offset);
+        mdo.writeByte(multipartMessageHeader);
+        mdo.writeInt(dataLength);
 
 
         int sendOffset = offset;
@@ -172,8 +172,8 @@ public class AeronPublicationMDOAdapter {
                     // Last part of message
                     sendLength = endPosition - sendOffset;
                 }
-                mdi.seek(sendOffset);
-                mdi.writeByte(multipartAdditionalPartHeader); // Write header byte. Note: we override data we already sent.
+                mdo.seek(sendOffset);
+                mdo.writeByte(multipartAdditionalPartHeader); // Write header byte. Note: we override data we already sent.
             }
         }
 
@@ -181,7 +181,10 @@ public class AeronPublicationMDOAdapter {
     }
 
     private void handlePublicationError(long result) {
-        if (result == Publication.BACK_PRESSURED || result == Publication.NOT_CONNECTED || result == Publication.ADMIN_ACTION) {
+        if (result == Publication.ADMIN_ACTION) {
+            // Minimal delay should be sufficient
+            Thread.yield();
+        } else if (result == Publication.BACK_PRESSURED || result == Publication.NOT_CONNECTED) {
             publicationIdleStrategy.idle();
         } else if (result == Publication.CLOSED) {
             throw new PublicationClosedException();

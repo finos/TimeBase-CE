@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -64,5 +64,10 @@ public class CreateFieldChange extends AbstractFieldChange {
 
     public String getInitialValue() {
         return resolution != null ? resolution.defaultValue : null;
+    }
+
+    @Override
+    public String toString() {
+        return "created";
     }
 }

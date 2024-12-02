@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,13 +16,14 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.pub.lock;
 
+import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
 /**
  * A token representing a lock on a timebase stream.
  *
  * <p> A lock object is created each time a lock is acquired on a stream via
- * one of the {@link deltix.qsrv.hf.tickdb.pub.DXTickStream#lock() lock()} or
- * {@link deltix.qsrv.hf.tickdb.pub.DXTickStream#tryLock(long)} tryLock() }
- * methods of the {@link deltix.qsrv.hf.tickdb.pub.DXTickStream} class.</p>
+ * one of the {@link DXTickStream#lock() lock()} or
+ * {@link DXTickStream#tryLock(long)} tryLock() }
+ * methods of the {@link DXTickStream} class.</p>
  */
 
 public interface DBLock {
@@ -35,6 +36,14 @@ public interface DBLock {
      */
     
     public LockType  getType();
+
+    /**
+     * Lock options
+     *
+     * @return options of the lock.
+     */
+
+    LockOptions getOptions();
 
     /**
      * Tells whether or not this lock is valid.

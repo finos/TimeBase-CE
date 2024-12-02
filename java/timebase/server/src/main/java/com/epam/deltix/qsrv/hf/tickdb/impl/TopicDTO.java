@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -55,15 +55,15 @@ public class TopicDTO {
     @XmlElement(name = "topicType")
     private TopicType topicType;
 
+    @SuppressWarnings("FieldMayBeFinal")
     @XmlElement(name = "metadata")
     private RecordClassSet rd = new RecordClassSet();
 
-    @XmlElementWrapper(name="symbols")
-    @XmlElement(name = "symbol")
-    List<String> symbols;
-
     @XmlElement(name = "copyToStream")
     private String copyToStream;
+
+    @XmlElement(name = "copyToStream")
+    private String copyToSpace;
 
     public TopicDTO() {
     }
@@ -100,6 +100,14 @@ public class TopicDTO {
         this.copyToStream = copyToStream;
     }
 
+    public String getCopyToSpace() {
+        return copyToSpace;
+    }
+
+    public void setCopyToSpace(String copyToSpace) {
+        this.copyToSpace = copyToSpace;
+    }
+
     public Map<String, String> getChannelSettings() {
         return channelSettings;
     }
@@ -123,21 +131,5 @@ public class TopicDTO {
     public void setTypes(List<RecordClassDescriptor> types) {
         this.rd.clear();
         this.rd.addContentClasses(types.toArray(new RecordClassDescriptor[0]));
-    }
-
-    public List<IdentityKey> getEntities() {
-        List<IdentityKey> result = new ArrayList<>();
-        for (String symbol : symbols) {
-            result.add(new ConstantIdentityKey(symbol));
-        }
-        return result;
-    }
-
-    public void setEntities(List<ConstantIdentityKey> entities) {
-        List<String> symbols = new ArrayList<>(entities.size());
-        for (ConstantIdentityKey entity : entities) {
-            symbols.add(entity.getSymbol());
-        }
-        this.symbols = symbols;
     }
 }

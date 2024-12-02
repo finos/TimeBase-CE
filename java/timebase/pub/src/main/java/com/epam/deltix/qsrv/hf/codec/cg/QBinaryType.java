@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -47,5 +47,10 @@ public class QBinaryType extends QPrimitiveType  <BinaryDataType> {
     @Override
     protected void encodeNullImpl(JExpr output, JCompoundStatement addTo) {
         addTo.add(CTXT.staticCall(BinaryCodec.class, "writeNull", output));
+    }
+
+    @Override
+    public void skip(JExpr input, JCompoundStatement addTo) {
+        addTo.add(CTXT.staticCall(BinaryCodec.class, "skip", input));
     }
 }

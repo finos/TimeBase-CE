@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -287,7 +287,7 @@ public final class LiveDataReaderImpl
                 }
             } catch (Exception ex) {
                 // in case of race conditions currentTimeSlice can be deleted here
-                DataReaderImpl.LOG.warn("Skipping error while reading slice: %s").with(ex);
+                DataReaderImpl.LOG.warn("Skipping error while reading slice (%s): %s").with(currentTimeSlice).with(ex);
             }
 
             // process waiting blocks (for live mode)

@@ -442,7 +442,7 @@ public class Test_SpaceReading {
         String streamKey = "testQueries";
         DXTickStream stream = db.createStream(streamKey, options);
 
-        generateMessagesForSpaces(stream, 4);
+        generateSpace(stream, 100, "a", "b");
 
         int count = 0;
 
@@ -456,9 +456,10 @@ public class Test_SpaceReading {
                 count++;
             }
 
-            assertEquals(10_000, count);
+            assertEquals(100, count);
         }
 
+        // SelectionOptions.spaces doesn't affect query
         count = 0;
         try (InstrumentMessageSource source =
                      runner.getTickDb().executeQuery("select * from testQueries where symbol == 'b'", so)) {
@@ -467,7 +468,7 @@ public class Test_SpaceReading {
                 count++;
             }
 
-            assertEquals(0, count);
+            assertEquals(100, count);
         }
     }
 

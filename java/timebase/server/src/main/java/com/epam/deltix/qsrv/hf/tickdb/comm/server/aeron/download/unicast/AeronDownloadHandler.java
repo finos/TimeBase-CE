@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -38,8 +38,8 @@ import java.security.Principal;
 public class AeronDownloadHandler {
     public static final String CHANNEL = TDBProtocol.AERON_CHANNEL;
 
-    public static void createAndStart(SelectionOptions options, Principal user, VSChannel ds, DXTickDB db, InstrumentMessageSource cursor, TickCursor tcursor, DataFilter<RawMessage> filter, boolean binary, DataOutputStream dout, int clientVersion, AeronThreadTracker aeronThreadTracker, Aeron aeron, String aeronDir, int aeronDataStreamId, int aeronCommandStreamId) throws IOException {
-        AeronDownloadTask downloadTask = new AeronDownloadTask(aeron, aeronDataStreamId, aeronCommandStreamId, cursor, filter, binary, user, options.channelPerformance, ds, db, tcursor);
+    public static void createAndStart(SelectionOptions options, Principal user, VSChannel ds, DXTickDB db, InstrumentMessageSource cursor, DataFilter<RawMessage> filter, boolean binary, DataOutputStream dout, int clientVersion, AeronThreadTracker aeronThreadTracker, Aeron aeron, String aeronDir, int aeronDataStreamId, int aeronCommandStreamId) throws IOException {
+        AeronDownloadTask downloadTask = new AeronDownloadTask(aeron, aeronDataStreamId, aeronCommandStreamId, cursor, filter, binary, user, options.channelPerformance, ds, db);
 
         Thread downloaderThread;
         try {

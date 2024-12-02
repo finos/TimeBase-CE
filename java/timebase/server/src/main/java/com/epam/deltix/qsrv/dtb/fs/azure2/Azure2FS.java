@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -68,7 +68,7 @@ public class Azure2FS extends AzureFsBase {
      * Configures FS using provided properties.
      */
     public static Azure2FS create(Properties props) {
-        String fullAccount = getRequiredProperty(props, AZURE_FULL_ACCOUTN_PROP);
+        String fullAccount = getRequiredProperty(props, AZURE_FULL_ACCOUNT_PROP);
         String clientId = getRequiredProperty(props, AZURE_CLIENT_ID_PROP);
         String authEndpoint = getRequiredProperty(props, AZURE_AUTH_TOKEN_ENDPOINT_PROP);
         String secretDef = getRequiredProperty(props, AZURE_SECRET_PROP);
@@ -94,7 +94,7 @@ public class Azure2FS extends AzureFsBase {
     }
 
     public static boolean isFullAccountNameSet() {
-        return System.getProperty(AZURE_FULL_ACCOUTN_PROP) != null;
+        return System.getProperty(AZURE_FULL_ACCOUNT_PROP) != null;
     }
 
     public static boolean isAllRequiredPropertiesSet() {

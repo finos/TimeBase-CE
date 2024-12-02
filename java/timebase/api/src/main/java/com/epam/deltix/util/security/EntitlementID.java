@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,17 +16,17 @@
  */
 package com.epam.deltix.util.security;
 
-public interface EntitlementID {
-    
-    boolean isNull();
-        
-    int numberOfEntries();
-    
-    byte[] content();
+import com.epam.deltix.containers.interfaces.BinaryArrayReadOnly;
 
-    int size();
-    
+public interface EntitlementID {
+
+    boolean isNull();
+
+    BinaryArrayReadOnly content();
+
+    int numberOfEntries();
+
     int entryOffset(int entryIndex);
-    
+
     int entryLength(int entryIndex);
 }

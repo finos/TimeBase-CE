@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,8 +17,8 @@
 package com.epam.deltix.qsrv.hf.tickdb.impl;
 
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.DBLockImpl;
+import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockOptions;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
-import com.epam.deltix.util.lang.Util;
 
 /**
  * User: alex
@@ -27,15 +27,24 @@ import com.epam.deltix.util.lang.Util;
 public class ServerLock extends DBLockImpl {
     protected String            clientId;
 
-    private static char         SEPARATOR = ':';
-    private static String       SEPARATOR_VALUE = String.valueOf(SEPARATOR);
+    private static final char         SEPARATOR = ':';
+    private static final String       SEPARATOR_VALUE = String.valueOf(SEPARATOR);
 
     public ServerLock(LockType type, String guid) {
         super(type, guid);
     }
 
+    public ServerLock(LockOptions options, String guid) {
+        super(options, guid);
+    }
+
     public ServerLock(LockType type, String guid, String clientId) {
         super(type, guid);
+        this.clientId = clientId;
+    }
+
+    public ServerLock(LockOptions options, String guid, String clientId) {
+        super(options, guid);
         this.clientId = clientId;
     }
 

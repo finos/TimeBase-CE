@@ -436,3 +436,9 @@ test select boolField, byteField from reverse("1min-1h-1h-3") over time(10m) whe
 !end
 test select boolField, byteField from reverse("1min-1h-1h-3") over time(10m) where timestamp > '2021-04-10 05:10:00.000'd and timestamp < '2021-04-12 05:10:00.000'd
 !end
+test select decimalField from "1min-1h-1h-3" over every time(3m) where timestamp > '2021-04-19 01:15:00.000'd and timestamp < '2021-04-19 01:19:00.000'd group by symbol
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:18:00.000Z","decimalField":"741.7301568223631"}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:18:00.000Z","decimalField":"330.7719239673901"}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:18:00.000Z","decimalField":"706.1560784509762"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:21:00.000Z","decimalField":"254.697647376261"}
+!end

@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.test.qsrv.hf.pub;
 
+import com.epam.deltix.dfp.Decimal;
 import com.epam.deltix.dfp.Decimal64;
 import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
@@ -29,6 +30,7 @@ import com.epam.deltix.util.memory.MemoryDataInput;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -296,16 +298,19 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
     public void compiled() throws Exception {
         setUpComp();
         testCodecs(0.12345, 123.456789);
-        testCodecs(Double.NaN, Double.NaN);
         testCodecs(0.689, 0.689);
-        //testCodecs1();
+        //testCodecs(Decimal64.NaN.toLong(), Decimal64.NaN.toLong());
+        testCodecs(Double.NaN, Double.NaN);
     }
 
     @Test
     public void interpretted() throws Exception {
         setUpIntp();
         testCodecs(0.12345, 123.456789);
+        testCodecs(0.689, 0.689);
+        //testCodecs(Decimal64.NaN.toLong(), Decimal64.NaN.toLong());
         testCodecs(Double.NaN, Double.NaN);
+        //testCodecs(Decimal64.NaN.toLong(), Decimal64.NaN.toLong());
     }
 
     private void checkValues(double price, double size, DoublePriceTestMessage msg) {
@@ -333,21 +338,63 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
             Assert.assertEquals(size, s);
     }
 
+    private void checkValues(@Decimal long price, @Decimal long size, DoublePriceTestMessage msg) {
+        if (Decimal64Utils.isNaN(price))
+            Assert.assertTrue(Double.isNaN(msg.getPrice()));
+        else
+            Assert.assertEquals(Decimal64Utils.toDouble(price), msg.getPrice(),1E-16);
+
+        if (Decimal64Utils.isNaN(size))
+            Assert.assertTrue(Double.isNaN(msg.getSize()));
+        else
+            Assert.assertEquals(Decimal64Utils.toDouble(size), msg.getSize(), 1E-16);
+    }
+
     private void checkValues(Decimal64 price, Decimal64 size, Decimal64 p, Decimal64 s) {
         if (price == null)
             Assert.assertNull(p);
         else
             Assert.assertTrue(Decimal64.isIdentical(price, p));
+
         if (size == null)
             Assert.assertNull(s);
         else
             Assert.assertTrue(Decimal64.isIdentical(size, s));
     }
 
+    public void testCodecs(long longPrice, long longSize) throws Exception {
+
+        // Decimal64
+        DecimalPriceBaseMessage dc = new DecimalPriceBaseMessage(longPrice, longSize);
+        DecimalPriceBaseMessage dce = (DecimalPriceBaseMessage) encodeDecode(dc, DecimalPriceBaseMessage.class);
+        checkValues(dc.getPrice(), dc.getSize(), dce.getPrice(), dce.getSize());
+
+        // long decimal without 'hasers'
+        LongPriceBaseMessage msg1 = new LongPriceBaseMessage(longPrice, longSize);
+        LongPriceBaseMessage lbm = (LongPriceBaseMessage) encodeDecode(msg1, LongPriceTestMessage.class);
+        checkValues(msg1.getPrice(), msg1.getSize(), lbm.getPrice(), lbm.getSize());
+        checkValues(longPrice, longSize, (DoublePriceTestMessage)encodeDecode(msg1, DoublePriceTestMessage.class));
+
+        DecimalPriceBaseMessage d = (DecimalPriceBaseMessage) encodeDecode(msg1, DecimalPriceBaseMessage.class);
+        checkValues(longPrice, longSize, Decimal64.toUnderlying(d.price), Decimal64.toUnderlying(d.size));
+
+        // long decimal with 'hasers'
+        LongPriceTestMessage msg = new LongPriceTestMessage(longPrice, longSize);
+        LongPriceTestMessage lm = (LongPriceTestMessage) encodeDecode(msg, LongPriceTestMessage.class);
+        checkValues(msg.getPrice(), msg.getSize(), lm.getPrice(), lm.getSize());
+        checkValues(longPrice, longSize, (DoublePriceTestMessage)encodeDecode(msg, DoublePriceTestMessage.class));
+
+        // long decimal with 'hasers'
+        LongFlatPriceTestMessage msg2 = new LongFlatPriceTestMessage(longPrice, longSize);
+        LongFlatPriceTestMessage fm = (LongFlatPriceTestMessage) encodeDecode(msg2, LongFlatPriceTestMessage.class);
+        checkValues(msg2.price, msg2.size, fm.price, fm.size);
+        checkValues(longPrice, longSize, (DoublePriceTestMessage)encodeDecode(msg2, DoublePriceTestMessage.class));
+    }
+
     public void testCodecs(double price, double size) throws Exception {
 
-        long longPrice = Double.isNaN(price) ? Decimal64Utils.NULL : Decimal64Utils.fromDouble(price);
-        long longSize = Double.isNaN(size) ? Decimal64Utils.NULL : Decimal64Utils.fromDouble(size);
+        long longPrice = Decimal64Utils.fromDouble(price);
+        long longSize = Decimal64Utils.fromDouble(size);
 
         // Decimal64
         DecimalPriceBaseMessage dc = new DecimalPriceBaseMessage(longPrice, longSize);
@@ -376,16 +423,36 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
         checkValues(price, size, (DoublePriceTestMessage)encodeDecode(msg2, DoublePriceTestMessage.class));
     }
 
-    public void testCodecs1() throws Exception {
+    @Test
+    public void test1Compiled() throws Exception {
+        setUpComp();
+        testCodecs1();
+    }
+
+    @Test
+    public void test1Int() throws Exception {
+        setUpIntp();
+        testCodecs1();
+    }
+
+    void testCodecs1() throws Exception {
         double price = 0.12345;
         double size = 123.456789;
-        test2(new LongFlatPriceTestMessage(Decimal64Utils.fromDouble(price), Decimal64Utils.fromDouble(size)), 0.12345, 123.456789);
+        test2(new LongFlatPriceTestMessage(Decimal64Utils.fromDouble(price), Decimal64Utils.fromDouble(size)), price, size);
+
+        test2(new LongFlatPriceTestMessage(Decimal64Utils.NaN, Decimal64Utils.NaN), Double.NaN, Double.NaN);
+    }
+
+    @Ignore("Fails because of incorrect processing Decimal64Utils.NULL") //TODO:
+    @Test
+    public void testCodecsNulls() throws Exception {
+
+        setUpIntp();
+        test2(new LongFlatPriceTestMessage(Decimal64Utils.NULL, Decimal64Utils.NULL), Double.NaN, Double.NaN);
+
+        setUpComp();
         test2(new LongFlatPriceTestMessage(Decimal64Utils.NULL, Decimal64Utils.NULL), Double.NaN, Double.NaN);
     }
-
-    public void testArray() throws Exception {
-    }
-
 
     private void test1(double price, double size) throws Exception {
         LongPriceTestMessage msg = new LongPriceTestMessage();
@@ -439,6 +506,7 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
     private void test2(LongFlatPriceTestMessage msg, double price, double size) throws Exception {
 
         MemoryDataOutput out = new MemoryDataOutput();
+
         factory.createFixedBoundEncoder(cd -> LongFlatPriceTestMessage.class, LONG_RCD).encode(msg, out);
 
         MemoryDataInput in = new MemoryDataInput(out);

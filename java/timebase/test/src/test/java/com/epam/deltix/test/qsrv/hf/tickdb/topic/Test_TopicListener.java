@@ -19,10 +19,11 @@ package com.epam.deltix.test.qsrv.hf.tickdb.topic;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDB;
 import com.epam.deltix.util.JUnitCategories;
 import com.epam.deltix.util.lang.Disposable;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import javax.annotation.Nonnull;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -37,8 +38,12 @@ public class Test_TopicListener extends BaseTimeBaseTopicReadingTest {
         executeTest();
     }
 
-    @NotNull
-    protected Runnable createReader(AtomicLong messagesReceivedCounter, MessageValidator messageValidator, String topicKey, TopicDB topicDB) {
+    @Override
+    @Nonnull
+    protected Runnable createReader(AtomicLong messagesReceivedCounter,
+                                    MessageValidator messageValidator,
+                                    String topicKey,
+                                    TopicDB topicDB, CountDownLatch readerReady) {
         return () -> {
             RatePrinter ratePrinter = new RatePrinter("Reader");
             ratePrinter.start();
@@ -47,6 +52,7 @@ public class Test_TopicListener extends BaseTimeBaseTopicReadingTest {
                 ratePrinter.inc();
                 messagesReceivedCounter.incrementAndGet();
             });
+            readerReady.countDown();
         };
     }
 

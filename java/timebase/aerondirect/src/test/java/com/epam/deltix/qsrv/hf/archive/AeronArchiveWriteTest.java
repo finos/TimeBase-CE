@@ -18,7 +18,6 @@ package com.epam.deltix.qsrv.hf.archive;
 
 import com.epam.deltix.qsrv.hf.tickdb.pub.Messages;
 import com.epam.deltix.streaming.MessageChannel;
-import com.epam.deltix.qsrv.hf.StubData;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.topic.loader.DirectLoaderFactory;
@@ -50,7 +49,6 @@ public class AeronArchiveWriteTest {
     private static final int MAX_TEST_DURATION_MS = 60 * 1000;
 
     public static final String TEST_DIR = "\\temp\\aeron";
-    public static final String DRIVER_DIR = TEST_DIR + "\\driver";
     public static final String ARCHIVE_DIR = TEST_DIR + "\\archive";
 
 
@@ -80,7 +78,6 @@ public class AeronArchiveWriteTest {
                 driverCtx,
                 archiveCtx
         );
-        //Archive archive = archivingMediaDriver.archive();
 
         Aeron client = Aeron.connect();
         AeronArchive aeronArchive = AeronArchive.connect(new AeronArchive.Context()
@@ -97,22 +94,21 @@ public class AeronArchiveWriteTest {
     void executeTest() throws Exception {
         String channel = ORIGINAL_CHANNEL;
         int dataStreamId = ORIGINAL_DATA_STREAM_ID;
-        int serverMetadataStreamId = dataStreamId + 1;
 
         // Start recording
         aeronArchive.startRecording(channel, dataStreamId, SourceLocation.LOCAL);
 
         List<RecordClassDescriptor> types = Collections.singletonList(Messages.ERROR_MESSAGE_DESCRIPTOR);
-        byte loaderNumber = 1;
 
         AtomicLong messagesSentCounter = new AtomicLong(0);
         AtomicBoolean senderStopFlag = new AtomicBoolean(false);
 
-        List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<>());
 
         Thread loaderThread = new Thread(() -> {
 
-            MessageChannel<InstrumentMessage> messageChannel = new DirectLoaderFactory().create(aeron, false, channel, channel, dataStreamId, serverMetadataStreamId, types, loaderNumber, new ByteArrayOutputStream(8 * 1024), Collections.emptyList(), null, null);
+            MessageChannel<InstrumentMessage> messageChannel = new DirectLoaderFactory().
+                    create(aeron, false, channel, dataStreamId, types, null, null, null, false);
 
             ErrorMessage msg = new ErrorMessage();
             msg.setSymbol("ABC");

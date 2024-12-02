@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -16,7 +16,9 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry;
 
-import java.util.concurrent.CountDownLatch;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -24,18 +26,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class CreateTopicResult {
     private final AtomicBoolean topicDeletedSignal;
-    private final CountDownLatch copyToThreadStopLatch;
+    private final CompletableFuture<Void> copyProcessStoppedFuture;
 
-    CreateTopicResult(AtomicBoolean topicDeletedSignal, CountDownLatch copyToThreadStopLatch) {
+    CreateTopicResult(@Nullable AtomicBoolean topicDeletedSignal, @Nullable CompletableFuture<Void> copyProcessStoppedFuture) {
         this.topicDeletedSignal = topicDeletedSignal;
-        this.copyToThreadStopLatch = copyToThreadStopLatch;
+        this.copyProcessStoppedFuture = copyProcessStoppedFuture;
     }
 
     public AtomicBoolean getTopicDeletedSignal() {
         return topicDeletedSignal;
     }
 
-    public CountDownLatch getCopyToThreadStopLatch() {
-        return copyToThreadStopLatch;
+    public CompletableFuture<Void> getCopyProcessStoppedFuture() {
+        return copyProcessStoppedFuture;
     }
 }

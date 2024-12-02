@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -66,6 +66,10 @@ public class RawDecoder {
         } catch (NullValueException e) {
             return null;
         }
+    }
+
+    public void         copyField(DataType type, ReadableValue rv, WritableValue w) {
+
     }
 
     protected Object    readBoolean(BooleanDataType type, ReadableValue rv) {

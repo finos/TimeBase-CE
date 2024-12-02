@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -291,9 +291,9 @@ public final class FloatDataType extends DataType {
     public static String    staticFormat (double d) {
         return (String.valueOf (d));
     }
-    
+
     public static String    staticFormat (@Decimal long decimal) {
-        return Decimal64Utils.toString(decimal);
+        return Decimal64Utils.toFloatString(decimal);
     }
 
     @Override
@@ -386,8 +386,8 @@ public final class FloatDataType extends DataType {
 
         switch (tag) {
             case T_NULL:        return (null);
-            case T_FLOAT:       return (in.readFloat ());
-            case T_DOUBLE:      return (in.readDouble ());
+            case T_FLOAT:       return (in.readFloat());
+            case T_DOUBLE:      return (in.readDouble());
             default:            throw new IOException ("Illegal tag: " + tag);
         }
     }

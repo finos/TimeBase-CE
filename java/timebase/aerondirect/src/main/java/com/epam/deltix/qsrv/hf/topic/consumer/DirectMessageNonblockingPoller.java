@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -18,12 +18,12 @@ package com.epam.deltix.qsrv.hf.topic.consumer;
 
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
-import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.MessagePoller;
 import com.epam.deltix.qsrv.hf.tickdb.pub.topic.MessageProcessor;
+import com.epam.deltix.qsrv.hf.tickdb.pub.topic.TopicDataLossHandler;
 import com.epam.deltix.qsrv.hf.topic.consumer.annotation.AeronClientThread;
 import com.epam.deltix.qsrv.hf.topic.consumer.annotation.AnyThread;
 import com.epam.deltix.qsrv.hf.topic.consumer.annotation.ReaderThreadOnly;
@@ -32,7 +32,9 @@ import io.aeron.Aeron;
 import io.aeron.ControlledFragmentAssembler;
 import io.aeron.Image;
 import io.aeron.Subscription;
+import net.jcip.annotations.NotThreadSafe;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.nio.ByteOrder;
 import java.util.List;
@@ -41,15 +43,17 @@ import java.util.List;
  * @author Alexei Osipov
  */
 @ParametersAreNonnullByDefault
+@NotThreadSafe
 class DirectMessageNonblockingPoller implements MessagePoller {
-    private static final Log LOG = LogFactory.getLog(DirectMessageNonblockingPoller.class.getName());
+    private static final Log LOG = LogFactory.getLog(DirectMessageNonblockingPoller.class);
 
     private final Subscription subscription;
     private final ControlledFragmentAssembler fragmentAssembler;
     //private final SubscriptionPublicationLimitCounterCache counterCache;
     //private final CountersReader countersReader;
     private final MessageFragmentHandler decodingFragmentHandler;
-    private final IpcFilPercentageChecker fillChecker;
+    private final IpcFillPercentageChecker fillChecker;
+    private final TopicDataLossHandler topicDataLossHandler;
 
 
     // Indicates that poller should be stopped OR already stopped
@@ -61,13 +65,14 @@ class DirectMessageNonblockingPoller implements MessagePoller {
 
     DirectMessageNonblockingPoller(Aeron aeron, boolean raw, String channel, int dataStreamId,
                                    List<RecordClassDescriptor> types, CodecFactory codecFactory, TypeLoader typeLoader,
-                                   MappingProvider mappingProvider) {
+                                   @Nullable TopicDataLossHandler topicDataLossHandler) {
         // TODO: Implement loading of temp indexes from server
         if (!ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
             throw new IllegalArgumentException("Only LITTLE_ENDIAN byte order supported");
         }
 
-        this.fillChecker = new IpcFilPercentageChecker();
+        this.topicDataLossHandler = topicDataLossHandler;
+        this.fillChecker = new IpcFillPercentageChecker();
 
         DoubleUnavailableImageHandler unavailableImageHandler = new DoubleUnavailableImageHandler(fillChecker, DirectMessageNonblockingPoller.this::onUnavailableImage);
 
@@ -77,10 +82,8 @@ class DirectMessageNonblockingPoller implements MessagePoller {
         this.subscription = aeron.addSubscription(channel, dataStreamId, fillChecker, unavailableImageHandler);
         LOG.debug().append("Subscribed to dataStreamId=").appendLast(dataStreamId);
         // Load mapping: this can be slow and may involve network interaction
-        ConstantIdentityKey[] mappingSnapshot = mappingProvider.getMappingSnapshot();
-        LOG.debug("Got mapping snapshot for dataStreamId=%s of size=%s").with(dataStreamId).with(mappingSnapshot.length);
 
-        this.decodingFragmentHandler = new MessageFragmentHandler(raw, codecFactory, typeLoader, types, mappingSnapshot, mappingProvider);
+        this.decodingFragmentHandler = new MessageFragmentHandler(raw, codecFactory, typeLoader, types);
         this.fragmentAssembler = new ControlledFragmentAssembler(decodingFragmentHandler);
     }
 
@@ -116,7 +119,13 @@ class DirectMessageNonblockingPoller implements MessagePoller {
 
     /**
      * Closes allocated resources.
-     * Please not that this method must be called from the same thread that polls messages.
+     * Please note that this method must be called from the same thread that polls messages.
+     *
+     * <p>It's permitted to call this method from another thread only if
+     * there are no concurrent calls to {@link #processMessages}
+     * AND it's guaranteed that all previous calls of {@link #processMessages}
+     * have "happens before" relationship with this {@link #close()} call
+     * AND this call has "happens before" relationship with any subsequent calls to {@link #processMessages}.
      */
     @ReaderThreadOnly
     @Override
@@ -147,8 +156,14 @@ class DirectMessageNonblockingPoller implements MessagePoller {
     @AeronClientThread
     // That will be executed from an Aeron's thread
     private void onDataLossDetected() {
+        LOG.debug("Data loss detected for subscriber with dataStreamId=%s").with(subscription.streamId());
+        if (topicDataLossHandler != null) {
+            boolean continuePolling = topicDataLossHandler.handleDataLoss();
+            if (continuePolling) {
+                return;
+            }
+        }
         dataLoss = true;
         stopFlag = true;
-        LOG.debug("Data loss detected for subscriber with dataStreamId=%s").with(subscription.streamId());
     }
 }

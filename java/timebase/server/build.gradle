@@ -21,6 +21,10 @@ dependencies {
     api project(':java:timebase:commons')
     api project(':java:timebase:api')
     api project(':java:timebase:aerondirect')
+    api project(':java:timebase:qql')
+
+    //implementation 'io.aeron:aeron-client'
+    implementation 'io.aeron:aeron-driver'
 
     implementation project(':java:timebase:computations-api')
     runtimeOnly project(':java:timebase:computations-std')
@@ -28,7 +32,7 @@ dependencies {
     implementation project(':java:timebase:snmpagent')
 
     implementation ('com.epam.deltix:timebase-lang')
-    compile ('com.epam.deltix:timebase-util')
+    implementation ('com.epam.deltix:timebase-util')
     implementation ('com.epam.deltix:timebase-messages')
     implementation ('com.epam.deltix:timebase-collections')
     implementation ('com.epam.deltix:dfp')
@@ -37,8 +41,12 @@ dependencies {
 
     implementation ('org.apache.commons:commons-lang3')
 
-    implementation 'com.epam.deltix:gflog-api', 'com.epam.deltix:gflog-core',
+    implementation 'com.epam.deltix:gflog-api',
+            'com.epam.deltix:gflog-core',
             'com.epam.deltix:gflog-jul'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations'
 
     // web application
 
@@ -47,6 +55,7 @@ dependencies {
 
     implementation 'org.apache.taglibs:taglibs-standard-impl' // JSTL Support
     implementation 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
+    implementation 'org.glassfish:javax.el:3.0.0' // Tomcat Requires
 
     implementation 'javax.xml.bind:jaxb-api'
     implementation 'com.sun.xml.bind:jaxb-impl'
@@ -68,7 +77,7 @@ dependencies {
     implementation 'commons-io:commons-io'
 
     // TODO: Replace by JSR305
-    compileOnly 'com.intellij:annotations'
+    compileOnly 'org.jetbrains:annotations'
     compileOnly 'de.jflex:jflex:1.4.3'
 
     // For JMH-based tests
@@ -86,7 +95,7 @@ task copyTimebaseServerContainerDependensies(type: Copy) {
     description 'Copy all timebase server dependencies'
     //dependsOn ':java:cleanSubprojects' // This is necessary to force clean build.
     dependsOn 'build'
-    dependsOn ':java:timebase:server:copyWebapp'
+    dependsOn ':java:timebase:server:copyMonitorWebapp'
     dependsOn ':java:timebase:commons:copyWebapp'
     dependsOn ':java:timebase:s3:build'
     dependsOn ':distribution:build'
@@ -124,48 +133,48 @@ task prepareFilesForDocker {
     dependsOn copyTimebaseServerContainerDependensies
 }
 
-task copyWebapp(type: Copy) {
-    description 'Copy timebase webapp war file into timebase server resources'
-    dependsOn ':java:timebase:web:war'
+task copyMonitorWebapp(type: Copy) {
+    description 'Copy timebase monitor webapp war file into timebase server resources'
+    dependsOn ':java:timebase:webmonitor:war'
     mustRunAfter processResources
     mustRunAfter clean
 
-    from (project(':java:timebase:web').file('build/libs')) {
+    from (project(':java:timebase:webmonitor').file('build/libs')) {
         include '*.war'
-        rename 'timebase-web(.*).war', 'timebase-web.war'
+        rename 'timebase-webmonitor(.*).war', 'timebase-webmonitor.war'
     }
     into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
 }
 
-shadowJar.dependsOn copyWebapp
+jar.dependsOn copyMonitorWebapp
 
-
-def generatedMainDir = file('build/generated-src/main/src')
-def lexerAndParserPackage = "com/epam/deltix/qsrv/hf/tickdb/lang/parser"
-def lexerAndParserDir = file("src/main/java/com/epam/deltix/qsrv/hf/tickdb/lang/parser")
-
-sourceSets.main.java.srcDirs generatedMainDir
-
-task generateQqlLexer(type: JavaExec) {
-    group = "QQL"
-    description = "Generates QQL lexer via flex library"
-    classpath = configurations.compileOnly
-    main = "JFlex.Main"
-    workingDir = lexerAndParserDir
-    args = ["qql.flex", "-d", "$generatedMainDir/$lexerAndParserPackage"]
-}
-
-task generateQqlParser(type: JavaExec, dependsOn: generateQqlLexer) {
-    group = "QQL"
-    description = "Generates QQL parser via java_cup library"
-    classpath = configurations.compile
-    main = "java_cup.Main"
-    workingDir = "$generatedMainDir/$lexerAndParserPackage"
-    args = ["-package", lexerAndParserPackage,
-            "-parser", "Parser",
-            "-symbols", "Symbols",
-            "$lexerAndParserDir/qql.cup"
-    ]
-}
-
-compileJava.dependsOn generateQqlParser
+//
+//def generatedMainDir = file('build/generated-src/main/src')
+//def lexerAndParserPackage = "com/epam/deltix/qsrv/hf/tickdb/lang/parser"
+//def lexerAndParserDir = file("src/main/java/com/epam/deltix/qsrv/hf/tickdb/lang/parser")
+//
+//sourceSets.main.java.srcDirs generatedMainDir
+//
+//task generateQqlLexer(type: JavaExec) {
+//    group = "QQL"
+//    description = "Generates QQL lexer via flex library"
+//    classpath = configurations.compileOnly
+//    main = "JFlex.Main"
+//    workingDir = lexerAndParserDir
+//    args = ["qql.flex", "-d", "$generatedMainDir/$lexerAndParserPackage"]
+//}
+//
+//task generateQqlParser(type: JavaExec, dependsOn: generateQqlLexer) {
+//    group = "QQL"
+//    description = "Generates QQL parser via java_cup library"
+//    classpath = configurations.compile
+//    main = "java_cup.Main"
+//    workingDir = "$generatedMainDir/$lexerAndParserPackage"
+//    args = ["-package", lexerAndParserPackage,
+//            "-parser", "Parser",
+//            "-symbols", "Symbols",
+//            "$lexerAndParserDir/qql.cup"
+//    ]
+//}
+//
+//compileJava.dependsOn generateQqlParser

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -161,7 +161,7 @@ public class AtomicFsLockManager {
 
                 // There is no more temp file. Probably move was successful but we just got wrong reply.
                 if (exists(targetPath)) {
-                    // There is a lock. We have to check it it ours.
+                    // There is a lock. We have to check it ours.
 
                     LockFileData lockFileData;
                     try {
@@ -295,7 +295,7 @@ public class AtomicFsLockManager {
 
         // There is no more temp file. Probably move was successful but we just got wrong reply.
         if (exists(targetPath)) {
-            // There is a lock. We have to check it it ours.
+            // There is a lock. We have to check it ours.
 
             LockFileData lockFileData = getLockFileData(targetPath);
             if (lockKey.equals(lockFileData.getLockKey())) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -22,10 +22,7 @@ import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.pub.NullValueException;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.ReadableValue;
-import com.epam.deltix.qsrv.hf.pub.codec.InterpretingCodecMetaFactory;
-import com.epam.deltix.qsrv.hf.pub.codec.NonStaticFieldInfo;
-import com.epam.deltix.qsrv.hf.pub.codec.StaticFieldInfo;
-import com.epam.deltix.qsrv.hf.pub.codec.UnboundDecoder;
+import com.epam.deltix.qsrv.hf.pub.codec.*;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.util.collections.generated.ObjectToObjectHashMap;
@@ -33,7 +30,10 @@ import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.memory.MemoryDataInput;
 import com.epam.deltix.util.time.TimeFormatter;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * Formats RawMessage to JSON. Not thread safe.
@@ -80,10 +80,15 @@ public class JSONRawMessagePrinter {
     protected final boolean htmlSafe;
     protected final boolean printInstrumentType;
     protected final PrintType printType;
+    protected DecimalFormat decimalFormat;
+    private char decimalSeparator;
+
 
     private final ObjectToObjectHashMap<String, UnboundDecoder> _decoders = new ObjectToObjectHashMap<>();
     private final MemoryDataInput buffer = new MemoryDataInput();
     private final DateFormatter formatter = new DateFormatter();
+    private final AlphanumericCodec codec = new AlphanumericCodec(10);
+
 
     public JSONRawMessagePrinter() {
         this(false, true, DataEncoding.STANDARD, false, false, PrintType.FULL,  false, "$type");
@@ -121,6 +126,18 @@ public class JSONRawMessagePrinter {
                                  PrintType printType,
                                  boolean printStaticFields,
                                  String typeField) {
+        this(prettyPrint, skipNull, dataEncoding, htmlSafe, printInstrumentType, printType, printStaticFields, typeField, Locale.getDefault(Locale.Category.FORMAT));
+    }
+
+    public JSONRawMessagePrinter(boolean prettyPrint,
+                                 boolean skipNull,
+                                 DataEncoding dataEncoding,
+                                 boolean htmlSafe,
+                                 boolean printInstrumentType,
+                                 PrintType printType,
+                                 boolean printStaticFields,
+                                 String typeField,
+                                 Locale locale) {
         this.prettyPrint = prettyPrint;
         this.skipNull = skipNull;
         this.dataEncoding = dataEncoding;
@@ -129,6 +146,20 @@ public class JSONRawMessagePrinter {
         this.printType = printType;
         this.typeField = typeField;
         this.printStaticFields = printStaticFields;
+        decimalFormat = new DecimalFormat("#.#", DecimalFormatSymbols.getInstance(locale));
+        decimalFormat.setMinimumFractionDigits(1);
+        decimalFormat.setMaximumFractionDigits(19);
+        decimalFormat.setMaximumIntegerDigits(309);
+        updateDecimalSeparator();
+    }
+
+    private void updateDecimalSeparator() {
+        decimalSeparator = decimalFormat.getDecimalFormatSymbols().getDecimalSeparator();
+    }
+
+    public void setDecimalFormat(DecimalFormat decimalFormat) {
+        this.decimalFormat = decimalFormat;
+        updateDecimalSeparator();
     }
 
     public void append(RawMessage raw, StringBuilder sb) {
@@ -182,15 +213,10 @@ public class JSONRawMessagePrinter {
         sb.append("\"symbol\":");
         appendString(raw.getSymbol(), sb);
 
+
         if (raw.hasTimeStampMs()) {
             appendSeparator(sb);
             sb.append("\"timestamp\":");
-            appendTimestamp(raw.getTimeStampMs(), sb);
-        }
-
-        if (raw.hasNanoTime()) {
-            appendSeparator(sb);
-            sb.append("\"nanoTime\":");
             appendNanoTime(raw.getNanoTime(), sb);
         }
     }
@@ -223,11 +249,11 @@ public class JSONRawMessagePrinter {
             return false;
         }
         sb.append('"').append(field.getName()).append("\":");
-        appendValue(field.getType(), field.getString(), sb);
+        appendStaticValue(field.getType(), field.getString(), sb);
         return true;
     }
 
-    protected void appendValue(DataType dataType, String value, StringBuilder sb) {
+    protected void appendStaticValue(DataType dataType, String value, StringBuilder sb) {
         if (dataType instanceof IntegerDataType) {
             sb.append(Long.parseLong(value));
         } else if (dataType instanceof FloatDataType) {
@@ -243,12 +269,12 @@ public class JSONRawMessagePrinter {
                 sb.append(Boolean.parseBoolean(value));
             }
         } else if (dataType instanceof DateTimeDataType) {
-            appendTimestamp(DateTimeDataType.staticParse(value), sb);
+            appendTime((DateTimeDataType) dataType, DateTimeDataType.staticParse(value, dataType.getEncoding()), sb);
         } else if (dataType instanceof TimeOfDayDataType) {
             appendTime(TimeOfDayDataType.staticParse(value), sb);
         } else if (dataType instanceof VarcharDataType) {
             if (dataEncoding == DataEncoding.NATIVE && ((VarcharDataType) dataType).getEncodingType() == VarcharDataType.ALPHANUMERIC) {
-                sb.append(AlphanumericUtils.toAlphanumericUInt64(value));
+                sb.append(codec.encodeToLong(value));
             } else {
                 appendString(value, sb);
             }
@@ -315,7 +341,7 @@ public class JSONRawMessagePrinter {
                 appendEnum(decoder, (EnumDataType) type, sb);
             } else if (type instanceof DateTimeDataType) {
                 long timestamp = decoder.getLong();
-                return appendTimestamp(timestamp, sb);
+                return appendTime((DateTimeDataType) type, timestamp, sb);
             } else if (type instanceof VarcharDataType) {
                 appendString(decoder, sb, (VarcharDataType) type);
             } else if (type instanceof CharDataType) {
@@ -454,7 +480,7 @@ public class JSONRawMessagePrinter {
                     sb.append(rv.getBoolean());
                 } else if (underlineType instanceof DateTimeDataType) {
                     long timestamp = rv.getLong();
-                    appendTimestamp(timestamp, sb);
+                    appendTime((DateTimeDataType) underlineType, timestamp, sb);
                 } else if (underlineType instanceof ClassDataType) {
                     int length = sb.length();
                     boolean hasValue = appendClassField(rv, sb);
@@ -502,14 +528,22 @@ public class JSONRawMessagePrinter {
         return timestamp != Long.MIN_VALUE;
     }
 
-    protected void appendNanoTime(long nanoTime, StringBuilder sb) {
+    protected boolean appendTime(DateTimeDataType type, long timestamp, StringBuilder sb) {
+        if (type.hasNanosecondPrecision())
+            return appendNanoTime(timestamp, sb);
+        else
+            return appendTimestamp(timestamp, sb);
+    }
+
+    protected boolean appendNanoTime(long nanoTime, StringBuilder sb) {
         if (dataEncoding == DataEncoding.NATIVE) {
-            sb.append(TimeStamp.getNanosComponent(nanoTime));
+            sb.append(nanoTime);
         } else {
             sb.append('"');
-            formatter.toNanosDateString(nanoTime, sb);
+            formatter.appendDateString(nanoTime, sb);
             sb.append('"');
         }
+        return nanoTime != Long.MIN_VALUE;
     }
 
     protected boolean appendTime(int timeOfDay, StringBuilder sb) {
@@ -627,22 +661,27 @@ public class JSONRawMessagePrinter {
             sb.append(value);
         } else {
             sb.append("\"");
-            Decimal64Utils.appendTo(value, sb);
+            Decimal64Utils.floatAppendTo(value, decimalSeparator, sb);
             sb.append("\"");
         }
         return value != Decimal64Utils.NULL; // we support NaN in Decimal64
     }
 
     protected boolean appendFloat(float f, StringBuilder sb) {
-        sb.append("\"")
-                .append(StringUtils.toDecimalString(f))
-                .append("\"");
-        return Float.isFinite(f);
+        return appendDouble(floatToDouble(f), sb);
+    }
+
+    private double floatToDouble(float value) {
+        final float abs = Math.abs(value);
+        if (1e-3 < abs && abs < 1e7)
+            return Double.parseDouble(String.valueOf(value));
+        else
+            return value;
     }
 
     protected boolean appendDouble(double d, StringBuilder sb) {
         sb.append("\"")
-                .append(StringUtils.toDecimalString(d))
+                .append(decimalFormat.format(d))
                 .append("\"");
         return Double.isFinite(d);
     }

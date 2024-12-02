@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -108,6 +108,9 @@ public class StreamDef {
     @XmlElement
     public boolean                      polymorphic = true;
 
+    @XmlElement
+    public String                       version = null;
+
     public StreamDef() {
     }
 
@@ -121,6 +124,7 @@ public class StreamDef {
         this.scope = options.scope;
         this.duplicatesAllowed = options.duplicatesAllowed;
         this.polymorphic = options.isPolymorphic();
+        this.version = options.version;
 
         if (options.bufferOptions != null) {
             this.bufferOptions = new BufferOptions();
@@ -143,6 +147,7 @@ public class StreamDef {
         options.scope = this.scope;
         options.duplicatesAllowed = this.duplicatesAllowed;
         options.polymorphic = this.polymorphic;
+        options.version = this.version;
 
         if (this.bufferOptions != null) {
             options.bufferOptions = new com.epam.deltix.qsrv.hf.tickdb.pub.BufferOptions();
@@ -158,6 +163,8 @@ public class StreamDef {
     @XmlElement()
     public String           metadata;
 
+    @XmlElement()
+    public String           metadataJson;
 
     public static class BufferOptions {
         public BufferOptions() { // JAXB

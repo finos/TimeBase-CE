@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,37 +17,46 @@
 package com.epam.deltix.qsrv.hf.tickdb.pub.topic.settings;
 
 import com.epam.deltix.timebase.messages.IdentityKey;
+import com.epam.deltix.util.BitUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author Alexei Osipov
  */
 public class TopicSettings {
-    private List<? extends IdentityKey> initialEntitySet = null;
     private String copyToStream = null;
+    private String copyToSpace = null;
 
     private TopicType topicMediaType;
     private MulticastTopicSettings multicastSettings = null;
     private String publisherAddress;
+    private Integer termBufferLength;
 
     public TopicSettings() {
     }
 
+    /**
+     * @deprecated This method is deprecated. Entity data is not used anymore.
+     */
     @Nullable
+    @Deprecated
     public List<? extends IdentityKey> getInitialEntitySet() {
-        return initialEntitySet;
+        return Collections.emptyList();
     }
 
     /**
-     * Defines initial entity set (may be empty).
+     * Defines initial entity set (it may be empty).
      * Providing entity set that matches expected data removes extra overhead that associated
      * with generation of indexes for new entities.
+     *
+     * @deprecated This method is deprecated. Entity data is not used anymore.
      */
-    public TopicSettings setInitialEntitySet(List<? extends IdentityKey> initialEntitySet) {
-        this.initialEntitySet = initialEntitySet;
+    @Deprecated
+    public TopicSettings setInitialEntitySet(@SuppressWarnings("unused") List<? extends IdentityKey> initialEntitySet) {
         return this;
     }
 
@@ -57,13 +66,33 @@ public class TopicSettings {
     }
 
     /**
-     * Enables background process that will copy all the data passed to this topic into a stream with the specified name.
-     * Keep in mind that if the topic data rate is too high then the stream may be unable to cope with it.
-     * In that case the topics's data producers will be blocked (any may loose data).
+     * See {@link #setCopyToStream(String, String)}
      */
     public TopicSettings setCopyToStream(String copyToStreamKey) {
         this.copyToStream = copyToStreamKey;
         return this;
+    }
+
+    /**
+     * Enables background process that will copy all the data passed to this topic into a stream with the specified name.
+     * Keep in mind that if the topic data rate is too high then the stream may be unable to cope with it.
+     * In that case the topic's data producers will be blocked (any may lose data).
+     *
+     * @param copyToStreamKey key for
+     * @param copyToSpace allows to specify space inside of stream to be used
+     */
+    public TopicSettings setCopyToStream(String copyToStreamKey, String copyToSpace) {
+        if (copyToSpace != null && copyToStreamKey == null) {
+            throw new IllegalArgumentException("copyToSpace must be used together with copyToStreamKey");
+        }
+        this.copyToStream = copyToStreamKey;
+        this.copyToSpace = copyToSpace;
+        return this;
+    }
+
+    @Nullable
+    public String getCopyToSpace() {
+        return copyToSpace;
     }
 
     @Nullable
@@ -96,10 +125,10 @@ public class TopicSettings {
     /**
      * Enables UDP operation mode with single predefined publisher.
      *
-     * Ony one publisher at a time can be used for this topic.
+     * <p>Ony one publisher at a time can be used for this topic.
      * This publisher can run only on the specified host.
      *
-     * @param publisherAddress IP address or hostname of the host that will run publisher.
+     * @param publisherAddress IP address or hostname of the host that will run publisher. Optionally with port (like "10.15.100.1:5555").
      */
     public TopicSettings setSinglePublisherUdpMode(String publisherAddress) {
         if (topicMediaType != null) {
@@ -115,6 +144,30 @@ public class TopicSettings {
 
     public String getPublisherAddress() {
         return publisherAddress;
+    }
+
+    @Nullable
+    public Integer getTermBufferLength() {
+        return termBufferLength;
+    }
+
+    /**
+     * Sets term buffer length for topic.
+     * <p>
+     * Overrides default term buffer length set on server.
+     */
+    public TopicSettings setTermBufferLength(@Nullable Integer termBufferLength) {
+        if (termBufferLength != null) {
+            if (termBufferLength <= 0) {
+                throw new IllegalArgumentException("Term buffer length must be positive");
+            }
+
+            if (!BitUtil.isPowerOfTwo(termBufferLength)) {
+                throw new IllegalArgumentException("Term buffer length must be power of 2");
+            }
+        }
+        this.termBufferLength = termBufferLength;
+        return this;
     }
 
     @Nonnull

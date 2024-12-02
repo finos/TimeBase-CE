@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 EPAM Systems, Inc
+ * Copyright 2024 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -40,6 +40,7 @@ import java.io.UncheckedIOException;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -63,6 +64,11 @@ public class JsonMessageSource implements MessageSource<RawMessage> {
 
     public JsonMessageSource(final RecordClassDescriptor[] descriptors,
                              final Reader reader, String typeField) throws IOException {
+        this(descriptors, reader, typeField, Locale.getDefault(Locale.Category.FORMAT));
+    }
+
+    public JsonMessageSource(final RecordClassDescriptor[] descriptors,
+                             final Reader reader, String typeField, Locale locale) throws IOException {
         this.rcds = descriptors;
         this.descriptors = new ObjectToObjectHashMap<>(descriptors.length);
         for (RecordClassDescriptor rcd : descriptors) {
@@ -75,7 +81,7 @@ public class JsonMessageSource implements MessageSource<RawMessage> {
         this.jsonParser.setFeatureMask(this.jsonParser.getFeatureMask() | JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS.getMask());
         this.fixedType = descriptors.length == 1;
         this.hasTypeField = hasTypeField(descriptors);
-        this.jsonWriter = new JsonWriter(jsonPool, typeField);
+        this.jsonWriter = new JsonWriter(jsonPool, typeField, locale);
     }
 
     @Override
@@ -157,15 +163,13 @@ public class JsonMessageSource implements MessageSource<RawMessage> {
                             break;
                         case "timestamp":
                             jsonParser.nextToken();
-                            raw.setTimeStampMs(dateFormatter.fromDateString(jsonParser.getValueAsString()));
+                            String value = jsonParser.getValueAsString();
+                            raw.setNanoTime(dateFormatter.nanoFromDateString(value));
                             break;
-                        case "nanoTime":
-                            jsonParser.nextToken();
-                            raw.setNanoTime(dateFormatter.fromNanosDateString(jsonParser.getValueAsString()));
-                            break;
-                        case "instrumentType":
-                            jsonParser.nextToken();
-                            break;
+//                        case "instrumentType":
+//                            jsonParser.nextToken();
+//                            raw.setInstrumentType(InstrumentType.valueOf(jsonParser.getValueAsString()));
+//                            break;
                         default:
                             parseField(fieldName, map);
                     }

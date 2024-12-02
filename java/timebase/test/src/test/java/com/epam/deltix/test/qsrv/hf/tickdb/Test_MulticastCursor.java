@@ -17,6 +17,7 @@
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
+import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.qsrv.test.messages.MarketMessage;
 import com.epam.deltix.qsrv.test.messages.TradeMessage;
 import com.epam.deltix.streaming.MessageSource;
@@ -47,7 +48,7 @@ public class Test_MulticastCursor extends TDBTestBase {
     private MessageSource<InstrumentMessage> cursor2;
 
     public Test_MulticastCursor() {
-        super(true);
+        super(true, true, getTemporaryLocation(), new TomcatServer(null, 0, 0, true), true);
     }
 
     @Before

@@ -44,7 +44,8 @@ public class SchemaBuilder {
             new VarcharDataType(VarcharDataType.ENCODING_ALPHANUMERIC + "(10)", true, true),
             BinaryDataType.getDefaultInstance(),
             new TimeOfDayDataType(true),
-            new DateTimeDataType(true),
+            new DateTimeDataType(true, DateTimeDataType.ENCODING_MILLISECONDS),
+            new DateTimeDataType(true, DateTimeDataType.ENCODING_NANOSECONDS),
 
             new FloatDataType(FloatDataType.ENCODING_FIXED_FLOAT, true),
             new FloatDataType(FloatDataType.ENCODING_FIXED_DOUBLE, true),
@@ -75,7 +76,10 @@ public class SchemaBuilder {
 
     public void build() {
         for (int i = 0; i < schema.types.length; i++) {
-            set.addContentClasses((RecordClassDescriptor) toDescriptor(schema.types[i]));
+            TypeDef type = schema.types[i];
+            if (!type.isAbstract()){
+                set.addContentClasses((RecordClassDescriptor) toDescriptor(type));
+            }
         }
     }
 
@@ -100,8 +104,14 @@ public class SchemaBuilder {
             cache.put(rcd.getName(), rcd);
 
             // populate fields
-            for (int i = 0; i < type.getFields().length; i++)
-                fields[i] = toField(type.getFields()[i]);
+            for (int i = 0; i < type.getFields().length; i++) {
+                try {
+                    fields[i] = toField(type.getFields()[i]);
+                } catch (Exception e) {
+                    throw new IllegalArgumentException(String.format("Type: %s. Failed to convert field: %s. Reason: %s",
+                            type.getName(), type.getFields()[i].getName(), e.getMessage()));
+                }
+            }
 
             return rcd;
         }
@@ -130,12 +140,12 @@ public class SchemaBuilder {
             else if (rcd instanceof RecordClassDescriptor)
                 return new ClassDataType(typeDef.isNullable(), (RecordClassDescriptor) rcd);
 
-            throw new IllegalArgumentException("Unknown type name" + typeDef.getName());
+            throw new IllegalArgumentException("Unknown type name: " + typeDef.getName());
         }
 
         DataType matched = types.get(0);
 
-        DataType type;
+        DataType type = null;
         switch (matched.getCode()) {
             case T_BINARY_TYPE:
                 type = BinaryDataType.getDefaultInstance();
@@ -147,7 +157,11 @@ public class SchemaBuilder {
                 type = new CharDataType(typeDef.isNullable());
                 break;
             case T_DATE_TIME_TYPE:
-                type = new DateTimeDataType(typeDef.isNullable());
+                if (DateTimeDataType.isEquals(typeDef.getEncoding(), DateTimeDataType.ENCODING_MILLISECONDS)) {
+                    type = DateTimeDataType.createEmpty(typeDef.isNullable());
+                } else {
+                    type = new DateTimeDataType(typeDef.isNullable(), typeDef.getEncoding());
+                }
                 break;
             case T_FLOAT_TYPE:
                 type = new FloatDataType(typeDef.getEncoding(), typeDef.isNullable());
@@ -163,9 +177,9 @@ public class SchemaBuilder {
                 break;
 
             case T_OBJECT_TYPE: {
-                List<RecordClassDescriptor> subtypes = new ArrayList<RecordClassDescriptor>();
+                List<RecordClassDescriptor> subtypes = new ArrayList<>();
 
-                if (typeDef.getTypes() == null)
+                if (typeDef.getTypes() == null || typeDef.getTypes().isEmpty())
                     throw new IllegalStateException("Expected not-nullable types: " + typeDef);
 
                 for (String typeDefType : typeDef.getTypes()) {
@@ -176,7 +190,7 @@ public class SchemaBuilder {
                         throw new IllegalStateException("Expected RecordClassDescriptor, but found: " + descriptor);
                 }
 
-                type = new ClassDataType(typeDef.isNullable(), subtypes.toArray(new RecordClassDescriptor[subtypes.size()]));
+                type = new ClassDataType(typeDef.isNullable(), subtypes.toArray(new RecordClassDescriptor[0]));
                 break;
             }
             case T_ARRAY_TYPE: {
@@ -215,14 +229,14 @@ public class SchemaBuilder {
                 if (info instanceof StaticFieldLayout) {
                     fields.add(FieldDef.createStatic(info.getName(),
                             info.getTitle(),
-                            ((StaticFieldLayout)info).getDescription(),
+                            ((StaticFieldLayout) info).getDescription(),
                             getDataTypeDef(info.getType()),
                             ((StaticFieldInfo) info).getString()));
                 } else if (info instanceof NonStaticFieldLayout) {
                     NonStaticFieldLayout fieldLayout = (NonStaticFieldLayout) info;
                     fields.add(FieldDef.createNonStatic(info.getName(),
                             info.getTitle(),
-                            ((NonStaticFieldLayout)info).getDescription(),
+                            ((NonStaticFieldLayout) info).getDescription(),
                             getDataTypeDef(info.getType()),
                             fieldLayout.getRelativeTo() != null ? fieldLayout.getRelativeTo().getName() : null,
                             fieldLayout.isPrimaryKey()
@@ -240,8 +254,8 @@ public class SchemaBuilder {
                 } else if (info instanceof NonStaticDataField) {
                     NonStaticDataField dataField = (NonStaticDataField) info;
                     fields.add(FieldDef.createNonStatic(
-                        info.getName(), info.getTitle(), info.getDescription(), getDataTypeDef(info.getType()),
-                        dataField.getRelativeTo(), dataField.isPk()
+                            info.getName(), info.getTitle(), info.getDescription(), getDataTypeDef(info.getType()),
+                            dataField.getRelativeTo(), dataField.isPk()
                     ));
                 }
             }
@@ -299,7 +313,7 @@ public class SchemaBuilder {
             return null;
         }
 
-        List<FieldDef> fields = new ArrayList<FieldDef>();
+        List<FieldDef> fields = new ArrayList<>();
         String parent = null;
 
         if (descriptor instanceof RecordClassDescriptor) {

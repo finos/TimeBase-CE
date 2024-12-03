@@ -1,7 +1,9 @@
 evaluationDependsOn(':java')
 
+description = "Timebase QQL Computation Functions"
+
 dependencies {
-    compile project(':java:timebase:computations-api')
+    implementation project(':java:timebase:computations-api')
 
     implementation ('com.epam.deltix:timebase-messages')
     implementation ('com.epam.deltix:dfp')

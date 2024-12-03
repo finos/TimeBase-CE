@@ -1,3 +1,5 @@
+description = "Timebase QQL Computations API"
+
 evaluationDependsOn(':java')
 
 dependencies {

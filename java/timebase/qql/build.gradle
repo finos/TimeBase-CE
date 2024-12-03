@@ -10,11 +10,10 @@ dependencies {
     implementation project(':java:timebase:api')
     implementation project(':java:timebase:pub')
     implementation project(':java:timebase:computations-api')
+    implementation project(':java:timebase:computations-std')
 
     implementation 'com.epam.deltix:gflog-api',
             'com.epam.deltix:gflog-jul'
-
-    implementation project(':java:timebase:computations-std')
 
     implementation ('com.epam.deltix:timebase-lang')
     implementation ('com.epam.deltix:timebase-util')

@@ -25,9 +25,4 @@ dependencies {
     implementation 'com.sun.xml.bind:jaxb-core'
 
     compileOnly 'com.google.code.findbugs:jsr305'
-
-    implementation 'com.bettercloud:vault-java-driver'
-
-    implementation 'com.azure:azure-identity'
-    implementation 'com.azure:azure-security-keyvault-secrets'
 }

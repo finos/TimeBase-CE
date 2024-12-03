@@ -21,13 +21,10 @@ import com.epam.deltix.qsrv.config.QuantServiceConfig;
 import com.epam.deltix.qsrv.config.QuantServiceConfig.Type;
 import com.epam.deltix.qsrv.config.ServiceExecutor;
 import com.epam.deltix.qsrv.util.servlet.AccessFilter;
-import com.epam.deltix.snmp.QuantServerSnmpObjectContainer;
-import com.epam.deltix.snmp.SNMPTransportFactory;
 import com.epam.deltix.qsrv.util.tomcat.DXTomcat;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.lang.Util;
-import com.epam.deltix.util.tomcat.ConnectionHandshakeHandler;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 

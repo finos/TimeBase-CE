@@ -5,7 +5,7 @@ description = "Timebase Commons Server API Library"
 
 dependencies {
     api project(':java:timebase:pub')
-    api project(':java:timebase:snmpagent')
+    //implementation project(':java:timebase:snmpagent')
 
     api ('com.epam.deltix:timebase-lang')
     api ('com.epam.deltix:timebase-util')
@@ -36,6 +36,11 @@ dependencies {
     testImplementation 'commons-io:commons-io'
 
     implementation 'com.github.sarxos:windows-registry-util:0.3'
+
+    implementation 'com.bettercloud:vault-java-driver'
+
+    implementation 'com.azure:azure-identity'
+    implementation 'com.azure:azure-security-keyvault-secrets'
 
     implementation 'com.epam.deltix:gflog-api',
             'com.epam.deltix:gflog-core',

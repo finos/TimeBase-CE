@@ -1,3 +1,5 @@
+description = "Timebase Query Engine Implementation"
+
 configurations {
     qqlLexerGenerator
     qqlParserGenerator

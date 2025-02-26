@@ -31,13 +31,10 @@ import java.util.*;
  *
  */
 public class DBQueryRunner {
-    private final SelectionOptions          opts = new SelectionOptions ();   
     private final Map <String, Parameter>   params =
         new TreeMap <String, Parameter> ();
     
     public DBQueryRunner() {
-        opts.raw = true;
-        opts.channelQOS = ChannelQualityOfService.MIN_INIT_TIME;
     }                    
     
     public void         clearParams () {
@@ -118,6 +115,9 @@ public class DBQueryRunner {
     ) throws IOException
     {
         try {
+            SelectionOptions opts = new SelectionOptions();
+            opts.raw = true;
+            opts.channelQOS = ChannelQualityOfService.MIN_INIT_TIME;
             InstrumentMessageSource ims = db.executeQuery(query, opts, null, null, startTimestamp, endTimestamp, getParams());
             IMSPrinter imsp = printJson ? new JsonIMSPrinter(out) : new SimpleIMSPrinter(out);
             imsp.setMaxCount (numResults);

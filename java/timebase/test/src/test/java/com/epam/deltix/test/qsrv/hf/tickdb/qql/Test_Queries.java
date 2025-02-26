@@ -20,6 +20,7 @@ import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.TickDBShell;
 import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.lang.Util;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -60,6 +61,7 @@ public class Test_Queries {
     }
 
     @Test
+    @Ignore // TODO: 2/12/2025 @AK need add source for computations/000-prepare.q.txt
     public void testComputations() throws Exception {
         test("${home}/java/timebase/test/src/test/resources/qql/computations/*.q.txt");
     }

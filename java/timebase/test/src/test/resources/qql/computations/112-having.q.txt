@@ -49,14 +49,14 @@ test select decimalField from "1min-1h-1h-3" trigger over time(10m) having decim
 test select running decimalField from "1min-1h-1h-3" over time(5m) having decimalField > 400
 0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:13:16.646Z","decimalField":"949.205300891957"}
 1: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:15:16.646Z","decimalField":"741.7301568223631"}
-2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:15:16.646Z","decimalField":"741.7301568223631"}
-3: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:17:16.646Z","decimalField":"706.1560784509762"}
-4: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:19:16.646Z","decimalField":"768.4588150073349"}
-5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:20:00.000Z","decimalField":"768.4588150073349"}
-6: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:20:16.646Z","decimalField":"693.7132670827411"}
-7: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:21:16.646Z","decimalField":"879.2005448282691"}
-8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:22:16.646Z","decimalField":"475.9250400213633"}
-9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:24:16.646Z","decimalField":"411.2834577657336"}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:17:16.646Z","decimalField":"706.1560784509762"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:19:16.646Z","decimalField":"768.4588150073349"}
+4: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:20:00.000Z","decimalField":"768.4588150073349"}
+5: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:20:16.646Z","decimalField":"693.7132670827411"}
+6: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:21:16.646Z","decimalField":"879.2005448282691"}
+7: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:22:16.646Z","decimalField":"475.9250400213633"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:24:16.646Z","decimalField":"411.2834577657336"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:25:00.000Z","decimalField":"411.2834577657336"}
 !end
 test select max{}(decimalField) as mx, min{}(decimalField) as mn from "1min-1h-1h-3" over time(1m) group by symbol having symbol == 'S2'
 0: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:15:00.000Z","MX":"7.868776715648451","MN":"7.868776715648451"}

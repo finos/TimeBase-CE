@@ -71,7 +71,6 @@ configure(ext.leafProjects) {
         minHeapSize = "1024m"
 
         include '**/*Test_*'
-        ignoreFailures = true
 
         testLogging.showStandardStreams = true
         reports.html.enabled = true;

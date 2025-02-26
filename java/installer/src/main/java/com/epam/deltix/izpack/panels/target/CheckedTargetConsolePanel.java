@@ -20,8 +20,8 @@ import com.izforge.izpack.api.data.InstallData;
 import com.izforge.izpack.api.handler.Prompt;
 import com.izforge.izpack.installer.console.ConsolePanel;
 import com.izforge.izpack.installer.panel.PanelView;
+import com.izforge.izpack.installer.util.InstallPathHelper;
 import com.izforge.izpack.panels.target.TargetConsolePanel;
-import com.izforge.izpack.panels.target.TargetPanelHelper;
 import com.izforge.izpack.util.Console;
 import com.epam.deltix.izpack.Utils;
 
@@ -38,7 +38,7 @@ public class CheckedTargetConsolePanel extends TargetConsolePanel {
 
     @Override
     public boolean run(InstallData installData, Console console) {
-        String path = Utils.PREFS.get(Utils.INST_FOLDER_VAR, TargetPanelHelper.getPath(installData));
+        String path = Utils.PREFS.get(Utils.INST_FOLDER_VAR, InstallPathHelper.getPath(installData));
 
         if (Utils.IS_X64 &&
                 "x86".equals(System.getProperty("os.arch")) &&

@@ -94,7 +94,7 @@ public abstract class TDBProtocol extends SerializationUtils {
     /**
      *  This component's version, whether server or client.
      */
-    public static final int     VERSION = 133;
+    public static final int     VERSION = 1133;
     
     /**
      *  Server will refuse to talk to a client unless the client's version is   at least

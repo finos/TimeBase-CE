@@ -25,5 +25,5 @@ test select doubleField + doubleField as "sum", doubleField - doubleField as "su
 !end
 test select decimalField + decimalField as "sum", decimalField - decimalField as "sub", decimalField * decimalField as "mul", decimalField / decimalField as "div", -decimalField as "neg" from "1min-1h-1h-3" limit 1
 >_,TIMESTAMP,SYMBOL,TYPE,sum,sub,mul,div,neg
-0,2021-04-19 01:13:16.646,S1,1898.410601783914,0,900990.7032413906,1,-949.205300891957
+0,2021-04-19 01:13:16.646,S1,1898.410601783914,0.0,900990.7032413906,1.0,-949.205300891957
 !end

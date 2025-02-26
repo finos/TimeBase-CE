@@ -67,15 +67,15 @@ public class TimestampLimits {
         if (e instanceof CompiledConstant) {
             CompiledConstant cc = (CompiledConstant) e;
             long t = (Long) cc.value;
-            updateInterval(t, code, true);
+            updateInterval(t, code, true, false);
         } else if (e instanceof ParamAccess) {
             ParamAccess pa = (ParamAccess) e;
             updateInterval(pa, code, false);
         }
     }
 
-    public void update(long t, OrderRelation code, boolean timestampOnRight, boolean matchExact) {
-        updateInterval(t, convertCode(code, timestampOnRight), matchExact);
+    public void update(long t, OrderRelation code, boolean timestampOnRight, boolean matchExact, boolean isConstNs) {
+        updateInterval(t, convertCode(code, timestampOnRight), matchExact, isConstNs);
     }
 
     public void update(ParamAccess pa, OrderRelation code, boolean timestampOnRight, boolean nanos) {
@@ -102,7 +102,7 @@ public class TimestampLimits {
         return code;
     }
 
-    private void updateInterval(long t, OrderRelation code, boolean matchExact) {
+    private void updateInterval(long t, OrderRelation code, boolean matchExact, boolean isConstNs) {
         switch (code) {
             case GT:
                 inclusiveMinimum = Math.max(inclusiveMinimum, matchExact ? t + 1 : t);
@@ -111,12 +111,21 @@ public class TimestampLimits {
                 inclusiveMinimum = Math.max(inclusiveMinimum, t);
                 break;
             case LT:
+                if (isConstNs) {
+                    t += 1;
+                }
                 inclusiveMaximum = Math.min(inclusiveMaximum, matchExact ? t - 1 : t);
                 break;
             case LE:
+                if (isConstNs) {
+                    t += 1;
+                }
                 inclusiveMaximum = Math.min(inclusiveMaximum, t);
                 break;
             case EQ:
+                if (isConstNs) {
+                    t += 1;
+                }
                 inclusiveMinimum = Math.max(inclusiveMinimum, t);
                 inclusiveMaximum = Math.min(inclusiveMaximum, t);
                 break;

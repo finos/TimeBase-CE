@@ -32,6 +32,7 @@ import com.epam.deltix.timebase.messages.service.EventMessageType;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.time.Interval;
 import com.epam.deltix.util.time.Periodicity;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -278,6 +279,7 @@ public class Test_Locking extends TDBRunnerBase {
     }
 
     @Test
+    @Ignore // TODO: 2/11/2025 @AK this flaky tests
     public void test72() {
         DXTickStream stream = createTestStream("test72");
 

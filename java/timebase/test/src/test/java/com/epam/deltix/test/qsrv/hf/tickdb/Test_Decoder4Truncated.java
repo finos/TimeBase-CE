@@ -31,7 +31,6 @@ import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.timebase.messages.RecordInfo;
 import com.epam.deltix.timebase.messages.SchemaElement;
 import com.epam.deltix.util.collections.generated.ByteArrayList;
-import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.lang.ExceptionHandler;
 import com.epam.deltix.util.lang.StringUtils;
@@ -330,7 +329,7 @@ public class Test_Decoder4Truncated {
         public ByteArrayList binary_1;
         //public boolean boolean_2;
         public char char_3;
-        public long timestamp_4;
+        public long millisecond_4;
         public Kind enum_5;
         public float ieee32_6;
         public double ieee64_7;
@@ -359,7 +358,7 @@ public class Test_Decoder4Truncated {
                 this.binary_1 = ext.binary_1;
                 //msg.boolean_2 = this.boolean_2;
                 this.char_3 = ext.char_3;
-                this.timestamp_4 = ext.timestamp_4;
+                this.millisecond_4 = ext.millisecond_4;
                 this.enum_5 = ext.enum_5;
                 this.ieee32_6 = ext.ieee32_6;
                 this.ieee64_7 = ext.ieee64_7;
@@ -436,7 +435,7 @@ public class Test_Decoder4Truncated {
                     binary_1 != null ? Util.arraydump(binary_1.getInternalBuffer(), 0, Math.min(5, binary_1.size())) : "null",
                     false, //boolean_2,
                     (int) char_3,
-                    timestamp_4,
+                    millisecond_4,
                     enum_5,
                     ieee32_6,
                     ieee64_7,
@@ -462,7 +461,7 @@ public class Test_Decoder4Truncated {
         public ByteArrayList binary_1;
         //private boolean boolean_2;
         private char char_3;
-        private long timestamp_4;
+        private long millisecond_4;
         private Kind enum_5;
         private float ieee32_6;
         private double ieee64_7;
@@ -635,12 +634,12 @@ public class Test_Decoder4Truncated {
         }
 
         @SchemaElement
-        public long getTimestamp_4 () {
-            return timestamp_4;
+        public long getMillisecond_4() {
+            return millisecond_4;
         }
 
-        public void setTimestamp_4 (long timestamp_4) {
-            this.timestamp_4 = timestamp_4;
+        public void setMillisecond_4(long millisecond_4) {
+            this.millisecond_4 = millisecond_4;
         }
 
         @SchemaElement
@@ -667,7 +666,7 @@ public class Test_Decoder4Truncated {
                 this.binary_1 = ext.binary_1;
                 //msg.boolean_2 = this.boolean_2;
                 this.char_3 = ext.char_3;
-                this.timestamp_4 = ext.timestamp_4;
+                this.millisecond_4 = ext.millisecond_4;
                 this.enum_5 = ext.enum_5;
                 this.ieee32_6 = ext.ieee32_6;
                 this.ieee64_7 = ext.ieee64_7;
@@ -737,7 +736,7 @@ public class Test_Decoder4Truncated {
                     binary_1 != null ? Util.arraydump(binary_1.getInternalBuffer(), 0, Math.min(5, binary_1.size())) : "null",
                     false, //boolean_2,
                     (int) char_3,
-                    timestamp_4,
+                    millisecond_4,
                     enum_5,
                     ieee32_6,
                     ieee64_7,
@@ -763,7 +762,7 @@ public class Test_Decoder4Truncated {
         public ByteArrayList binary_1;
         //public boolean boolean_2;
         public char char_3;
-        public long timestamp_4;
+        public long millisecond_4;
         public Kind enum_5;
         public float ieee32_6;
         public double ieee64_7;
@@ -796,7 +795,7 @@ public class Test_Decoder4Truncated {
 
                 this.binary_1 = ext.binary_1;
                 this.char_3 = ext.char_3;
-                this.timestamp_4 = ext.timestamp_4;
+                this.millisecond_4 = ext.millisecond_4;
                 this.enum_5 = ext.enum_5;
                 this.ieee32_6 = ext.ieee32_6;
                 this.ieee64_7 = ext.ieee64_7;
@@ -865,7 +864,7 @@ public class Test_Decoder4Truncated {
                     binary_1 != null ? Util.arraydump(binary_1.getInternalBuffer(), 0, Math.min(5, binary_1.size())) : "null",
                     false, //boolean_2,
                     (int) char_3,
-                    timestamp_4,
+                    millisecond_4,
                     enum_5,
                     ieee32_6,
                     ieee64_7,
@@ -891,7 +890,7 @@ public class Test_Decoder4Truncated {
         public ByteArrayList binary_1;
         //private boolean boolean_2;
         private char char_3;
-        private long timestamp_4;
+        private long millisecond_4;
         private Kind enum_5;
         private float ieee32_6;
         private double ieee64_7;
@@ -1064,12 +1063,12 @@ public class Test_Decoder4Truncated {
         }
 
         @SchemaElement
-        public long getTimestamp_4 () {
-            return timestamp_4;
+        public long getMillisecond_4() {
+            return millisecond_4;
         }
 
-        public void setTimestamp_4 (long timestamp_4) {
-            this.timestamp_4 = timestamp_4;
+        public void setMillisecond_4(long millisecond_4) {
+            this.millisecond_4 = millisecond_4;
         }
 
         @SchemaElement
@@ -1095,7 +1094,7 @@ public class Test_Decoder4Truncated {
 
                 this.binary_1 = ext.binary_1;
                 this.char_3 = ext.char_3;
-                this.timestamp_4 = ext.timestamp_4;
+                this.millisecond_4 = ext.millisecond_4;
                 this.enum_5 = ext.enum_5;
                 this.ieee32_6 = ext.ieee32_6;
                 this.ieee64_7 = ext.ieee64_7;
@@ -1165,7 +1164,7 @@ public class Test_Decoder4Truncated {
                     binary_1 != null ? Util.arraydump(binary_1.getInternalBuffer(), 0, Math.min(5, binary_1.size())) : "null",
                     false, //boolean_2,
                     (int) char_3,
-                    timestamp_4,
+                    millisecond_4,
                     enum_5,
                     ieee32_6,
                     ieee64_7,

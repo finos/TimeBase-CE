@@ -684,6 +684,7 @@ public class Test_Replicator {
                     FloatDataType.ENCODING_FIXED_DOUBLE);
 
             convert(from.getSource(), rcd);
+            to.getSource().truncate(Long.MIN_VALUE);
 
             new StreamReplicator().replicate(from, to, options);
 

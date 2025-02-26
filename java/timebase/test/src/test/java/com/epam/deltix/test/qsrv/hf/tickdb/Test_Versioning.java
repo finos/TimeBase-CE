@@ -238,7 +238,7 @@ public class Test_Versioning extends TDBTestBase {
             options.allowLateOutOfOrder = true;
 
             DXTickStream stream = db.getStream("stream");
-            assertEquals(0, stream.getDataVersion());
+            assertEquals(-1, stream.getDataVersion());
         }
     }
 

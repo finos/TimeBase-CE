@@ -17,7 +17,7 @@ OPTIONS (fixedType)
 #   Describe
 #
 testdesc S
-DURABLE STREAM S (
+DURABLE STREAM S 'S' (
     CLASS A (
         F FLOAT DECIMAL (10)
     );

@@ -22,8 +22,8 @@ import com.izforge.izpack.gui.LabelFactory;
 import com.izforge.izpack.gui.log.Log;
 import com.izforge.izpack.installer.data.GUIInstallData;
 import com.izforge.izpack.installer.gui.InstallerFrame;
+import com.izforge.izpack.installer.util.InstallPathHelper;
 import com.izforge.izpack.panels.target.TargetPanel;
-import com.izforge.izpack.panels.target.TargetPanelHelper;
 import com.epam.deltix.izpack.Utils;
 
 import javax.swing.*;
@@ -50,7 +50,7 @@ public class CheckedTargetPanel extends TargetPanel {
 
     @Override
     public void panelActivate() {
-        String path = Utils.PREFS.get(Utils.INST_FOLDER_VAR, TargetPanelHelper.getPath(installData));
+        String path = Utils.PREFS.get(Utils.INST_FOLDER_VAR, InstallPathHelper.getPath(installData));
 
         warningLabel.setVisible(false);
         if (Utils.IS_X64 &&

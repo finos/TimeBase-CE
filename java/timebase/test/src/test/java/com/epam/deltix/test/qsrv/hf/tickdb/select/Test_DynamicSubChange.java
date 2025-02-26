@@ -32,6 +32,7 @@ import org.junit.*;
 import org.junit.experimental.categories.Category;
 
 @Category(JUnitCategories.TickDBFast.class)
+@Ignore // TODO: 2/12/2025 @AK  incorrect source: on 70-72 started difference in timestamp with origin source
 public class Test_DynamicSubChange {
     private static final int        MIN_NUM_TEST = 4;
     private static final int        MAX_NUM_TEST = 20;

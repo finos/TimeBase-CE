@@ -661,20 +661,21 @@ public class Test_QqlObjects extends TDBRunnerBase {
                     "over time(5s) " +
                     "where trade != null and symbol == 'BTC/USD'"),
 
-            QUERY_RAW("WITH entries[this is L1Entry] as 'entries', " +
-                    "sum(entries.price * entries.size) / sum(entries.size) as 'avgPrice', " +
-                    "bollinger{}(avgPrice) as 'bollinger' " +
-                    "SELECT " +
-                    "avgPrice, " +
-                    "sma{timePeriod: 1h}(avgPrice) as 'sma-1h', " +
-                    "cma{}(avgPrice) as 'cma', " +
-                    "ema{period: 14}(avgPrice) as 'ema-14', " +
-                    "bollinger.upperBand, " +
-                    "bollinger.middleBand, " +
-                    "bollinger.lowerBand " +
-                    "FROM KRAKEN " +
-                    "OVER TIME(5s) " +
-                    "WHERE symbol == 'BTC/USD' AND notEmpty(entries)"),
+        // TODO: uncomment when timebase computations lib will be added to dependencies
+//            QUERY_RAW("WITH entries[this is L1Entry] as 'entries', " +
+//                    "sum(entries.price * entries.size) / sum(entries.size) as 'avgPrice', " +
+//                    "bollinger{}(avgPrice) as 'bollinger' " +
+//                    "SELECT " +
+//                    "avgPrice, " +
+//                    "sma{timePeriod: 1h}(avgPrice) as 'sma-1h', " +
+//                    "cma{}(avgPrice) as 'cma', " +
+//                    "ema{period: 14}(avgPrice) as 'ema-14', " +
+//                    "bollinger.upperBand, " +
+//                    "bollinger.middleBand, " +
+//                    "bollinger.lowerBand " +
+//                    "FROM KRAKEN " +
+//                    "OVER TIME(5s) " +
+//                    "WHERE symbol == 'BTC/USD' AND notEmpty(entries)"),
 
 //            QUERY_RAW("select " +
 //                    "orderbook{maxDepth: 10}(this.packageType, this.entries) as entries, " +
@@ -844,11 +845,42 @@ public class Test_QqlObjects extends TDBRunnerBase {
             QUERY_RAW("select t.name as 'typeName' array join streams()[this.key == 'KRAKEN'].topTypes as 't'"),
             QUERY_RAW("select \"field\".name, \"field\".\"type\".baseName as 'fieldType', \"field\".\"type\".encoding as 'encoding' " +
                     "array join streams()[this.key == 'KRAKEN'].topTypes.fields as 'field'"),
+    };
+
+    private static Pair<String, MappingInfo>[] QQL_MISC2 = new Pair[] {
+        QUERY_RAW("SELECT ((33 as char) as decimal)"),
+        QUERY_RAW("SELECT ((33 as timestamp) as decimal)"),
         QUERY("select ([] as array(decimal) if true) as a1, " +
             "(null as array(int8) if true) as a2, " +
             "(null as int8 if true) as a, " +
             "(a + (1 as timestamp) if true) as a3, " +
             "(a + (1 as int16) if true) as a4"),
+        // todo: prepare l3 stream (fairxL3)
+//        QUERY_RAW("select " +
+//            "orderbook{maxDepth: 10, model: 'l3'}(this.packageType, this.entries) as entries, " +
+//            "PERIODICAL_SNAPSHOT as packageType " +
+//            "type \"deltix.timebase.api.messages.universal.PackageHeader\" " +
+//            "from fairxL3 " +
+//            "over time(5s) " +
+//            "where symbol == 'BITF24'"),
+//        QUERY_RAW("select s, sort(symbols(s)) array join sort(streams().key) as s limit 3"),
+        // todo: support typeOf
+//        QUERY_RAW("select typeOf(asciiTextField), typeOf(binaryField), typeOf(enumField), typeOf(floatField), " +
+//            "typeOf(decimalField), typeOf(doubleField), typeOf(intField), typeOf(longField), typeOf(shortField), typeOf(intField), " +
+//            "typeOf(timeOfDayField), typeOf(timestamp), typeOf(timestampField), typeOf(timestampField), " +
+//            "typeOf(symbol), typeOf(type), typeOf(alphanumericList), typeOf(longList), typeOf(enumList) " +
+//            "from alltypesrand limit 1"),
+        QUERY_RAW("SELECT typeOf(this.entries), typeOf(this.entries[0]), typeOf(this.entries[1]), typeOf(this) " +
+            "FROM (select * from BINANCE union select * from KRAKEN)"),
+        QUERY_RAW("SELECT typeOf(this), this.entries[0] FROM (select * from BINANCE union select * from KRAKEN) GROUP BY typeOf(this)"),
+        QUERY_RAW("select e, typeof(e) from (select * from BINANCE union select * from KRAKEN) array join this.entries as e"),
+        QUERY_RAW("select e, typeof(e), count{}() from (select * from BINANCE union select * from KRAKEN) array join this.entries as e group by typeof(e)"),
+        //todo: add stream 1hourbars
+//        QUERY_RAW("select this.high from \"1hourbars\""),
+        QUERY_RAW("with " +
+            "entries[0].exchangeId == 'BINANCE' as isBinance, " +
+            "(entries if isBinance) as binanceEntries " +
+            "SELECT binanceEntries[0].price as pp FROM BINANCE"),
     };
 
 
@@ -1015,6 +1047,21 @@ public class Test_QqlObjects extends TDBRunnerBase {
         } else {
             Assert.assertTrue(
                     qql(db, QQL_ALL_MISC, readExpectedResults(Home.getPath(EXPECTED_PATH + "misc.txt")))
+            );
+        }
+    }
+
+    @Test
+    public void Test_AllMisc2() throws Exception {
+        if (!remote) {
+            throw new RuntimeException("Test is available only in remote mode: use -Drunner.remote=true");
+        }
+
+        if (GENERATE_EXPECTED) {
+            qqlWriteExpected(db, QQL_MISC2, Home.getPath(EXPECTED_GENERATE_PATH + "misc2.txt"));
+        } else {
+            Assert.assertTrue(
+                qql(db, QQL_MISC2, readExpectedResults(Home.getPath(EXPECTED_PATH + "misc2.txt")))
             );
         }
     }

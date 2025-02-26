@@ -16,10 +16,12 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
+import org.junit.Ignore;
 import org.junit.experimental.categories.Category;
 import com.epam.deltix.util.JUnitCategories.TickDBFast;
 
 @Category(TickDBFast.class)
+@Ignore // TODO: 2/11/2025 @AK need add test source related to Test_ReverseCursor
 public class Test_ReverseCursorMax extends Test_ReverseCursor {
     static {
         distribution_factor = 0;

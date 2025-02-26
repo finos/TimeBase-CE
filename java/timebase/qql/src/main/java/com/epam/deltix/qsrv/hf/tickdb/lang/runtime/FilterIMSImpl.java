@@ -521,7 +521,7 @@ public abstract class FilterIMSImpl
         if (isNotStrictCondition(paramNums[i])) {
             return value - 1;
         } else if (isNanos(paramNums[i])) {
-            return QQLCompilerUtils.nsToMs(value);
+            return QQLCompilerUtils.nsToMs(value) + 1;
         }
 
         return value;

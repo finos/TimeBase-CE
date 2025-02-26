@@ -69,7 +69,7 @@ OPTIONS (DF = 1)
 #   Describe
 #
 testdesc TEST1
-DURABLE STREAM TEST1 (
+DURABLE STREAM TEST1 'TEST1' (
     ENUM "deltix.qsrv.hf.tickdb.testframework.TestEnum" 'Test Enum Title' (
         "RED" = 0,
         "GREEN" = 1,
@@ -167,7 +167,7 @@ OPTIONS (POLYMORPHIC; PERIODICITY = '1I'; HIGHAVAILABILITY = FALSE; UNIQUE = FAL
 #   Describe
 #
 testdesc test_guid
-DURABLE STREAM "test_guid" (
+DURABLE STREAM "test_guid" 'test_guid' (
     CLASS "com.epam.deltix.timebase.messages.service.ErrorMessage" 'Error Message' GUID 'TEST_GUID2' (
         "details" VARCHAR
     );

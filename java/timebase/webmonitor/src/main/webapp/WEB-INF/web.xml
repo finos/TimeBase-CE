@@ -23,6 +23,29 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
+    <servlet>
+        <servlet-name>metrics</servlet-name>
+        <servlet-class>com.epam.deltix.qsrv.hf.tickdb.web.controller.MetricsServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>monitor</servlet-name>
+        <servlet-class>com.epam.deltix.qsrv.hf.tickdb.web.controller.MonitorServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>monitor</servlet-name>
+        <url-pattern>/</url-pattern>
+        <url-pattern>/index</url-pattern>
+        <url-pattern>/loaders/*</url-pattern>
+        <url-pattern>/cursors/*</url-pattern>
+        <url-pattern>/connections</url-pattern>
+        <url-pattern>/connection</url-pattern>
+        <url-pattern>/locks</url-pattern>
+        <url-pattern>/track/*</url-pattern>
+    </servlet-mapping>
+
     <servlet-mapping>
         <servlet-name>api</servlet-name>
         <url-pattern>/xml/*</url-pattern>
@@ -36,6 +59,11 @@
     <servlet-mapping>
         <servlet-name>ping</servlet-name>
         <url-pattern>/ping</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>metrics</servlet-name>
+        <url-pattern>/metrics</url-pattern>
     </servlet-mapping>
 
     <mime-mapping>
@@ -99,5 +127,9 @@
         <url-pattern>/webdav/*</url-pattern>
       </servlet-mapping>
       -->
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/resources/*</url-pattern>
+    </servlet-mapping>
 
 </web-app>

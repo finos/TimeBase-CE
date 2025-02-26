@@ -1522,6 +1522,9 @@ public class PDStream extends TickStreamImpl {
     @Override
     public synchronized void        setPolymorphic (RecordClassDescriptor ... cds) {
         runUnderLock(() -> {
+            if (getTimeRange() != null) {
+                throw new UnsupportedOperationException("Stream types cannot be reset in a non-empty stream. Use @SchemaChangeTask");
+            }
             super.setPolymorphic(cds);
         });
     }
@@ -1529,6 +1532,9 @@ public class PDStream extends TickStreamImpl {
     @Override
     public synchronized void        setFixedType (RecordClassDescriptor cd) {
         runUnderLock(() -> {
+            if (getTimeRange() != null) {
+                throw new UnsupportedOperationException("Stream types cannot be reset in a non-empty stream. Use @SchemaChangeTask");
+            }
             super.setFixedType(cd);
         });
     }

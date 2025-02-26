@@ -1621,7 +1621,7 @@ class EvalGenerator {
     private void genTimestampSelectorEval(TimestampSelector e, QValue outValue) {
         addTo.add(outValue.write(
             e.hasNanosecondPrecision() ?
-                inMsg.call("getTimeStampNs") :
+                inMsg.call("getNanoTime") :
                 inMsg.call("getTimeStampMs")
         ));
     }

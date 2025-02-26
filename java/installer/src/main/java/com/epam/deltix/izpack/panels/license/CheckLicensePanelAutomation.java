@@ -32,6 +32,7 @@ import java.util.List;
  */
 public class CheckLicensePanelAutomation extends UserInputPanelAutomationHelper {
     public CheckLicensePanelAutomation() {
+        super(null);
     }
 
     @Override

@@ -16,11 +16,13 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
+import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.SSLProperties;
 import com.epam.deltix.qsrv.comm.cat.StartConfiguration;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.qsrv.servlet.HomeServlet;
+import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.net.SSLContextProvider;
 import org.junit.*;
 
@@ -40,22 +42,28 @@ public class Test_TomcatServer {
         TDBRunner runner = new TDBRunner(true, true, new TomcatServer(null));
         runner.startup();
 
-        testHome("localhost", runner.getPort(), new File(runner.getLocation()).getParent());
+        testHome("localhost", runner.getWebPort(), new File(runner.getLocation()).getParent());
 
         runner.shutdown();
     }
 
     @Test
     public void testHomeServletSSL() throws Throwable {
+        File tb = new File(TDBRunner.getTemporaryLocation());
+        QSHome.set(tb.getParent());
 
-        StartConfiguration configuration = StartConfiguration.create(true, false, false);
-        configuration.tb.setSSLConfig(new SSLProperties(true, false));
+        File certificate = new File(tb.getParent(), "selfsigned.jks");
+        IOUtil.extractResource("com/epam/deltix/cert/selfsigned.jks", certificate);
 
-        TDBRunner runner = new TDBRunner(true, true, new TomcatServer(configuration));
-        //runner.sslContext = SSLContextProvider.createSSLContext(ssl.keystoreFile, ssl.keystorePass, false);
+        StartConfiguration config = StartConfiguration.create(true, false, false);
+        SSLProperties ssl = new SSLProperties(true, false);
+        ssl.keystoreFile = certificate.getAbsolutePath();
+        config.tb.setSSLConfig(ssl);
+        TDBRunner runner = new TDBRunner(true, true, new TomcatServer(config));
+        runner.sslContext = SSLContextProvider.createSSLContext(ssl.keystoreFile, ssl.keystorePass, false);
         runner.startup();
 
-        testHome("localhost", runner.getPort(), new File(runner.getLocation()).getParent());
+        testHome("localhost", runner.getWebPort(), new File(runner.getLocation()).getParent());
 
         runner.shutdown();
     }

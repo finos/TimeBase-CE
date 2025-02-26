@@ -21,6 +21,7 @@ import com.epam.deltix.qsrv.hf.pub.md.StandardTypes;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.BinaryLogicalOperation;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OrderRelation;
+import com.epam.deltix.timebase.messages.TypeConstants;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -189,7 +190,7 @@ abstract class QQLPostProcessingPatterns {
             }
             long resetVal = isConstNs ? QQLCompilerUtils.nsToMs(constant.getLong()) : constant.getLong();
             matched = !isSelectorNs && !isConstNs;
-            range.update(resetVal, relation, timestampOnRight, matched);
+            range.update(resetVal, relation, timestampOnRight, matched, isConstNs);
         } else if (arg instanceof ParamAccess) {
             if (isSelectorNs) {
                 range.update((ParamAccess) arg, relation, timestampOnRight, true);

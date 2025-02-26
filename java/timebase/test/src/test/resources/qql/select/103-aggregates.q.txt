@@ -128,24 +128,24 @@ test select sum{}(float_n_32), sum{}(float_c_32), sum{}(float_n_64), sum{}(float
 #
 test select sum{}(int_n_8), sum{}(int_c_8), sum{}(int_n_16), sum{}(int_c_16), sum{}(int_n_32), sum{}(int_c_32), sum{}(int_n_64), sum{}(int_c_64) from alltypes group by symbol
 >_,TIMESTAMP,SYMBOL,TYPE,SUM{}(int_n_8),SUM{}(int_c_8),SUM{}(int_n_16),SUM{}(int_c_16),SUM{}(int_n_32),SUM{}(int_c_32),SUM{}(int_n_64),SUM{}(int_c_64)
-0,2011-01-01 00:01:39,S0,-127,1,-32767,1,-2147483287,441,-9223372036854776000,0
-1,2011-01-01 00:01:39,S1,-127,1,-32767,1,-2147483287,441,-9223372036854776000,0
+0,2011-01-01 00:01:39,S0,-127.0,1.0,-32767.0,1.0,-2147483287.0,441.0,-9223372036854776000.0,0.0
+1,2011-01-01 00:01:39,S1,-127.0,1.0,-32767.0,1.0,-2147483287.0,441.0,-9223372036854776000.0,0.0
 !end
 #
 #   Test SUM (puint data types)
 #
 test select sum{}(puint_n_30), sum{}(puint_c_30), sum{}(puint_n_61), sum{}(puint_c_61) from alltypes group by symbol
 >_,TIMESTAMP,SYMBOL,TYPE,SUM{}(puint_n_30),SUM{}(puint_c_30),SUM{}(puint_n_61),SUM{}(puint_c_61)
-0,2011-01-01 00:01:39,S0,65574836470,49583741822,136333720368547800000,50815843009213690000
-1,2011-01-01 00:01:39,S1,65574836470,49583741822,136333720368547800000,50815843009213690000
+0,2011-01-01 00:01:39,S0,65574836470.0,49583741822.0,136333720368547800000.0,50815843009213690000.0
+1,2011-01-01 00:01:39,S1,65574836470.0,49583741822.0,136333720368547800000.0,50815843009213690000.0
 !end
 #
 #   Test AVG (various data types)
 #
 test select sum{}(int_c_32), sum{}(int_n_8), sum{}(float_c_32) from alltypes group by symbol
 >_,TIMESTAMP,SYMBOL,TYPE,SUM{}(int_c_32),SUM{}(int_n_8),SUM{}(float_c_32)
-0,2011-01-01 00:01:39,S0,441,-127,25.0
-1,2011-01-01 00:01:39,S1,441,-127,25.0
+0,2011-01-01 00:01:39,S0,441.0,-127.0,25.0
+1,2011-01-01 00:01:39,S1,441.0,-127.0,25.0
 !end
 #
 #   Test FIRST{}(various data types)

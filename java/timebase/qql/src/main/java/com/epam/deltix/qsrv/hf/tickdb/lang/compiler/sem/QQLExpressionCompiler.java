@@ -498,7 +498,7 @@ public class QQLExpressionCompiler {
 
         switch (name) {
             case KEYWORD_TIMESTAMP:
-                expectedType = intersectTypes(e, expectedType, StandardTypes.NULLABLE_TIMESTAMP);
+                expectedType = intersectTypes(e, expectedType, StandardTypes.NULLABLE_TIMESTAMP_NS);
                 break;
 
             case KEYWORD_TIMESTAMPNS:
@@ -536,7 +536,7 @@ public class QQLExpressionCompiler {
 
         switch (fieldName) {
             case KEYWORD_TIMESTAMP:
-                expectedType = intersectTypes(e, expectedType, StandardTypes.NULLABLE_TIMESTAMP);
+                expectedType = intersectTypes(e, expectedType, StandardTypes.NULLABLE_TIMESTAMP_NS);
                 break;
 
             case KEYWORD_TIMESTAMPNS:
@@ -1349,6 +1349,11 @@ public class QQLExpressionCompiler {
                     throw new DuplicateNameException(oe, name);
 
                 tsInit = e;
+            } else if (KEYWORD_TIMESTAMPNS.equals(name)) {
+                if (tsInit != null)
+                    throw new DuplicateNameException(oe, name);
+
+                tsInit = e;
             } else if (KEYWORD_SYMBOL.equals(name)) {
                 if (symbolInit != null)
                     throw new DuplicateNameException(oe, name);
@@ -1947,7 +1952,7 @@ public class QQLExpressionCompiler {
             return (new SymbolSelector());
 
         if (text.equals(KEYWORD_TIMESTAMP))
-            return (new TimestampSelector());
+            return (new TimestampSelector(true));
 
         if (text.equals(KEYWORD_TIMESTAMPNS)) {
             return (new TimestampSelector(true));

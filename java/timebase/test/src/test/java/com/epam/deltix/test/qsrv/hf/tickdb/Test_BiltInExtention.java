@@ -24,10 +24,7 @@ import com.epam.deltix.util.StringUtil;
 import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.lang.Util;
-import org.junit.Test;
-import org.junit.Before;
-import org.junit.After;
-import org.junit.Assert;
+import org.junit.*;
 
 import java.io.IOException;
 import java.io.File;
@@ -48,6 +45,7 @@ import com.epam.deltix.util.JUnitCategories.TickDBFast;
  * Time: 7:37:26 PM
  */
 @Category(TickDBFast.class)
+@Ignore // TODO: 2/11/2025 @AK need add test source ZIP field
 public class Test_BiltInExtention {
     private static final File DIR = Home.getFile("testdata", "qsrv", "hf", "tickdb");
     private static final File ZIP = new File(DIR, "tickdb.ticksEx.zip");

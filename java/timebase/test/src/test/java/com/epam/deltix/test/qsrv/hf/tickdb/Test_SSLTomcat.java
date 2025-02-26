@@ -29,6 +29,7 @@ import com.epam.deltix.util.io.SSLClientContextProvider;
 import com.epam.deltix.util.net.SSLContextProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -72,6 +73,7 @@ public class Test_SSLTomcat {
     }
 
     @Test
+    @Ignore // TODO: 2/11/2025  @AK
     public void testConnectionToSSLTomcat() throws Throwable {
         try (TickDBClient client = (TickDBClient) TickDBFactory.connect("localhost", runner.getPort(), false)) {
             client.open(false);

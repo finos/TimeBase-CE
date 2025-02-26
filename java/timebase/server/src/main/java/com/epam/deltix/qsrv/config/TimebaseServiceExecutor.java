@@ -47,7 +47,6 @@ import com.epam.deltix.util.time.KeeperTimeSource;
 import com.epam.deltix.util.time.TimeKeeper;
 import com.epam.deltix.util.vsocket.*;
 import org.apache.catalina.Context;
-import org.springframework.util.unit.DataSize;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -262,7 +261,20 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         if (value == null) {
             return null;
         }
-        return DataSize.parse(value.toUpperCase(Locale.ENGLISH)).toBytes();
+        value = value.toUpperCase(Locale.ENGLISH).trim();
+        if (value.matches("\\d+B")) {
+            return Long.parseLong(value.substring(0, value.length() - 1));
+        } else if (value.matches("\\d+KB")) {
+            return Long.parseLong(value.substring(0, value.length() - 2)) * 1024;
+        } else if (value.matches("\\d+MB")) {
+            return Long.parseLong(value.substring(0, value.length() - 2)) * 1024 * 1024;
+        } else if (value.matches("\\d+GB")) {
+            return Long.parseLong(value.substring(0, value.length() - 2)) * 1024 * 1024 * 1024;
+        } else if (value.matches("\\d+TB")) {
+            return Long.parseLong(value.substring(0, value.length() - 2)) * 1024L * 1024L * 1024L * 1024L;
+        } else {
+            throw new IllegalArgumentException("Invalid data size format: " + value);
+        }
     }
 
     private static TimeSource configureTimeSource(QuantServiceConfig config) {

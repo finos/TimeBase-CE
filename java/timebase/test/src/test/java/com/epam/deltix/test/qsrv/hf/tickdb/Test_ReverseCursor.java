@@ -47,6 +47,7 @@ import com.epam.deltix.util.JUnitCategories.TickDBFast;
  * Time: 9:41:24 PM
  */
 @Category(TickDBFast.class)
+@Ignore // TODO: 2/11/2025 @AK need add test source ZIP field
 public class Test_ReverseCursor {
 
     private final static String LOCATION = TDBRunner.getTemporaryLocation();

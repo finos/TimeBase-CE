@@ -36,7 +36,7 @@ import static com.epam.deltix.qsrv.hf.tickdb.schema.migration.DescriptorToMessag
 public class SchemaChangeMessageBuilder {
 
     public SchemaChangeMessage build(StreamMetaDataChange metaDataChange) {
-        return build(metaDataChange, "@SYSTEM", System.currentTimeMillis());
+        return build(metaDataChange, "", System.currentTimeMillis()); // @SYSTEM
     }
 
     public SchemaChangeMessage build(StreamMetaDataChange metaDataChange, String symbol, long timestamp) {

@@ -428,7 +428,7 @@ public class StreamReplicator {
             RawMessage msg;
 
             TickCursor sCursor = source.select(Long.MIN_VALUE, so, null,
-                    new IdentityKey[] { new ConstantIdentityKey("@SYSTEM") });
+                    new IdentityKey[] { new ConstantIdentityKey("") }); // @SYSTEM
             msm.add(sCursor);
 
             boolean logVersionErrors = true;
@@ -1171,7 +1171,7 @@ public class StreamReplicator {
             RawMessage msg;
 
             TickCursor sCursor = source.select(Long.MIN_VALUE, so, null,
-                                new IdentityKey[] { new ConstantIdentityKey("@SYSTEM") });
+                                new IdentityKey[] { new ConstantIdentityKey("") });// @SYSTEM
             msm.add(sCursor);
 
             boolean logVersionErrors = true;

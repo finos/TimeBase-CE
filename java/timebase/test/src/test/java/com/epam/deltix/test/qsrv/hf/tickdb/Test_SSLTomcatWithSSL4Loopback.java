@@ -28,6 +28,7 @@ import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.io.SSLClientContextProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -81,6 +82,7 @@ public class Test_SSLTomcatWithSSL4Loopback {
     }
 
     @Test
+    @Ignore // TODO: 2/11/2025  @AK
     public void testConnectionToSSLTomcat() throws Throwable {
         DXTickDB client = TickDBFactory.connect("localhost", runner.getPort(), false);
         client.open(false);

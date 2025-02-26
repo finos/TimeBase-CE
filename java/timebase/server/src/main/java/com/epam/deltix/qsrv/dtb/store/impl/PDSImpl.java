@@ -24,6 +24,7 @@ import com.epam.deltix.qsrv.dtb.store.dataacc.DataReaderImpl;
 import com.epam.deltix.qsrv.dtb.store.dataacc.DataWriterImpl;
 import com.epam.deltix.qsrv.dtb.store.dataacc.LiveDataReaderImpl;
 import com.epam.deltix.qsrv.dtb.store.pub.*;
+import com.epam.deltix.qsrv.util.metrics.MetricsService;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.concurrent.QuickExecutor;
 import com.epam.deltix.util.concurrent.UncheckedInterruptedException;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 class PDSImpl implements PersistentDataStore {
     static final Log LOGGER = LogFactory.getLog("deltix.dtb");
@@ -41,7 +43,7 @@ class PDSImpl implements PersistentDataStore {
 //        LOGGER.setLevel(LogLevel.DEBUG);
 //    }
 
-//    private final MetricsService metrics = MetricsService.getInstance();
+    private final MetricsService metrics = MetricsService.getInstance();
 
     // After thant number of failures across any number of files we trigger Emergency shutdown.
     private static final int FAILURES_TO_TRIGGER_SHUTDOWN = Integer.getInteger("TimeBase.storage.failuresToShutdown", 5);
@@ -84,18 +86,18 @@ class PDSImpl implements PersistentDataStore {
 
     //private ByteArrayHeap                   allocator;
 
-//    private final AtomicInteger dirtyFilesGauge = metrics.registerGauge(
-//        "timebase.storage.num_dirty_files", new AtomicInteger(numDirtyFiles)
-//    );
-//    private final AtomicInteger activeFilesGauge = metrics.registerGauge(
-//        "timebase.storage.num_active_files", new AtomicInteger()
-//    );
-//    private final AtomicLong ioReadsCount = metrics.registerGauge(
-//        "timebase.storage.io.read_count", new AtomicLong()
-//    );
-//    private final AtomicLong ioWritesCount = metrics.registerGauge(
-//        "timebase.storage.io.write_count", new AtomicLong()
-//    );
+    private final AtomicInteger dirtyFilesGauge = metrics.registerGauge(
+        "timebase.storage.num_dirty_files", new AtomicInteger(numDirtyFiles)
+    );
+    private final AtomicInteger activeFilesGauge = metrics.registerGauge(
+        "timebase.storage.num_active_files", new AtomicInteger()
+    );
+    private final AtomicLong ioReadsCount = metrics.registerGauge(
+        "timebase.storage.io.read_count", new AtomicLong()
+    );
+    private final AtomicLong ioWritesCount = metrics.registerGauge(
+        "timebase.storage.io.write_count", new AtomicLong()
+    );
 
     PDSImpl (QuickExecutor exe) {
         this.executor = exe;
@@ -485,22 +487,22 @@ class PDSImpl implements PersistentDataStore {
     }
 
     void fileActivated() {
-        //activeFilesGauge.incrementAndGet();
+        activeFilesGauge.incrementAndGet();
     }
 
     void fileDeactivated() {
-        //activeFilesGauge.decrementAndGet();
+        activeFilesGauge.decrementAndGet();
     }
 
     void fileRead() {
-        //ioReadsCount.incrementAndGet();
+        ioReadsCount.incrementAndGet();
     }
 
     void fileWritten() {
-        //ioWritesCount.incrementAndGet();
+        ioWritesCount.incrementAndGet();
     }
 
     private void updateDirtyFilesGauge() {
-        //dirtyFilesGauge.set(numDirtyFiles);
+        dirtyFilesGauge.set(numDirtyFiles);
     }
 }

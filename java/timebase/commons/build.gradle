@@ -42,6 +42,8 @@ dependencies {
     implementation 'com.azure:azure-identity'
     implementation 'com.azure:azure-security-keyvault-secrets'
 
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
     implementation 'com.epam.deltix:gflog-api',
             'com.epam.deltix:gflog-core',
             'com.epam.deltix:gflog-jul',

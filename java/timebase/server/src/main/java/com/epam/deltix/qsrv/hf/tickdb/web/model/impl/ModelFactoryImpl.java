@@ -17,19 +17,23 @@
 package com.epam.deltix.qsrv.hf.tickdb.web.model.impl;
 
 import com.epam.deltix.qsrv.hf.tickdb.web.model.pub.*;
-import org.springframework.stereotype.Component;
 
 /**
  *
  */
-@Component
 public class ModelFactoryImpl implements ModelFactory {
+
+    private static final ModelFactoryImpl INSTANCE = new ModelFactoryImpl();
 
     private final MenuModel[] menuModels = new MenuModel[MenuModelImpl.MENU_SECTIONS.length];
 
-    public ModelFactoryImpl() {
+    private ModelFactoryImpl() {
         for (MenuSection menuSection : MenuModelImpl.MENU_SECTIONS)
             menuModels[menuSection.ordinal()] = new MenuModelImpl(menuSection);
+    }
+
+    public static ModelFactoryImpl getInstance() {
+        return INSTANCE;
     }
 
     @Override

@@ -48,11 +48,6 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
 
-    // web application
-
-    implementation 'org.springframework:spring-webmvc'
-    implementation 'org.springframework:spring-web'
-
     implementation 'org.apache.taglibs:taglibs-standard-impl' // JSTL Support
     implementation 'javax.servlet.jsp.jstl:jstl-api'; // JSTL Support
     implementation 'org.glassfish:javax.el:3.0.0' // Tomcat Requires

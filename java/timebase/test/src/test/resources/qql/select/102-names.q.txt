@@ -18,9 +18,9 @@ test select sequence as "field-Name" from alltypes
 #
 #   Just timestamp
 #
-test select timestamp from alltypes
+test select timestamp as timestamp(ms) from alltypes
 !shellmatch
->_,TIMESTAMP,SYMBOL,TYPE,$TIMESTAMP
+>_,TIMESTAMP,SYMBOL,TYPE,$1
 0,2011-01-01 00:00:00,S0,2011-01-01
 1,2011-01-01 00:00:00.001,S1,2011-01-01 00:00:00.001
 !end

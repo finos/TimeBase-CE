@@ -216,8 +216,10 @@ public class FieldLayout <T extends DataField> implements DataFieldInfo {
 
                 // setter/getter for the nanoseconds precision has suffix "Ns"
                 try {
-                    if (field.getType() instanceof DateTimeDataType && ((DateTimeDataType) field.getType()).hasNanosecondPrecision())
-                        method = cls.getMethod(method.getName() + "Ns");
+                    if (field.getType() instanceof DateTimeDataType && ((DateTimeDataType) field.getType()).hasNanosecondPrecision()) {
+                        if (!method.getName().endsWith(fieldName + "Ns"))
+                            method = cls.getMethod(method.getName() + "Ns");
+                    }
                 } catch (NoSuchMethodException e) {
                     LOG.warn("Nanosecond getter with name \"" + (method.getName() + "Ns") + "\" is not found in class " + cls);
                 }

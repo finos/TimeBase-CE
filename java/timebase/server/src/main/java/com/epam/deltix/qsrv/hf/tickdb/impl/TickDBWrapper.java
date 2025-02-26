@@ -350,7 +350,10 @@ public class TickDBWrapper
 
     @Override
     public InstrumentMessageSource executeQuery(String qql, SelectionOptions options, TickStream[] streams, CharSequence[] ids, long startTimestamp, long endTimestamp, Parameter... params) throws CompilationException {
-        return null;
+        if (delegate instanceof PQExecutor)
+            return executeQuery((PQExecutor) delegate, qql, options, streams, ids, startTimestamp == TimeConstants.TIMESTAMP_UNKNOWN, startTimestamp, endTimestamp, params);
+
+        return delegate.executeQuery(qql, options, streams, ids, startTimestamp, endTimestamp, params);
     }
 
     @Override
@@ -381,6 +384,33 @@ public class TickDBWrapper
     {
         PreparedQuery pq = pqCache.prepareQuery(parsedQQL, ParamSignature.signatureOf(params));
         return executor.executePreparedQuery(pq, options, streams, ids, fullScan, time, params);
+    }
+
+    private InstrumentMessageSource executeQuery(PQExecutor executor,
+                                                 String qql,
+                                                 SelectionOptions options,
+                                                 TickStream[] streams,
+                                                 CharSequence[] ids,
+                                                 boolean fullScan,
+                                                 long startTimestamp,
+                                                 long endTimestamp,
+                                                 Parameter[] params)
+    {
+        return executeQuery(executor, CompilerUtil.parse(qql), options, streams, ids, fullScan, startTimestamp, endTimestamp, params);
+    }
+
+    private InstrumentMessageSource executeQuery(PQExecutor executor,
+                                                 Element parsedQQL,
+                                                 SelectionOptions options,
+                                                 TickStream[] streams,
+                                                 CharSequence[] ids,
+                                                 boolean fullScan,
+                                                 long startTimestamp,
+                                                 long endTimestamp,
+                                                 Parameter[] params)
+    {
+        PreparedQuery pq = pqCache.prepareQuery(parsedQQL, ParamSignature.signatureOf(params), endTimestamp);
+        return executor.executePreparedQuery(pq, options, streams, ids, fullScan, startTimestamp, params);
     }
 
     @Override

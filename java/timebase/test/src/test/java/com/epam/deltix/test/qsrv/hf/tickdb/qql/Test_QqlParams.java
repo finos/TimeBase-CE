@@ -98,31 +98,31 @@ public class Test_QqlParams extends TDBRunnerBase {
         String query1 = "select price, size type t from trades where (timestamp > $ts0 and timestamp < $ts1)";
         List<SimpleTradeMessage> fetch1 = fetch(() -> query1, new long[]{100, 200});
         Assert.assertEquals(99, fetch1.size());
-        Assert.assertEquals(101, fetch1.get(0).getTimeStampMs());
+        Assert.assertEquals(101, fetch1.get(0).getNanoTime());
         Assert.assertEquals(111, fetch1.get(0).getSize(), 0.00001);
-        Assert.assertEquals(199, fetch1.get(98).getTimeStampMs());
+        Assert.assertEquals(199, fetch1.get(98).getNanoTime());
         Assert.assertEquals(209, fetch1.get(98).getSize(), 0.00001);
 
         List<SimpleTradeMessage> fetch2 = fetch(() -> query1, new long[]{1000, 2000});
         Assert.assertEquals(999, fetch2.size());
-        Assert.assertEquals(1001, fetch2.get(0).getTimeStampMs());
+        Assert.assertEquals(1001, fetch2.get(0).getNanoTime());
         Assert.assertEquals(1011, fetch2.get(0).getSize(), 0.00001);
-        Assert.assertEquals(1999, fetch2.get(998).getTimeStampMs());
+        Assert.assertEquals(1999, fetch2.get(998).getNanoTime());
         Assert.assertEquals(2009, fetch2.get(998).getSize(), 0.00001);
 
         String query2 = "select price, size type t from trades where (timestamp between $ts0 and $ts1)";
         List<SimpleTradeMessage> fetch3 = fetch(() -> query2, new long[]{55, 555});
         Assert.assertEquals(501, fetch3.size());
-        Assert.assertEquals(55, fetch3.get(0).getTimeStampMs());
+        Assert.assertEquals(55, fetch3.get(0).getNanoTime());
         Assert.assertEquals(65, fetch3.get(0).getSize(), 0.00001);
-        Assert.assertEquals(555, fetch3.get(500).getTimeStampMs());
+        Assert.assertEquals(555, fetch3.get(500).getNanoTime());
         Assert.assertEquals(565, fetch3.get(500).getSize(), 0.00001);
 
         List<SimpleTradeMessage> fetch4 = fetch(() -> query2, new long[]{5555, 6666});
         Assert.assertEquals(1112, fetch4.size());
-        Assert.assertEquals(5555, fetch4.get(0).getTimeStampMs());
+        Assert.assertEquals(5555, fetch4.get(0).getNanoTime());
         Assert.assertEquals(5565, fetch4.get(0).getSize(), 0.00001);
-        Assert.assertEquals(6666, fetch4.get(1111).getTimeStampMs());
+        Assert.assertEquals(6666, fetch4.get(1111).getNanoTime());
         Assert.assertEquals(6676, fetch4.get(1111).getSize(), 0.00001);
     }
 
@@ -213,9 +213,9 @@ public class Test_QqlParams extends TDBRunnerBase {
 
         List<SimpleTradeMessage> fetch1 = fetch(() -> query1, new long[]{500}, "S2", "S4");
         Assert.assertEquals(229, fetch1.size());
-        Assert.assertEquals(500, fetch1.get(0).getTimeStampMs());
+        Assert.assertEquals(500, fetch1.get(0).getNanoTime());
         Assert.assertEquals(510, fetch1.get(0).getSize(), 0.0001);
-        Assert.assertEquals(899, fetch1.get(228).getTimeStampMs());
+        Assert.assertEquals(899, fetch1.get(228).getNanoTime());
         Assert.assertEquals(909, fetch1.get(228).getSize(), 0.0001);
         Assert.assertEquals(0, checkSymbols(fetch1, "S2", "S4", "S5", "S6").size());
 
@@ -225,9 +225,9 @@ public class Test_QqlParams extends TDBRunnerBase {
 
         List<SimpleTradeMessage> fetch2 = fetch(() -> query2, new long[]{1000, 900}, "S2", "S4");
         Assert.assertEquals(229, fetch2.size());
-        Assert.assertEquals(500, fetch2.get(228).getTimeStampMs());
+        Assert.assertEquals(500, fetch2.get(228).getNanoTime());
         Assert.assertEquals(510, fetch2.get(228).getSize(), 0.0001);
-        Assert.assertEquals(899, fetch2.get(0).getTimeStampMs());
+        Assert.assertEquals(899, fetch2.get(0).getNanoTime());
         Assert.assertEquals(909, fetch2.get(0).getSize(), 0.0001);
         Assert.assertEquals(0, checkSymbols(fetch2, "S2", "S4", "S5", "S6").size());
 
@@ -236,24 +236,24 @@ public class Test_QqlParams extends TDBRunnerBase {
 
         List<SimpleTradeMessage> fetch3 = fetch(() -> query3, new long[]{1000, 900}, "S2", "S4");
         Assert.assertEquals(786, fetch3.size());
-        Assert.assertEquals(1, fetch3.get(0).getTimeStampMs());
+        Assert.assertEquals(1, fetch3.get(0).getNanoTime());
         Assert.assertEquals(11, fetch3.get(0).getSize(), 0.0001);
-        Assert.assertEquals(1000, fetch3.get(785).getTimeStampMs());
+        Assert.assertEquals(1000, fetch3.get(785).getNanoTime());
         Assert.assertEquals(1010, fetch3.get(785).getSize(), 0.0001);
 
-        List<SimpleTradeMessage> fetch31 = fetch3.stream().filter(f -> f.getTimeStampMs() < 500).collect(Collectors.toList());
+        List<SimpleTradeMessage> fetch31 = fetch3.stream().filter(f -> f.getNanoTime() < 500).collect(Collectors.toList());
         Assert.assertEquals(0, checkSymbols(fetch31, "S2", "S4", "S5", "S6").size());
 
-        List<SimpleTradeMessage> fetch32 = fetch3.stream().filter(f -> f.getTimeStampMs() > 500).collect(Collectors.toList());
+        List<SimpleTradeMessage> fetch32 = fetch3.stream().filter(f -> f.getNanoTime() > 500).collect(Collectors.toList());
         Assert.assertEquals(0, checkSymbols(fetch32, "S1", "S2", "S3", "S4", "S5", "S6", "S7").size());
 
 
         String query4 = "select running price, size, count{}() as count type t from trades " +
             "where (timestamp between 500 and $ts0 or (symbol == 'S6' or symbol in ($s0, 'S5', $s1)))";
         List<SimpleTradeMessage> fetch4 = fetch(() -> query4, new long[]{900}, "S2", "S4");
-        List<SimpleTradeMessage> fetch41 = fetch4.stream().filter(f -> f.getTimeStampMs() < 500 || f.getTimeStampMs() > 900)
+        List<SimpleTradeMessage> fetch41 = fetch4.stream().filter(f -> f.getNanoTime() < 500 || f.getNanoTime() > 900)
             .collect(Collectors.toList());
-        List<SimpleTradeMessage> fetch42 = fetch4.stream().filter(f -> f.getTimeStampMs() >= 500 || f.getTimeStampMs() <= 900)
+        List<SimpleTradeMessage> fetch42 = fetch4.stream().filter(f -> f.getNanoTime() >= 500 || f.getNanoTime() <= 900)
             .collect(Collectors.toList());
         Assert.assertEquals(0, checkSymbols(fetch41, "S2", "S4", "S5", "S6").size());
         Assert.assertEquals(0, checkSymbols(fetch42, "S1", "S2", "S3", "S4", "S5", "S6", "S7").size());
@@ -480,7 +480,7 @@ public class Test_QqlParams extends TDBRunnerBase {
                 String[] symbols = new String[] { "S1", "S2", "S3", "S4", "S5", "S6", "S7" };
                 TradeMessage tradeMessage = new TradeMessage();
                 for (int i = 0; i < 10000; i++) {
-                    tradeMessage.setTimeStampMs(i);
+                    tradeMessage.setNanoTime(i);
                     tradeMessage.setSymbol(symbols[i % symbols.length]);
                     tradeMessage.setPrice(i);
                     tradeMessage.setSize(i + 10);

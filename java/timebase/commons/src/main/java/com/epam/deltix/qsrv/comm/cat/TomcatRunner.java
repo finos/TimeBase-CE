@@ -20,6 +20,7 @@ import com.epam.deltix.qsrv.config.QuantServerExecutor;
 import com.epam.deltix.qsrv.config.QuantServiceConfig;
 import com.epam.deltix.qsrv.config.QuantServiceConfig.Type;
 import com.epam.deltix.qsrv.config.ServiceExecutor;
+import com.epam.deltix.qsrv.util.metrics.MetricsService;
 import com.epam.deltix.qsrv.util.servlet.AccessFilter;
 import com.epam.deltix.qsrv.util.tomcat.DXTomcat;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
@@ -90,6 +91,13 @@ public final class TomcatRunner {
         executors.add(0, executor);
 
         if (config.tb != null) {
+            if (isMetricsServiceEnabled(config.tb, MetricsService.ENABLE_TIMEBASE_METRICS)) {
+                MetricsService.init(config.tb.getHost(), config.port,
+                        isJvmMetricsEnabled(config.tb, MetricsService.ENABLE_JVM_TIMEBASE_METRICS),
+                        isTomcatMetricsEnabled(config.tb, MetricsService.ENABLE_TOMCAT_TIMEBASE_METRICS)
+                );
+            }
+
             ServiceExecutor tb = config.getExecutor(Type.TimeBase);
             tb.run(config.tb);
             executors.add(0, tb);
@@ -172,6 +180,8 @@ public final class TomcatRunner {
         Stops and destroy server
     */
     public void             close() {
+        MetricsService.getInstance().close();
+
         Util.close(socketServer);
         // let's stop servicing incoming requests as a first step
         try {
@@ -281,11 +291,17 @@ public final class TomcatRunner {
         return enabled || (config != null && config.getBoolean(QuantServiceConfig.ENABLE_METRICS, false));
     }
 
-    private boolean isJvmMetricsDisabled(QuantServiceConfig config, boolean disabled) {
-        return disabled ||
+    private boolean isJvmMetricsEnabled(QuantServiceConfig config, boolean enabled) {
+        return enabled ||
                 (config != null &&
                         config.getBoolean(QuantServiceConfig.ENABLE_METRICS, false) &&
-                        config.getBoolean(QuantServiceConfig.DISABLE_JVM_METRICS, false));
+                        config.getBoolean(QuantServiceConfig.ENABLE_JVM_METRICS, false));
     }
 
+    private boolean isTomcatMetricsEnabled(QuantServiceConfig config, boolean enabled) {
+        return enabled ||
+                (config != null &&
+                        config.getBoolean(QuantServiceConfig.ENABLE_METRICS, false) &&
+                        config.getBoolean(QuantServiceConfig.ENABLE_TOMCAT_METRICS, false));
+    }
 }

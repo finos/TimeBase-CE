@@ -301,7 +301,7 @@ public class SessionHandler implements StreamStateListener, SecurityReloadListen
             }
         }
 
-        if (clientVersion < 116) {
+        if (clientVersion < 133) {
             int size = writeStreams(buffer, streams, 0, streams.size());
 
             synchronized (out) {

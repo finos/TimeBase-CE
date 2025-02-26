@@ -131,7 +131,7 @@ configure(leafProjects) {
     dependencyManagement {
         imports {
             mavenBom 'com.fasterxml.jackson:jackson-bom:2.13.5'
-            mavenBom 'io.netty:netty-bom:4.1.110.Final'
+            mavenBom 'io.netty:netty-bom:4.1.118.Final'
         }
 
         dependencies {
@@ -182,8 +182,6 @@ configure(leafProjects) {
 
             dependency 'org.codehaus.groovy:groovy:2.5.3'
 
-            //dependency 'org.apache.ant:ant:1.9.13'
-
             dependency 'org.hdrhistogram:HdrHistogram:2.1.10'
 
             dependencySet(group: 'com.amazonaws', version: '1.12.740') {
@@ -194,13 +192,6 @@ configure(leafProjects) {
 
             // related to aws-java-sdk
             dependency 'com.amazon.ion:ion-java:1.10.5'
-
-            dependencySet(group: 'org.springframework', version: '5.3.39') {
-                entry 'spring-context'
-                entry 'spring-web'
-                entry 'spring-webmvc'
-                entry 'spring-beans'
-            }
 
             dependencySet(group: 'org.apache.tomcat.embed', version: '8.5.100') {
                 entry 'tomcat-embed-core' // Tomcat core
@@ -262,8 +253,6 @@ configure(leafProjects) {
 
             dependency 'org.tukaani:xz:1.6'
             dependency 'joda-time:joda-time:2.8.1'
-
-            dependency 'org.jdom:jdom2:2.0.5'
 
             dependency 'com.google.errorprone:error_prone_annotations:2.0.19'
 
@@ -327,10 +316,13 @@ configure(leafProjects) {
 
             dependency 'com.microsoft.azure:msal4j:1.15.1'
             dependency 'com.microsoft.azure:azure-data-lake-store-sdk:2.3.9'
+            dependency 'net.minidev:json-smart:2.5.2'
 
             dependency 'com.bettercloud:vault-java-driver:5.1.0'
 
             dependency 'net.java.dev.jna:jna-platform:5.6.0' // azure sdk requires jna 5.6.0
+
+            dependency 'io.micrometer:micrometer-registry-prometheus:1.7.12'
         }
     }
 

@@ -36,7 +36,7 @@ public class TimestampSelector extends CompiledExpression<DataType> {
     public TimestampSelector(boolean nanosecondPrecision) {
         super(nanosecondPrecision ? StandardTypes.CLEAN_TIMESTAMP_NS : StandardTypes.CLEAN_TIMESTAMP);
         this.nanosecondPrecision = nanosecondPrecision;
-        name = "$" + (nanosecondPrecision ? QQLCompiler.KEYWORD_TIMESTAMPNS : QQLCompiler.KEYWORD_TIMESTAMP);
+        name = "$" + QQLCompiler.KEYWORD_TIMESTAMP;
     }
 
     public boolean hasNanosecondPrecision() {

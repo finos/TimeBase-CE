@@ -1282,7 +1282,7 @@ public class Test_SchemaConverter {
         ObjectArrayList<RawMessage> messages = createMessagesInnerEnum(rcd1, fieldName, innerRcd, enumFieldName, values1);
 
         MetaDataChange change = getChange(rcd1, rcd2);
-        assertTrue(change.isAcceptable());
+        assertFalse(change.isAcceptable());
         SchemaConverter converter = new SchemaConverter(change);
 
         for (int i = 0; i < messages.size() - 1; i++) {

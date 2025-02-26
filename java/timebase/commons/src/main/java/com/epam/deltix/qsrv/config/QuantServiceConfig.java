@@ -25,7 +25,6 @@ import com.epam.deltix.util.cmdline.DefaultApplication;
 import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.io.TokenReplacingReader;
 import com.epam.deltix.util.lang.Depends;
-import com.epam.deltix.util.lang.DependsOnClass;
 import com.epam.deltix.util.lang.SortedProperties;
 import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.os.CommonSysProps;
@@ -74,8 +73,8 @@ public class QuantServiceConfig {
     public static final String WEBAPP_PATH                 = "webapp.path";
 
     public static final String ENABLE_METRICS              = "enableMetrics";
-    public static final String DISABLE_JVM_METRICS          = "metricsService.disableJvmMetrics";
-
+    public static final String ENABLE_JVM_METRICS          = "metrics.enableJvmMetrics";
+    public static final String ENABLE_TOMCAT_METRICS       = "metrics.enableTomcatMetrics";
     private static final String ENABLE_SSL_SYS_PROP        = "TimeBase.enableSSL";
 
     public enum Type {

@@ -163,7 +163,7 @@ public class SessionClient implements Closeable {
                             stateNotifierTask.fireStateChanged(stream.getKey());
                     }
 
-                    if (serverVersion < 116)
+                    if (serverVersion < 133)
                         streamsSignal.set();
                     break;
 

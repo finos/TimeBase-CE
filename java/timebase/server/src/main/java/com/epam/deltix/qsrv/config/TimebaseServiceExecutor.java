@@ -30,6 +30,7 @@ import com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler;
 import com.epam.deltix.qsrv.hf.tickdb.http.TopicContext;
 import com.epam.deltix.qsrv.hf.tickdb.http.rest.RESTHandshakeHandler;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
+import com.epam.deltix.qsrv.util.tomcat.DXTomcat;
 import com.epam.deltix.util.net.NetworkInterfaceUtil;
 import com.epam.deltix.qsrv.hf.tickdb.impl.TickDBImpl;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicRegistryFactory;
@@ -216,7 +217,7 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         framework.setConnectionListener(new VSConnectionHandler(TDB, new ServerParameters(bandwidth), QuantServerExecutor.SC, MAC, aeronContext, aeronThreadTracker, topicRegistry));
 
         QuantServerExecutor.HANDLER.addHandler((byte)0, framework);
-        QuantServerExecutor.HANDLER.addHandler((byte)24, new RESTHandshakeHandler(TDB, QuantServerExecutor.SC, contextContainer, tlsContext));
+        QuantServerExecutor.HANDLER.addHandler((byte)24, new RESTHandshakeHandler(TDB, QuantServerExecutor.SC, contextContainer, tlsContext, config.getWebPort(DXTomcat.TOMCAT_DEFAULT_PORT)));
 
 
         // Register server - it's ready to use

@@ -26,4 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "listEntities")
 public class ListEntitiesRequest extends StreamRequest {
 
+    @XmlElement()
+    public String[] instrumentTypes;
+
 }

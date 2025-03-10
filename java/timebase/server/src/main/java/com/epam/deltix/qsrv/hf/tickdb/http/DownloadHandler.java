@@ -22,9 +22,8 @@ import java.security.AccessControlException;
 import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
-import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.writeIdentityKey;
-
 import com.epam.deltix.qsrv.hf.pub.util.SerializationUtils;
+import com.epam.deltix.qsrv.hf.tickdb.http.rest.HttpProtocolSerializationUtils;
 import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBObject;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
@@ -481,7 +480,7 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
         dout.write(HTTPProtocol.INSTRUMENT_BLOCK_ID);
         writeEntityIndex(entityIndex);
 
-        writeIdentityKey(msg, dout);
+        HttpProtocolSerializationUtils.writeInstrumentIdentity(msg, dout);
 
         if (DEBUG_COMM)
             LOGGER.log(Level.INFO, "Write INSTRUMENT_BLOCK_ID: " + entityIndex);
@@ -646,11 +645,14 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
 
             if (request.spaces != null) {
                 so.withSpaces(request.spaces);
+            } else if (request.space != null) {
+                so.withSpace(request.space);
             }
 
             //InstrumentMessageSource cursor = db.createCursor(so, streams);
 
-            InstrumentMessageSource cursor = db.select(request.reverse ? request.to : request.from, so, request.types, request.symbols, streams);
+            String[] instruments = StreamHandler.extractSymbols(StreamHandler.concat(request.instruments, request.symbols));
+            InstrumentMessageSource cursor = db.select(request.reverse ? request.to : request.from, so, request.types, instruments, streams);
 
             if (request.types != null)
                 cursor.setTypes(request.types);
@@ -693,13 +695,15 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
             so.realTimeNotification = request.realTimeNotification;
             if (request.spaces != null) {
                 so.withSpaces(request.spaces);
+            } else if (request.space != null) {
+                so.withSpace(request.space);
             }
 
-            IdentityKey[] instruments = StreamHandler.identityKeys(request.symbols);
+            String[] instruments = StreamHandler.extractSymbols(StreamHandler.concat(request.instruments, request.symbols));
             if (params != null)
-                source = db.executeQuery(request.qql, so, null, request.symbols, request.from, params);
+                source = db.executeQuery(request.qql, so, null, instruments, request.from, params);
             else
-                source = db.executeQuery(request.qql, so, null, request.symbols, request.from);
+                source = db.executeQuery(request.qql, so, null, instruments, request.from);
 
             source.setAvailabilityListener(new Runnable() {
                 @Override

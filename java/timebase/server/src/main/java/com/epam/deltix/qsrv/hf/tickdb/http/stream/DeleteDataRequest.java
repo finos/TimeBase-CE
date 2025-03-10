@@ -16,9 +16,13 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http.stream;
 
+import com.epam.deltix.qsrv.hf.tickdb.http.InstrumentIdentityKey;
+import com.epam.deltix.qsrv.hf.tickdb.http.InstrumentIdentityKeyListAdapter;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @XmlRootElement(name = "deleteStreamData")
 public class DeleteDataRequest extends StreamRequest {
@@ -30,7 +34,8 @@ public class DeleteDataRequest extends StreamRequest {
     public long             toNs;
 
     @XmlElement()
-    public String[]         identities;
+    @XmlJavaTypeAdapter(InstrumentIdentityKeyListAdapter.class)
+    public InstrumentIdentityKey[] instruments;
 
     @XmlElementWrapper
     @XmlElement(name = "item")

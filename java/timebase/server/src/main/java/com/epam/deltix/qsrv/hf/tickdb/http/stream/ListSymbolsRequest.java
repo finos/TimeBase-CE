@@ -27,4 +27,8 @@ public class ListSymbolsRequest extends StreamRequest {
 
     @XmlElement()
     public String space;
+
+    @XmlElement()
+    public String[] instrumentTypes;
+
 }

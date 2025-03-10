@@ -42,8 +42,7 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
 import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.*;
 import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.marshallUHF;
@@ -81,8 +80,9 @@ public final class StreamHandler {
         DXTickStream stream = getStream(db, req, response);
 
         if (stream != null) {
-            final long[] range = req.identities != null ?
-                    stream.getTimeRange(identityKeys(req.identities)) : stream.getTimeRange();
+            IdentityKey[] identities = concat(req.instruments, req.symbols);
+            final long[] range = identities != null ?
+                    stream.getTimeRange(identities) : stream.getTimeRange();
 
             final GetRangeResponse r = new GetRangeResponse();
             if (range != null)
@@ -206,9 +206,9 @@ public final class StreamHandler {
                     String[] from = entry.getKey().split(":");
 
                     if (from.length == 2) { // DataField
-                        DataField fromField = source.findField(from[0], from[1]);
+                        DataField fromField = findField(source, from[0], from[1]);
                         String[] to = entry.getValue().split(":");
-                        DataField toField = classSet.findField(to[0], to[1]);
+                        DataField toField = findField(classSet, to[0], to[1]);
 
                         mapping.fields.put(fromField, toField);
 
@@ -313,7 +313,18 @@ public final class StreamHandler {
 
         if (stream != null) {
             final ListEntitiesResponse r = new ListEntitiesResponse();
-            r.identities = stream.listEntities();
+            r.instruments = instrumentIdentityKeys(stream.listEntities());
+
+            marshall(r, response.getOutputStream());
+        }
+    }
+
+    static void processListSymbols(DXTickDB db, ListSymbolsRequest req, HttpServletResponse response) throws IOException {
+        DXTickStream stream = getStream(db, req, response);
+
+        if (stream != null) {
+            final ListSymbolsResponse r = new ListSymbolsResponse();
+            r.symbols = extractSymbols(stream.listEntities());
 
             marshall(r, response.getOutputStream());
         }
@@ -368,10 +379,11 @@ public final class StreamHandler {
         if (stream != null) {
             verifyWrite(stream, req.token);
 
-            if (req.identities == null || req.identities.length == 0)
+            IdentityKey[] keys = concat(req.instruments, req.symbols);
+            if (keys == null || keys.length == 0)
                 stream.clear();
             else
-                stream.clear(identityKeys(req.identities));
+                stream.clear(keys);
 
             response.setStatus(HttpServletResponse.SC_OK);
         }
@@ -392,8 +404,9 @@ public final class StreamHandler {
         if (stream != null) {
             verifyWriteRange(stream, req.token, req.time, Long.MAX_VALUE);
 
-            if (req.identities != null && req.identities.length > 0)
-                stream.truncate(req.time, identityKeys(req.identities));
+            IdentityKey[] identities = concat(req.instruments, req.symbols);
+            if (identities != null && identities.length > 0)
+                stream.truncate(req.time, identities);
             else
                 stream.truncate(req.time);
 
@@ -407,7 +420,7 @@ public final class StreamHandler {
         if (stream != null) {
 //            verifyLock(stream, req.token, LockType.WRITE); todo: this check is commented for RequestHandler
 
-            IdentityKey[] instruments = identityKeys(req.symbols);
+            IdentityKey[] instruments = concat(req.instruments, req.symbols);
             if (instruments != null && instruments.length > 0) {
                 stream.delete(TimeStamp.fromNanoseconds(req.fromNs), TimeStamp.fromNanoseconds(req.toNs), instruments);
             } else {
@@ -660,19 +673,6 @@ public final class StreamHandler {
         }
     }
 
-    static IdentityKey[] identityKeys(String[] identities) {
-        if (identities == null) {
-            return null;
-        }
-
-        IdentityKey[] keys = new IdentityKey[identities.length];
-        for (int i = 0; i < identities.length; ++i) {
-            keys[i] = new ConstantIdentityKey(identities[i]);
-        }
-
-        return keys;
-    }
-
     public static void verifyWrite(DXTickStream stream, String lockId) {
         TickStreamImpl serverStream = getServerStream(stream);
         if (serverStream != null) {
@@ -706,11 +706,80 @@ public final class StreamHandler {
         return null;
     }
 
-//        IdentityKey[] keys = new IdentityKey[identities.length];
-//        for (int i = 0; i < identities.length; ++i) {
-//            keys[i] = new ConstantIdentityKey(identities[i]);
-//        }
-//
-//        return keys;
-//    }
+    public static IdentityKey[] concat(InstrumentIdentityKey[] instrumentKeys, String[] symbols) {
+        if (instrumentKeys == null) {
+            return identityKeys(symbols);
+        } else if (symbols == null) {
+            return identityKeys(extractSymbols(instrumentKeys));
+        }
+
+        Set<String> instruments = new HashSet<>(Arrays.asList(symbols));
+        instruments.addAll(Arrays.asList(extractSymbols(instrumentKeys)));
+        return identityKeys(instruments.toArray(new String[0]));
+    }
+
+    public static IdentityKey[] identityKeys(String[] identities) {
+        if (identities == null) {
+            return null;
+        }
+
+        IdentityKey[] keys = new IdentityKey[identities.length];
+        for (int i = 0; i < identities.length; ++i) {
+            keys[i] = new ConstantIdentityKey(identities[i]);
+        }
+
+        return keys;
+    }
+
+    public static IdentityKey[] identityKeys(InstrumentIdentityKey[] identities) {
+        if (identities == null) {
+            return null;
+        }
+
+        IdentityKey[] keys = new IdentityKey[identities.length];
+        for (int i = 0; i < identities.length; ++i) {
+            keys[i] = new ConstantIdentityKey(identities[i].getSymbol());
+        }
+
+        return keys;
+    }
+
+    public static InstrumentIdentityKey[] instrumentIdentityKeys(IdentityKey[] identities) {
+        if (identities == null) {
+            return null;
+        }
+
+        InstrumentIdentityKey[] instrumentIdentityKeys = new InstrumentIdentityKey[identities.length];
+        for (int i = 0; i < identities.length; ++i) {
+            instrumentIdentityKeys[i] = new InstrumentIdentityKey("CUSTOM", identities[i].getSymbol().toString());
+        }
+        return instrumentIdentityKeys;
+    }
+
+    public static String[] extractSymbols(InstrumentIdentityKey[] instrumentKeys) {
+        if (instrumentKeys == null) {
+            return null;
+        }
+
+        String[] symbols = new String[instrumentKeys.length];
+        for (int i = 0; i < instrumentKeys.length; ++i) {
+            symbols[i] = instrumentKeys[i].getSymbol().toString();
+        }
+
+        return symbols;
+    }
+
+    public static String[] extractSymbols(IdentityKey[] keys) {
+        if (keys == null) {
+            return null;
+        }
+
+        String[] symbols = new String[keys.length];
+        for (int i = 0; i < keys.length; ++i) {
+            symbols[i] = keys[i].getSymbol().toString();
+        }
+
+        return symbols;
+    }
+
 }

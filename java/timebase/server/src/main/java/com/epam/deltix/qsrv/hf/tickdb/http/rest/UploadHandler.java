@@ -25,7 +25,6 @@ import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
-import com.epam.deltix.qsrv.hf.pub.util.SerializationUtils;
 import com.epam.deltix.qsrv.hf.tickdb.comm.UnknownStreamException;
 import com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol;
 import com.epam.deltix.qsrv.hf.tickdb.http.ValidationException;
@@ -43,8 +42,6 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
-
-import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.readIdentityKey;
 
 /**
  *
@@ -111,7 +108,7 @@ public class UploadHandler extends RestHandler implements Runnable, LockEventLis
         }
 
         final String streamKey = din.readUTF();
-        final LoadingOptions.WriteMode writeMode = LoadingOptions.WriteMode.values()[din.readByte()];
+        final LoadingOptions.WriteMode writeMode = byteToWriteMode(din.readByte());
 
         boolean hasSpace = din.readBoolean();
         String space = hasSpace ? din.readUTF() : null;
@@ -142,7 +139,7 @@ public class UploadHandler extends RestHandler implements Runnable, LockEventLis
             options.writeMode = writeMode;
             options.space = space;
 
-        concreteTypes = stream.getStreamOptions().getMetaData().getTopTypes();
+            concreteTypes = stream.getStreamOptions().getMetaData().getTopTypes();
 
             loader = stream.createLoader(options);
             if (loader instanceof TBObject) {
@@ -168,7 +165,7 @@ public class UploadHandler extends RestHandler implements Runnable, LockEventLis
                     case HTTPProtocol.INSTRUMENT_BLOCK_ID:
 
                         log(streamKey, "recieved INSTRUMENT_BLOCK_ID");
-                        entities.add(readIdentityKey(din));
+                        entities.add(HttpProtocolSerializationUtils.readIdentityKey(din));
                         break;
                     case HTTPProtocol.TERMINATOR_BLOCK_ID:
                         log(streamKey, "recieved TERMINATOR_BLOCK_ID");
@@ -187,6 +184,18 @@ public class UploadHandler extends RestHandler implements Runnable, LockEventLis
         }
 
         log(Level.INFO, stream.getKey(), "Upload finished. Recieved " + count + " messages.");
+    }
+
+    private LoadingOptions.WriteMode byteToWriteMode(int writeModeByte) {
+        switch (writeModeByte) {
+            case 0: return LoadingOptions.WriteMode.APPEND;
+            case 1: return LoadingOptions.WriteMode.APPEND;
+            case 2: return LoadingOptions.WriteMode.REWRITE;
+            case 3: return LoadingOptions.WriteMode.TRUNCATE;
+            case 4: return LoadingOptions.WriteMode.INSERT;
+            default:
+                return LoadingOptions.WriteMode.APPEND;
+        }
     }
 
     private void                        log(String stream, String message) {
@@ -343,7 +352,7 @@ public class UploadHandler extends RestHandler implements Runnable, LockEventLis
                     dout.writeBoolean(true); // entities added
                     dout.writeInt(entities.size()); // entities size
                     for (IdentityKey id : entities)
-                        SerializationUtils.writeIdentityKey(id, dout);
+                        HttpProtocolSerializationUtils.writeInstrumentIdentity(id, dout);
                 }
             } catch (IOException ioe) {
                 onException(ioe);
@@ -359,7 +368,7 @@ public class UploadHandler extends RestHandler implements Runnable, LockEventLis
                     dout.writeBoolean(false); // entities added
                     dout.writeInt(entities.size()); // entities size
                     for (IdentityKey id : entities)
-                        SerializationUtils.writeIdentityKey(id, dout);
+                        HttpProtocolSerializationUtils.writeInstrumentIdentity(id, dout);
                 }
             } catch (IOException ioe) {
                 onException(ioe);

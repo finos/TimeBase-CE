@@ -54,17 +54,20 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
     private final Map<String, DXTickDB> userNameToDb = new HashMap<>();
     private final ContextContainer contextContainer;
     private final TLSContext tlsContext;
+    private final int webPort;
 
     public RESTHandshakeHandler(DXTickDB tickdb,
                                 SecurityController securityController,
                                 ContextContainer contextContainer,
-                                TLSContext tlsContext)
+                                TLSContext tlsContext,
+                                int webPort)
     {
         this.tickdb = tickdb;
         this.contextContainer = contextContainer;
         this.contextContainer.getQuickExecutor().reuseInstance();
         this.securityController = securityController;
         this.tlsContext = tlsContext;
+        this.webPort = webPort;
     }
 
     public boolean handleHandshake(Socket socket, BufferedInputStream bis, OutputStream os) throws IOException {
@@ -117,7 +120,7 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
         }
 
         if (clientVersion >= HTTPProtocol.CLIENT_SEPARATE_WEB_PORT_VERSION) {
-            dos.writeInt(0); // means, use binary protocol port
+            dos.writeInt(webPort); // means, use binary protocol port
         }
 
         String applicationName = HTTPProtocol.UNKNOWN_APPLICATION_NAME;

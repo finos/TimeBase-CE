@@ -23,11 +23,10 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.zip.GZIPOutputStream;
 
-import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.writeIdentityKey;
-
 import com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol;
 import com.epam.deltix.qsrv.hf.tickdb.http.LoadResponse;
 import com.epam.deltix.qsrv.hf.tickdb.http.TBJAXBContext;
+import com.epam.deltix.qsrv.hf.tickdb.http.rest.HttpProtocolSerializationUtils;
 import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.qsrv.hf.blocks.InstrumentToObjectMap;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
@@ -130,7 +129,7 @@ public class HTTPLoader implements MessageChannel<RawMessage> {
     private void writeInsrumentBlock(RawMessage raw) throws IOException {
         endMessageBlock();
         dout.write(HTTPProtocol.INSTRUMENT_BLOCK_ID);
-        writeIdentityKey(raw, dout);
+        HttpProtocolSerializationUtils.writeInstrumentIdentity(raw, dout);
     }
 
     private void writeTerminatorBlock() throws IOException {

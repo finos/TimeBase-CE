@@ -28,8 +28,8 @@ import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 import com.epam.deltix.qsrv.hf.pub.util.SerializationUtils;
+import com.epam.deltix.qsrv.hf.tickdb.http.rest.HttpProtocolSerializationUtils;
 import com.sun.xml.bind.IDResolver;
-import static com.epam.deltix.qsrv.hf.pub.util.SerializationUtils.readIdentityKey;
 
 import com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol;
 import com.epam.deltix.qsrv.hf.tickdb.http.SelectRequest;
@@ -158,7 +158,7 @@ public class HTTPCursor implements MessageSource<RawMessage> {
 
                 case HTTPProtocol.INSTRUMENT_BLOCK_ID:
                     int index = din.readShort();
-                    entities.add(index, readIdentityKey(din));
+                    entities.add(index, HttpProtocolSerializationUtils.readIdentityKey(din));
                     break;
 
                 case HTTPProtocol.MESSAGE_BLOCK_ID:

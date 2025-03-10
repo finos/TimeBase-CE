@@ -751,7 +751,7 @@ public final class StreamHandler {
 
         InstrumentIdentityKey[] instrumentIdentityKeys = new InstrumentIdentityKey[identities.length];
         for (int i = 0; i < identities.length; ++i) {
-            instrumentIdentityKeys[i] = new InstrumentIdentityKey("CUSTOM", identities[i].getSymbol().toString());
+            instrumentIdentityKeys[i] = new InstrumentIdentityKey(identities[i].getSymbol().toString());
         }
         return instrumentIdentityKeys;
     }

@@ -229,7 +229,7 @@ public class TestHttpSelect {
         EntitiesRequest change = new EntitiesRequest();
         change.id = cur.getId();
         change.mode = ChangeAction.ADD;
-        change.identities = new String[] { "A" };
+        change.entities = new InstrumentIdentityKey[] { new InstrumentIdentityKey("A") };
 
         TestXmlQueries.query(null, null, change);
 

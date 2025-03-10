@@ -219,8 +219,8 @@ public class Test_HttpSecured {
 
         try {
             ListEntitiesResponse resp = (ListEntitiesResponse) query(user, password, req);
-            System.out.println("stream: " + stream + " " + Util.printArray(resp.identities));
-            compareSets(identities, resp.identities);
+            System.out.println("stream: " + stream + " " + Util.printArray(resp.instruments));
+            compareSets(identities, resp.instruments);
             assert !forbidden;
         } catch (AccessControlException e) {
             assert forbidden;

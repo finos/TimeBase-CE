@@ -20,12 +20,14 @@ import com.epam.deltix.streaming.MessageChannel;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
-import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.qsrv.hf.tickdb.schema.SchemaConverter;
 import com.epam.deltix.util.time.TimeKeeper;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
 * Replays messages from specific streams in real-time.
@@ -45,16 +47,20 @@ public class RealtimePlayerThread extends Thread {
     private final MessageChannel<InstrumentMessage> dest;
     private final SchemaConverter converter;
     private final Runnable streamRestarter;
-    private final double speed;
-    private volatile long timeOffset = Long.MIN_VALUE; // Time offset between timestamp on the base message and wall clock
-    private long firstMessageTimestamp = Long.MIN_VALUE; // Timestamp on a message that we use as base
-    private long firstRealTimestamp = Long.MIN_VALUE; // Timestamp when (in real time) we processed the base message
+    private final Lock lock = new ReentrantLock();
+    private final Condition commonCondition = lock.newCondition();
+    private final Condition pauseBreakCondition = lock.newCondition();
+    private double oldSpeed; // to recalculate the waiting time
+    private volatile double speed;
+    private volatile boolean updateTimestampPoint = false;
+    private long messageTimestampPoint = Long.MIN_VALUE; // timestamp point of the message source
+    private long realTimestampPoint = Long.MIN_VALUE; // real time timestamp point
     private volatile long endTimeNano = Long.MAX_VALUE;
     protected long count = 1;
 
     /**
      * @param streamRestarter will be executed (if not null) when source stream depletes (ends) to restart (cycle) it
-     * @param speed
+     * @param speed ratio of time periods between messages in src and dest
      */
     public RealtimePlayerThread(
             MessageSource<InstrumentMessage> src,
@@ -69,101 +75,156 @@ public class RealtimePlayerThread extends Thread {
         this.dest = dest;
         this.converter = converter;
         this.streamRestarter = streamRestarter;
-        this.speed = speed;
+        oldSpeed = this.speed = speed;
 
         this.setDaemon(false);
     }
 
     public void setMode(PlayMode mode) {
-        if (mode == PlayMode.PAUSED || mode == PlayMode.SKIP)
-            timeOffset = Long.MIN_VALUE;
-
-        playMode = mode;
-        interrupt();
+        lock.lock();
+        try {
+            if (mode != playMode){
+                if (mode == PlayMode.SKIP || mode == PlayMode.PAUSED)
+                    updateTimestampPoint = true;
+                playMode = mode;
+                commonCondition.signal();
+                if (mode == PlayMode.PLAY || mode == PlayMode.SKIP || mode == PlayMode.STOP)
+                    pauseBreakCondition.signal();
+            }
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void setEndTimeNano(long endTimeNano) {
         this.endTimeNano = endTimeNano;
     }
 
+    public void setSpeed(double speed) {
+        if (speed <= 0) {
+            throw new IllegalArgumentException("Playback speed cannot be zero or less than zero");
+        }
+        lock.lock();
+        try {
+            if (this.speed != speed) {
+                updateTimestampPoint = true;
+                this.speed = speed;
+                commonCondition.signal();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
     @Override
     public void run() {
+        boolean first = true;
+        long lastMessageTimestamp = Long.MIN_VALUE;
+        long lastRealTimestamp = Long.MIN_VALUE;
 
-        for (; ; ) {
+        while (true) {
+            long now;
+            long messageTimestampNs;
+            RawMessage outMsg;
+
+            lock.lock();
             try {
-                switch (playMode) {
-                    case PAUSED:
-                        Thread.sleep(5000);
-                        continue;
-
-                    case STOP:
-                        return;
+                if (playMode == PlayMode.STOP) {
+                    return;
+                }
+                if (updateTimestampPoint) {
+                    updateTimestampPoint(lastMessageTimestamp, lastRealTimestamp);
                 }
 
                 if (!src.next()) {
-                    // Source depleted
-                    if (streamRestarter == null) {
-                        return;
+                    if (recycle()) {
+                        first = true;
                     } else {
-                        // Cyclic mode: restart stream
-                        streamRestarter.run();
-                        timeOffset = Long.MIN_VALUE;
-                        if (!src.next()) {
-                            // Even after reset we don't have any messages. So stream is empty. Exit.
-                            return;
-                        }
+                        playMode = PlayMode.STOP;
+                        return;
                     }
-
                 }
 
                 RawMessage inMsg = (RawMessage) src.getMessage();
-                long mt = inMsg.getNanoTime();
-                if (mt >= endTimeNano) {
-                    playMode = PlayMode.PAUSED;
-                    continue;
-                }
-                long now = TimeKeeper.currentTimeNanos;
 
-                if (timeOffset != Long.MIN_VALUE) {
+                messageTimestampNs = inMsg.getNanoTime();
+                if (messageTimestampNs >= endTimeNano) {
+                    if (recycle()) {
+                        first = true;
+                        inMsg = (RawMessage) src.getMessage();
+                        messageTimestampNs = inMsg.getNanoTime();
+                    } else {
+                        playMode = PlayMode.STOP;
+                        return;
+                    }
+                }
+                now = TimeKeeper.currentTimeNanos;
+
+                if (first) {
+                    first = false;
+                    messageTimestampPoint = messageTimestampNs;
+                    realTimestampPoint = now;
+                } else {
                     if (playMode == PlayMode.SKIP)
                         playMode = PlayMode.PLAY;
-                    else {
-                        long sourceTimePassed = mt - firstMessageTimestamp;
-                        // Higher speed means less time to wait
-                        long expectedRealTimePassed = speed == 1 ? sourceTimePassed : Math.round(sourceTimePassed / speed);
-                        long expectedRealTimestamp = firstRealTimestamp + expectedRealTimePassed;
-
-                        long timeToWait = expectedRealTimestamp - now;
-
-                        int wait = (int) TimeStamp.getMilliseconds(timeToWait);
-
-                        if (wait > 2)
-                            Thread.sleep(wait);
+                    // Higher speed means less time to wait
+                    long waitTime = getWaitTime(messageTimestampNs, now);
+                    try {
+                        if (playMode == PlayMode.PAUSED) {
+                            pauseBreakCondition.await();
+                            waitTime = oldSpeed == speed ? waitTime : recalculateWaitingTime(waitTime);
+                            if (playMode == PlayMode.STOP || playMode == PlayMode.SKIP) {
+                                waitTime = 0;
+                            }
+                        }
+                        while (waitTime > 2000000) {
+                            long waitTimeLeft = commonCondition.awaitNanos(waitTime);
+                            if (waitTimeLeft > 0 && waitTimeLeft <= waitTime) {
+                                if (oldSpeed != speed) {
+                                    waitTime = recalculateWaitingTime(waitTimeLeft);
+                                    continue;
+                                }
+                                if (playMode == PlayMode.PAUSED) {
+                                    pauseBreakCondition.await();
+                                    waitTime = oldSpeed == speed ? waitTimeLeft : recalculateWaitingTime(waitTimeLeft);
+                                    if (playMode == PlayMode.PLAY) {
+                                        continue;
+                                    }
+                                }
+                            }
+                            break; // break because the waiting time is up or received a signal on "next"
+                        }
+                    } catch (InterruptedException e) {
+                        if (Thread.currentThread().isInterrupted()) {
+                            playMode = PlayMode.STOP;
+                        }
                     }
-                } else {
-                    timeOffset = now - mt;
-                    firstMessageTimestamp = mt;
-                    firstRealTimestamp = now;
                 }
 
-                RawMessage outMsg = converter.convert(inMsg);
-
+                outMsg = converter.convert(inMsg);
                 if (outMsg == null) {
                     onMessageConversionError(inMsg);
                     continue;
                 }
 
                 now = TimeKeeper.currentTimeNanos;
-
                 outMsg.setNanoTime(now);
-
-                log(mt, now, outMsg);
-
                 dest.send(outMsg);
-                count++;
-            } catch (InterruptedException x) {
-                return;
+
+                if (updateTimestampPoint) {
+                    updateTimestampPoint(messageTimestampNs, now);
+                }
+            } finally {
+                lock.unlock();
             }
+
+            if (playMode == PlayMode.STOP)
+                return;
+
+            lastMessageTimestamp = messageTimestampNs;
+            lastRealTimestamp = now;
+            log(messageTimestampNs, now, outMsg);
+            count++;
         }
     }
 
@@ -173,5 +234,51 @@ public class RealtimePlayerThread extends Thread {
 
     protected void onMessageConversionError (RawMessage msg) {
         System.err.println("Cannot convert message:" + msg);
+    }
+
+    private boolean recycle(){
+        // Source depleted
+        if (streamRestarter == null) {
+            return false;
+        } else {
+            // Cyclic mode: restart stream
+            streamRestarter.run();
+            // Even after reset we don't have any messages. So stream is empty. Exit.
+            return src.next();
+        }
+    }
+
+    private long getWaitTime(long mt, long now) {
+        // calculate the wait time relative to realTimestampPoint to adjust for pauses and speed changes
+        long sourceTimePassed = mt - messageTimestampPoint;
+        long expectedRealTimePassed = speed == 1 ? sourceTimePassed : Math.round(sourceTimePassed / speed);
+        long expectedRealTimestamp = addWithOverflowCheck(realTimestampPoint, expectedRealTimePassed);
+        return expectedRealTimestamp - now;
+    }
+
+    private void updateTimestampPoint(long messageTimestampPoint, long realTimestampPoint) {
+        updateTimestampPoint = false;
+        this.messageTimestampPoint = messageTimestampPoint;
+        this.realTimestampPoint = realTimestampPoint;
+        resetSpeedDiff();
+    }
+
+
+    private long recalculateWaitingTime(long waitTime) {
+        long result = Math.round(waitTime * oldSpeed / speed);
+        resetSpeedDiff();
+        return result;
+    }
+
+    private void resetSpeedDiff() {
+        oldSpeed = speed;
+    }
+
+    private long addWithOverflowCheck(long x, long y) {
+        long r = x + y;
+        if (((x ^ r) & (y ^ r)) < 0) {
+            throw new ArithmeticException("Failed to determine the value of the next realtime message, intervals between messages are too long");
+        }
+        return r;
     }
 }

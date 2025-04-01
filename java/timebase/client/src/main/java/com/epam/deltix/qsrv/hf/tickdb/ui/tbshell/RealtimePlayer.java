@@ -173,7 +173,7 @@ public class RealtimePlayer implements PlayerInterface {
 
     @Override
     public void setSpeed(double speed) {
-        // Not supported
+        playerThread.setSpeed(speed);
     }
 
     @Override

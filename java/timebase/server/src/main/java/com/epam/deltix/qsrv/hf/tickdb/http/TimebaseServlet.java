@@ -49,6 +49,9 @@ import static com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler.*;
 import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.marshall;
 import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.LOGGER;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 /**
  *
  */
@@ -99,7 +102,16 @@ public class TimebaseServlet extends HttpServlet {
                             LOGGER.fine("request: " + xml);
                         }
 
-                        body = um.unmarshal(new StringReader(xml));
+                        XMLInputFactory xif = XMLInputFactory.newFactory();
+                        xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+                        xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+                        XMLStreamReader xsr = null;
+                        try {
+                            xsr = xif.createXMLStreamReader(new StringReader(xml));
+                        } catch(XMLStreamException e) {
+                            throw new RuntimeException(e);
+                        }
+                        body = um.unmarshal(xsr);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }

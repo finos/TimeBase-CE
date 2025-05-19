@@ -197,4 +197,11 @@ public class EnvironmentFrame implements Environment {
 
         return removed;
     }
+
+    static String shortName(String name) {
+        if (name == null)
+            return null;
+        int i = name.lastIndexOf(".");
+        return i == -1 || i == name.length() ? null: name.substring(i + 1);
+    }
 }

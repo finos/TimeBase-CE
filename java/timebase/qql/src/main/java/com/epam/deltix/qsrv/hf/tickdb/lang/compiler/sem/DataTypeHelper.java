@@ -99,8 +99,8 @@ public class DataTypeHelper {
     }
 
     public static boolean isTimestampAndInteger(DataType left, DataType right) {
-        return TimebaseTypes.isDateTimeOrDateTimeArray(left) && NumericType.isInteger(right) ||
-               TimebaseTypes.isDateTimeOrDateTimeArray(right) && NumericType.isInteger(left);
+        return TimebaseTypes.isDateTimeOrDateTimeArray(left) && NumericType.isIntegerOrIntegerArray(right) ||
+               TimebaseTypes.isDateTimeOrDateTimeArray(right) && NumericType.isIntegerOrIntegerArray(left);
     }
 
     public static boolean isTimestampAndTimestamp(DataType left, DataType right) {

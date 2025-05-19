@@ -16,14 +16,19 @@
  */
 package com.epam.deltix.computations.stateful.lastNotNull;
 
-import com.epam.deltix.computations.api.annotations.BuiltInTimestampMs;
-import com.epam.deltix.computations.api.annotations.Compute;
-import com.epam.deltix.computations.api.annotations.Function;
+import com.epam.deltix.computations.api.annotations.*;
 import com.epam.deltix.computations.api.generated.VarcharToVarcharStatefulFunctionBase;
 import com.epam.deltix.qsrv.hf.pub.md.TimebaseTypes;
 
 @Function("LASTNOTNULL")
 public class LastNotNullVarchar extends VarcharToVarcharStatefulFunctionBase {
+
+    private boolean reset;
+
+    @Init
+    public void init(@Arg(name = "reset", defaultValue = "false") boolean reset) {
+        this.reset = reset;
+    }
 
     @Compute
     @Override
@@ -35,6 +40,14 @@ public class LastNotNullVarchar extends VarcharToVarcharStatefulFunctionBase {
         sb.setLength(0);
         sb.append(v);
         value = sb;
+    }
+
+    @Reset
+    @Override
+    public void reset() {
+        if (reset) {
+            super.reset();
+        }
     }
 
 }

@@ -20,7 +20,6 @@ import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.ReadableValue;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.*;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OverCountExpression;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.OverTimeExpression;
 import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.FilterBase;
@@ -307,7 +306,7 @@ class FilterGenerator {
         } else if (OverTimeFilter.class.isAssignableFrom(baseClass) || OverCountFilter.class.isAssignableFrom(baseClass)) {
             msgVar = generateVar(stateClass, RawMessage.class, "outMsg", classRegistry.getTypeRef(outputTypes[0]));
             outMsgInFilter = msgVar.access(typedState);
-        } else if (groupBy) {
+        } else if (groupBy || aggregate) {
             msgVar = generateVar(stateClass, RawMessage.class, "outMsg");
             outMsgInFilter = msgVar.access(typedState);
         } else {
@@ -431,7 +430,7 @@ class FilterGenerator {
 
             filterBody.add(mdoAccess.call("reset"));
 
-            if (selector.getClassDescriptors().length > 1) {
+            if (selector.getClassDescriptors().length > 1 || selector.hasConditions()) {
                 generateEncodersForMultipleTypes(selector, mdoAccess, filterBody);
             } else {
                 for (int ii = 0; ii < n; ii++) {
@@ -477,7 +476,7 @@ class FilterGenerator {
             filterBody.add(mdoAccess.call("reset", CTXT.intLiteral(0)));
             filterBody.add(mdoAccess.call("write", inMsg.field("data"), inMsg.field("offset"), inMsg.field("length")));
             filterBody.add(outMsgInFilter.call("setBytes", mdoAccess));
-        } else if (groupBy) {
+        } else if (groupBy || aggregate) {
             filterBody.add(outMsgInFilter.call("copyFrom", inMsg));
             JMethod getLastMessage = stateClass.addMethod(Modifier.PROTECTED, RawMessage.class, "getLastMessage");
             getLastMessage.addAnnotation(CTXT.annotation(Override.class));

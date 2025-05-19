@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 EPAM Systems, Inc
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Licensed under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.epam.deltix.qsrv.hf.tickdb.lang.parser;
 
 import java_cup.runtime.*;
@@ -5,7 +21,6 @@ import com.epam.deltix.util.parsers.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
 import com.epam.deltix.qsrv.hf.pub.md.CharDataType;
-
 
 /**
  * QQL 5.0 Lexer.
@@ -92,6 +107,10 @@ UnescapedIdentifier =               [:jletter:] [:jletterdigit:]*
 UnsignedInteger =                   0 | [1-9][0-9]*
 
 UnsignedLong =                      {UnsignedInteger}L
+
+BitValue =                          0b[01]+
+
+HexValue =                          0x[0-9a-fA-F]+
 
 FloatingPointLiteral =              {UnsignedInteger} "." [0-9]* ( e [+-]? {UnsignedInteger} )?
 
@@ -187,6 +206,8 @@ CharLiteral =                       \'(([^\n\r\'\\]) | (\\\') | (\\\") | (\\\\) 
     /* literals */
     {UnsignedInteger}               { return symbol (Symbols.UINT, yytext ()); }
     {UnsignedLong}                  { return symbol (Symbols.ULONG, yytext()); }
+    {BitValue}                      { return symbol (Symbols.BITVAL, yytext()); }
+    {HexValue}                      { return symbol (Symbols.HEXVAL, yytext()); }
     {FloatingPointLiteral}          { return symbol (Symbols.FP, yytext ()); }
     {DoubleLiteral}                 { return symbol (Symbols.DOUBLE, yytext()); }
     {TimeInterval}                  { return symbol (Symbols.TIME_INTERVAL_LITERAL, yytext()); }
@@ -208,6 +229,12 @@ CharLiteral =                       \'(([^\n\r\'\\]) | (\\\') | (\\\") | (\\\\) 
     "-"                             { return symbol (Symbols.MINUS); }
     "*"                             { return symbol (Symbols.STAR); }
     "/"                             { return symbol (Symbols.SLASH); }
+    "&"                             { return symbol (Symbols.BIT_AND); }
+    "|"                             { return symbol (Symbols.BIT_OR); }
+    "^"                             { return symbol (Symbols.BIT_XOR); }
+    "~"                             { return symbol (Symbols.BIT_NOT); }
+    ">>"                            { return symbol (Symbols.RSHIFT); }
+    "<<"                            { return symbol (Symbols.LSHIFT); }
     ">"                             { return symbol (Symbols.GT); }
     "<"                             { return symbol (Symbols.LT); }
     ">="                            { return symbol (Symbols.GE); }

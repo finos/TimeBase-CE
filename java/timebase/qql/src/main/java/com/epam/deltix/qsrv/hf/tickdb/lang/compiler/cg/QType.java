@@ -18,6 +18,7 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
 import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.pub.md.*;
+import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.StdEnvironment;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledExpression;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.FieldAccessor;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.PluginSimpleFunction;
@@ -559,6 +560,10 @@ public abstract class QType <T extends DataType> {
 
     protected String parseMethodName() {
         throw new RuntimeException("Parse for type '" + dt.getBaseName() + "' is not allowed.");
+    }
+
+    public JExpr addExpr(JExpr v1, JExpr v2) {
+        return CTXT.binExpr(v1, "+", v2);
     }
 
 }

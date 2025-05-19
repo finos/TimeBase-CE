@@ -25,16 +25,22 @@ import java.util.Objects;
 public class CastArrayTypeExpression extends CastTypeExpression {
     public final List<CastTypeIdExpression> typeIdList;
     public final boolean nullable;
+    public final boolean preserveNulls;
 
-    public CastArrayTypeExpression(long location, List<CastTypeIdExpression> typeIdList, boolean nullable) {
+    public CastArrayTypeExpression(long location, List<CastTypeIdExpression> typeIdList, boolean nullable, boolean preserveNulls) {
         super(location);
         this.typeIdList = typeIdList;
         this.nullable = nullable;
+        this.preserveNulls = preserveNulls;
     }
 
     @Override
     public void print(StringBuilder s) {
-        s.append("ARRAY(");
+        s.append("ARRAY");
+        if (preserveNulls) {
+            s.append("?");
+        }
+        s.append("(");
         for (int i = 0; i < typeIdList.size(); ++i) {
             if (i > 0) {
                 s.append(", ");
@@ -56,12 +62,13 @@ public class CastArrayTypeExpression extends CastTypeExpression {
         if (!super.equals(o)) return false;
         CastArrayTypeExpression that = (CastArrayTypeExpression) o;
         return nullable == that.nullable &&
+            preserveNulls == that.preserveNulls &&
             Objects.equals(typeIdList, that.typeIdList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), typeIdList, nullable);
+        return Objects.hash(super.hashCode(), typeIdList, nullable, preserveNulls);
     }
 
 }

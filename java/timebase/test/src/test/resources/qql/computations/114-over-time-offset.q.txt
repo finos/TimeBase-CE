@@ -1,0 +1,236 @@
+set printJson true
+set max 10
+
+test select first{}(decimalField), decimalField from "1min-1h-1h-3" over time(1m, 30s)
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:13:30.000Z","FIRST{}(decimalField)":"949.205300891957","decimalField":"949.205300891957"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:14:30.000Z","FIRST{}(decimalField)":"7.868776715648451","decimalField":"7.868776715648451"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:15:30.000Z","FIRST{}(decimalField)":"741.7301568223631","decimalField":"741.7301568223631"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:16:30.000Z","FIRST{}(decimalField)":"330.7719239673901","decimalField":"330.7719239673901"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:17:30.000Z","FIRST{}(decimalField)":"706.1560784509762","decimalField":"706.1560784509762"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:18:30.000Z","FIRST{}(decimalField)":"254.697647376261","decimalField":"254.697647376261"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:19:30.000Z","FIRST{}(decimalField)":"768.4588150073349","decimalField":"768.4588150073349"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:20:30.000Z","FIRST{}(decimalField)":"693.7132670827411","decimalField":"693.7132670827411"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:21:30.000Z","FIRST{}(decimalField)":"879.2005448282691","decimalField":"879.2005448282691"}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:22:30.000Z","FIRST{}(decimalField)":"475.9250400213633","decimalField":"475.9250400213633"}
+!end
+
+test select first{}(decimalField), decimalField from "1min-1h-1h-3" over time(1m, 10s)
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:14:10.000Z","FIRST{}(decimalField)":"949.205300891957","decimalField":"949.205300891957"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:15:10.000Z","FIRST{}(decimalField)":"7.868776715648451","decimalField":"7.868776715648451"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:16:10.000Z","FIRST{}(decimalField)":"741.7301568223631","decimalField":"741.7301568223631"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:17:10.000Z","FIRST{}(decimalField)":"330.7719239673901","decimalField":"330.7719239673901"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:18:10.000Z","FIRST{}(decimalField)":"706.1560784509762","decimalField":"706.1560784509762"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:19:10.000Z","FIRST{}(decimalField)":"254.697647376261","decimalField":"254.697647376261"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:20:10.000Z","FIRST{}(decimalField)":"768.4588150073349","decimalField":"768.4588150073349"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:21:10.000Z","FIRST{}(decimalField)":"693.7132670827411","decimalField":"693.7132670827411"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:22:10.000Z","FIRST{}(decimalField)":"879.2005448282691","decimalField":"879.2005448282691"}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:23:10.000Z","FIRST{}(decimalField)":"475.9250400213633","decimalField":"475.9250400213633"}
+!end
+
+test select first{}(decimalField), decimalField from "1min-1h-1h-3" over time(10m)
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:20:00.000Z","FIRST{}(decimalField)":"949.205300891957","decimalField":"768.4588150073349"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:30:00.000Z","FIRST{}(decimalField)":"693.7132670827411","decimalField":"194.7424171071696"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:40:00.000Z","FIRST{}(decimalField)":"567.2431474737018","decimalField":"607.3742731071844"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:50:00.000Z","FIRST{}(decimalField)":"898.4671026976248","decimalField":"887.5358134003666"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T02:00:00.000Z","FIRST{}(decimalField)":"746.2460986369373","decimalField":"758.6026027895201"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T02:10:00.000Z","FIRST{}(decimalField)":"618.105430996402","decimalField":"834.051249484754"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T02:20:00.000Z","FIRST{}(decimalField)":"156.1281763173372","decimalField":"805.9206283307223"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T03:20:00.000Z","FIRST{}(decimalField)":"847.5249086720049","decimalField":"426.0726370605654"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T03:30:00.000Z","FIRST{}(decimalField)":"16.04987258443202","decimalField":"403.8650586988333"}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T03:40:00.000Z","FIRST{}(decimalField)":"305.7372740268154","decimalField":"198.0120749438585"}
+!end
+
+test select first{}(decimalField), decimalField from "1min-1h-1h-3" over time(10m, 0m)
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:20:00.000Z","FIRST{}(decimalField)":"949.205300891957","decimalField":"768.4588150073349"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:30:00.000Z","FIRST{}(decimalField)":"693.7132670827411","decimalField":"194.7424171071696"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:40:00.000Z","FIRST{}(decimalField)":"567.2431474737018","decimalField":"607.3742731071844"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:50:00.000Z","FIRST{}(decimalField)":"898.4671026976248","decimalField":"887.5358134003666"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T02:00:00.000Z","FIRST{}(decimalField)":"746.2460986369373","decimalField":"758.6026027895201"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T02:10:00.000Z","FIRST{}(decimalField)":"618.105430996402","decimalField":"834.051249484754"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T02:20:00.000Z","FIRST{}(decimalField)":"156.1281763173372","decimalField":"805.9206283307223"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T03:20:00.000Z","FIRST{}(decimalField)":"847.5249086720049","decimalField":"426.0726370605654"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T03:30:00.000Z","FIRST{}(decimalField)":"16.04987258443202","decimalField":"403.8650586988333"}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T03:40:00.000Z","FIRST{}(decimalField)":"305.7372740268154","decimalField":"198.0120749438585"}
+!end
+
+test select first{}(decimalField), decimalField from "1min-1h-1h-3" over time(10m, 1m)
+0: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:21:00.000Z","FIRST{}(decimalField)":"949.205300891957","decimalField":"693.7132670827411"}
+1: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:31:00.000Z","FIRST{}(decimalField)":"879.2005448282691","decimalField":"567.2431474737018"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:41:00.000Z","FIRST{}(decimalField)":"560.6769451304624","decimalField":"898.4671026976248"}
+3: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:51:00.000Z","FIRST{}(decimalField)":"411.0528108433426","decimalField":"746.2460986369373"}
+4: {"$type":"","symbol":"S3","timestamp":"2021-04-19T02:01:00.000Z","FIRST{}(decimalField)":"380.1945313052249","decimalField":"618.105430996402"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T02:11:00.000Z","FIRST{}(decimalField)":"814.9392149175902","decimalField":"156.1281763173372"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T02:21:00.000Z","FIRST{}(decimalField)":"356.8885744547832","decimalField":"805.9206283307223"}
+7: {"$type":"","symbol":"S3","timestamp":"2021-04-19T03:21:00.000Z","FIRST{}(decimalField)":"847.5249086720049","decimalField":"16.04987258443202"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T03:31:00.000Z","FIRST{}(decimalField)":"983.2845978569541","decimalField":"305.7372740268154"}
+9: {"$type":"","symbol":"S2","timestamp":"2021-04-19T03:41:00.000Z","FIRST{}(decimalField)":"189.4066258985985","decimalField":"771.3601551154386"}
+!end
+
+test select first{}(decimalField), decimalField from "1min-1h-1h-3" over time(10m, 1m16s646ms)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:21:16.646Z","FIRST{}(decimalField)":"949.205300891957","decimalField":"879.2005448282691"}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:31:16.646Z","FIRST{}(decimalField)":"475.9250400213633","decimalField":"560.6769451304624"}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:41:16.646Z","FIRST{}(decimalField)":"983.5038175524223","decimalField":"411.0528108433426"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:51:16.646Z","FIRST{}(decimalField)":"759.8951422753881","decimalField":"380.1945313052249"}
+4: {"$type":"","symbol":"S1","timestamp":"2021-04-19T02:01:16.646Z","FIRST{}(decimalField)":"870.4533275265156","decimalField":"814.9392149175902"}
+5: {"$type":"","symbol":"S2","timestamp":"2021-04-19T02:11:16.646Z","FIRST{}(decimalField)":"141.2810161290866","decimalField":"356.8885744547832"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T02:21:16.646Z","FIRST{}(decimalField)":"407.8206104262513","decimalField":"805.9206283307223"}
+7: {"$type":"","symbol":"S1","timestamp":"2021-04-19T03:21:16.646Z","FIRST{}(decimalField)":"847.5249086720049","decimalField":"983.2845978569541"}
+8: {"$type":"","symbol":"S2","timestamp":"2021-04-19T03:31:16.646Z","FIRST{}(decimalField)":"716.5813712106129","decimalField":"189.4066258985985"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T03:41:16.646Z","FIRST{}(decimalField)":"382.3481114448248","decimalField":"459.733921839197"}
+!end
+
+test select first{}(decimalField), decimalField from "1min-1h-1h-3" over time(5m)
+0: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:15:00.000Z","FIRST{}(decimalField)":"949.205300891957","decimalField":"7.868776715648451"}
+1: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:20:00.000Z","FIRST{}(decimalField)":"741.7301568223631","decimalField":"768.4588150073349"}
+2: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:25:00.000Z","FIRST{}(decimalField)":"693.7132670827411","decimalField":"411.2834577657336"}
+3: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:30:00.000Z","FIRST{}(decimalField)":"653.7222433440731","decimalField":"194.7424171071696"}
+4: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:35:00.000Z","FIRST{}(decimalField)":"567.2431474737018","decimalField":"852.5208542550955"}
+5: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:40:00.000Z","FIRST{}(decimalField)":"107.2404499380734","decimalField":"607.3742731071844"}
+6: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:45:00.000Z","FIRST{}(decimalField)":"898.4671026976248","decimalField":"323.9344291469677"}
+7: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:50:00.000Z","FIRST{}(decimalField)":"346.4990343651874","decimalField":"887.5358134003666"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:55:00.000Z","FIRST{}(decimalField)":"746.2460986369373","decimalField":"977.823746477618"}
+9: {"$type":"","symbol":"S2","timestamp":"2021-04-19T02:00:00.000Z","FIRST{}(decimalField)":"372.3525999868322","decimalField":"758.6026027895201"}
+!end
+
+test select first{}(decimalField), decimalField from "1min-1h-1h-3" over time(5m, 1m)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:16:00.000Z","FIRST{}(decimalField)":"949.205300891957","decimalField":"741.7301568223631"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:21:00.000Z","FIRST{}(decimalField)":"330.7719239673901","decimalField":"693.7132670827411"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:26:00.000Z","FIRST{}(decimalField)":"879.2005448282691","decimalField":"653.7222433440731"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:31:00.000Z","FIRST{}(decimalField)":"116.8716284002856","decimalField":"567.2431474737018"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:36:00.000Z","FIRST{}(decimalField)":"560.6769451304624","decimalField":"107.2404499380734"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:41:00.000Z","FIRST{}(decimalField)":"290.1274278923486","decimalField":"898.4671026976248"}
+6: {"$type":"","symbol":"S3","timestamp":"2021-04-19T01:46:00.000Z","FIRST{}(decimalField)":"411.0528108433426","decimalField":"346.4990343651874"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T01:51:00.000Z","FIRST{}(decimalField)":"266.2156911294418","decimalField":"746.2460986369373"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T01:56:00.000Z","FIRST{}(decimalField)":"380.1945313052249","decimalField":"372.3525999868322"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T02:01:00.000Z","FIRST{}(decimalField)":"153.3856773966298","decimalField":"618.105430996402"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(1m)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:00.000Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"306.9859898859655"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:12:00.000Z","FIRST{}(decimalField)":"496.4862919484308","decimalField":"496.4862919484308"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:11:00.000Z","FIRST{}(decimalField)":"522.0607784328132","decimalField":"522.0607784328132"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:10:00.000Z","FIRST{}(decimalField)":"956.6530412237674","decimalField":"956.6530412237674"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:09:00.000Z","FIRST{}(decimalField)":"976.9052542630014","decimalField":"976.9052542630014"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:08:00.000Z","FIRST{}(decimalField)":"610.3717500245243","decimalField":"610.3717500245243"}
+6: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:07:00.000Z","FIRST{}(decimalField)":"238.0592173257039","decimalField":"238.0592173257039"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:06:00.000Z","FIRST{}(decimalField)":"907.5292499807659","decimalField":"907.5292499807659"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:05:00.000Z","FIRST{}(decimalField)":"424.3861483265291","decimalField":"424.3861483265291"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:04:00.000Z","FIRST{}(decimalField)":"806.5283987923112","decimalField":"806.5283987923112"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(1m, 0s)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:00.000Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"306.9859898859655"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:12:00.000Z","FIRST{}(decimalField)":"496.4862919484308","decimalField":"496.4862919484308"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:11:00.000Z","FIRST{}(decimalField)":"522.0607784328132","decimalField":"522.0607784328132"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:10:00.000Z","FIRST{}(decimalField)":"956.6530412237674","decimalField":"956.6530412237674"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:09:00.000Z","FIRST{}(decimalField)":"976.9052542630014","decimalField":"976.9052542630014"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:08:00.000Z","FIRST{}(decimalField)":"610.3717500245243","decimalField":"610.3717500245243"}
+6: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:07:00.000Z","FIRST{}(decimalField)":"238.0592173257039","decimalField":"238.0592173257039"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:06:00.000Z","FIRST{}(decimalField)":"907.5292499807659","decimalField":"907.5292499807659"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:05:00.000Z","FIRST{}(decimalField)":"424.3861483265291","decimalField":"424.3861483265291"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:04:00.000Z","FIRST{}(decimalField)":"806.5283987923112","decimalField":"806.5283987923112"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(1m, 35s)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:12:35.000Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"306.9859898859655"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:11:35.000Z","FIRST{}(decimalField)":"496.4862919484308","decimalField":"496.4862919484308"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:10:35.000Z","FIRST{}(decimalField)":"522.0607784328132","decimalField":"522.0607784328132"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:09:35.000Z","FIRST{}(decimalField)":"956.6530412237674","decimalField":"956.6530412237674"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:08:35.000Z","FIRST{}(decimalField)":"976.9052542630014","decimalField":"976.9052542630014"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:07:35.000Z","FIRST{}(decimalField)":"610.3717500245243","decimalField":"610.3717500245243"}
+6: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:06:35.000Z","FIRST{}(decimalField)":"238.0592173257039","decimalField":"238.0592173257039"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:05:35.000Z","FIRST{}(decimalField)":"907.5292499807659","decimalField":"907.5292499807659"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:04:35.000Z","FIRST{}(decimalField)":"424.3861483265291","decimalField":"424.3861483265291"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:03:35.000Z","FIRST{}(decimalField)":"806.5283987923112","decimalField":"806.5283987923112"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(1m, 15s)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:13:15.000Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"306.9859898859655"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:12:15.000Z","FIRST{}(decimalField)":"496.4862919484308","decimalField":"496.4862919484308"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:11:15.000Z","FIRST{}(decimalField)":"522.0607784328132","decimalField":"522.0607784328132"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:10:15.000Z","FIRST{}(decimalField)":"956.6530412237674","decimalField":"956.6530412237674"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:09:15.000Z","FIRST{}(decimalField)":"976.9052542630014","decimalField":"976.9052542630014"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:08:15.000Z","FIRST{}(decimalField)":"610.3717500245243","decimalField":"610.3717500245243"}
+6: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:07:15.000Z","FIRST{}(decimalField)":"238.0592173257039","decimalField":"238.0592173257039"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:06:15.000Z","FIRST{}(decimalField)":"907.5292499807659","decimalField":"907.5292499807659"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:05:15.000Z","FIRST{}(decimalField)":"424.3861483265291","decimalField":"424.3861483265291"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:04:15.000Z","FIRST{}(decimalField)":"806.5283987923112","decimalField":"806.5283987923112"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(10m)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:10:00.000Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"956.6530412237674"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:00:00.000Z","FIRST{}(decimalField)":"976.9052542630014","decimalField":"987.0609798947334"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:50:00.000Z","FIRST{}(decimalField)":"677.3716075552138","decimalField":"505.603199160236"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:40:00.000Z","FIRST{}(decimalField)":"100.1451510744163","decimalField":"70.66617060884506"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:30:00.000Z","FIRST{}(decimalField)":"509.3885353801321","decimalField":"166.6485147951489"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:20:00.000Z","FIRST{}(decimalField)":"771.1522197868567","decimalField":"177.843209966719"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:10:00.000Z","FIRST{}(decimalField)":"946.7382536312271","decimalField":"638.3591679082889"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T10:10:00.000Z","FIRST{}(decimalField)":"454.9669633626048","decimalField":"190.4409462257414"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T10:00:00.000Z","FIRST{}(decimalField)":"966.5040481063268","decimalField":"988.990435063175"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T09:50:00.000Z","FIRST{}(decimalField)":"683.9765088993661","decimalField":"931.9945539156046"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(10m, 0s)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:10:00.000Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"956.6530412237674"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:00:00.000Z","FIRST{}(decimalField)":"976.9052542630014","decimalField":"987.0609798947334"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:50:00.000Z","FIRST{}(decimalField)":"677.3716075552138","decimalField":"505.603199160236"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:40:00.000Z","FIRST{}(decimalField)":"100.1451510744163","decimalField":"70.66617060884506"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:30:00.000Z","FIRST{}(decimalField)":"509.3885353801321","decimalField":"166.6485147951489"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:20:00.000Z","FIRST{}(decimalField)":"771.1522197868567","decimalField":"177.843209966719"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:10:00.000Z","FIRST{}(decimalField)":"946.7382536312271","decimalField":"638.3591679082889"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T10:10:00.000Z","FIRST{}(decimalField)":"454.9669633626048","decimalField":"190.4409462257414"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T10:00:00.000Z","FIRST{}(decimalField)":"966.5040481063268","decimalField":"988.990435063175"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T09:50:00.000Z","FIRST{}(decimalField)":"683.9765088993661","decimalField":"931.9945539156046"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(10m, 5m)
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:05:00.000Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"424.3861483265291"}
+1: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:55:00.000Z","FIRST{}(decimalField)":"806.5283987923112","decimalField":"902.8573874456264"}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:45:00.000Z","FIRST{}(decimalField)":"56.98886716609009","decimalField":"263.8675104640203"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:35:00.000Z","FIRST{}(decimalField)":"710.4455162859147","decimalField":"423.9363965516726"}
+4: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:25:00.000Z","FIRST{}(decimalField)":"946.8850875632301","decimalField":"4.117077651298096"}
+5: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:15:00.000Z","FIRST{}(decimalField)":"266.6909797261371","decimalField":"402.6373910868425"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:05:00.000Z","FIRST{}(decimalField)":"638.3591679082889","decimalField":"638.3591679082889"}
+7: {"$type":"","symbol":"S3","timestamp":"2021-04-19T10:05:00.000Z","FIRST{}(decimalField)":"454.9669633626048","decimalField":"417.641627460017"}
+8: {"$type":"","symbol":"S2","timestamp":"2021-04-19T09:55:00.000Z","FIRST{}(decimalField)":"657.5356041737483","decimalField":"823.8689412531952"}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T09:45:00.000Z","FIRST{}(decimalField)":"836.4445686834581","decimalField":"181.4966407072041"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(10m, 2m40s)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:12:40.000Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"306.9859898859655"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T12:02:40.000Z","FIRST{}(decimalField)":"496.4862919484308","decimalField":"162.7649374331955"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:52:40.000Z","FIRST{}(decimalField)":"763.2725182203341","decimalField":"957.7032080799955"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:42:40.000Z","FIRST{}(decimalField)":"774.7889820419962","decimalField":"432.8328434209885"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:32:40.000Z","FIRST{}(decimalField)":"564.2301683510851","decimalField":"123.232186014579"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:22:40.000Z","FIRST{}(decimalField)":"996.1203449959969","decimalField":"67.87790057744914"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:12:40.000Z","FIRST{}(decimalField)":"19.76313818037023","decimalField":"638.3591679082889"}
+7: {"$type":"","symbol":"S2","timestamp":"2021-04-19T10:12:40.000Z","FIRST{}(decimalField)":"454.9669633626048","decimalField":"454.9669633626048"}
+8: {"$type":"","symbol":"S1","timestamp":"2021-04-19T10:02:40.000Z","FIRST{}(decimalField)":"876.0015673773839","decimalField":"890.6022947961524"}
+9: {"$type":"","symbol":"S3","timestamp":"2021-04-19T09:52:40.000Z","FIRST{}(decimalField)":"789.0105353473393","decimalField":"914.9784718079536"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(10m, 3m40s)
+0: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:03:40.000Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"806.5283987923112"}
+1: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:53:40.000Z","FIRST{}(decimalField)":"162.7649374331955","decimalField":"56.98886716609009"}
+2: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:43:40.000Z","FIRST{}(decimalField)":"957.7032080799955","decimalField":"710.4455162859147"}
+3: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:33:40.000Z","FIRST{}(decimalField)":"432.8328434209885","decimalField":"946.8850875632301"}
+4: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:23:40.000Z","FIRST{}(decimalField)":"123.232186014579","decimalField":"266.6909797261371"}
+5: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:13:40.000Z","FIRST{}(decimalField)":"67.87790057744914","decimalField":"638.3591679082889"}
+6: {"$type":"","symbol":"S2","timestamp":"2021-04-19T10:03:40.000Z","FIRST{}(decimalField)":"454.9669633626048","decimalField":"657.5356041737483"}
+7: {"$type":"","symbol":"S1","timestamp":"2021-04-19T09:53:40.000Z","FIRST{}(decimalField)":"890.6022947961524","decimalField":"836.4445686834581"}
+8: {"$type":"","symbol":"S3","timestamp":"2021-04-19T09:43:40.000Z","FIRST{}(decimalField)":"914.9784718079536","decimalField":"427.0653255530523"}
+9: {"$type":"","symbol":"S2","timestamp":"2021-04-19T09:33:40.000Z","FIRST{}(decimalField)":"220.3246511339215","decimalField":"969.2227919067325"}
+!end
+
+test select first{}(decimalField), decimalField from reverse("1min-1h-1h-3") over time(10m, 1m16s646ms)
+0: {"$type":"","symbol":"S1","timestamp":"2021-04-19T12:11:16.646Z","FIRST{}(decimalField)":"306.9859898859655","decimalField":"522.0607784328132"}
+1: {"$type":"","symbol":"S3","timestamp":"2021-04-19T12:01:16.646Z","FIRST{}(decimalField)":"956.6530412237674","decimalField":"356.4234805211005"}
+2: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:51:16.646Z","FIRST{}(decimalField)":"987.0609798947334","decimalField":"605.0925870426771"}
+3: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:41:16.646Z","FIRST{}(decimalField)":"505.603199160236","decimalField":"137.4389622615901"}
+4: {"$type":"","symbol":"S3","timestamp":"2021-04-19T11:31:16.646Z","FIRST{}(decimalField)":"70.66617060884506","decimalField":"761.59436755774"}
+5: {"$type":"","symbol":"S2","timestamp":"2021-04-19T11:21:16.646Z","FIRST{}(decimalField)":"166.6485147951489","decimalField":"828.5239154701713"}
+6: {"$type":"","symbol":"S1","timestamp":"2021-04-19T11:11:16.646Z","FIRST{}(decimalField)":"177.843209966719","decimalField":"638.3591679082889"}
+7: {"$type":"","symbol":"S3","timestamp":"2021-04-19T10:11:16.646Z","FIRST{}(decimalField)":"454.9669633626048","decimalField":"114.509248750364"}
+8: {"$type":"","symbol":"S2","timestamp":"2021-04-19T10:01:16.646Z","FIRST{}(decimalField)":"190.4409462257414","decimalField":"366.8377591057481"}
+9: {"$type":"","symbol":"S1","timestamp":"2021-04-19T09:51:16.646Z","FIRST{}(decimalField)":"988.990435063175","decimalField":"729.9153863869183"}
+!end

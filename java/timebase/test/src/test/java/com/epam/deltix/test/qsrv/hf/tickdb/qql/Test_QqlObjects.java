@@ -831,7 +831,9 @@ public class Test_QqlObjects extends TDBRunnerBase {
                     "type t " +
                     "from kraken " +
                     "where size(bbo) > 0 " +
-                    "limit 10 offset 30")
+                    "limit 10 offset 30"),
+        QUERY_RAW("SELECT e FROM (select * from BINANCE union select * from BITFINEX) array join this.entries as e limit 20 offset 10"),
+        QUERY_RAW("SELECT e FROM (select * from BINANCE union select * from BITFINEX union select * from KRAKEN) array join this.entries as e limit 20 offset 30")
     };
 
     private static Pair<String, MappingInfo>[] QQL_ALL_DASHBOARD = new Pair[] {
@@ -865,11 +867,11 @@ public class Test_QqlObjects extends TDBRunnerBase {
 //            "where symbol == 'BITF24'"),
 //        QUERY_RAW("select s, sort(symbols(s)) array join sort(streams().key) as s limit 3"),
         // todo: support typeOf
-//        QUERY_RAW("select typeOf(asciiTextField), typeOf(binaryField), typeOf(enumField), typeOf(floatField), " +
-//            "typeOf(decimalField), typeOf(doubleField), typeOf(intField), typeOf(longField), typeOf(shortField), typeOf(intField), " +
-//            "typeOf(timeOfDayField), typeOf(timestamp), typeOf(timestampField), typeOf(timestampField), " +
-//            "typeOf(symbol), typeOf(type), typeOf(alphanumericList), typeOf(longList), typeOf(enumList) " +
-//            "from alltypesrand limit 1"),
+        QUERY_RAW("select typeOf(asciiTextField), typeOf(binaryField), typeOf(enumField), typeOf(floatField), " +
+            "typeOf(decimalField), typeOf(doubleField), typeOf(intField), typeOf(longField), typeOf(shortField), typeOf(intField), " +
+            "typeOf(timeOfDayField), typeOf(timestamp), typeOf(timestampField), typeOf(timestampField), " +
+            "typeOf(symbol), typeOf(type), typeOf(alphanumericList), typeOf(longList), typeOf(enumList) " +
+            "from alltypesrand limit 1"),
         QUERY_RAW("SELECT typeOf(this.entries), typeOf(this.entries[0]), typeOf(this.entries[1]), typeOf(this) " +
             "FROM (select * from BINANCE union select * from KRAKEN)"),
         QUERY_RAW("SELECT typeOf(this), this.entries[0] FROM (select * from BINANCE union select * from KRAKEN) GROUP BY typeOf(this)"),
@@ -881,6 +883,65 @@ public class Test_QqlObjects extends TDBRunnerBase {
             "entries[0].exchangeId == 'BINANCE' as isBinance, " +
             "(entries if isBinance) as binanceEntries " +
             "SELECT binanceEntries[0].price as pp FROM BINANCE"),
+
+        QUERY_RAW("SELECT " +
+            "lastNotNull{}(entry.price if symbol == 'ETH/USDT') AS p1, " +
+            "lastNotNull{}(entry.price if symbol == 'BTC/USDT') AS p2 " +
+            "FROM \"BINANCE\" " +
+            "array join (entries as array(BinanceTradeEntry)) as entry " +
+            "over time (1ms) " +
+            "where entry is TradeEntry"),
+        QUERY_RAW("SELECT " +
+            "lastNotNull{\"reset\":true}(entry.price if symbol == 'ETH/USDT') AS p1, " +
+            "lastNotNull{\"reset\":true}(entry.price if symbol == 'BTC/USDT') AS p2 " +
+            "FROM \"BINANCE\" " +
+            "array join (entries as array(BinanceTradeEntry)) as entry " +
+            "over time (1ms) " +
+            "where entry is TradeEntry"),
+
+        QUERY_RAW("SELECT entries, " +
+            "entries[this is L1Entry] as l1_misc, " +
+            "entries as array?(L1Entry) as l1_a1, " +
+            "entries[this is L1Entry] as array?(L1Entry) as l1_arr, " +
+            "size(l1_misc) as s1, size(l1_arr) as s2 " +
+            "FROM \"BINANCE\" limit 20 offset 60"),
+        QUERY_RAW("SELECT entries[0], " +
+            "entries[this is L1Entry][0] as l1_misc, " +
+            "entries[0] as L1Entry as l1_a, " +
+            "entries[this is L1Entry][0] as L1Entry as l1 " +
+            "FROM \"BINANCE\" limit 20 offset 60"),
+        QUERY_RAW("SELECT entries, " +
+            "entries[this is L1Entry] as l1_misc, " +
+            "entries as array(L1Entry) as l1_a1, " +
+            "entries[this is L1Entry] as array(L1Entry) as l1_arr, " +
+            "size(l1_misc) as s1, size(l1_arr) as s2 " +
+            "FROM \"BINANCE\" limit 20 offset 60"),
+        QUERY_RAW("SELECT entries as array(L2EntryNew) as a1, " +
+            "entries as array?(L2EntryNew) as a2 " +
+            "FROM \"BINANCE\" limit 10 offset 60"),
+        QUERY_RAW("SELECT entries as array(object(L2EntryNew)) as a1, " +
+            "entries as array?(object(L2EntryNew)) as a2, " +
+            "entries as array(object(L2EntryNew, L2EntryUpdate)) as a3 " +
+            "FROM \"BINANCE\" limit 10 offset 60"),
+        QUERY_RAW("SELECT running (entries if count{}() % 2 == 0 else null) as array(L1Entry) as 'a' FROM BINANCE limit 10 offset 60"),
+//        QUERY_RAW("with " +
+//            "  (orderbook{maxDepth: 1}(this.packageType, this.entries) as array(L2EntryNew)) as ob, " +
+//            "  ob[side == QuoteSide:BID and level == 0][0] as bestBid, " +
+//            "  ob[side == QuoteSide:ASK and level == 1][0] as bestAsk " +
+//            "SELECT running " +
+//            "    bestBid.price as 'bidPrice', " +
+//            "    bestBid.size as 'bidSize', " +
+//            "    bestBid.exchangeId as 'bidExchangeId', " +
+//            "    bestAsk.price as 'askPrice'," +
+//            "    bestAsk.size as 'askSize', " +
+//            "    bestAsk.exchangeId as 'askExchangeId' " +
+//            "TYPE \"deltix.timebase.api.messages.BestBidOfferMessage\" " +
+//            "FROM \"BINANCE\" " +
+//            "where size(ob) > 0 " +
+//            "group by symbol"),
+//        QUERY_RAW("SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999]}(entries.price[0]) as hist FROM BINANCE"),
+//        QUERY_RAW("SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999]}(timestamp - originalTimestamp) as hist FROM BINANCE"),
+//        QUERY_RAW("SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999], significantDigits: 5}(timestamp - originalTimestamp) as hist FROM BINANCE"),
     };
 
 

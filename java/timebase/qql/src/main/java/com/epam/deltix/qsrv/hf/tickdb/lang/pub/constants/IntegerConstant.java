@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants;
 
 import com.epam.deltix.util.lang.Util;
+import com.epam.deltix.util.parsers.CompilationException;
 
 /**
  *
@@ -31,6 +32,18 @@ public final class IntegerConstant extends Constant {
 
     public IntegerConstant (long value) {
         this(NO_LOCATION, value);
+    }
+
+    public static IntegerConstant parse(String value) {
+        return parse(NO_LOCATION, value);
+    }
+
+    public static IntegerConstant parse(long location, String value) {
+        try {
+            return new IntegerConstant(location, Long.parseLong(value));
+        } catch (NumberFormatException e) {
+            throw new CompilationException("Failed to parse numeric value '" + value + "'", location);
+        }
     }
 
     protected void      print (int outerPriority, StringBuilder s) {

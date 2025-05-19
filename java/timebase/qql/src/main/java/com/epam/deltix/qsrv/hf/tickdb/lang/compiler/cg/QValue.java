@@ -16,7 +16,6 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
-import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.STRT;
 import com.epam.deltix.util.jcg.JCompoundStatement;
 import com.epam.deltix.util.jcg.JExpr;
 import com.epam.deltix.util.jcg.JStatement;
@@ -83,7 +82,7 @@ public abstract class QValue {
         cs.add (
             CTXT.ifStmt (
                 base.readIsNull (false), 
-                write (CTXT.binExpr (read (), "+", base.read ()))
+                write(type.addExpr(read(), base.read()))
             )
         );
         

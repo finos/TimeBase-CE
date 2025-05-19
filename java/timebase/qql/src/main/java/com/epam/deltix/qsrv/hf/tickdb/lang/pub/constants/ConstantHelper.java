@@ -46,10 +46,10 @@ public class ConstantHelper {
     }
 
     public static IntegerConstant parseInteger(String constant) {
-        return new IntegerConstant(Long.parseLong(constant));
+        return IntegerConstant.parse(constant);
     }
 
     public static LongConstant parseLong(String constant) {
-        return new LongConstant(constant);
+        return LongConstant.parse(constant);
     }
 }

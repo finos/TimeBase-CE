@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 EPAM Systems, Inc
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Licensed under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.epam.deltix.qsrv.hf.tickdb.lang.parser;
 
 import java_cup.runtime.*;
@@ -29,6 +45,7 @@ action code {:
 terminal            SEMICOLON,  PLUS,       MINUS,      STAR;
 terminal            LPAREN,     RPAREN,     LBRACKET,   RBRACKET, LBRACE, RBRACE;
 terminal            COLON,      SLASH,      PERCENT,    DOT;
+terminal            BIT_AND,    BIT_OR,     BIT_XOR,    BIT_NOT,  RSHIFT, LSHIFT;
 terminal            EQ,         NEQ,        STRICT_EQ,  STRICT_NEQ,  ASSIGN, COMMA;
 terminal            LE,         GE,         LT,         GT;
 terminal            QUESTION;
@@ -55,6 +72,8 @@ terminal            IF,         ELSE,       CASE,       WHEN,       THEN,       
 terminal String     IDENTIFIER;
 terminal String     UINT;
 terminal String     ULONG;
+terminal String     BITVAL;
+terminal String     HEXVAL;
 terminal String     FP;
 terminal String     DOUBLE;
 terminal String     STRING;
@@ -117,6 +136,7 @@ non terminal ArrayList              Non_Empty_Constants_List;
 non terminal Expression[]           Init_Body;
 non terminal ArrayList              Cast_TypeId_List;
 non terminal CastTypeExpression     Cast_Type_Expression;
+non terminal ArrayList              Array_Cast_Objects;
 non terminal CastTypeIdExpression   Cast_TypeId_Expression;
 non terminal TimeIntervalConstant[] Time_Expression;
 non terminal Integer                Count_Expression;
@@ -139,11 +159,15 @@ precedence right AS, FIELD;
 precedence left COLON;
 precedence left OR, AND;
 precedence left BETWEEN;
-precedence right NOT;
+precedence right NOT, BIT_NOT;
 precedence left IN;
 precedence left EQ, NEQ, STRICT_EQ, STRICT_NEQ, ASSIGN, LE, GE, LT, GT;
 precedence left LIKE;
 precedence left PLUS, MINUS;
+precedence left BIT_OR;
+precedence left BIT_XOR;
+precedence left BIT_AND;
+precedence left RSHIFT, LSHIFT;
 precedence left STAR, SLASH, PERCENT;
 precedence left IS;
 precedence left DOT, QUESTION;
@@ -257,12 +281,28 @@ Arithmetic_Expression ::=
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.DIV, e1, e2); :} |
     Arithmetic_Expression:e1 PERCENT Arithmetic_Expression:e2
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MOD, e1, e2); :} |
+
+    Arithmetic_Expression:e1 BIT_AND Arithmetic_Expression:e2
+        {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.AND, e1, e2); :} |
+    Arithmetic_Expression:e1 BIT_OR Arithmetic_Expression:e2
+        {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.OR, e1, e2); :} |
+    Arithmetic_Expression:e1 BIT_XOR Arithmetic_Expression:e2
+        {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.XOR, e1, e2); :} |
+    Arithmetic_Expression:e1 RSHIFT Arithmetic_Expression:e2
+        {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.RSHIFT, e1, e2); :} |
+    Arithmetic_Expression:e1 LSHIFT Arithmetic_Expression:e2
+        {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.LSHIFT, e1, e2); :} |
+
     New_Expression:t
         {: RESULT = t; :} |
     Call_Expression:c
         {: RESULT = c; :} |
+
     MINUS:m Arithmetic_Expression:e
         {: RESULT = new UnaryMinusExpression (lx (mleft, eright), e); :} |
+    BIT_NOT:m Arithmetic_Expression:e
+        {: RESULT = new BitwiseNotExpression(lx(mleft, eright), e); :} |
+
     Arithmetic_Expression:e IS Type_Id:t
         {: RESULT = new TypeCheckExpression (lx (eleft, tright), e, t); :} |
     Arithmetic_Expression:e IS NULL:n
@@ -278,9 +318,13 @@ Arithmetic_Expression ::=
     NAN:n
         {: RESULT = new Nan(lx(nleft, nright)); :} |
     UINT:n
-        {: RESULT = new IntegerConstant (lx (nleft, nright), Long.parseLong (n)); :} |
+        {: RESULT = IntegerConstant.parse(lx (nleft, nright), n); :} |
     ULONG:n
-        {: RESULT = new LongConstant (lx (nleft, nright), n); :} |
+        {: RESULT = LongConstant.parse(lx (nleft, nright), n); :} |
+    BITVAL:n
+        {: RESULT = LongConstant.parseBitVal(lx(nleft, nright), n); :} |
+    HEXVAL:n
+        {: RESULT = LongConstant.parseHexVal(lx(nleft, nright), n); :} |
     FP:n
         {: RESULT = FloatConstant.parseDecimal(lx (nleft, nright), n); :} |
     DOUBLE:n
@@ -350,9 +394,13 @@ Numeric_Constant ::=
 
 Int_Literal ::=
     ULONG:n
-        {: RESULT = new LongConstant(lx(nleft, nright), n); :} |
+        {: RESULT = LongConstant.parse(lx(nleft, nright), n); :} |
     UINT:n
-        {: RESULT = new IntegerConstant(lx(nleft, nright), Long.parseLong(n)); :} |
+        {: RESULT = IntegerConstant.parse(lx(nleft, nright), n); :} |
+    BITVAL:n
+        {: RESULT = LongConstant.parseBitVal(lx(nleft, nright), n); :} |
+    HEXVAL:n
+        {: RESULT = LongConstant.parseHexVal(lx(nleft, nright), n); :} |
     TIME_INTERVAL_LITERAL:s
         {: RESULT = new TimeIntervalConstant(lx(sleft, sright), s); :};
 
@@ -371,6 +419,20 @@ Int_Constant ::=
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.DIV, e1, e2); :} |
     Int_Constant:e1 PERCENT Int_Constant:e2
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MOD, e1, e2); :} |
+
+    BIT_NOT:m Int_Constant:n
+        {: RESULT = new BitwiseNotExpression(lx(mleft, nright), n); :} |
+    Int_Constant:e1 BIT_AND Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.AND, e1, e2); :} |
+    Int_Constant:e1 BIT_OR Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.OR, e1, e2); :} |
+    Int_Constant:e1 BIT_XOR Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.XOR, e1, e2); :} |
+    Int_Constant:e1 RSHIFT Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.RSHIFT, e1, e2); :} |
+    Int_Constant:e1 LSHIFT Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.LSHIFT, e1, e2); :} |
+
     LPAREN Int_Constant:e RPAREN
         {: RESULT = e; :};
 
@@ -690,10 +752,16 @@ Cast_Type_Expression ::=
         {: RESULT = t; :} |
     OBJECT:o LPAREN Cast_TypeId_List:tidlist RPAREN
         {: RESULT = new CastObjectTypeExpression(lx(oleft, tidlistright + 1), tidlist, true); :} |
-    ARRAY:a LPAREN Cast_TypeId_List:tidlist RPAREN
-        {: RESULT = new CastArrayTypeExpression(lx(aleft, tidlistright + 1), tidlist, true); :} |
-    ARRAY:a LPAREN OBJECT:o LPAREN Cast_TypeId_List:tidlist RPAREN RPAREN
-        {: RESULT = new CastArrayTypeExpression(lx(aleft, tidlistright + 2), tidlist, true); :};
+    ARRAY:a Array_Cast_Objects:tidlist
+        {: RESULT = new CastArrayTypeExpression(lx(aleft, tidlistright), tidlist, true, false); :} |
+    ARRAY:a QUESTION Array_Cast_Objects:tidlist
+        {: RESULT = new CastArrayTypeExpression(lx(aleft, tidlistright), tidlist, true, true); :};
+
+Array_Cast_Objects ::=
+    LPAREN Cast_TypeId_List:tidlist RPAREN
+        {: RESULT = tidlist; :} |
+    LPAREN OBJECT:o LPAREN Cast_TypeId_List:tidlist RPAREN RPAREN
+        {: RESULT = tidlist; :};
 
 Cast_TypeId_Expression ::=
     Type_Id:t [LPAREN IDENTIFIER:modifier {: RESULT = modifier; :} RPAREN]:modifier

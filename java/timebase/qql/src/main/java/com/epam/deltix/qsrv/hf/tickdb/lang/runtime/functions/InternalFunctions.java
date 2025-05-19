@@ -52,6 +52,8 @@ public class InternalFunctions {
     public static boolean streams(@DB DXTickDB db,
                                   @Type("ARRAY(OBJECT(com.epam.deltix.timebase.messages.schema.StreamMessage))?")
                                   @Nonnull @Result ObjectArrayList<StreamMessage> result) {
+        result.clear();
+
         final long currentTime = System.currentTimeMillis();
         for (DXTickStream stream : db.listStreams()) {
             StreamMessage msg = new StreamMessage();
@@ -80,6 +82,8 @@ public class InternalFunctions {
     @Function("SYMBOLS")
     public static boolean symbols(@Nonnull CharSequence streamKey, @DB DXTickDB db,
                                   @Type("ARRAY(VARCHAR?)?") @Nonnull @Result ObjectArrayList<CharSequence> result) {
+        result.clear();
+
         DXTickStream stream = db.getStream(streamKey.toString());
         if (stream == null)
             return false;
@@ -94,6 +98,8 @@ public class InternalFunctions {
     @Function("SPACES")
     public static boolean spaces(@Nonnull CharSequence streamKey, @DB DXTickDB db,
                                  @Type("ARRAY(VARCHAR?)?") @Nonnull @Result ObjectArrayList<CharSequence> result) {
+        result.clear();
+
         DXTickStream stream = db.getStream(streamKey.toString());
         if (stream == null)
             return false;
@@ -108,6 +114,8 @@ public class InternalFunctions {
     @Function("STATEFUL_FUNCTIONS")
     public static boolean statefulFunctions(@Type("ARRAY(OBJECT(com.epam.deltix.timebase.messages.qql.StatefulFunctionMessage))?")
                                             @Nonnull @Result ObjectArrayList<StatefulFunctionMessage> result) {
+        result.clear();
+
         for (int i = 0; i < statefulFunctions().size(); i++) {
             result.add(statefulFunctions().getObject(i));
         }
@@ -117,6 +125,8 @@ public class InternalFunctions {
     @Function("STATELESS_FUNCTIONS")
     public static boolean statelessFunctions(@Type("ARRAY(OBJECT(com.epam.deltix.timebase.messages.qql.StatelessFunctionMessage))?")
                                              @Nonnull @Result ObjectArrayList<StatelessFunctionMessage> result) {
+        result.clear();
+
         for (int i = 0; i < statelessFunctions().size(); i++) {
             result.add(statelessFunctions().getObject(i));
         }

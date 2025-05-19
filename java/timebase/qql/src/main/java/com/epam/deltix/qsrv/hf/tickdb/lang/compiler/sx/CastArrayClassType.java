@@ -31,19 +31,26 @@ public class CastArrayClassType extends CompiledComplexExpression {
     public final CompiledExpression<DataType> parent;
     public final ArrayDataType sourceType;
     public final RecordClassDescriptor[] descriptors;
+    public final boolean preserveNulls;
 
-    public CastArrayClassType(CompiledExpression<DataType> parent, ArrayDataType sourceType, DataType type) {
+    public CastArrayClassType(CompiledExpression<DataType> parent, ArrayDataType sourceType, DataType type,
+                              boolean preserveNulls) {
         super(type.nullableInstance(true), parent);
         this.parent = parent;
         this.sourceType = sourceType;
         this.descriptors = ((ClassDataType) ((ArrayDataType) type).getElementDataType()).getDescriptors();
+        this.preserveNulls = preserveNulls;
     }
 
     @Override
     public void print(StringBuilder out) {
         out.append("(");
         parent.print(out);
-        out.append(" CAST ARRAY(");
+        out.append(" CAST ARRAY");
+        if (preserveNulls) {
+            out.append("?");
+        }
+        out.append("(");
         RecordClassDescriptor[] descriptors = ((ClassDataType) ((ArrayDataType) type).getElementDataType()).getDescriptors();
         for (int i = 0; i < descriptors.length; ++i) {
             if (i > 0) {
@@ -55,17 +62,18 @@ public class CastArrayClassType extends CompiledComplexExpression {
     }
 
     @Override
-    @SuppressWarnings ("EqualsWhichDoesntCheckParameterClass")
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        CastArrayClassType castClassType = (CastArrayClassType) o;
-        return Arrays.equals(descriptors, castClassType.descriptors);
+        CastArrayClassType that = (CastArrayClassType) o;
+        return preserveNulls == that.preserveNulls && Arrays.equals(descriptors, that.descriptors);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode()) + 31 * Arrays.hashCode(descriptors);
+        int result = Objects.hash(super.hashCode(), preserveNulls);
+        result = 31 * result + Arrays.hashCode(descriptors);
+        return result;
     }
 }

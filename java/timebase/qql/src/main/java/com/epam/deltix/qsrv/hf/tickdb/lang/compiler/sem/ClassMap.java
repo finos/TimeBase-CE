@@ -150,6 +150,10 @@ public final class ClassMap {
         ei = new EnumClassInfo (ecd);
         
         typeEnv.bind (NamedObjectType.TYPE, ecd.getName (), ei);
+        String shortName = EnvironmentFrame.shortName(ecd.getName());
+        if (shortName != null) {
+            typeEnv.bind(NamedObjectType.TYPE, shortName, ei);
+        }
         infoMap.put (ecd, ei);
         
         return (ei);
@@ -170,7 +174,7 @@ public final class ClassMap {
             pci.directSubclasses.add(ci);
 
         typeEnv.bind(NamedObjectType.TYPE, rcd.getName(), ci);
-        String shortName = shortName(rcd.getName());
+        String shortName = EnvironmentFrame.shortName(rcd.getName());
         if (shortName != null) {
             typeEnv.bind(NamedObjectType.TYPE, shortName, ci);
         }
@@ -194,13 +198,6 @@ public final class ClassMap {
         return (ci);
     }
 
-    private static String shortName(String name) {
-        if (name == null)
-            return null;
-        int i = name.lastIndexOf(".");
-        return i == -1 || i == name.length() ? null: name.substring(i + 1);
-    }
-    
     public Set <RecordClassInfo>                getDirectSubclasses (RecordClassDescriptor rcd) {
         RecordClassInfo               ci = (RecordClassInfo) infoMap.get (rcd);
 

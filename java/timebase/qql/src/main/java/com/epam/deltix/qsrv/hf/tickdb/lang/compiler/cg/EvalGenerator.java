@@ -20,6 +20,7 @@ import com.epam.deltix.qsrv.hf.pub.md.ArrayDataType;
 import com.epam.deltix.qsrv.hf.pub.md.ClassDataType;
 import com.epam.deltix.qsrv.hf.pub.md.DataField;
 import com.epam.deltix.qsrv.hf.pub.md.DataType;
+import com.epam.deltix.qsrv.hf.pub.md.EnumDataType;
 import com.epam.deltix.qsrv.hf.pub.md.IntegerDataType;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.values.ValueBean;
@@ -399,6 +400,9 @@ class EvalGenerator {
         } else if (e instanceof ParseTimestampFunction) {
             genParseTimestampExpression((ParseTimestampFunction) e, outValue);
         } else {
+            if (e instanceof FieldSelector) {
+                throw new IllegalStateException("Field '" + e.name + "' is unknown for the context.");
+            }
             throw new UnsupportedOperationException(e.getClass().getName());
         }
     }
@@ -515,14 +519,12 @@ class EvalGenerator {
         QValue array = genEval(e.compiledSelector);
         QValue indexValue = genEval(e.compiledPredicate);
 
-        this.addTo.add(
-            outValue.write(
-                CTXT.staticCall(
-                    ARRT.class, "indexOf", array.read(),
-                    CTXT.staticCall(Conversions.class, "int32", indexValue.read())
-                )
-            )
-        );
+        if (array instanceof QArrayValue) {
+            QArrayValue arrayValue = (QArrayValue) array;
+            this.addTo.add(outValue.write(arrayValue.indexOf(indexValue.read())));
+        } else {
+            throw new IllegalStateException("Array value required");
+        }
     }
 
     private void genArrayBooleanIndexer(ArrayBooleanIndexer e, QValue outValue) {
@@ -888,6 +890,8 @@ class EvalGenerator {
             ((ClassDataType) ((ArrayDataType) castArrayClassType.type).getElementDataType()).getDescriptors();
 
         JCompoundStatement ifBody = CTXT.compStmt();
+        ifBody.add(outArray.setEmpty());
+
         JLocalVariable len = ifBody.addVar(Modifier.FINAL, int.class, "len", array.startRead());
         JLocalVariable ii = ifBody.addVar(0, int.class, "ii");
 
@@ -908,8 +912,10 @@ class EvalGenerator {
                 sw.addBreak();
             }
         }
-        sw.addDefaultLabel();
-        sw.add(outArray.write(CTXT.nullLiteral()));
+        if (castArrayClassType.preserveNulls) {
+            sw.addDefaultLabel();
+            sw.add(outArray.write(CTXT.nullLiteral()));
+        }
         forBody.add(sw);
 
         ifBody.add(
@@ -937,11 +943,11 @@ class EvalGenerator {
     }
 
     public void genCastPrimitiveType(CastPrimitiveType castPrimitiveType, QValue value, QValue outValue) {
-        addTo.add(
-            outValue.write(
-                getCastPrimitiveType(castPrimitiveType, value.read())
-            )
-        );
+        if (castPrimitiveType.sourceType instanceof EnumDataType) {
+            addTo.add(outValue.write(getCastEnumType(castPrimitiveType, value)));
+        } else {
+            addTo.add(outValue.write(getCastPrimitiveType(castPrimitiveType, value.read())));
+        }
     }
 
     public void genCastArrayPrimitiveType(CastPrimitiveType castPrimitiveType, QArrayValue value, QArrayValue outValue) {
@@ -983,6 +989,22 @@ class EvalGenerator {
             return castPrimitiveType.targetNumeric.castFrom(value, castPrimitiveType.sourceNumeric);
         } else {
             return castPrimitiveType.targetNumeric.read(value, castPrimitiveType.sourceNumeric);
+        }
+    }
+
+    public JExpr getCastEnumType(CastPrimitiveType castPrimitiveType, QValue value) {
+        if (!(value.type instanceof QEnumType)) {
+            throw new IllegalStateException("Invalid value type: " + value);
+        }
+
+        if (castPrimitiveType.type.isNullable()) {
+            return CTXT.condExpr(
+                value.type.checkNull(value.read(), true),
+                castPrimitiveType.targetNumeric.nullExpression(),
+                castPrimitiveType.targetNumeric.cast(value.read())
+            );
+        } else {
+            return castPrimitiveType.targetNumeric.cast(value.read());
         }
     }
 

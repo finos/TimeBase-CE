@@ -108,13 +108,13 @@ public class DownloadHandlerFactory {
             try {
                 cursor = db.executeQuery (qql, options, streams, ids, initTime, endTimestamp, params);
             } catch (CompilationException x) {
-                UserLogger.severe(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "Query stream error: ", x);
+                UserLogger.warn(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "Query stream error: ", x);
 
                 dout.writeBoolean (false);
                 AeronDownloadHandler.writeException(new CompilationException(x.getClass().getSimpleName() + ": " + x.diag, x.location), binary, dout);
                 throw new DownloadHandler.QueryCompilationFailed();
             } catch (RuntimeException x) {
-                UserLogger.severe(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "Query stream error: ", x);
+                UserLogger.error(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "Query stream error: ", x);
 
                 dout.writeBoolean (false);
                 AeronDownloadHandler.writeException(x, binary, dout);

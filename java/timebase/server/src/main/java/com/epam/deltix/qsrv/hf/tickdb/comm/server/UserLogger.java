@@ -79,6 +79,10 @@ public class UserLogger {
         log(LogLevel.WARN, user, address, appId, message, error);
     }
 
+    public static void      error(Principal user, String address, String appId, String message, Throwable error) {
+        log(LogLevel.ERROR, user, address, appId, message, error);
+    }
+
     public static void      severe (Principal user, String address, String appId, String message, Throwable error) {
         log(LogLevel.FATAL, user, address, appId, message, error);
     }

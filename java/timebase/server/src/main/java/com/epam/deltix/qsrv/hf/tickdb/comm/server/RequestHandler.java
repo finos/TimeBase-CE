@@ -293,8 +293,9 @@ public class RequestHandler extends QuickExecutor.QuickTask {
                 if (x instanceof UnknownStreamException) {
                     if (req != TDBProtocol.REQ_GET_BG_PROCESS)
                         TickDBServer.LOGGER.log (Level.FINE, "Request handling error: " + x.getMessage());
-                }
-                else if (!(x instanceof StreamLockedException || minorTopicException)) {
+                } else if (x instanceof CompilationException) {
+                    TickDBServer.LOGGER.log (Level.WARNING, "Request handling error; query compilation exception: ", x);
+                } else if (!(x instanceof StreamLockedException || minorTopicException)) {
                     TickDBServer.LOGGER.log (Level.SEVERE, "Request handling error; sending to client: ", x);
                 }
 

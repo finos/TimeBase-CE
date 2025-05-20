@@ -231,7 +231,7 @@ class UploadHandler extends QuickExecutor.QuickTask implements LockEventListener
             closeLoader();
             close();
         } catch (Throwable iox) {
-            UserLogger.severe(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "[" + stream.getKey() + "]. Error while loading data.", iox);
+            UserLogger.error(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "[" + stream.getKey() + "]. Error while loading data.", iox);
             //TickDBServer.LOGGER.log (Level.SEVERE, "IOException on upload:", iox);
             closeAll();
         }

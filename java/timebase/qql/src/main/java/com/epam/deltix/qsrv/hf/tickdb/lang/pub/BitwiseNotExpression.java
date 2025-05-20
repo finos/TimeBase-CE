@@ -14,21 +14,22 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.epam.deltix.qsrv.hf.tickdb.lang.errors;
-
-import com.epam.deltix.qsrv.hf.pub.md.DataType;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
-import com.epam.deltix.util.parsers.CompilationException;
+package com.epam.deltix.qsrv.hf.tickdb.lang.pub;
 
 /**
  *
  */
-public class MismatchTypesException extends CompilationException {
-    public MismatchTypesException(Expression e, DataType[] types) {
-        super(
-            "Illegal type in: " + e +
-            "; Types should be equal; found : " + DataTypeToStringUtils.toString(types),
-            e
-        );
+public final class BitwiseNotExpression extends ComplexExpression {
+    public BitwiseNotExpression(long location, Expression arg) {
+        super(location, arg);
+    }
+
+    public BitwiseNotExpression(Expression arg) {
+        this(NO_LOCATION, arg);
+    }
+
+    @Override
+    protected void print(int outerPriority, StringBuilder s) {
+        printPrefix(outerPriority, "~", OpPriority.ADDITION, s);
     }
 }

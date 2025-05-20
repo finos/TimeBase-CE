@@ -17,18 +17,26 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.errors;
 
 import com.epam.deltix.qsrv.hf.pub.md.DataType;
-import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CastTypeExpression;
 import com.epam.deltix.util.parsers.CompilationException;
+import com.epam.deltix.util.parsers.Element;
 
 /**
  *
  */
-public class MismatchTypesException extends CompilationException {
-    public MismatchTypesException(Expression e, DataType[] types) {
-        super(
-            "Illegal type in: " + e +
-            "; Types should be equal; found : " + DataTypeToStringUtils.toString(types),
-            e
-        );
+public class CastException extends CompilationException {
+    public CastException(DataType parentType, DataType targetType, Element elem) {
+        super ("Can't cast " + DataTypeToStringUtils.toString(parentType) + " to " +
+            DataTypeToStringUtils.toString(targetType), elem);
+    }
+
+    public CastException(DataType parentType, CastTypeExpression targetType, Element elem) {
+        super ("Can't cast " + DataTypeToStringUtils.toString(parentType) + " to " + getTypeString(targetType), elem);
+    }
+
+    private static String getTypeString(CastTypeExpression type) {
+        StringBuilder sb = new StringBuilder();
+        type.print(sb);
+        return sb.toString();
     }
 }

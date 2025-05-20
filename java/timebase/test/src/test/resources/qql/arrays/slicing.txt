@@ -408,25 +408,25 @@ Running QQL: select (entries.attributes as array(deltix.CustomAttribute)).key as
 res1 : 4 [Key #5101, Key #5103, Key #5111, Key #5113]
 res1 : 4 [Key #5201, Key #5203, Key #5211, Key #5213]
 res1 : 6 [Key #5301, Key #5303, Key #5311, Key #5313, Key #5321, Key #5323]
-res1 : NULL
-res1 : NULL
+res1 : 0 []
+res1 : 0 []
 res1 : 6 [Key #5601, Key #5603, Key #5611, Key #5613, Key #5621, Key #5623]
-res1 : NULL
-res1 : NULL
+res1 : 0 []
+res1 : 0 []
 res1 : 6 [Key #5901, Key #5903, Key #5911, Key #5913, Key #5921, Key #5923]
-res1 : NULL
+res1 : 0 []
 !END
 Running QQL: select (entries.attributes as array(deltix.FixAttribute)).key as res1 from packages
 res1 : 4 [5100, 5102, 5110, 5112]
 res1 : 4 [5200, 5202, 5210, 5212]
 res1 : 9 [5300, 5302, 5304, 5310, 5312, 5314, 5320, 5322, 5324]
-res1 : NULL
-res1 : NULL
+res1 : 0 []
+res1 : 0 []
 res1 : 9 [5600, 5602, 5604, 5610, 5612, 5614, 5620, 5622, 5624]
-res1 : NULL
-res1 : NULL
+res1 : 0 []
+res1 : 0 []
 res1 : 9 [5900, 5902, 5904, 5910, 5912, 5914, 5920, 5922, 5924]
-res1 : NULL
+res1 : 0 []
 !END
 Running QQL: select ((entries.price + 3) * 10) as res1 from packages
 res1 : 6 [20130.0, 19920.0, 20130.0, 19910.0, 50030.0, 49920.0]

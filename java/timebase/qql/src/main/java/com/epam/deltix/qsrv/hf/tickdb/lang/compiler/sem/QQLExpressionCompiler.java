@@ -138,8 +138,15 @@ public class QQLExpressionCompiler {
         if (e instanceof ArithmeticExpression)
             return (compileArithmeticExpression((ArithmeticExpression) e, expectedType));
 
+        if (e instanceof BitwiseExpression)
+            return (compileBitwiseExpression((BitwiseExpression) e, expectedType));
+
         if (e instanceof UnaryMinusExpression)
             return (compileUnaryMinusExpression((UnaryMinusExpression) e, expectedType));
+
+        if (e instanceof BitwiseNotExpression) {
+            return (compileBitwiseNotExpression((BitwiseNotExpression) e, expectedType));
+        }
 
         if (e instanceof AndExpression)
             return (compileAndExpression((AndExpression) e, expectedType));
@@ -869,6 +876,34 @@ public class QQLExpressionCompiler {
         return new ArithmeticOperation(e.function, left, right);
     }
 
+    private CompiledExpression<?> compileBitwiseExpression(BitwiseExpression e, DataType expectedType) {
+        CompiledExpression<?> left = compile(e.getLeft(), null);
+        CompiledExpression<?> right = compile(e.getRight(), null);
+
+        BitwiseOperation.validateArgs(e, left, right);
+
+        left = convertBitwiseIfNecessary(e, left, right);
+        right = convertBitwiseIfNecessary(e, right, left);
+
+        if (left instanceof CompiledConstant && right instanceof CompiledConstant) {
+            return ConstantsProcessor.compute(e, (CompiledConstant) left, (CompiledConstant) right);
+        }
+
+        return new BitwiseOperation(e.function, left, right);
+    }
+
+    private CompiledExpression<?> convertBitwiseIfNecessary(BitwiseExpression e, CompiledExpression<?> x, CompiledExpression<?> other) {
+        if (x.type instanceof EnumDataType) {
+            if (other.type instanceof IntegerDataType) {
+                return compileCastExpression(e, (CompiledExpression<DataType>) x, other.type);
+            } else if (other.type instanceof EnumDataType) {
+                return compileCastExpression(e, (CompiledExpression<DataType>) x, StandardTypes.NULLABLE_INTEGER);
+            }
+        }
+
+        return x;
+    }
+
     private CompiledExpression<?> compileUnaryMinusExpression(UnaryMinusExpression e, DataType expectedType) {
         CompiledExpression<?> arg = compile(e.getArgument(), null);
 
@@ -903,6 +938,33 @@ public class QQLExpressionCompiler {
         } else
             throw new UnexpectedTypeException(e, argType, StandardTypes.CLEAN_FLOAT);
     }
+
+    private CompiledExpression<?> compileBitwiseNotExpression(BitwiseNotExpression e, DataType expectedType) {
+        CompiledExpression<?> arg = compile(e.getArgument(), null);
+
+        BitwiseNotOperation.validate(e, arg);
+
+        if (arg instanceof CompiledConstant) {
+            return computeBitwiseNotExpression(e, (CompiledConstant) arg);
+        }
+
+        return new BitwiseNotOperation(arg, arg.type);
+    }
+
+    private CompiledConstant computeBitwiseNotExpression(BitwiseNotExpression e, CompiledConstant arg) {
+        DataType argType = arg.type;
+        if (argType instanceof IntegerDataType) {
+            long a = arg.getLong();
+            return new CompiledConstant(
+                StandardTypes.getIntegerDataType(
+                    ((IntegerDataType) argType).getNativeTypeSize(), argType.isNullable()
+                ), ~a
+            );
+        } else {
+            throw new UnexpectedTypeException(e, argType, StandardTypes.CLEAN_INTEGER);
+        }
+    }
+
 
     private CompiledExpression<?> compileAndExpression(AndExpression e, DataType expectedType) {
         CompiledExpression<?> left = compile(e.getLeft(), null);
@@ -1353,7 +1415,7 @@ public class QQLExpressionCompiler {
                 if (tsInit != null)
                     throw new DuplicateNameException(oe, name);
 
-                tsInit = e;
+                tsInit = e;            
             } else if (KEYWORD_SYMBOL.equals(name)) {
                 if (symbolInit != null)
                     throw new DuplicateNameException(oe, name);
@@ -1408,9 +1470,6 @@ public class QQLExpressionCompiler {
 
             if (symbolInit == null)
                 symbolInit = new CompiledConstant(StandardTypes.CLEAN_VARCHAR, "");
-
-//            if (typeInit == null)
-//                typeInit = new CompiledConstant(StdEnvironment.INSTR_TYPE_ENUM, InstrumentType.SYSTEM.ordinal());
         }
 
         String typeName = typeId != null ? typeId.typeName : null;
@@ -1672,7 +1731,7 @@ public class QQLExpressionCompiler {
             }
 
             boolean aggregate = !e.isRunning() &&
-                    ((compiledSelector != null && compiledSelector.impliesAggregation()) || groupBy != null);
+                    ((compiledSelector != null && compiledSelector.impliesAggregation()) || groupBy != null || selectLast);
 
             CompiledFilter.RunningFilter runningFilter =
                     selectFirst ?
@@ -2197,7 +2256,11 @@ public class QQLExpressionCompiler {
         if (e.castType instanceof CastTypeIdExpression) {
             CastTypeIdExpression castTypeId = (CastTypeIdExpression) e.castType;
             try {
-                lookUpType(castTypeId);
+                Object type = lookUpType(castTypeId);
+                if (type instanceof ClassMap.EnumClassInfo) {
+                    // can't cast to enum
+                    throw new RuntimeException();
+                }
             } catch (Throwable t) {
                 return new NamedExpression(e.location, e.expression, castTypeId.typeId.typeName);
             }
@@ -2224,8 +2287,7 @@ public class QQLExpressionCompiler {
 
     private CompiledExpression<DataType> compileCastExpression(AsExpression e) {
         CompiledExpression<DataType> parent = compile(e.expression, null);
-        DataType castDataType = getCastDataType(e, parent.type == null || parent.type.isNullable());
-        return compileCastExpression(e, parent, castDataType);
+        return compileCastExpression(e, parent, getCastDataType(e, parent.type));
     }
 
     private CompiledExpression<DataType> compileCastExpression(Expression e, CompiledExpression<DataType> parent, DataType castDataType) {
@@ -2252,7 +2314,11 @@ public class QQLExpressionCompiler {
 
             if (parentElementType instanceof ClassDataType && castElementType instanceof ClassDataType) {
                 if (isCastRequired((ClassDataType) parentElementType, (ClassDataType) castElementType)) {
-                    return new CastArrayClassType(parent, (ArrayDataType) parent.type, castDataType);
+                    boolean preserveNulls = false;
+                    if (e instanceof AsExpression && ((AsExpression) e).castType instanceof CastArrayTypeExpression) {
+                        preserveNulls = ((CastArrayTypeExpression) ((AsExpression) e).castType).preserveNulls;
+                    }
+                    return new CastArrayClassType(parent, (ArrayDataType) parent.type, castDataType, preserveNulls);
                 } else {
                     return parent;
                 }
@@ -2279,6 +2345,12 @@ public class QQLExpressionCompiler {
             return new CastPrimitiveType(parent, parent.type, castDataType, sourceNumeric, numeric, false);
         }
 
+        if (parent.type instanceof EnumDataType && castDataType instanceof IntegerDataType) {
+            EnumDataType enumType = (EnumDataType) parent.type;
+            NumericType sourceNumericType = numericIntTypeFromSize(enumType.getDescriptor().computeStorageSize());
+            return new CastPrimitiveType(parent, parent.type, castDataType, sourceNumericType, numeric, false);
+        }
+
         if (castDataType instanceof VarcharDataType) {
             return new CastToVarchar(castDataType, parent);
         }
@@ -2294,7 +2366,7 @@ public class QQLExpressionCompiler {
             return new ParsePrimitive(castDataType, parent);
         }
 
-        throw new CompilationException("Can't cast " + parent.type.getBaseName() + " to " + castDataType.getBaseName(), e);
+        throw new CastException(parent.type, castDataType, e);
     }
 
     private CompiledExpression<DataType> compileConstantCast(CompiledConstant parent, DataType targetType) {
@@ -2310,17 +2382,7 @@ public class QQLExpressionCompiler {
 
     private NumericType getNumericType(DataType type) {
         if (type instanceof IntegerDataType) {
-            int size = ((IntegerDataType) type).getNativeTypeSize();
-            switch (size) {
-                case 1:
-                    return NumericType.Int8;
-                case 2:
-                    return NumericType.Int16;
-                case 4:
-                    return NumericType.Int32;
-                case 8:
-                    return NumericType.Int64;
-            }
+            return numericIntTypeFromSize(((IntegerDataType) type).getNativeTypeSize());
         } else if (type instanceof FloatDataType) {
             if (((FloatDataType) type).isDecimal64()) {
                 return NumericType.Decimal64;
@@ -2340,37 +2402,182 @@ public class QQLExpressionCompiler {
         return null;
     }
 
+    private NumericType numericIntTypeFromSize(int size) {
+        switch (size) {
+            case 1:
+                return NumericType.Int8;
+            case 2:
+                return NumericType.Int16;
+            case 4:
+                return NumericType.Int32;
+            case 8:
+                return NumericType.Int64;
+        }
+
+        throw new RuntimeException("Illegal Integer Numeric size: " + size);
+    }
+
     private boolean isCastRequired(ClassDataType sourceType, ClassDataType type) {
         return !Arrays.equals(sourceType.getDescriptors(), type.getDescriptors());
     }
 
-    private DataType getCastDataType(AsExpression e, boolean isNullable) {
+    private DataType getCastDataType(AsExpression e, DataType parentType) {
+        if (parentType == null) {
+            return getCastDataType(e);
+        }
+
         if (e.castType instanceof CastTypeIdExpression) {
-            return compileCastTypeIdExpression((CastTypeIdExpression) e.castType, isNullable);
+            return getCastDataType(e.castType, (CastTypeIdExpression) e.castType, parentType);
         } else if (e.castType instanceof CastObjectTypeExpression) {
             CastObjectTypeExpression castObjectType = (CastObjectTypeExpression) e.castType;
-            return new ClassDataType(
-                    true,
-                    collectDescriptors(castObjectType.typeIdList)
-            );
+            RecordClassDescriptor[] descriptors = collectCastDescriptors(castObjectType.typeIdList, parentType);
+            if (descriptors.length == 0) {
+                throw new CastException(parentType, e.castType, e);
+            }
+            return new ClassDataType(true, descriptors);
         } else if (e.castType instanceof CastArrayTypeExpression) {
             CastArrayTypeExpression castArrayType = (CastArrayTypeExpression) e.castType;
             List<CastTypeIdExpression> castTypeIds = castArrayType.typeIdList;
-
             if (castTypeIds.size() > 1) {
+                RecordClassDescriptor[] descriptors = collectCastDescriptors(castTypeIds, parentType);
+                if (descriptors.length == 0) {
+                    throw new CastException(parentType, e.castType, e);
+                }
                 return new ArrayDataType(
-                    isNullable,
-                        new ClassDataType(true, collectDescriptors(castTypeIds))
+                    parentType.isNullable(),
+                    new ClassDataType(true, descriptors)
                 );
             } else {
                 return new ArrayDataType(
-                    isNullable,
-                    compileCastTypeIdExpression(castTypeIds.get(0), isNullable)
+                    parentType.isNullable(),
+                    getCastDataType(e.castType, castTypeIds.get(0), parentType)
                 );
             }
         }
 
         return null;
+    }
+
+    private DataType getCastDataType(AsExpression e) {
+        if (e.castType instanceof CastTypeIdExpression) {
+            return getCastDataType((CastTypeIdExpression) e.castType);
+        } else if (e.castType instanceof CastObjectTypeExpression) {
+            List<ClassMap.RecordClassInfo> rcis = collectClassInfo(((CastObjectTypeExpression) e.castType).typeIdList);
+            return new ClassDataType(true, rcis.stream().map(rci -> rci.cd).toArray(RecordClassDescriptor[]::new));
+        } else if (e.castType instanceof CastArrayTypeExpression) {
+            CastArrayTypeExpression castArrayType = (CastArrayTypeExpression) e.castType;
+            List<CastTypeIdExpression> castTypeIds = castArrayType.typeIdList;
+            if (castTypeIds.size() > 1) {
+                List<ClassMap.RecordClassInfo> rcis = collectClassInfo(((CastObjectTypeExpression) e.castType).typeIdList);
+                return new ArrayDataType(
+                    true, new ClassDataType(true, rcis.stream().map(rci -> rci.cd).toArray(RecordClassDescriptor[]::new))
+                );
+            } else {
+                return new ArrayDataType(true, getCastDataType(castTypeIds.get(0)));
+            }
+        }
+
+        return null;
+    }
+
+    private DataType getCastDataType(CastTypeExpression baseCastType, CastTypeIdExpression castTypeId, DataType parentType) {
+        Object type = lookUpType(castTypeId);
+        if (type instanceof ClassMap.RecordClassInfo) {
+            RecordClassDescriptor[] descriptors = collectCastDescriptors((ClassMap.RecordClassInfo) type, parentType);
+            if (descriptors.length == 0) {
+                throw new CastException(parentType, baseCastType, baseCastType);
+            }
+            return new ClassDataType(true, descriptors);
+        } else if (type instanceof ClassMap.EnumClassInfo) {
+            return new EnumDataType(true, ((ClassMap.EnumClassInfo) type).cd);
+        } else if (type instanceof DataType) {
+            return ((DataType) type).nullableInstance(parentType.isNullable());
+        } else {
+            throw new CompilationException("Unknown type: " + castTypeId.typeId, castTypeId);
+        }
+    }
+
+    private DataType getCastDataType(CastTypeIdExpression castTypeId) {
+        Object type = lookUpType(castTypeId);
+        if (type instanceof ClassMap.RecordClassInfo) {
+            return new ClassDataType(true, ((ClassMap.RecordClassInfo) type).cd);
+        } else if (type instanceof ClassMap.EnumClassInfo) {
+            return new EnumDataType(true, ((ClassMap.EnumClassInfo) type).cd);
+        } else if (type instanceof DataType) {
+            return ((DataType) type).nullableInstance(true);
+        } else {
+            throw new CompilationException("Unknown type: " + castTypeId.typeId, castTypeId);
+        }
+    }
+
+    private RecordClassDescriptor[] collectCastDescriptors(List<CastTypeIdExpression> castTypeIds, DataType parentType) {
+        List<ClassMap.RecordClassInfo> rcis = collectClassInfo(castTypeIds);
+        Set<RecordClassDescriptor> parentDescriptors = getTypeDescriptors(parentType);
+        if (parentDescriptors == null) {
+            return rcis.stream().map(rci -> rci.cd).toArray(RecordClassDescriptor[]::new);
+        }
+
+        Set<RecordClassDescriptor> descriptors = new LinkedHashSet<>();
+        rcis.forEach(rci -> collectSubclasses(rci, parentDescriptors, descriptors));
+        return descriptors.toArray(new RecordClassDescriptor[0]);
+    }
+
+    private RecordClassDescriptor[] collectCastDescriptors(ClassMap.RecordClassInfo rci, DataType parentType) {
+        Set<RecordClassDescriptor> parentDescriptors = getTypeDescriptors(parentType);
+        if (parentDescriptors == null) {
+            return new RecordClassDescriptor[]{rci.cd};
+        }
+
+        Set<RecordClassDescriptor> descriptors = collectSubclasses(rci, parentDescriptors, new LinkedHashSet<>());
+        return descriptors.toArray(new RecordClassDescriptor[0]);
+    }
+
+    private Set<RecordClassDescriptor> getTypeDescriptors(DataType type) {
+        RecordClassDescriptor[] parentDescriptors;
+        if (type instanceof ClassDataType) {
+            parentDescriptors = ((ClassDataType) type).getDescriptors();
+        } else if (type instanceof ArrayDataType &&
+            ((ArrayDataType) type).getElementDataType() instanceof ClassDataType) {
+
+            parentDescriptors = ((ClassDataType) ((ArrayDataType) type).getElementDataType()).getDescriptors();
+        } else {
+            return null;
+        }
+
+        return new LinkedHashSet<>(Arrays.asList(parentDescriptors));
+    }
+
+    private Set<RecordClassDescriptor> collectSubclasses(ClassMap.RecordClassInfo rci,
+                                                         Set<RecordClassDescriptor> castTypeMap,
+                                                         Set<RecordClassDescriptor> result) {
+        if (castTypeMap.contains(rci.cd)) {
+            result.add(rci.cd);
+        }
+        rci.directSubclasses.forEach(subRci -> collectSubclasses(subRci, castTypeMap, result));
+        return result;
+    }
+
+    private List<ClassMap.RecordClassInfo> collectClassInfo(List<CastTypeIdExpression> castTypeIds) {
+        Set<RecordClassDescriptor> descriptors = new HashSet<>();
+        List<ClassMap.RecordClassInfo> rcis = new ArrayList<>();
+        for (int i = 0; i < castTypeIds.size(); ++i) {
+            CastTypeIdExpression castTypeId = castTypeIds.get(i);
+            Object type = lookUpType(castTypeId);
+            if (type instanceof ClassMap.RecordClassInfo) {
+                ClassMap.RecordClassInfo rci = (ClassMap.RecordClassInfo) type;
+                RecordClassDescriptor descriptor = rci.cd;
+                if (descriptors.contains(descriptor)) {
+                    throw new CompilationException("Duplicate descriptor", castTypeId);
+                } else {
+                    descriptors.add(descriptor);
+                    rcis.add(rci);
+                }
+            } else {
+                throw new CompilationException("Invalid object type: " + castTypeId.typeId, castTypeId);
+            }
+        }
+
+        return rcis;
     }
 
     private Object lookUpType(CastTypeIdExpression castTypeId) {
@@ -2383,39 +2590,6 @@ public class QQLExpressionCompiler {
         } catch (Throwable t) {
             return classMap.lookUpClass(castTypeId.typeId);
         }
-    }
-
-    private DataType compileCastTypeIdExpression(CastTypeIdExpression castTypeId, boolean nullable) {
-        Object type = lookUpType(castTypeId);
-        if (type instanceof DataType) {
-            return ((DataType) type).nullableInstance(nullable);
-        } else if (type instanceof ClassMap.RecordClassInfo) {
-            return new ClassDataType(true, ((ClassMap.RecordClassInfo) type).cd);
-        } else if (type instanceof ClassMap.EnumClassInfo) {
-            return new EnumDataType(true, ((ClassMap.EnumClassInfo) type).cd);
-        } else {
-            throw new CompilationException("Unknown type: " + castTypeId.typeId, castTypeId);
-        }
-    }
-
-    private RecordClassDescriptor[] collectDescriptors(List<CastTypeIdExpression> castTypeIds) {
-        List<RecordClassDescriptor> descriptors = new ArrayList<>();
-        for (int i = 0; i < castTypeIds.size(); ++i) {
-            CastTypeIdExpression castTypeId = castTypeIds.get(i);
-            Object type = lookUpType(castTypeId);
-            if (type instanceof ClassMap.RecordClassInfo) {
-                RecordClassDescriptor descriptor = ((ClassMap.RecordClassInfo) type).cd;
-                if (descriptors.contains(descriptor)) {
-                    throw new CompilationException("Duplicate descriptor", castTypeId);
-                } else {
-                    descriptors.add(descriptor);
-                }
-            } else {
-                throw new CompilationException("Invalid object type: " + castTypeId.typeId, castTypeId);
-            }
-        }
-
-        return descriptors.toArray(new RecordClassDescriptor[0]);
     }
 
     private CompiledExpression<DataType> compileFieldAccessorExpression(FieldAccessorExpression e) {

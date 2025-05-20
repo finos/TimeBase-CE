@@ -38,6 +38,8 @@ public interface JExpr {
 
     public JExpr        negate ();
 
+    public JExpr        bitwiseNot();
+
     public JExpr        incAndGet ();
 
     public JExpr        decAndGet ();

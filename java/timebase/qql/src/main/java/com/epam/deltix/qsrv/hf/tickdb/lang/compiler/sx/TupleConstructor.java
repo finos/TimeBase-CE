@@ -109,6 +109,10 @@ public class TupleConstructor extends CompiledComplexExpression {
         return (((ClassDataType) type).getDescriptors());
     }
 
+    public boolean hasConditions() {
+        return typeToCondition.values().stream().anyMatch(Objects::nonNull);
+    }
+
     public CompiledExpression getTimestampInitializer() {
         return (args[0]);
     }

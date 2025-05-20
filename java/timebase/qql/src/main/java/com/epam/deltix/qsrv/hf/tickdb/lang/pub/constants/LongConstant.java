@@ -17,17 +17,54 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.pub.constants;
 
 import com.epam.deltix.util.lang.Util;
+import com.epam.deltix.util.parsers.CompilationException;
 
 public class LongConstant extends Constant {
     public final long value;
 
-    public LongConstant(long location, String value) {
+    public LongConstant(long location, long value) {
         super(location);
-        this.value = Long.parseLong(value.substring(0, value.length() - 1));
+        this.value = value;
     }
 
-    public LongConstant(String value) {
+    public LongConstant(long value) {
         this(NO_LOCATION, value);
+    }
+
+    public static LongConstant parse(String value) {
+        return parse(NO_LOCATION, value, 10);
+    }
+
+    public static LongConstant parse(long location, String value) {
+        return parse(location, value, 10);
+    }
+
+    public static LongConstant parseBitVal(long location, String value) {
+        if (!value.toLowerCase().startsWith("0b")) {
+            throw new CompilationException("Invalid bit value '" + value + "'", location);
+        }
+
+        return parse(location, value.substring(2), 2);
+    }
+
+    public static LongConstant parseHexVal(long location, String value) {
+        if (!value.toLowerCase().startsWith("0x")) {
+            throw new CompilationException("Invalid hex value '" + value + "'", location);
+        }
+
+        return parse(location, value.substring(2), 16);
+    }
+
+    public static LongConstant parse(long location, String value, int radix) {
+        try {
+            if (value.toLowerCase().endsWith("l")) {
+                value = value.substring(0, value.length() - 1);
+            }
+
+            return new LongConstant(location, Long.parseLong(value, radix));
+        } catch (NumberFormatException e) {
+            throw new CompilationException("Failed to parse numeric value '" + value + "'", location);
+        }
     }
 
     protected void print(int outerPriority, StringBuilder s) {

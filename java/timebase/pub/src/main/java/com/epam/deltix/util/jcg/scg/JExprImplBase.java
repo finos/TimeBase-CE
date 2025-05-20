@@ -350,6 +350,17 @@ abstract class JExprImplBase implements JExpr, Printable {
         };
     }
 
+
+    @Override
+    public JExpr bitwiseNot() {
+        return new X2(this) {
+            @Override
+            public void print(int outerPriority, SourceCodePrinter out) throws IOException {
+                printPrefix(outerPriority, "~", JavaOpPriority.UNARY, (JExprImplBase) arg, out);
+            }
+        };
+    }
+
     @Override
     public JStatement   throwStmt () {
         return (

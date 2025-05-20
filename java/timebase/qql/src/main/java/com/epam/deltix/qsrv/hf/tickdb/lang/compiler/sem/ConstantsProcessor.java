@@ -24,6 +24,8 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledConstant;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.IllegalTypeCombinationException;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.ArithmeticExpression;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.ArithmeticFunction;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.BitwiseExpression;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.BitwiseFunction;
 import com.epam.deltix.util.collections.generated.DoubleArrayList;
 import com.epam.deltix.util.collections.generated.IntegerArrayList;
 import com.epam.deltix.util.collections.generated.LongArrayList;
@@ -578,6 +580,87 @@ class ConstantsProcessor {
             list.add(compute(function, a.getInteger(i), b.getInteger(i)));
         }
         return list;
+    }
+
+    static CompiledConstant compute(BitwiseExpression e, CompiledConstant left, CompiledConstant right) {
+        DataType leftType = left.type;
+        DataType rightType = right.type;
+        if (leftType instanceof IntegerDataType && rightType instanceof IntegerDataType) {
+            return compute(e.function, left, right, (IntegerDataType) leftType, (IntegerDataType) rightType);
+        } else {
+            throw new IllegalTypeCombinationException(e, leftType, rightType);
+        }
+    }
+
+    static CompiledConstant compute(BitwiseFunction function, CompiledConstant left, CompiledConstant right,
+                                    IntegerDataType leftType, IntegerDataType rightType) {
+        if (leftType.getNativeTypeSize() == 8 || rightType.getNativeTypeSize() == 8) {
+            long a = left.getLong();
+            long b = right.getLong();
+            long res = compute(function, a, b);
+            return new CompiledConstant(
+                StandardTypes.INT64_CONTAINER.getType(true),
+                TimebaseTypes.isNull(res) ? null : res
+            );
+        } else {
+            int a = left.getInteger();
+            int b = right.getInteger();
+            int res = compute(function, a, b);
+            return new CompiledConstant(
+                StandardTypes.INT32_CONTAINER.getType(true),
+                TimebaseTypes.isNull(res) ? null : res
+            );
+        }
+    }
+
+    static long compute(BitwiseFunction function, long a, long b) {
+        return compute(function, a, b, false);
+    }
+
+    static long compute(BitwiseFunction function, long a, long b, boolean swap) {
+        if (TimebaseTypes.isNull(a) || TimebaseTypes.isNull(b)) {
+            return TimebaseTypes.INT64_NULL;
+        }
+
+        switch (function) {
+            case AND:
+                return a & b;
+            case OR:
+                return a | b;
+            case XOR:
+                return a ^ b;
+            case RSHIFT:
+                return swap ? b >> a : a >> b;
+            case LSHIFT:
+                return swap ? b << a : a << b;
+            default:
+                throw new RuntimeException();
+        }
+    }
+
+    static int compute(BitwiseFunction function, int a, int b) {
+        return compute(function, a, b, false);
+    }
+
+    static int compute(BitwiseFunction function, int a, int b, boolean swap) {
+        if (TimebaseTypes.isNull(a) || TimebaseTypes.isNull(b)) {
+            return TimebaseTypes.INT32_NULL;
+        }
+
+        switch (function) {
+            case AND:
+                return a & b;
+            case OR:
+                return a | b;
+            case XOR:
+                return a ^ b;
+            case RSHIFT:
+                return swap ? b >> a : a >> b;
+            case LSHIFT:
+                return swap ? b << a : a << b;
+            default:
+                throw new RuntimeException();
+        }
     }
 
 }

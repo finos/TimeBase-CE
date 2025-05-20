@@ -55,25 +55,27 @@ public class QQLCompilerUtils {
             DataType type = types[i];
             if (baseType instanceof ClassDataType) {
                 if (!(type instanceof ClassDataType)) {
-                    throw new MismatchTypesException(e, types);
+                    throw new MismatchTypesException(e, new DataType[]{baseType, type});
                 }
             } else if (baseType instanceof ArrayDataType) {
                 if (type instanceof ArrayDataType) {
                     if (!simpleTypesAreEquals(((ArrayDataType) baseType).getElementDataType(), ((ArrayDataType) type).getElementDataType())) {
-                        throw new MismatchTypesException(e, types);
+                        throw new MismatchTypesException(e,
+                            new DataType[] {((ArrayDataType) baseType).getElementDataType(), ((ArrayDataType) type).getElementDataType()}
+                        );
                     }
                 } else {
-                    throw new MismatchTypesException(e, types);
+                    throw new MismatchTypesException(e, new DataType[]{baseType, type});
                 }
             } else if (baseType instanceof EnumDataType && type instanceof EnumDataType) {
                 EnumDataType baseEnumType = (EnumDataType) baseType;
                 EnumDataType enumType = (EnumDataType) type;
                 if (!baseEnumType.getBaseName().equalsIgnoreCase(enumType.getBaseName())) {
-                    throw new MismatchTypesException(e, types);
+                    throw new MismatchTypesException(e, new DataType[]{baseType, type});
                 }
             } else {
                 if (!simpleTypesAreEquals(baseType, type)) {
-                    throw new MismatchTypesException(e, types);
+                    throw new MismatchTypesException(e, new DataType[]{baseType, type});
                 }
             }
         }

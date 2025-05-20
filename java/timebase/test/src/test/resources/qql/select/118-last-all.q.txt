@@ -1,0 +1,49 @@
+set printJson true
+set max 10
+
+test select last(*) from tickquerydemo
+0: {"$type":"deltix.timebase.api.messages.TradeMessage","symbol":"GREATCO","timestamp":"2011-10-17T17:21:44.000Z","price":"44.0","size":"100.0"}
+!end
+
+test select last(*) from reverse(tickquerydemo)
+0: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"GREATCO","timestamp":"2011-10-17T17:21:40.000Z","offerPrice":"43.5","offerSize":"100.0","bidPrice":"42.5","bidSize":"200.0"}
+!end
+
+test select last(*) from tickquerydemo where this is BestBidOfferMessage
+0: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"XBANK","timestamp":"2011-10-17T17:21:43.000Z","offerPrice":"299.5","offerSize":"40000.0","bidPrice":"295.0","bidSize":"300.0"}
+!end
+
+test select last(*) from tickquerydemo where this is TradeMessage
+0: {"$type":"deltix.timebase.api.messages.TradeMessage","symbol":"GREATCO","timestamp":"2011-10-17T17:21:44.000Z","price":"44.0","size":"100.0"}
+!end
+
+test select * from tickquerydemo where this is BestBidOfferMessage and timestamp <= '2011-10-17 17:21:42'd
+0: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"GREATCO","timestamp":"2011-10-17T17:21:40.000Z","offerPrice":"43.5","offerSize":"100.0","bidPrice":"42.5","bidSize":"200.0"}
+1: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"XBANK","timestamp":"2011-10-17T17:21:40.000Z","offerPrice":"301.75","offerSize":"40000.0","bidPrice":"301.25","bidSize":"800.0"}
+2: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"XBANK","timestamp":"2011-10-17T17:21:42.000Z","offerPrice":"301.5","offerSize":"60000.0","bidPrice":"298.5","bidSize":"800.0"}
+!end
+
+test select last(*) from tickquerydemo where this is BestBidOfferMessage and timestamp <= '2011-10-17 17:21:42'd
+0: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"XBANK","timestamp":"2011-10-17T17:21:42.000Z","offerPrice":"301.5","offerSize":"60000.0","bidPrice":"298.5","bidSize":"800.0"}
+!end
+
+test select last(*) from tickquerydemo where timestamp > '2011-10-17 17:21:42'd and bidPrice > 50
+0: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"XBANK","timestamp":"2011-10-17T17:21:43.000Z","offerPrice":"299.5","offerSize":"40000.0","bidPrice":"295.0","bidSize":"300.0"}
+!end
+
+test select last(*) from tickquerydemo group by symbol
+0: {"$type":"deltix.timebase.api.messages.TradeMessage","symbol":"GREATCO","timestamp":"2011-10-17T17:21:44.000Z","price":"44.0","size":"100.0"}
+1: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"XBANK","timestamp":"2011-10-17T17:21:43.000Z","offerPrice":"299.5","offerSize":"40000.0","bidPrice":"295.0","bidSize":"300.0"}
+!end
+
+test select Last(*) from (select * from reverse(tickquerydemo))
+0: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"GREATCO","timestamp":"2011-10-17T17:21:40.000Z","offerPrice":"43.5","offerSize":"100.0","bidPrice":"42.5","bidSize":"200.0"}
+!end
+
+test select Last(*) from (select * from reverse(tickquerydemo) where this is TradeMessage)
+0: {"$type":"deltix.timebase.api.messages.TradeMessage","symbol":"XBANK","timestamp":"2011-10-17T17:21:41.000Z","price":"301.25","size":"800.0"}
+!end
+
+test select last(*) from (select * from tickquerydemo where this is BestBidOfferMessage and timestamp <= '2011-10-17 17:21:42'd)
+0: {"$type":"deltix.timebase.api.messages.BestBidOfferMessage","symbol":"XBANK","timestamp":"2011-10-17T17:21:42.000Z","offerPrice":"301.5","offerSize":"60000.0","bidPrice":"298.5","bidSize":"800.0"}
+!end

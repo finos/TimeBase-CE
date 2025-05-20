@@ -91,10 +91,12 @@ public class PolyInstanceCodec {
         if (descriptors == null) {
             descriptors = new RecordClassDescriptor[classes.length];
             for (int i = 0; i < classes.length; i++) {
-                try {
-                    descriptors[i] = INTROSPECTOR.introspectMemberClass(PolyInstanceCodec.class.getSimpleName(), classes[i]);
-                } catch (Introspector.IntrospectionException e) {
-                    throw new RuntimeException(e);
+                synchronized (INTROSPECTOR) {
+                    try {
+                        descriptors[i] = INTROSPECTOR.introspectMemberClass(PolyInstanceCodec.class.getSimpleName(), classes[i]);
+                    } catch (Introspector.IntrospectionException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         }

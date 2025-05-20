@@ -16,6 +16,8 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime;
 
+import com.epam.deltix.dfp.Decimal;
+import com.epam.deltix.dfp.Decimal64Utils;
 import com.epam.deltix.qsrv.hf.codec.MessageSizeCodec;
 import com.epam.deltix.qsrv.hf.codec.cg.StringBuilderPool;
 import com.epam.deltix.qsrv.hf.pub.codec.AlphanumericCodec;
@@ -541,6 +543,25 @@ public class ARRT {
         } else {
             if ((index = array.size() + i) < 0) {
                 return IntegerDataType.INT64_NULL;
+            }
+        }
+
+        return array.getLong(index);
+    }
+
+    public static long indexOfDecimal(@Decimal LongArrayList array, int i) {
+        if (array == null) {
+            return Decimal64Utils.NULL;
+        }
+
+        final int index;
+        if (i >= 0) {
+            if ((index = i) >= array.size()) {
+                return Decimal64Utils.NULL;
+            }
+        } else {
+            if ((index = array.size() + i) < 0) {
+                return Decimal64Utils.NULL;
             }
         }
 

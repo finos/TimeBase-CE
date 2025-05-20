@@ -1,0 +1,54 @@
+set max 10
+
+test select * from (select * from tickquerydemo)
+>deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
+0,2011-10-17 17:21:40,GREATCO,43.5,100.0,42.5,200.0
+1,2011-10-17 17:21:40,XBANK,301.75,40000.0,301.25,800.0
+>deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
+2,2011-10-17 17:21:41,XBANK,301.25,800.0
+>deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
+3,2011-10-17 17:21:42,XBANK,301.5,60000.0,298.5,800.0
+4,2011-10-17 17:21:43,GREATCO,45.0,100.0,43.0,400.0
+5,2011-10-17 17:21:43,XBANK,299.5,40000.0,295.0,300.0
+>deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
+6,2011-10-17 17:21:44,GREATCO,44.0,100.0
+!end
+
+test select * from (select offerPrice,offerSize from tickquerydemo)
+>_,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize
+0,2011-10-17 17:21:40,GREATCO,43.5,100.0
+1,2011-10-17 17:21:40,XBANK,301.75,40000.0
+2,2011-10-17 17:21:41,XBANK,_,_
+3,2011-10-17 17:21:42,XBANK,301.5,60000.0
+4,2011-10-17 17:21:43,GREATCO,45.0,100.0
+5,2011-10-17 17:21:43,XBANK,299.5,40000.0
+6,2011-10-17 17:21:44,GREATCO,_,_
+!end
+
+test select * from (select * from (select * from tickquerydemo))
+>deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
+0,2011-10-17 17:21:40,GREATCO,43.5,100.0,42.5,200.0
+1,2011-10-17 17:21:40,XBANK,301.75,40000.0,301.25,800.0
+>deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
+2,2011-10-17 17:21:41,XBANK,301.25,800.0
+>deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
+3,2011-10-17 17:21:42,XBANK,301.5,60000.0,298.5,800.0
+4,2011-10-17 17:21:43,GREATCO,45.0,100.0,43.0,400.0
+5,2011-10-17 17:21:43,XBANK,299.5,40000.0,295.0,300.0
+>deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
+6,2011-10-17 17:21:44,GREATCO,44.0,100.0
+!end
+
+test select * from (select * from (select * from (select * from tickquerydemo)))
+>deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
+0,2011-10-17 17:21:40,GREATCO,43.5,100.0,42.5,200.0
+1,2011-10-17 17:21:40,XBANK,301.75,40000.0,301.25,800.0
+>deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
+2,2011-10-17 17:21:41,XBANK,301.25,800.0
+>deltix.timebase.api.messages.BestBidOfferMessage,TIMESTAMP,SYMBOL,TYPE,offerPrice,offerSize,bidPrice,bidSize
+3,2011-10-17 17:21:42,XBANK,301.5,60000.0,298.5,800.0
+4,2011-10-17 17:21:43,GREATCO,45.0,100.0,43.0,400.0
+5,2011-10-17 17:21:43,XBANK,299.5,40000.0,295.0,300.0
+>deltix.timebase.api.messages.TradeMessage,TIMESTAMP,SYMBOL,TYPE,price,size
+6,2011-10-17 17:21:44,GREATCO,44.0,100.0
+!end

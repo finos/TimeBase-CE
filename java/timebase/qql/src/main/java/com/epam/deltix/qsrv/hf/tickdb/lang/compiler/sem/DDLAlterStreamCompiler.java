@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem;
 import com.epam.deltix.qsrv.hf.pub.codec.FieldLayout;
 import com.epam.deltix.qsrv.hf.pub.codec.NonStaticFieldLayout;
 import com.epam.deltix.qsrv.hf.pub.codec.RecordLayout;
+import com.epam.deltix.qsrv.hf.pub.codec.StaticFieldLayout;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.UnknownIdentifierException;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.*;
@@ -230,12 +231,19 @@ public class DDLAlterStreamCompiler {
 
     private static void validateDuplicateFields(RecordClassDescriptor rcd) {
         RecordLayout recordLayout = new RecordLayout(rcd);
-        Map<String, NonStaticFieldLayout> nameToField = new HashMap<>();
-        for (NonStaticFieldLayout field : recordLayout.getNonStaticFields()) {
-            if (nameToField.containsKey(field.getName().toUpperCase())) {
-                throw new CompilationException("Duplicate field: " + field.getName(), 0);
+        Set<String> fieldNames = new HashSet<>();
+        validateDuplicateFields(recordLayout.getNonStaticFields(), fieldNames);
+        validateDuplicateFields(recordLayout.getStaticFields(), fieldNames);
+    }
+
+    private static void validateDuplicateFields(FieldLayout<?>[] fields, Set<String> fieldNames) {
+        if (fields != null) {
+            for (FieldLayout<?> field : fields) {
+                if (fieldNames.contains(field.getName().toUpperCase())) {
+                    throw new CompilationException("Duplicate field: " + field.getName(), 0);
+                }
+                fieldNames.add(field.getName());
             }
-            nameToField.put(field.getName(), field);
         }
     }
 

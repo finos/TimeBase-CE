@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.containers;
 
+import com.epam.deltix.qsrv.hf.codec.CodecUtils;
 import com.epam.deltix.qsrv.hf.codec.MessageSizeCodec;
 import com.epam.deltix.qsrv.hf.codec.cg.ObjectManager;
 import com.epam.deltix.qsrv.hf.pub.TypeLoader;
@@ -93,13 +94,25 @@ public class PolyArrayCodec {
 
         int length = MessageSizeCodec.read(in);
         for (int i = 0; i < length; i++) {
-            int messageLength = MessageSizeCodec.read(in);
-            if (messageLength > 0) {
+            int objectSize = MessageSizeCodec.read(in);
+            if (objectSize > 0) {
                 int typeId = in.readUnsignedByte();
                 Object obj = borrowObject(typeId, cls(typeId));
                 BoundExternalDecoder decoder = decoder(typeId);
-                decoder.decode(in, obj);
                 decoder.setStaticFields(obj);
+
+                if (objectSize < in.getAvail()) {
+                    final int limit = CodecUtils.limitMDI(objectSize - 1 /* type id byte */, in);
+                    decoder.decode(in, obj);
+                    // contract: we have limit for reading data and we should skip all unread content
+                    int available = in.getAvail();
+                    if (available > 0)
+                        in.skipBytes(available);
+                    in.setLimit (limit);
+                } else {
+                    decoder.decode(in, obj);
+                }
+
                 list.add(obj);
             } else {
                 list.add(null);
@@ -141,10 +154,12 @@ public class PolyArrayCodec {
         if (!isDescriptorsInitialized) {
             for (int i = 0; i < descriptors.length; i++) {
                 if (descriptors[i] == null) {
-                    try {
-                        descriptors[i] = INTROSPECTOR.introspectMemberClass(PolyInstanceCodec.class.getSimpleName(), classes[i]);
-                    } catch (Introspector.IntrospectionException e) {
-                        throw new RuntimeException(e);
+                    synchronized (INTROSPECTOR) {
+                        try {
+                            descriptors[i] = INTROSPECTOR.introspectMemberClass(PolyInstanceCodec.class.getSimpleName(), classes[i]);
+                        } catch (Introspector.IntrospectionException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
             }

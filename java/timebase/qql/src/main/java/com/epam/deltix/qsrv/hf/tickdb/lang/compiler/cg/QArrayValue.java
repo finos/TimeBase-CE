@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 
 import com.epam.deltix.qsrv.hf.pub.md.ArrayDataType;
+import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.ARRT;
 import com.epam.deltix.util.jcg.JCompoundStatement;
 import com.epam.deltix.util.jcg.JExpr;
 import com.epam.deltix.util.jcg.JStatement;
@@ -155,6 +156,19 @@ public class QArrayValue extends QValue {
 
     public boolean hasClasses() {
         return arrayType.hasClasses();
+    }
+
+    public JExpr indexOf(JExpr indexExpr) {
+        String functionName = isArrayOfDecimals() ? "indexOfDecimal" : "indexOf";
+        return CTXT.staticCall(
+            ARRT.class, functionName, read(),
+            CTXT.staticCall(Conversions.class, "int32", indexExpr)
+        );
+    }
+
+    private boolean isArrayOfDecimals() {
+        return arrayType.elementType instanceof QFloatType &&
+            ((QFloatType) arrayType.elementType).isDecimal();
     }
 
 }

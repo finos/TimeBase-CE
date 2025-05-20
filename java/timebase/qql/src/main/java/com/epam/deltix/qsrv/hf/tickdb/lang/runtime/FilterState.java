@@ -32,8 +32,6 @@ import com.epam.deltix.util.memory.MemoryDataOutput;
  */
 public abstract class FilterState {
 
-    private static final Introspector INTROSPECTOR = Introspector.createEmptyMessageIntrospector();
-
     boolean accepted = false;
     boolean havingAccepted = true;
     boolean changed = false;
@@ -51,6 +49,8 @@ public abstract class FilterState {
     private final FilterIMSImpl filter;
 
     private final DateFormatter datetimeFormatter = new DateFormatter();
+
+    private final Introspector introspector = Introspector.createEmptyMessageIntrospector();
 
     public FilterState(FilterIMSImpl filter) {
         this.filter = filter;
@@ -106,7 +106,7 @@ public abstract class FilterState {
         }
 
         try {
-            return INTROSPECTOR.introspectMemberClass(FilterIMSImpl.class.getName(), Class.forName(name));
+            return introspector.introspectMemberClass(FilterIMSImpl.class.getName(), Class.forName(name));
         } catch (ClassNotFoundException | Introspector.IntrospectionException e) {
             return null;
         }
@@ -119,7 +119,7 @@ public abstract class FilterState {
         }
 
         try {
-            return INTROSPECTOR.introspectEnumClass(Class.forName(name));
+            return introspector.introspectEnumClass(Class.forName(name));
         } catch (ClassNotFoundException | Introspector.IntrospectionException e) {
             return null;
         }

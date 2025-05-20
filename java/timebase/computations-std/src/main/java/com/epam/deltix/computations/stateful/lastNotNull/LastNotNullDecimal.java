@@ -16,15 +16,20 @@
  */
 package com.epam.deltix.computations.stateful.lastNotNull;
 
+import com.epam.deltix.computations.api.annotations.*;
+import com.epam.deltix.computations.api.generated.DecimalToDecimalStatefulFunctionBase;
 import com.epam.deltix.dfp.Decimal;
 import com.epam.deltix.dfp.Decimal64Utils;
-import com.epam.deltix.computations.api.annotations.BuiltInTimestampMs;
-import com.epam.deltix.computations.api.annotations.Compute;
-import com.epam.deltix.computations.api.annotations.Function;
-import com.epam.deltix.computations.api.generated.DecimalToDecimalStatefulFunctionBase;
 
 @Function("LASTNOTNULL")
 public class LastNotNullDecimal extends DecimalToDecimalStatefulFunctionBase {
+
+    private boolean reset;
+
+    @Init
+    public void init(@Arg(name = "reset", defaultValue = "false") boolean reset) {
+        this.reset = reset;
+    }
 
     @Compute
     @Override
@@ -34,6 +39,14 @@ public class LastNotNullDecimal extends DecimalToDecimalStatefulFunctionBase {
         }
 
         value = v;
+    }
+
+    @Reset
+    @Override
+    public void reset() {
+        if (reset) {
+            super.reset();
+        }
     }
 
 }

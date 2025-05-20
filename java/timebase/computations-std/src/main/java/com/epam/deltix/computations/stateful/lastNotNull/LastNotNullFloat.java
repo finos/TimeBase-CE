@@ -16,14 +16,19 @@
  */
 package com.epam.deltix.computations.stateful.lastNotNull;
 
-import com.epam.deltix.computations.api.annotations.BuiltInTimestampMs;
-import com.epam.deltix.computations.api.annotations.Compute;
-import com.epam.deltix.computations.api.annotations.Function;
+import com.epam.deltix.computations.api.annotations.*;
 import com.epam.deltix.computations.api.generated.FloatToFloatStatefulFunctionBase;
 import com.epam.deltix.qsrv.hf.pub.md.TimebaseTypes;
 
 @Function("LASTNOTNULL")
 public class LastNotNullFloat extends FloatToFloatStatefulFunctionBase {
+
+    private boolean reset;
+
+    @Init
+    public void init(@Arg(name = "reset", defaultValue = "false") boolean reset) {
+        this.reset = reset;
+    }
 
     @Compute
     @Override
@@ -33,6 +38,14 @@ public class LastNotNullFloat extends FloatToFloatStatefulFunctionBase {
         }
 
         value = v;
+    }
+
+    @Reset
+    @Override
+    public void reset() {
+        if (reset) {
+            super.reset();
+        }
     }
 
 }

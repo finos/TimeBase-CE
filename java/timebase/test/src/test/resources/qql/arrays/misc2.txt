@@ -233,3 +233,12 @@ Running QQL: SELECT running (entries if count{}() % 2 == 0 else null) as array(L
 {"$type":"QUERY1981228","symbol":"LUNA/USDT","timestamp":"2023-01-25T12:00:00.089Z"}
 {"$type":"QUERY1981228","symbol":"UNI/USDT","timestamp":"2023-01-25T12:00:00.089Z","a":[]}
 !END
+Running QQL: SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999]}(entries.price[0]) as hist FROM BINANCE
+{"$type":"QUERY66069392555","symbol":"BTC/EUR","timestamp":"2023-01-25T12:00:30.998Z","HIST":["0.0","0.0","23.0146484375","22607.9990234375","22607.9990234375","22607.9990234375","22607.9990234375","22607.9990234375","22607.9990234375"]}
+!END
+Running QQL: SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999]}(timestamp - originalTimestamp) as hist FROM BINANCE
+{"$type":"QUERY66069392555","symbol":"BTC/EUR","timestamp":"2023-01-25T12:00:30.998Z","HIST":[122945536,125042687,126025727,129040383,132055039,135004159,192020479,192020479,192020479]}
+!END
+Running QQL: SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999], significantDigits: 5}(timestamp - originalTimestamp) as hist FROM BINANCE
+{"$type":"QUERY66069392555","symbol":"BTC/EUR","timestamp":"2023-01-25T12:00:30.998Z","HIST":[122999808,125000191,126000127,129000447,132000255,135000063,192001023,192001023,192001023]}
+!END

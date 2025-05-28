@@ -939,9 +939,9 @@ public class Test_QqlObjects extends TDBRunnerBase {
 //            "FROM \"BINANCE\" " +
 //            "where size(ob) > 0 " +
 //            "group by symbol"),
-//        QUERY_RAW("SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999]}(entries.price[0]) as hist FROM BINANCE"),
-//        QUERY_RAW("SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999]}(timestamp - originalTimestamp) as hist FROM BINANCE"),
-//        QUERY_RAW("SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999], significantDigits: 5}(timestamp - originalTimestamp) as hist FROM BINANCE"),
+        QUERY_RAW("SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999]}(entries.price[0]) as hist FROM BINANCE"),
+        QUERY_RAW("SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999]}(timestamp - originalTimestamp) as hist FROM BINANCE"),
+        QUERY_RAW("SELECT histogram{q:[0.0, 0.1, 0.5, 0.75, 0.90, 0.99, 0.999, 0.9999, 0.99999], significantDigits: 5}(timestamp - originalTimestamp) as hist FROM BINANCE"),
     };
 
 

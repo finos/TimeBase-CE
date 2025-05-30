@@ -8,4 +8,6 @@ dependencies {
     implementation ('com.epam.deltix:timebase-messages')
     implementation ('com.epam.deltix:dfp')
     implementation ('com.epam.deltix:containers')
+
+    implementation ('org.hdrhistogram:HdrHistogram:2.2.2')
 }

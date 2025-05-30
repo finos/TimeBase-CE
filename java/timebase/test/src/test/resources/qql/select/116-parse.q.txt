@@ -1,0 +1,77 @@
+set printJson false
+set max 10
+
+test SELECT '123' as int8, '4345' as int16, '12345345' as int32, '12341234123' as int64, '1.23' as float32, '1.000010' as float64, '333.333' as decimal
+>_,TIMESTAMP,SYMBOL,TYPE,$1,$2,$3,$4,$5,$6,$7
+0,_,,123,4345,12345345,12341234123,1.23,1.00001,333.333
+!end
+
+test SELECT '-123' as int8, '-4345' as int16, '-12345345' as int32, '-12341234123' as int64, '-1.23' as float32, '-1.000010' as float64, '-333.333' as decimal
+>_,TIMESTAMP,SYMBOL,TYPE,$1,$2,$3,$4,$5,$6,$7
+0,_,,-123,-4345,-12345345,-12341234123,-1.23,-1.00001,-333.333
+!end
+
+test SELECT typeof('123' as int8), typeof('4345' as int16), typeof('12345345' as int32), typeof('12341234123' as int64), typeof('1.23' as float32), typeof('1.000010' as FLOAT64), typeof('333.333' as decimal)
+>_,TIMESTAMP,SYMBOL,TYPE,$1,$2,$3,$4,$5,$6,$7
+0,_,,INT8,INT16,INT32,INT64,FLOAT32,FLOAT64,DECIMAL
+!end
+
+test SELECT (-123 as varchar) as int8, (4345 as varchar) as int16, (-12345345 as varchar) as int32, (12341234123 as varchar) as int64, (-1.23 as varchar) as float32, (1.000010 as varchar) as float64, (-333.333 as varchar) as decimal
+>_,TIMESTAMP,SYMBOL,TYPE,$1,$2,$3,$4,$5,$6,$7
+0,_,,-123,4345,-12345345,12341234123,-1.23,1.00001,-333.333
+!end
+
+test SELECT 'dd' as int8, '-12.7' as int16, '12c' as int32, 'aa' as int64, '-1e3' as float32, '3s4' as float64, 'hello' as decimal
+>_,TIMESTAMP,SYMBOL,TYPE,$1,$2,$3,$4,$5,$6,$7
+0,_,,_,_,_,_,_,_,_
+!end
+
+set printJson true
+
+test SELECT toTimestamp('2024', 'yyyy')
+0: {"$type":"","symbol":"","$1":"2024-01-01T00:00:00.000Z"}
+!end
+
+test SELECT toTimestamp('2022-08-27 22:32:02', 'yyyy-MM-dd HH:mm:ss')
+0: {"$type":"","symbol":"","$1":"2022-08-27T22:32:02.000Z"}
+!end
+
+test SELECT toTimestamp('2023-08-27 22:32:02.123', 'yyyy-MM-dd HH:mm:ss.SSS')
+0: {"$type":"","symbol":"","$1":"2023-08-27T22:32:02.123Z"}
+!end
+
+test SELECT toTimestamp('2024-08-27 22:32:02.123456789', 'yyyy-MM-dd HH:mm:ss.SSSSSSSSS')
+0: {"$type":"","symbol":"","$1":"2024-08-27T22:32:02.123Z"}
+!end
+
+test SELECT toTimestamp('2024-08-27 22:32:02.123456789 Europe/Minsk', 'yyyy-MM-dd HH:mm:ss.SSSSSSSSS v')
+0: {"$type":"","symbol":"","$1":"2024-08-27T19:32:02.123Z"}
+!end
+
+test SELECT toTimestamp('08 2024-27 22--32 - 02 123456789', 'MM yyyy-dd HH--mm - ss SSSSSSSSS')
+0: {"$type":"","symbol":"","$1":"2024-08-27T22:32:02.123Z"}
+!end
+
+test SELECT toTimestamp('08 2024-27 22--32 - 02 123456789 Europe/Moscow', 'MM yyyy-dd HH--mm - ss SSSSSSSSS v')
+0: {"$type":"","symbol":"","$1":"2024-08-27T19:32:02.123Z"}
+!end
+
+test SELECT toTimestampNs('2024', 'yyyy')
+0: {"$type":"","symbol":"","$1":"2024-01-01T00:00:00.000Z"}
+!end
+
+test SELECT toTimestampNs('2023-08-27 22:32:02.123', 'yyyy-MM-dd HH:mm:ss.SSS')
+0: {"$type":"","symbol":"","$1":"2023-08-27T22:32:02.123Z"}
+!end
+
+test SELECT toTimestampNs('08 2024-27 22--32 - 02 123456789 Europe/Moscow', 'MM yyyy-dd HH--mm - ss SSSSSSSSS v')
+0: {"$type":"","symbol":"","$1":"2024-08-27T19:32:02.123456789Z"}
+!end
+
+test select toTimestamp('2016-10-27T16:36:08.993GMT+1[Europe/Paris]'), toTimestamp('2016-10-27T16:36:08+02:00[Europe/Paris]'), toTimestamp('2016-10-27T16:36:08.993+0000'), toTimestamp('2016-10-27T16:36:08.000993'), toTimestamp('2016-10-27')
+0: {"$type":"","symbol":"","$1":"2016-10-27T15:36:08.993Z","$2":"2016-10-27T14:36:08.000Z","$3":"2016-10-27T16:36:08.993Z","$4":"2016-10-27T16:36:08.000Z","$5":"2016-10-27T00:00:00.000Z"}
+!end
+
+test select toTimestampNs('2016-10-27T16:36:08.993556111GMT+1[Europe/Paris]'), toTimestampNs('2016-10-27T16:36:08+02:00[Europe/Paris]'), toTimestampNs('2016-10-27T16:36:08.993+0000'), toTimestampNs('2016-10-27T16:36:08.000993123'), toTimestampNs('2016-10-27')
+0: {"$type":"","symbol":"","$1":"2016-10-27T15:36:08.993556111Z","$2":"2016-10-27T14:36:08.000Z","$3":"2016-10-27T16:36:08.993Z","$4":"2016-10-27T16:36:08.000993123Z","$5":"2016-10-27T00:00:00.000Z"}
+!end

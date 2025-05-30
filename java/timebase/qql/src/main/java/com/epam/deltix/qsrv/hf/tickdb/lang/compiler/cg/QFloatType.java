@@ -312,4 +312,13 @@ public final class QFloatType extends QNumericType <FloatDataType> {
     protected String parseMethodName() {
         return dt.isDecimal64() ? "parseDecimal" : (dt.isFloat() ? "parseFloat" : "parseDouble");
     }
+
+    @Override
+    public JExpr addExpr(JExpr v1, JExpr v2) {
+        if (isDecimal()) {
+            return CTXT.staticCall(Decimal64Utils.class, "add", v1, v2);
+        } else {
+            return super.addExpr(v1, v2);
+        }
+    }
 }

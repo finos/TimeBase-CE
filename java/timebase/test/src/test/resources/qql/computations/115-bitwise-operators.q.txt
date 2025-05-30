@@ -1,0 +1,278 @@
+set printJson false
+set max 20
+
+test select byteField as "v", byteField & byteField as "and", byteField | byteField as "or", byteField ^ byteField as "xor", byteField >> 2 as "rshift", byteField << 1 as "lshift", ~byteField as "not" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v,and,or,xor,rshift,lshift,not
+0,2021-04-19 01:13:16.646,S1,42,42,42,0,10,84,-43
+!end
+
+test select shortField as "v", shortField & shortField as "and", shortField | shortField as "or", shortField ^ shortField as "xor", shortField >> 2 as "rshift", shortField << 1 as "lshift", ~shortField as "not" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v,and,or,xor,rshift,lshift,not
+0,2021-04-19 01:13:16.646,S1,29137,29137,29137,0,7284,58274,-29138
+!end
+
+test select intField as "v", intField & intField as "and", intField | intField as "or", intField ^ intField as "xor", intField >> 1 as "rshift", intField << 1 as "lshift", ~intField as "not" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v,and,or,xor,rshift,lshift,not
+0,2021-04-19 01:13:16.646,S1,1187042131,1187042131,1187042131,0,593521065,-1920883034,-1187042132
+!end
+
+test select longField as "v", longField & longField as "and", longField | longField as "or", longField ^ longField as "xor", longField >> 1 as "rshift", longField << 4 as "lshift", ~longField as "not" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v,and,or,xor,rshift,lshift,not
+0,2021-04-19 01:13:16.646,S1,-4455585974335323739,-4455585974335323739,-4455585974335323739,0,-2227792987167661870,2497600705473026640,4455585974335323738
+!end
+
+test select longField as "v1", intField as "v2", longField & intField as "and", longField | intField as "or", longField ^ intField as "xor", intField & longField as "and2", intField | longField as "or2", intField ^ longField as "xor2" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v1,v2,and,or,xor,and2,or2,xor2
+0,2021-04-19 01:13:16.646,S1,-4455585974335323739,1187042131,75546881,-4455585973223828489,-4455585973299375370,75546881,-4455585973223828489,-4455585973299375370
+!end
+
+test select longField as "v1", shortField as "v2", longField & shortField as "and", longField | shortField as "or", longField ^ shortField as "xor", shortField & longField as "and2", shortField | longField as "or2", shortField ^ longField as "xor2" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v1,v2,and,or,xor,and2,or2,xor2
+0,2021-04-19 01:13:16.646,S1,-4455585974335323739,29137,16769,-4455585974335311371,-4455585974335328140,16769,-4455585974335311371,-4455585974335328140
+!end
+
+test select shortField as "v1", intField as "v2", shortField & intField as "and", shortField | intField as "or", shortField ^ intField as "xor", intField & shortField as "and2", intField | shortField as "or2", intField ^ shortField as "xor2" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v1,v2,and,or,xor,and2,or2,xor2
+0,2021-04-19 01:13:16.646,S1,29137,1187042131,20817,1187050451,1187029634,20817,1187050451,1187029634
+!end
+
+test select byteField as "v", v & 15 as "and", v | 15 as "or", v ^ 15 as "xor", 15 & v as "and2", 15 | v as "or2", 15 ^ v as "xor2" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v,and,or,xor,and2,or2,xor2
+0,2021-04-19 01:13:16.646,S1,42,10,47,37,10,47,37
+!end
+
+test select shortField as "v", v & 15 as "and", v | 15 as "or", v ^ 15 as "xor", 15 & v as "and2", 15 | v as "or2", 15 ^ v as "xor2" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v,and,or,xor,and2,or2,xor2
+0,2021-04-19 01:13:16.646,S1,29137,1,29151,29150,1,29151,29150
+!end
+
+test select intField as "v", v & 15 as "and", v | 15 as "or", v ^ 15 as "xor", 15 & v as "and2", 15 | v as "or2", 15 ^ v as "xor2" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v,and,or,xor,and2,or2,xor2
+0,2021-04-19 01:13:16.646,S1,1187042131,3,1187042143,1187042140,3,1187042143,1187042140
+!end
+
+test select longField as "v", v & 15 as "and", v | 15 as "or", v ^ 15 as "xor", 15 & v as "and2", 15 | v as "or2", 15 ^ v as "xor2" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v,and,or,xor,and2,or2,xor2
+0,2021-04-19 01:13:16.646,S1,-4455585974335323739,5,-4455585974335323729,-4455585974335323734,5,-4455585974335323729,-4455585974335323734
+!end
+
+test select 15 & 3 as "v1", 15 | 3 as "v2", 15 ^ 3 as "v3", 15 << 4 as "v4", 15 >> 3 as "v5", ~15 as "v6" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v1,v2,v3,v4,v5,v6
+>>,,,,3,15,12,240,1,-16
+0,_,
+!end
+
+test select byteField as "v", v & 2 as "v1", v & 4 as "v2" from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,v,v1,v2
+0,2021-04-19 01:13:16.646,S1,42,2,0
+!end
+
+test select floatField as "v", floatField & 2 from "1min-1h-1h-3" limit 1
+>>> Error: IllegalTypeCombinationException: 1.27..41: Illegal combination of types in FLOATFIELD  &  2: FLOAT is not compatible with INTEGER
+!end
+
+test select decimalList as "v", decimalList & 2 from "1min-1h-1h-3" limit 1
+>>> Error: IllegalTypeCombinationException: 1.28..43: Illegal combination of types in DECIMALLIST  &  2: ARRAY is not compatible with INTEGER
+!end
+
+test select enumNullableField as "v", enumNullableField as int8 as "v1", enumNullableField as int16 as "v2", enumNullableField as int32 as "v3", enumNullableField as int64 as "v4" from "1min-1h-1h-3" limit 20
+>_,TIMESTAMP,SYMBOL,TYPE,v,v1,v2,v3,v4
+0,2021-04-19 01:13:16.646,S1,_,_,_,_,_
+1,2021-04-19 01:14:16.646,S2,_,_,_,_,_
+2,2021-04-19 01:15:16.646,S3,_,_,_,_,_
+3,2021-04-19 01:16:16.646,S1,_,_,_,_,_
+4,2021-04-19 01:17:16.646,S2,_,_,_,_,_
+5,2021-04-19 01:18:16.646,S3,THREE,3,3,3,3
+6,2021-04-19 01:19:16.646,S1,ONE,1,1,1,1
+7,2021-04-19 01:20:16.646,S2,_,_,_,_,_
+8,2021-04-19 01:21:16.646,S3,ONE,1,1,1,1
+9,2021-04-19 01:22:16.646,S1,_,_,_,_,_
+10,2021-04-19 01:23:16.646,S2,FIVE,5,5,5,5
+11,2021-04-19 01:24:16.646,S3,ZERO,0,0,0,0
+12,2021-04-19 01:25:16.646,S1,_,_,_,_,_
+13,2021-04-19 01:26:16.646,S2,FOUR,4,4,4,4
+14,2021-04-19 01:27:16.646,S3,TWO,2,2,2,2
+15,2021-04-19 01:28:16.646,S1,ONE,1,1,1,1
+16,2021-04-19 01:29:16.646,S2,FOUR,4,4,4,4
+17,2021-04-19 01:30:16.646,S3,_,_,_,_,_
+18,2021-04-19 01:31:16.646,S1,TWO,2,2,2,2
+19,2021-04-19 01:32:16.646,S2,TWO,2,2,2,2
+!end
+
+test select enumField as "v", enumField as int8 as "v1", enumField as int16 as "v2", enumField as int32 as "v3", enumField as int64 as "v4" from "1min-1h-1h-3" limit 20
+>_,TIMESTAMP,SYMBOL,TYPE,v,v1,v2,v3,v4
+0,2021-04-19 01:13:16.646,S1,ZERO,0,0,0,0
+1,2021-04-19 01:14:16.646,S2,FOUR,4,4,4,4
+2,2021-04-19 01:15:16.646,S3,TWO,2,2,2,2
+3,2021-04-19 01:16:16.646,S1,ONE,1,1,1,1
+4,2021-04-19 01:17:16.646,S2,TWO,2,2,2,2
+5,2021-04-19 01:18:16.646,S3,TWO,2,2,2,2
+6,2021-04-19 01:19:16.646,S1,THREE,3,3,3,3
+7,2021-04-19 01:20:16.646,S2,FIVE,5,5,5,5
+8,2021-04-19 01:21:16.646,S3,THREE,3,3,3,3
+9,2021-04-19 01:22:16.646,S1,THREE,3,3,3,3
+10,2021-04-19 01:23:16.646,S2,TWO,2,2,2,2
+11,2021-04-19 01:24:16.646,S3,FOUR,4,4,4,4
+12,2021-04-19 01:25:16.646,S1,FOUR,4,4,4,4
+13,2021-04-19 01:26:16.646,S2,ONE,1,1,1,1
+14,2021-04-19 01:27:16.646,S3,ZERO,0,0,0,0
+15,2021-04-19 01:28:16.646,S1,ZERO,0,0,0,0
+16,2021-04-19 01:29:16.646,S2,FOUR,4,4,4,4
+17,2021-04-19 01:30:16.646,S3,TWO,2,2,2,2
+18,2021-04-19 01:31:16.646,S1,TWO,2,2,2,2
+19,2021-04-19 01:32:16.646,S2,TWO,2,2,2,2
+!end
+
+test select enumNullableField as "v", typeof(enumNullableField as int8) as "v1", typeof(enumNullableField as int16) as "v2", typeof(enumNullableField as int32) as "v3", typeof(enumNullableField as int64) as "v4" from "1min-1h-1h-3" limit 20
+>_,TIMESTAMP,SYMBOL,TYPE,v,v1,v2,v3,v4
+0,2021-04-19 01:13:16.646,S1,_,INT8,INT16,INT32,INT64
+1,2021-04-19 01:14:16.646,S2,_,INT8,INT16,INT32,INT64
+2,2021-04-19 01:15:16.646,S3,_,INT8,INT16,INT32,INT64
+3,2021-04-19 01:16:16.646,S1,_,INT8,INT16,INT32,INT64
+4,2021-04-19 01:17:16.646,S2,_,INT8,INT16,INT32,INT64
+5,2021-04-19 01:18:16.646,S3,THREE,INT8,INT16,INT32,INT64
+6,2021-04-19 01:19:16.646,S1,ONE,INT8,INT16,INT32,INT64
+7,2021-04-19 01:20:16.646,S2,_,INT8,INT16,INT32,INT64
+8,2021-04-19 01:21:16.646,S3,ONE,INT8,INT16,INT32,INT64
+9,2021-04-19 01:22:16.646,S1,_,INT8,INT16,INT32,INT64
+10,2021-04-19 01:23:16.646,S2,FIVE,INT8,INT16,INT32,INT64
+11,2021-04-19 01:24:16.646,S3,ZERO,INT8,INT16,INT32,INT64
+12,2021-04-19 01:25:16.646,S1,_,INT8,INT16,INT32,INT64
+13,2021-04-19 01:26:16.646,S2,FOUR,INT8,INT16,INT32,INT64
+14,2021-04-19 01:27:16.646,S3,TWO,INT8,INT16,INT32,INT64
+15,2021-04-19 01:28:16.646,S1,ONE,INT8,INT16,INT32,INT64
+16,2021-04-19 01:29:16.646,S2,FOUR,INT8,INT16,INT32,INT64
+17,2021-04-19 01:30:16.646,S3,_,INT8,INT16,INT32,INT64
+18,2021-04-19 01:31:16.646,S1,TWO,INT8,INT16,INT32,INT64
+19,2021-04-19 01:32:16.646,S2,TWO,INT8,INT16,INT32,INT64
+!end
+
+test select enumField as "v", enumField & 1 as "v1", enumField & 2 as "v2", enumField & 3 as "v3", enumField & 4 as "v4", enumField & 5 as "v5" from "1min-1h-1h-3" limit 20
+>_,TIMESTAMP,SYMBOL,TYPE,v,v1,v2,v3,v4,v5
+0,2021-04-19 01:13:16.646,S1,ZERO,0,0,0,0,0
+1,2021-04-19 01:14:16.646,S2,FOUR,0,0,0,4,4
+2,2021-04-19 01:15:16.646,S3,TWO,0,2,2,0,0
+3,2021-04-19 01:16:16.646,S1,ONE,1,0,1,0,1
+4,2021-04-19 01:17:16.646,S2,TWO,0,2,2,0,0
+5,2021-04-19 01:18:16.646,S3,TWO,0,2,2,0,0
+6,2021-04-19 01:19:16.646,S1,THREE,1,2,3,0,1
+7,2021-04-19 01:20:16.646,S2,FIVE,1,0,1,4,5
+8,2021-04-19 01:21:16.646,S3,THREE,1,2,3,0,1
+9,2021-04-19 01:22:16.646,S1,THREE,1,2,3,0,1
+10,2021-04-19 01:23:16.646,S2,TWO,0,2,2,0,0
+11,2021-04-19 01:24:16.646,S3,FOUR,0,0,0,4,4
+12,2021-04-19 01:25:16.646,S1,FOUR,0,0,0,4,4
+13,2021-04-19 01:26:16.646,S2,ONE,1,0,1,0,1
+14,2021-04-19 01:27:16.646,S3,ZERO,0,0,0,0,0
+15,2021-04-19 01:28:16.646,S1,ZERO,0,0,0,0,0
+16,2021-04-19 01:29:16.646,S2,FOUR,0,0,0,4,4
+17,2021-04-19 01:30:16.646,S3,TWO,0,2,2,0,0
+18,2021-04-19 01:31:16.646,S1,TWO,0,2,2,0,0
+19,2021-04-19 01:32:16.646,S2,TWO,0,2,2,0,0
+!end
+
+test select enumNullableField as "v", enumNullableField & 1 as "v1", enumNullableField & 2 as "v2", enumNullableField & 3 as "v3", enumNullableField & 4 as "v4", enumNullableField & 5 as "v5" from "1min-1h-1h-3" limit 20
+>_,TIMESTAMP,SYMBOL,TYPE,v,v1,v2,v3,v4,v5
+0,2021-04-19 01:13:16.646,S1,_,_,_,_,_,_
+1,2021-04-19 01:14:16.646,S2,_,_,_,_,_,_
+2,2021-04-19 01:15:16.646,S3,_,_,_,_,_,_
+3,2021-04-19 01:16:16.646,S1,_,_,_,_,_,_
+4,2021-04-19 01:17:16.646,S2,_,_,_,_,_,_
+5,2021-04-19 01:18:16.646,S3,THREE,1,2,3,0,1
+6,2021-04-19 01:19:16.646,S1,ONE,1,0,1,0,1
+7,2021-04-19 01:20:16.646,S2,_,_,_,_,_,_
+8,2021-04-19 01:21:16.646,S3,ONE,1,0,1,0,1
+9,2021-04-19 01:22:16.646,S1,_,_,_,_,_,_
+10,2021-04-19 01:23:16.646,S2,FIVE,1,0,1,4,5
+11,2021-04-19 01:24:16.646,S3,ZERO,0,0,0,0,0
+12,2021-04-19 01:25:16.646,S1,_,_,_,_,_,_
+13,2021-04-19 01:26:16.646,S2,FOUR,0,0,0,4,4
+14,2021-04-19 01:27:16.646,S3,TWO,0,2,2,0,0
+15,2021-04-19 01:28:16.646,S1,ONE,1,0,1,0,1
+16,2021-04-19 01:29:16.646,S2,FOUR,0,0,0,4,4
+17,2021-04-19 01:30:16.646,S3,_,_,_,_,_,_
+18,2021-04-19 01:31:16.646,S1,TWO,0,2,2,0,0
+19,2021-04-19 01:32:16.646,S2,TWO,0,2,2,0,0
+!end
+
+test select "FIVE" & "THREE", "FIVE" | "THREE", 5 & 3, 5 | 3, "FIVE" << "TWO", "FIVE" >> "ONE", 5 << 2, 5 >> 1 from "1min-1h-1h-3" limit 1
+>_,TIMESTAMP,SYMBOL,TYPE,$1,$2,$5,$6,$3,$4,$7,$8
+>>,,,,,,,,1,7,20,2
+0,2021-04-19 01:13:16.646,S1,1,7,20,2
+!end
+
+test select enumField, "FIVE" & enumField from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,enumField,$1
+0,2021-04-19 01:13:16.646,S1,ZERO,0
+1,2021-04-19 01:14:16.646,S2,FOUR,4
+2,2021-04-19 01:15:16.646,S3,TWO,0
+3,2021-04-19 01:16:16.646,S1,ONE,1
+4,2021-04-19 01:17:16.646,S2,TWO,0
+5,2021-04-19 01:18:16.646,S3,TWO,0
+6,2021-04-19 01:19:16.646,S1,THREE,1
+7,2021-04-19 01:20:16.646,S2,FIVE,5
+8,2021-04-19 01:21:16.646,S3,THREE,1
+9,2021-04-19 01:22:16.646,S1,THREE,1
+10,2021-04-19 01:23:16.646,S2,TWO,0
+11,2021-04-19 01:24:16.646,S3,FOUR,4
+12,2021-04-19 01:25:16.646,S1,FOUR,4
+13,2021-04-19 01:26:16.646,S2,ONE,1
+14,2021-04-19 01:27:16.646,S3,ZERO,0
+15,2021-04-19 01:28:16.646,S1,ZERO,0
+16,2021-04-19 01:29:16.646,S2,FOUR,4
+17,2021-04-19 01:30:16.646,S3,TWO,0
+18,2021-04-19 01:31:16.646,S1,TWO,0
+19,2021-04-19 01:32:16.646,S2,TWO,0
+!end
+
+test select enumField, enumNullableField, "FIVE" & enumField, enumNullableField & THREE from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,enumField,enumNullableField,$1,$2
+0,2021-04-19 01:13:16.646,S1,ZERO,_,0,_
+1,2021-04-19 01:14:16.646,S2,FOUR,_,4,_
+2,2021-04-19 01:15:16.646,S3,TWO,_,0,_
+3,2021-04-19 01:16:16.646,S1,ONE,_,1,_
+4,2021-04-19 01:17:16.646,S2,TWO,_,0,_
+5,2021-04-19 01:18:16.646,S3,TWO,THREE,0,3
+6,2021-04-19 01:19:16.646,S1,THREE,ONE,1,1
+7,2021-04-19 01:20:16.646,S2,FIVE,_,5,_
+8,2021-04-19 01:21:16.646,S3,THREE,ONE,1,1
+9,2021-04-19 01:22:16.646,S1,THREE,_,1,_
+10,2021-04-19 01:23:16.646,S2,TWO,FIVE,0,1
+11,2021-04-19 01:24:16.646,S3,FOUR,ZERO,4,0
+12,2021-04-19 01:25:16.646,S1,FOUR,_,4,_
+13,2021-04-19 01:26:16.646,S2,ONE,FOUR,1,0
+14,2021-04-19 01:27:16.646,S3,ZERO,TWO,0,2
+15,2021-04-19 01:28:16.646,S1,ZERO,ONE,0,1
+16,2021-04-19 01:29:16.646,S2,FOUR,FOUR,4,0
+17,2021-04-19 01:30:16.646,S3,TWO,_,0,_
+18,2021-04-19 01:31:16.646,S1,TWO,TWO,0,2
+19,2021-04-19 01:32:16.646,S2,TWO,TWO,0,2
+!end
+
+test select byteField, enumField as int64, enumNullableField, enumField | byteField, enumNullableField | enumField from "1min-1h-1h-3"
+>_,TIMESTAMP,SYMBOL,TYPE,byteField,$1,enumNullableField,$2,$3
+0,2021-04-19 01:13:16.646,S1,42,0,_,42,_
+1,2021-04-19 01:14:16.646,S2,88,4,_,92,_
+2,2021-04-19 01:15:16.646,S3,17,2,_,19,_
+3,2021-04-19 01:16:16.646,S1,-75,1,_,-75,_
+4,2021-04-19 01:17:16.646,S2,-85,2,_,-85,_
+5,2021-04-19 01:18:16.646,S3,-14,2,THREE,-14,3
+6,2021-04-19 01:19:16.646,S1,-58,3,ONE,-57,3
+7,2021-04-19 01:20:16.646,S2,47,5,_,47,_
+8,2021-04-19 01:21:16.646,S3,11,3,ONE,11,3
+9,2021-04-19 01:22:16.646,S1,-79,3,_,-77,_
+10,2021-04-19 01:23:16.646,S2,-3,2,FIVE,-1,7
+11,2021-04-19 01:24:16.646,S3,67,4,ZERO,71,4
+12,2021-04-19 01:25:16.646,S1,102,4,_,102,_
+13,2021-04-19 01:26:16.646,S2,-90,1,FOUR,-89,5
+14,2021-04-19 01:27:16.646,S3,115,0,TWO,115,2
+15,2021-04-19 01:28:16.646,S1,104,0,ONE,104,1
+16,2021-04-19 01:29:16.646,S2,-120,4,FOUR,-116,4
+17,2021-04-19 01:30:16.646,S3,17,2,_,19,_
+18,2021-04-19 01:31:16.646,S1,-110,2,TWO,-110,2
+19,2021-04-19 01:32:16.646,S2,-103,2,TWO,-101,2
+!end
+
+test select enumNullableField as float32 as "v1" from "1min-1h-1h-3" limit 20
+>>> Error: CastException: 1.8..29: Can't cast deltix.qsrv.test.messages.TestEnum to FLOAT
+!end

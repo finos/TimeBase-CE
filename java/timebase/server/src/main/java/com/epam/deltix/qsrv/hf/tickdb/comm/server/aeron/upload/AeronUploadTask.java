@@ -241,7 +241,7 @@ public class AeronUploadTask implements Runnable, ControlledFragmentHandler {
             closeLoader();
             close();
         } catch (Throwable iox) {
-            UserLogger.severe(user, channel.getRemoteAddress(), channel.getRemoteApplication(), "Error while loading data.", iox);
+            UserLogger.error(user, channel.getRemoteAddress(), channel.getRemoteApplication(), "Error while loading data.", iox);
             closeAll();
             return Action.ABORT;
         }

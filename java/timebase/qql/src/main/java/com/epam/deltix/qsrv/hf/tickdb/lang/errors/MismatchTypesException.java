@@ -20,8 +20,6 @@ import com.epam.deltix.qsrv.hf.pub.md.DataType;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
 import com.epam.deltix.util.parsers.CompilationException;
 
-import java.util.Arrays;
-
 /**
  *
  */
@@ -29,7 +27,7 @@ public class MismatchTypesException extends CompilationException {
     public MismatchTypesException(Expression e, DataType[] types) {
         super(
             "Illegal type in: " + e +
-            "; Types should be equal; found : " + Arrays.toString(types),
+            "; Types should be equal; found : " + DataTypeToStringUtils.toString(types),
             e
         );
     }

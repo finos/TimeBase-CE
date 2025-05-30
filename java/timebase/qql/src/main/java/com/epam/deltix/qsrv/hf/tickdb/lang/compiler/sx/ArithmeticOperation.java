@@ -170,7 +170,7 @@ public class ArithmeticOperation extends BinaryExpression {
 
     public static void validateArgs(ArithmeticExpression expression, CompiledExpression<?> left, CompiledExpression<?> right) throws IllegalTypeCombinationException {
         if (expression.function == ArithmeticFunction.MOD) {
-            if (!NumericType.isInteger(left.type) || !NumericType.isInteger(right.type)) {
+            if (!NumericType.isIntegerOrIntegerArray(left.type) || !NumericType.isIntegerOrIntegerArray(right.type)) {
                 throw new IllegalTypeCombinationException(expression, left.type, right.type);
             }
         } else if (DataTypeHelper.isTimestampAndInteger(left.type, right.type)) {

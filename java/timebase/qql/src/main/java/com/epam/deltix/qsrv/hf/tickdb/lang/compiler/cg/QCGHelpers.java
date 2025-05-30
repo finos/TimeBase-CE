@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.hf.tickdb.lang.compiler.cg;
 import com.epam.deltix.qsrv.hf.pub.NullValueException;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.pub.values.*;
+import com.epam.deltix.util.collections.generated.*;
 import com.epam.deltix.util.jcg.JContext;
 import com.epam.deltix.util.jcg.JExpr;
 import com.epam.deltix.util.jcg.JStatement;
@@ -85,6 +86,48 @@ public class QCGHelpers {
             return Long.class;
 
         return Object.class;
+    }
+
+    public static Class<?> primitiveArrayList(Class<?> clazz) {
+        if (clazz.equals(boolean.class))
+            return BooleanArrayList.class;
+        else if (clazz.equals(char.class))
+            return CharacterArrayList.class;
+        else if (clazz.equals(byte.class))
+            return ByteArrayList.class;
+        else if (clazz.equals(short.class))
+            return ShortArrayList.class;
+        else if (clazz.equals(int.class))
+            return IntegerArrayList.class;
+        else if (clazz.equals(float.class))
+            return FloatArrayList.class;
+        else if (clazz.equals(double.class))
+            return DoubleArrayList.class;
+        else if (clazz.equals(long.class))
+            return LongArrayList.class;
+
+        return ObjectArrayList.class;
+    }
+
+    public static Class<?> primitiveHashSet(Class<?> clazz) {
+        if (clazz.equals(char.class))
+            return CharacterHashSet.class;
+        else if (clazz.equals(short.class))
+            return ShortHashSet.class;
+        else if (clazz.equals(int.class))
+            return IntegerHashSet.class;
+        else if (clazz.equals(float.class))
+            return FloatHashSet.class;
+        else if (clazz.equals(double.class))
+            return DoubleHashSet.class;
+        else if (clazz.equals(long.class))
+            return LongHashSet.class;
+
+        return ObjectHashSet.class;
+    }
+
+    public static boolean isHashSetSupported(Class<?> clazz) {
+        return !clazz.equals(boolean.class) && !clazz.equals(byte.class);
     }
 
     static JExpr []     objtoex (Object ... args) {

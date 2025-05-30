@@ -326,25 +326,25 @@ Running QQL: select (entries.attributes as array(deltix.FixAttribute)).key as re
 res1 : 4 [5100, 5102, 5110, 5112]
 res1 : 4 [5200, 5202, 5210, 5212]
 res1 : 9 [5300, 5302, 5304, 5310, 5312, 5314, 5320, 5322, 5324]
-res1 : NULL
-res1 : NULL
+res1 : 0 []
+res1 : 0 []
 res1 : 9 [5600, 5602, 5604, 5610, 5612, 5614, 5620, 5622, 5624]
-res1 : NULL
-res1 : NULL
+res1 : 0 []
+res1 : 0 []
 res1 : 9 [5900, 5902, 5904, 5910, 5912, 5914, 5920, 5922, 5924]
-res1 : NULL
+res1 : 0 []
 !END
 Running QQL: select (entries.attributes[(this as deltix.FixAttribute).key > 5100] as array(deltix.FixAttribute)).key as res1 from packages
 res1 : 3 [5102, 5110, 5112]
 res1 : 4 [5200, 5202, 5210, 5212]
 res1 : 9 [5300, 5302, 5304, 5310, 5312, 5314, 5320, 5322, 5324]
-res1 : NULL
-res1 : NULL
+res1 : 0 []
+res1 : 0 []
 res1 : 9 [5600, 5602, 5604, 5610, 5612, 5614, 5620, 5622, 5624]
-res1 : NULL
-res1 : NULL
+res1 : 0 []
+res1 : 0 []
 res1 : 9 [5900, 5902, 5904, 5910, 5912, 5914, 5920, 5922, 5924]
-res1 : NULL
+res1 : 0 []
 !END
 Running QQL: select (entries[price > 2000])[price <= 3000] as res1 from packages
 res1 : 2 [TradeEntry{price=2010.0, size=20010.0, side=BUY}, L1Entry{side=BUY, price=2010.0, size=20010.0}]

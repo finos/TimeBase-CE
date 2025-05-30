@@ -332,6 +332,10 @@ public enum NumericType {
             type instanceof DateTimeDataType;
     }
 
+    public static boolean isIntegerType(DataType type) {
+        return type instanceof IntegerDataType;
+    }
+
     public static boolean isNumericArrayType(DataType type) {
         return type instanceof ArrayDataType && isNumericType(((ArrayDataType) type).getElementDataType());
     }
@@ -359,7 +363,7 @@ public enum NumericType {
         return computeDistance(forType(source), forType(target));
     }
 
-    public static boolean isInteger(DataType dataType) {
+    public static boolean isIntegerOrIntegerArray(DataType dataType) {
         return dataType instanceof IntegerDataType ||
                 (dataType instanceof ArrayDataType && (((ArrayDataType) dataType).getElementDataType()) instanceof IntegerDataType);
     }

@@ -28,6 +28,7 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sem.TimeBaseEnvironment;
 import com.epam.deltix.qsrv.hf.tickdb.lang.compiler.sx.CompiledQuery;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.ExpressionRequiredException;
 import com.epam.deltix.qsrv.hf.tickdb.lang.errors.SelectRequiredException;
+import com.epam.deltix.qsrv.hf.tickdb.lang.errors.UnknownQueryType;
 import com.epam.deltix.qsrv.hf.tickdb.lang.parser.QQLParser;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.PreparedQuery;
@@ -200,7 +201,7 @@ public abstract class CompilerUtil {
         if (qql instanceof Statement) {
             return (compiler.compileStatement ((Statement) qql));
         }
-        throw new UnsupportedOperationException (qql.toString ());
+        throw new UnknownQueryType(qql);
     }
 
     public static PreparedQuery prepareQuery(DXTickDB db, Element qql, long endTimestamp, ParamSignature... params)
@@ -222,7 +223,7 @@ public abstract class CompilerUtil {
         if (qql instanceof Statement) {
             return (compiler.compileStatement((Statement) qql));
         } else
-            throw new UnsupportedOperationException(qql.toString());
+            throw new UnknownQueryType(qql);
     }
 
     public static DataType              parseDataType (String text) {

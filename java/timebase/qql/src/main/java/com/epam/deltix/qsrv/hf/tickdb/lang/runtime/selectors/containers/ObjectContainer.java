@@ -47,10 +47,12 @@ public class ObjectContainer<T> extends Instance {
 
     public ObjectContainer(@Nonnull Supplier<T> supplier) {
         this.bufferMessage = supplier.get();
-        try {
-            this.rcd = INTROSPECTOR.introspectRecordClass(bufferMessage.getClass());
-        } catch (Introspector.IntrospectionException e) {
-            throw new RuntimeException(e);
+        synchronized (INTROSPECTOR) {
+            try {
+                this.rcd = INTROSPECTOR.introspectRecordClass(bufferMessage.getClass());
+            } catch (Introspector.IntrospectionException e) {
+                throw new RuntimeException(e);
+            }
         }
         this.decoder = COMPILED_FACTORY.createFixedBoundDecoder(x -> bufferMessage.getClass(), rcd);
         this.encoder = COMPILED_FACTORY.createFixedBoundEncoder(x -> bufferMessage.getClass(), rcd);

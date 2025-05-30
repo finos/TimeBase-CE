@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 EPAM Systems, Inc
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Licensed under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.epam.deltix.qsrv.hf.tickdb.lang.parser;
 
 import java_cup.runtime.*;
@@ -29,6 +45,7 @@ action code {:
 terminal            SEMICOLON,  PLUS,       MINUS,      STAR;
 terminal            LPAREN,     RPAREN,     LBRACKET,   RBRACKET, LBRACE, RBRACE;
 terminal            COLON,      SLASH,      PERCENT,    DOT;
+terminal            BIT_AND,    BIT_OR,     BIT_XOR,    BIT_NOT,  RSHIFT, LSHIFT;
 terminal            EQ,         NEQ,        STRICT_EQ,  STRICT_NEQ,  ASSIGN, COMMA;
 terminal            LE,         GE,         LT,         GT;
 terminal            QUESTION;
@@ -55,6 +72,8 @@ terminal            IF,         ELSE,       CASE,       WHEN,       THEN,       
 terminal String     IDENTIFIER;
 terminal String     UINT;
 terminal String     ULONG;
+terminal String     BITVAL;
+terminal String     HEXVAL;
 terminal String     FP;
 terminal String     DOUBLE;
 terminal String     STRING;
@@ -156,11 +175,15 @@ precedence right AS, FIELD;
 precedence left COLON;
 precedence left OR, AND;
 precedence left BETWEEN;
-precedence right NOT;
+precedence right NOT, BIT_NOT;
 precedence left IN;
 precedence left EQ, NEQ, STRICT_EQ, STRICT_NEQ, ASSIGN, LE, GE, LT, GT;
 precedence left LIKE;
 precedence left PLUS, MINUS;
+precedence left BIT_OR;
+precedence left BIT_XOR;
+precedence left BIT_AND;
+precedence left RSHIFT, LSHIFT;
 precedence left STAR, SLASH, PERCENT;
 precedence left IS;
 precedence left DOT, QUESTION;
@@ -264,9 +287,9 @@ Arithmetic_Expression ::=
     NAN:n
         {: RESULT = new Nan(lx(nleft, nright)); :} |
     UINT:n
-        {: RESULT = new IntegerConstant (lx (nleft, nright), Long.parseLong (n)); :} |
+        {: RESULT = IntegerConstant.parse(lx (nleft, nright), n); :} |
     ULONG:n
-        {: RESULT = new LongConstant (lx (nleft, nright), n); :} |
+        {: RESULT = LongConstant.parse(lx (nleft, nright), n); :} |
     FP:n
         {: RESULT = FloatConstant.parseDecimal(lx (nleft, nright), n); :} |
     DOUBLE:n
@@ -340,9 +363,9 @@ Numeric_Constant ::=
 
 Int_Literal ::=
     ULONG:n
-        {: RESULT = new LongConstant(lx(nleft, nright), n); :} |
+        {: RESULT = LongConstant.parse(lx(nleft, nright), n); :} |
     UINT:n
-        {: RESULT = new IntegerConstant(lx(nleft, nright), Long.parseLong(n)); :} |
+        {: RESULT = IntegerConstant.parse(lx(nleft, nright), n); :} |
     TIME_INTERVAL_LITERAL:s
         {: RESULT = new TimeIntervalConstant(lx(sleft, sright), s); :};
 

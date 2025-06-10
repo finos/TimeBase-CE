@@ -313,7 +313,7 @@ public final class StreamHandler {
 
         if (stream != null) {
             final ListEntitiesResponse r = new ListEntitiesResponse();
-            r.instruments = instrumentIdentityKeys(stream.listEntities());
+            r.instruments = entityKeys(stream.listEntities());
 
             marshall(r, response.getOutputStream());
         }
@@ -706,15 +706,15 @@ public final class StreamHandler {
         return null;
     }
 
-    public static IdentityKey[] concat(InstrumentIdentityKey[] instrumentKeys, String[] symbols) {
-        if (instrumentKeys == null) {
+    public static IdentityKey[] concat(EntityKey[] entityKeys, String[] symbols) {
+        if (entityKeys == null) {
             return identityKeys(symbols);
         } else if (symbols == null) {
-            return identityKeys(extractSymbols(instrumentKeys));
+            return identityKeys(extractSymbols(entityKeys));
         }
 
         Set<String> instruments = new HashSet<>(Arrays.asList(symbols));
-        instruments.addAll(Arrays.asList(extractSymbols(instrumentKeys)));
+        instruments.addAll(Arrays.asList(extractSymbols(entityKeys)));
         return identityKeys(instruments.toArray(new String[0]));
     }
 
@@ -731,7 +731,7 @@ public final class StreamHandler {
         return keys;
     }
 
-    public static IdentityKey[] identityKeys(InstrumentIdentityKey[] identities) {
+    public static IdentityKey[] identityKeys(EntityKey[] identities) {
         if (identities == null) {
             return null;
         }
@@ -744,26 +744,26 @@ public final class StreamHandler {
         return keys;
     }
 
-    public static InstrumentIdentityKey[] instrumentIdentityKeys(IdentityKey[] identities) {
+    public static EntityKey[] entityKeys(IdentityKey[] identities) {
         if (identities == null) {
             return null;
         }
 
-        InstrumentIdentityKey[] instrumentIdentityKeys = new InstrumentIdentityKey[identities.length];
+        EntityKey[] entityKeys = new EntityKey[identities.length];
         for (int i = 0; i < identities.length; ++i) {
-            instrumentIdentityKeys[i] = new InstrumentIdentityKey(identities[i].getSymbol().toString());
+            entityKeys[i] = new EntityKey(identities[i].getSymbol().toString());
         }
-        return instrumentIdentityKeys;
+        return entityKeys;
     }
 
-    public static String[] extractSymbols(InstrumentIdentityKey[] instrumentKeys) {
-        if (instrumentKeys == null) {
+    public static String[] extractSymbols(EntityKey[] entityKeys) {
+        if (entityKeys == null) {
             return null;
         }
 
-        String[] symbols = new String[instrumentKeys.length];
-        for (int i = 0; i < instrumentKeys.length; ++i) {
-            symbols[i] = instrumentKeys[i].getSymbol().toString();
+        String[] symbols = new String[entityKeys.length];
+        for (int i = 0; i < entityKeys.length; ++i) {
+            symbols[i] = entityKeys[i].getSymbol().toString();
         }
 
         return symbols;

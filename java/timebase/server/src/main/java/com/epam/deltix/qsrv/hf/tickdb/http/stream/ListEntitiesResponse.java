@@ -20,8 +20,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.epam.deltix.qsrv.hf.tickdb.http.InstrumentIdentityKey;
-import com.epam.deltix.qsrv.hf.tickdb.http.InstrumentIdentityKeyListAdapter;
+import com.epam.deltix.qsrv.hf.tickdb.http.EntityKey;
+import com.epam.deltix.qsrv.hf.tickdb.http.EntityKeyListAdapter;
 
 /**
  *
@@ -29,13 +29,13 @@ import com.epam.deltix.qsrv.hf.tickdb.http.InstrumentIdentityKeyListAdapter;
 @XmlRootElement(name = "listEntitiesResponse")
 public class ListEntitiesResponse {
     @XmlElement()
-    @XmlJavaTypeAdapter(InstrumentIdentityKeyListAdapter.class)
-    public InstrumentIdentityKey[] instruments;
+    @XmlJavaTypeAdapter(EntityKeyListAdapter.class)
+    public EntityKey[] instruments;
 
     public ListEntitiesResponse() {
     }
 
-    public ListEntitiesResponse(InstrumentIdentityKey[] instruments) {
+    public ListEntitiesResponse(EntityKey[] instruments) {
         this.instruments = instruments;
     }
 }

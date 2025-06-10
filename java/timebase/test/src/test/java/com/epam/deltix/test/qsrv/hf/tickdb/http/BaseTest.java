@@ -20,7 +20,7 @@ import com.epam.deltix.qsrv.hf.pub.md.UHFJAXBContext;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.qsrv.hf.tickdb.http.CreateStreamRequest;
-import com.epam.deltix.qsrv.hf.tickdb.http.InstrumentIdentityKey;
+import com.epam.deltix.qsrv.hf.tickdb.http.EntityKey;
 import com.epam.deltix.qsrv.hf.tickdb.http.StreamDef;
 import com.epam.deltix.qsrv.hf.tickdb.http.TBJAXBContext;
 import com.epam.deltix.qsrv.hf.tickdb.pub.StreamOptions;
@@ -93,14 +93,14 @@ public class BaseTest {
         return symbols;
     }
 
-    static InstrumentIdentityKey[] getInstrumentIdentityKeys(IdentityKey... ids) {
+    static EntityKey[] getInstrumentIdentityKeys(IdentityKey... ids) {
         if (ids == null) {
             return null;
         }
 
-        InstrumentIdentityKey[] symbols = new InstrumentIdentityKey[ids.length];
+        EntityKey[] symbols = new EntityKey[ids.length];
         for (int i = 0; i < ids.length; ++i) {
-            symbols[i] = new InstrumentIdentityKey(ids[i].getSymbol().toString());
+            symbols[i] = new EntityKey(ids[i].getSymbol().toString());
         }
 
         return symbols;

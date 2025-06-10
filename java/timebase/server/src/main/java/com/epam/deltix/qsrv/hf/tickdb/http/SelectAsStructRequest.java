@@ -33,8 +33,8 @@ public class SelectAsStructRequest extends DownloadRequest {
     public String stream;
 
     @XmlElement()
-    @XmlJavaTypeAdapter(InstrumentIdentityKeyListAdapter.class)
-    InstrumentIdentityKey[] instruments;
+    @XmlJavaTypeAdapter(EntityKeyListAdapter.class)
+    EntityKey[] instruments;
 
     @XmlElement()
     public int symbolLength = 10;

@@ -532,7 +532,7 @@ public class SessionHandler extends RestHandler implements StreamStateListener {
 
                 synchronized (out) {
                     writePropertyHeader(key, property, serial);
-                    marshalAndWrite(new ListEntitiesResponse(StreamHandler.instrumentIdentityKeys(ids)), out);
+                    marshalAndWrite(new ListEntitiesResponse(StreamHandler.entityKeys(ids)), out);
                     out.flush();
                 }
                 break;

@@ -31,8 +31,8 @@ public class SelectRequest extends DownloadRequest {
     public String[]             streams;
 
     @XmlElement()
-    @XmlJavaTypeAdapter(InstrumentIdentityKeyListAdapter.class)
-    public InstrumentIdentityKey[] instruments;
+    @XmlJavaTypeAdapter(EntityKeyListAdapter.class)
+    public EntityKey[]          instruments;
 
     @XmlElementWrapper
     @XmlElement(name = "item")

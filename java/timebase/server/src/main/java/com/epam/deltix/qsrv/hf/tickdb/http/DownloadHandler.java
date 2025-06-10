@@ -23,7 +23,6 @@ import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
 import com.epam.deltix.qsrv.hf.pub.util.SerializationUtils;
-import com.epam.deltix.qsrv.hf.tickdb.http.rest.HttpProtocolSerializationUtils;
 import com.epam.deltix.qsrv.hf.tickdb.pub.mon.TBObject;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
@@ -480,7 +479,7 @@ public abstract class DownloadHandler <T extends SelectRequest> extends Abstract
         dout.write(HTTPProtocol.INSTRUMENT_BLOCK_ID);
         writeEntityIndex(entityIndex);
 
-        HttpProtocolSerializationUtils.writeInstrumentIdentity(msg, dout);
+        SerializationUtils.writeIdentityKey(msg, dout);
 
         if (DEBUG_COMM)
             LOGGER.log(Level.INFO, "Write INSTRUMENT_BLOCK_ID: " + entityIndex);

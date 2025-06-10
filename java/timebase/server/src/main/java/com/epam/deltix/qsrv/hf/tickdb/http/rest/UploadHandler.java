@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http.rest;
 
+import com.epam.deltix.qsrv.hf.pub.util.SerializationUtils;
 import com.epam.deltix.qsrv.hf.tickdb.http.StreamHandler;
 import com.epam.deltix.qsrv.hf.tickdb.impl.ServerLock;
 import com.epam.deltix.qsrv.hf.tickdb.impl.TickStreamImpl;
@@ -165,7 +166,7 @@ public class UploadHandler extends RestHandler implements Runnable, LockEventLis
                     case HTTPProtocol.INSTRUMENT_BLOCK_ID:
 
                         log(streamKey, "recieved INSTRUMENT_BLOCK_ID");
-                        entities.add(HttpProtocolSerializationUtils.readIdentityKey(din));
+                        entities.add(SerializationUtils.readIdentityKey(din));
                         break;
                     case HTTPProtocol.TERMINATOR_BLOCK_ID:
                         log(streamKey, "recieved TERMINATOR_BLOCK_ID");
@@ -352,7 +353,7 @@ public class UploadHandler extends RestHandler implements Runnable, LockEventLis
                     dout.writeBoolean(true); // entities added
                     dout.writeInt(entities.size()); // entities size
                     for (IdentityKey id : entities)
-                        HttpProtocolSerializationUtils.writeInstrumentIdentity(id, dout);
+                        SerializationUtils.writeIdentityKey(id, dout);
                 }
             } catch (IOException ioe) {
                 onException(ioe);
@@ -368,7 +369,7 @@ public class UploadHandler extends RestHandler implements Runnable, LockEventLis
                     dout.writeBoolean(false); // entities added
                     dout.writeInt(entities.size()); // entities size
                     for (IdentityKey id : entities)
-                        HttpProtocolSerializationUtils.writeInstrumentIdentity(id, dout);
+                        SerializationUtils.writeIdentityKey(id, dout);
                 }
             } catch (IOException ioe) {
                 onException(ioe);

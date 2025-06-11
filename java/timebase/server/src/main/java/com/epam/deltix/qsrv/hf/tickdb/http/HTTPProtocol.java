@@ -38,8 +38,8 @@ public abstract class HTTPProtocol {
     public static final Logger LOGGER = Logger.getLogger(HTTPProtocol.class.getPackage().getName());
 
     public static final short VERSION = 104;
-    public static final short COMMUNITY_VERSION_FLAG = 0x4000;
     public static final short MIN_CLIENT_VERSION = 8;
+    public static final short COMMUNITY_VERSION_FLAG = 0x4000; // set this flag only for a community version of server
     public static final short CLIENT_SSL_SUPPORT_VERSION = 9;
     public static final short CLIENT_ENTITYID32_SUPPORT_VERSION = 11;
     public static final short CLIENT_LOCKS_SUPPORT_VERSION = 12;

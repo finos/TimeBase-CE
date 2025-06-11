@@ -87,7 +87,7 @@ public class RESTHandshakeHandler implements ConnectionHandshakeHandler, Closeab
         final int init = dis.read();
         assert HTTPProtocol.PROTOCOL_INIT == init;
 
-        dos.writeShort(HTTPProtocol.VERSION);
+        dos.writeShort(HTTPProtocol.VERSION | HTTPProtocol.COMMUNITY_VERSION_FLAG);
         final short clientVersion = dis.readShort();
         if (clientVersion < HTTPProtocol.MIN_CLIENT_VERSION) {
             HTTPProtocol.LOGGER.severe(

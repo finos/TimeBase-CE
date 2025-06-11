@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.hf.tickdb.http;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  *
@@ -32,7 +33,8 @@ public class SelectAsStructRequest extends DownloadRequest {
     public String stream;
 
     @XmlElement()
-    public String[] identities;
+    @XmlJavaTypeAdapter(EntityKeyListAdapter.class)
+    EntityKey[] instruments;
 
     @XmlElement()
     public int symbolLength = 10;

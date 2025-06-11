@@ -11,6 +11,11 @@ SetSchemaRequest
 ChangeSchemaRequest
 ListEntitiesRequest
 ListEntitiesResponse
+ListSymbolsRequest
+ListSymbolsResponse
+DeleteDataRequest
+GenerateSchemaRequest
+GenerateSchemaResponse
 LockStreamRequest
 LockStreamResponse
 PurgeRequest

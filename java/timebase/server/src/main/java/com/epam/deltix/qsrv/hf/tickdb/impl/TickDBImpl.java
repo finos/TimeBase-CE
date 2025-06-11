@@ -1860,14 +1860,9 @@ public class TickDBImpl
     {
         InstrumentMessageSource     ims = 
             pq.executeQuery (options, Parameter.valuesOf (params));
-        
-        if (streams != null)
-            ims.addStream (streams);
-        
-        if (ids == null)
-            ims.subscribeToAllEntities ();
-        else
-            ims.addEntities (toArray(ids), 0, ids.length);
+
+        // pq controls all possible entities it should subscribe
+        ims.subscribeToAllEntities();
         
         if (fullScan) 
             ims.reset (pq.isReverse () ? Long.MAX_VALUE : Long.MIN_VALUE);

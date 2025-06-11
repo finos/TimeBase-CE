@@ -16,12 +16,23 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http.stream;
 
+import com.epam.deltix.qsrv.hf.tickdb.http.EntityKey;
+import com.epam.deltix.qsrv.hf.tickdb.http.EntityKeyListAdapter;
+
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @XmlRootElement(name = "clearStream")
 public class ClearRequest extends StreamRequest {
 
     @XmlElement()
-    public String[]    identities;
+    @XmlJavaTypeAdapter(EntityKeyListAdapter.class)
+    public EntityKey[]    instruments;
+
+    @XmlElementWrapper
+    @XmlElement(name = "item")
+    public String[]                     symbols;
+
 }

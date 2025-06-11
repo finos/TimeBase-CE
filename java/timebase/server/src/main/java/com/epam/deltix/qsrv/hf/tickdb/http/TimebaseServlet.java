@@ -201,10 +201,10 @@ public class TimebaseServlet extends HttpServlet {
                         final ListEntitiesRequest r = (ListEntitiesRequest) body;
 
                         StreamHandler.processListEntities(db, r, resp);
-//                    } else if (body instanceof ListSymbolsRequest) {
-//                        final ListSymbolsRequest r = (ListSymbolsRequest) body;
-//
-//                        StreamHandler.processListSymbols(db, r, resp);
+                    } else if (body instanceof ListSymbolsRequest) {
+                        final ListSymbolsRequest r = (ListSymbolsRequest) body;
+
+                        StreamHandler.processListSymbols(db, r, resp);
                     } else if (body instanceof LockStreamRequest) {
                         StreamHandler.processLock(db, (LockStreamRequest) body, resp);
                     } else if (body instanceof UnlockStreamRequest) {
@@ -276,7 +276,7 @@ public class TimebaseServlet extends HttpServlet {
                         response.serial = instance.reset(((ResetRequest) body).time);
                     } else if (body instanceof EntitiesRequest) {
                         EntitiesRequest r = (EntitiesRequest) body;
-                        response.serial = instance.changeEntities(r.time, r.mode, StreamHandler.identityKeys(r.identities));
+                        response.serial = instance.changeEntities(r.time, r.mode, StreamHandler.concat(r.entities, r.symbols));
                     } else if (body instanceof TypesRequest) {
                         TypesRequest r = (TypesRequest) body;
                         response.serial = instance.changeTypes(r.mode, r.types);

@@ -21,8 +21,6 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.epam.deltix.timebase.messages.IdentityKey;
-
 /**
  *
  */
@@ -31,6 +29,10 @@ public class SelectRequest extends DownloadRequest {
     @XmlElementWrapper
     @XmlElement(name = "item")
     public String[]             streams;
+
+    @XmlElement()
+    @XmlJavaTypeAdapter(EntityKeyListAdapter.class)
+    public EntityKey[]          instruments;
 
     @XmlElementWrapper
     @XmlElement(name = "item")
@@ -54,6 +56,9 @@ public class SelectRequest extends DownloadRequest {
 
     @XmlElement()
     public boolean              realTimeNotification = false;
+
+    @XmlElement()
+    public String               space;
 
     @XmlElementWrapper
     @XmlElement(name = "item")

@@ -61,13 +61,13 @@ public class TestXmlQueries {
         ListEntitiesRequest req = new ListEntitiesRequest();
         req.stream = stream;
         ListEntitiesResponse resp = (ListEntitiesResponse) query(user, password, req);
-        System.out.println("stream: " + stream + " " + Util.printArray(resp.identities));
+        System.out.println("stream: " + stream + " " + Util.printArray(resp.instruments));
     }
 
     private static void testGetRange(String user, String password, String stream, IdentityKey... instruments) throws IOException, JAXBException {
         GetRangeRequest req = new GetRangeRequest();
         req.stream = stream;
-        req.identities = BaseTest.getSymbols(instruments);
+        req.instruments = BaseTest.getInstrumentIdentityKeys(instruments);
         GetRangeResponse resp = (GetRangeResponse) query(user, password, req);
 
         System.out.print("stream: " + stream + " instruments: " + Util.printArray(instruments));

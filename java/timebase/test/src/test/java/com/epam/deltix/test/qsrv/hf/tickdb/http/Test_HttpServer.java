@@ -250,8 +250,8 @@ public class Test_HttpServer extends BaseTest {
         request.stream = TickDBCreator.BARS_STREAM_KEY;
 
         ListEntitiesResponse result = (ListEntitiesResponse) TestXmlQueries.query(URL, null, null, request);
-        assertTrue(result.identities != null);
-        System.out.println("stream: " + request.stream + " " + Util.printArray(result.identities));
+        assertTrue(result.instruments != null);
+        System.out.println("stream: " + request.stream + " " + Util.printArray(result.instruments));
     }
 
     @Test
@@ -563,7 +563,7 @@ public class Test_HttpServer extends BaseTest {
         EntitiesRequest change = new EntitiesRequest();
         change.id = cursor.getId();
         change.mode = ChangeAction.ADD;
-        change.identities = getSymbols(ids);
+        change.entities = getInstrumentIdentityKeys(ids);
 
         TestXmlQueries.query(URL, null, null, change);
     }

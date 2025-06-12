@@ -20,8 +20,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.epam.deltix.timebase.messages.IdentityKey;
-import com.epam.deltix.qsrv.hf.tickdb.http.IdentityKeyListAdapter;
+import com.epam.deltix.qsrv.hf.tickdb.http.EntityKey;
+import com.epam.deltix.qsrv.hf.tickdb.http.EntityKeyListAdapter;
 
 /**
  *
@@ -29,13 +29,13 @@ import com.epam.deltix.qsrv.hf.tickdb.http.IdentityKeyListAdapter;
 @XmlRootElement(name = "listEntitiesResponse")
 public class ListEntitiesResponse {
     @XmlElement()
-    @XmlJavaTypeAdapter(IdentityKeyListAdapter.class)
-    public IdentityKey[] identities;
+    @XmlJavaTypeAdapter(EntityKeyListAdapter.class)
+    public EntityKey[] instruments;
 
     public ListEntitiesResponse() {
     }
 
-    public ListEntitiesResponse(IdentityKey[] identities) {
-        this.identities = identities;
+    public ListEntitiesResponse(EntityKey[] instruments) {
+        this.instruments = instruments;
     }
 }

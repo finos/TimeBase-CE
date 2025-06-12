@@ -16,8 +16,13 @@
  */
 package com.epam.deltix.qsrv.hf.tickdb.http.download;
 
+import com.epam.deltix.qsrv.hf.tickdb.http.EntityKey;
+import com.epam.deltix.qsrv.hf.tickdb.http.EntityKeyListAdapter;
+
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @XmlRootElement(name = "changeEntities")
 public class EntitiesRequest extends CursorRequest {
@@ -26,5 +31,10 @@ public class EntitiesRequest extends CursorRequest {
     public ChangeAction mode;
 
     @XmlElement()
-    public String[] identities;
+    @XmlJavaTypeAdapter(EntityKeyListAdapter.class)
+    public EntityKey[] entities;
+
+    @XmlElementWrapper
+    @XmlElement(name = "item")
+    public String[]             symbols;
 }

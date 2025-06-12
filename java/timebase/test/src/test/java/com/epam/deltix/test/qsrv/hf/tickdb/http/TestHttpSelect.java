@@ -30,8 +30,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.zip.GZIPInputStream;
 
 import com.epam.deltix.qsrv.hf.tickdb.http.*;
-import com.epam.deltix.timebase.messages.ConstantIdentityKey;
-import com.epam.deltix.timebase.messages.IdentityKey;
 
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
 import com.epam.deltix.qsrv.hf.tickdb.http.download.ChangeAction;
@@ -229,7 +227,7 @@ public class TestHttpSelect {
         EntitiesRequest change = new EntitiesRequest();
         change.id = cur.getId();
         change.mode = ChangeAction.ADD;
-        change.identities = new String[] { "A" };
+        change.entities = new EntityKey[] { new EntityKey("A") };
 
         TestXmlQueries.query(null, null, change);
 

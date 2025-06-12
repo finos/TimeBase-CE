@@ -143,10 +143,13 @@ public class DownloadStructHandler extends AbstractHandler implements Runnable {
 
         try (final InstrumentMessageSource cursor = openCursor()) {
 
-            if (request.identities == null || request.identities.length == 0)
+            if (request.instruments == null || request.instruments.length == 0)
                 cursor.subscribeToAllEntities();
             else
-                cursor.addEntities(StreamHandler.identityKeys(request.identities), 0, request.identities.length);
+                cursor.addEntities(
+                    StreamHandler.identityKeys(request.instruments),
+                    0, request.instruments.length
+                );
 
             if (request.concreteTypes == null || request.concreteTypes.length == 0)
                 cursor.subscribeToAllTypes();

@@ -18,6 +18,7 @@ package com.epam.deltix.qsrv.hf.tickdb.ui.tbshell;
 
 import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.qsrv.hf.pub.MappingTypeLoader;
+import com.epam.deltix.qsrv.hf.pub.TypeLoaderImpl;
 import com.epam.deltix.qsrv.hf.pub.md.DataField;
 import com.epam.deltix.qsrv.hf.pub.md.FloatDataType;
 import com.epam.deltix.qsrv.hf.pub.md.NonStaticDataField;
@@ -474,7 +475,11 @@ public class DBMgr {
 
         DXTickStream stream = tdb.createStream(name, options);
 
+        MappingTypeLoader typeLoader = new MappingTypeLoader(TypeLoaderImpl.DEFAULT_INSTANCE);
+        typeLoader.bind("com.epam.deltix.timebase.messages.BarMessage", SimpleBarMessage.class);
+
         LoadingOptions lo = new LoadingOptions();
+        lo.typeLoader = typeLoader;
 
         try (TickLoader loader = stream.createLoader(lo)) {
             SimpleLoader.loadBarsFromZipResource("com/epam/deltix/qsrv/testsetup/TestBars.zip", loader);

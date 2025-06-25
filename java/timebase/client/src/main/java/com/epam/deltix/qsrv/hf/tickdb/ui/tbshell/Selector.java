@@ -17,16 +17,14 @@
 package com.epam.deltix.qsrv.hf.tickdb.ui.tbshell;
 
 import com.epam.deltix.data.stream.DXChannel;
+import com.epam.deltix.qsrv.hf.pub.*;
 import com.epam.deltix.streaming.MessageSource;
 import com.epam.deltix.qsrv.hf.blocks.InstrumentSet;
 import com.epam.deltix.qsrv.hf.blocks.InstrumentToObjectMap;
 import com.epam.deltix.qsrv.hf.codec.MessageSizeCodec;
-import com.epam.deltix.qsrv.hf.pub.ChannelQualityOfService;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
-import com.epam.deltix.qsrv.hf.pub.NullValueException;
-import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.timebase.messages.TimeStamp;
 import com.epam.deltix.qsrv.hf.pub.codec.CodecFactory;
 import com.epam.deltix.qsrv.hf.pub.codec.NonStaticFieldInfo;
@@ -922,9 +920,17 @@ public class Selector {
         opts.channelQOS = qos;
         opts.reversed = reverse;
         opts.versionTracking = versionTracking;
+        opts.typeLoader = getTypeLoader();
         
         return (opts);
-    }    
+    }
+
+    public TypeLoader               getTypeLoader() {
+        MappingTypeLoader typeLoader = new MappingTypeLoader(TypeLoaderImpl.DEFAULT_INSTANCE);
+        typeLoader.bind("com.epam.deltix.timebase.messages.BarMessage", SimpleBarMessage.class);
+
+        return typeLoader;
+    }
     
     public void                     runQuery (String args, String fileId, LineNumberReader reader)
         throws IOException, InterruptedException 

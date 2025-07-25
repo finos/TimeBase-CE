@@ -419,7 +419,7 @@ public class QuantServiceConfig {
         return (myServiceUser != null) ? getString(myType, TB_LOGIN_PASS, null) : getString(Type.QuantServer, TB_LOGIN_PASS, null);
     }
 
-    private static final class PropertiesTokenReplacer implements TokenReplacingReader.TokenResolver {
+    private static final class PropertiesTokenReplacer implements TokenReplacingReader.ITokenResolver {
         private String qsHome = null;
         private String home = null;
 

@@ -57,7 +57,7 @@ public class SimpleSecurityConfiguration {
     public static SimpleSecurityConfiguration read(File file) {
 
         try {
-            TokenReplacingReader reader = new TokenReplacingReader(new FileReader(file), new TokenReplacingReader.TokenResolver() {
+            TokenReplacingReader reader = new TokenReplacingReader(new FileReader(file), new TokenReplacingReader.ITokenResolver() {
                 @Override
                 public String resolveToken(String token) {
                     return System.getenv(token);

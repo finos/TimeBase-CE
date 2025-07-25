@@ -78,7 +78,7 @@ jobs:
       fail-fast: false
       matrix:
         java: [ '11' ]
-        os: [ 'windows-latest' ] # we need windows for building native service libs.
+        os: [ 'windows-2022' ] # we need windows for building native service libs.
     steps:
       - name: Checkout code
         uses: actions/checkout@v2

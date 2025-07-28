@@ -1,3 +1,5 @@
+import deltix.buildtools.SonatypeCentralPortalUploadRepositoryTask
+
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -546,6 +548,18 @@ configure(leafProjects) {
     task printDependencies(type: DependencyReportTask) {
         description "Prints project dependency tree"
     }
+}
+
+ext {
+    sonaUser = findProperty('SONATYPE_NEXUS_USERNAME') ?:  System.getenv('SONATYPE_NEXUS_USERNAME') ?: "FakeUser"
+    sonaPass = findProperty('SONATYPE_NEXUS_PASSWORD') ?:  System.getenv('SONATYPE_NEXUS_PASSWORD') ?: "FakePass"
+}
+
+tasks.register('uploadArtifactsToMaven', SonatypeCentralPortalUploadRepositoryTask) {
+    portalUsername.set(sonaUser)
+    portalPassword.set(sonaPass)
+    groupId.set('com.epam.deltix')
+    snapshotRelease.set(false)
 }
 
 def webAbbrs = [':java:timebase:web': 'default', ':java:timebase:webmonitor': 'tb']

@@ -15,6 +15,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.13.5'
 
     compile 'de.undercouch:gradle-download-task:3.4.3'
+    compile 'org.json:json:20240303'
     testCompile 'junit:junit:4.13.1'
 }
 

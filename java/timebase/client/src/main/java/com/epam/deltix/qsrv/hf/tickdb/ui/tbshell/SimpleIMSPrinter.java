@@ -44,7 +44,7 @@ public class SimpleIMSPrinter implements IMSPrinter {
     public static final char            CR = '\n';
     public static final String          NEWTYPE = ">";
     public static final String          STATICHDR = ">>";
-    
+
     private InstrumentMessageSource     ims;
     private boolean                     closeWhenDone;
     private int                         count;
@@ -67,8 +67,11 @@ public class SimpleIMSPrinter implements IMSPrinter {
     public static final String      KEYWORD_SYMBOL = "SYMBOL";
     public static final String      KEYWORD_TYPE = "TYPE";
 
+    private final CSVWriter csvWriter;
+
     public SimpleIMSPrinter(Writer out) {
         this.out = out;
+        this.csvWriter = new CSVWriter(out);
     }
 
     @Override
@@ -78,8 +81,8 @@ public class SimpleIMSPrinter implements IMSPrinter {
 
     @Override
     public void                     setIMS (
-        InstrumentMessageSource         ims,
-        boolean                         closeWhenDone
+            InstrumentMessageSource         ims,
+            boolean                         closeWhenDone
     )
     {
         this.ims = ims;
@@ -104,46 +107,44 @@ public class SimpleIMSPrinter implements IMSPrinter {
     }
 
     @Override
-    public void                     printAll () throws IOException {        
-        try {            
+    public void                     printAll () throws IOException {
+        try {
             while (count < maxCount && ims.next ()) {
-                InstrumentMessage msg = ims.getMessage ();
-
                 printMessage (ims);
                 count++;
-            }            
+            }
         } finally {
             if (closeWhenDone)
                 ims.close ();
-        }        
+        }
     }
-    
-    private void                    print (String s, Object ... args) 
-        throws IOException 
+
+    private void                    print (String s, Object ... args)
+            throws IOException
     {
         print (String.format (s, args));
     }
-    
+
     private void                    print (CharSequence s) throws IOException {
-        if (newLine) 
-            newLine = false;        
+        if (newLine)
+            newLine = false;
         else
             out.write (SEP);
-        
-        CSVWriter.printCell (s == null ? NULLSTR : s, out);           
+
+        csvWriter.writeCell (s == null ? NULLSTR : s);
     }
-    
+
     private void                    println () throws IOException {
         out.write (CR);
         out.flush ();
         newLine = true;
     }
-    
+
     private void                    printTime (
-        final long                      nanos,
-        boolean                         skipZeroTod
-    ) 
-        throws IOException 
+            final long                      nanos,
+            boolean                         skipZeroTod
+    )
+            throws IOException
     {
         if (nanos == TimeConstants.TIMESTAMP_UNKNOWN) {
             print (NULLSTR);
@@ -160,19 +161,18 @@ public class SimpleIMSPrinter implements IMSPrinter {
             timestamp = nanos / TimeStamp.NANOS_PER_MS;
         }
 
-        cal.setTimeInMillis (timestamp);        
-        
+        cal.setTimeInMillis (timestamp);
+
         sb.setLength (0);
-        
+
         sb.append (
-            String.format (
-                "%04d-%02d-%02d", 
+            String.format ("%04d-%02d-%02d",
                 cal.get (Calendar.YEAR),
                 cal.get (Calendar.MONTH) + 1,
                 cal.get (Calendar.DAY_OF_MONTH)
             )
         );
-        
+
         int             s = cal.get (Calendar.SECOND);
         int             m = cal.get (Calendar.MINUTE);
         int             h = cal.get (Calendar.HOUR_OF_DAY);
@@ -181,56 +181,56 @@ public class SimpleIMSPrinter implements IMSPrinter {
         boolean         hasNanos = ns != 0;
         boolean         hasSec = s != 0 || hasMillis || hasNanos || !skipZeroTod;
         boolean         hasHours = m != 0 || h != 0 || hasSec;
-        
+
         if (hasHours) {
             sb.append (String.format (" %02d:%02d", h, m));
-            
+
             if (hasSec)
                 sb.append (String.format (":%02d", s));
-                                    
+
             if (hasNanos)
-                sb.append (String.format (".%09d", ns + ms * 1000000));            
+                sb.append (String.format (".%09d", ns + ms * 1000000));
             else if (hasMillis)
                 sb.append (String.format (".%03d", ms));
-        }      
-        
+        }
+
         print (sb);
-    }        
-    
-    private void                    printBinary (UnboundDecoder decoder) 
-        throws IOException    
+    }
+
+    private void                    printBinary (UnboundDecoder decoder)
+            throws IOException
     {
         int         len = decoder.getBinaryLength ();
-        
+
         if (xe == null)
             xe = new HexBinCharEncoder (out, false, true, 0);
-        
+
         print ("");
-        
+
         if (len > maxBinary) {
             //  Compute and print the hash
             if (mdos == null)
                 mdos = new MessageDigestOutputStream (); //Note: Nov 2019: changed default algo from MD5 to SHA-256
-            
+
             mdos.md.reset ();
-            
+
             decoder.getBinary (0, len, mdos);
-            
+
             byte [] d = mdos.md.digest ();
-            
+
             out.write ('#');
-            
+
             xe.write (d, d.length - 4, 4); // not secure, but good enough.
+        } else {
+            decoder.getBinary(0, len, xe);
         }
-        else                                    
-            decoder.getBinary (0, len, xe);        
     }
-        
-    private void                    print (UnboundDecoder decoder) 
-        throws IOException 
+
+    private void                    print (UnboundDecoder decoder)
+            throws IOException
     {
         DataType    dt = decoder.getField ().getType ();
-        
+
         if (dt instanceof DateTimeDataType)
             printTime (decoder.getLong (),  true);
         else if (dt instanceof BinaryDataType)
@@ -240,36 +240,35 @@ public class SimpleIMSPrinter implements IMSPrinter {
         else
             print (decoder.getString ());
     }
-    
-    public void                     printTypeHeader () 
-        throws IOException
+
+    public void                     printTypeHeader ()
+            throws IOException
     {
         String      typeName = type.getName ();
 
         if (typeName == null || typeName.startsWith("QUERY"))
             typeName = NULLSTR;
-        
+
         print ("%s%s", NEWTYPE, typeName);
     }
-    
+
     public void                     printMessage (InstrumentMessageSource msginfo)
-        throws IOException 
+        throws IOException
     {
-        RawMessage          rmsg = (RawMessage) msginfo.getMessage ();        
+        RawMessage          rmsg = (RawMessage) msginfo.getMessage ();
         //
         //  Handle type
         //
         boolean             newType = msginfo.getCurrentTypeIndex () == numTypesSeen;
-        
-        if (newType) 
+
+        if (newType)
             numTypesSeen++;
-            
+
         if (rmsg.type != type) {
             type = rmsg.type;
             decoder = cf.createFixedUnboundDecoder (type);// cached
 
-            RecordClassInfo         cinfo = decoder.getClassInfo ();                        
-            
+            RecordClassInfo         cinfo = decoder.getClassInfo ();
             NonStaticFieldInfo []   nsf = cinfo.getNonStaticFields ();
 
             printTypeHeader ();
@@ -278,49 +277,47 @@ public class SimpleIMSPrinter implements IMSPrinter {
             print (KEYWORD_TYPE);
 
             int                     numNsf = 0;
-            
-            if (nsf != null)
+
+            if (nsf != null) {
                 for (NonStaticFieldInfo fi : nsf) {
-                    print (fi.getName ());      
+                    print(fi.getName());
                     numNsf++;
                 }
+            }
 
             if (newType) {
                 StaticFieldInfo []  sf = cinfo.getStaticFields ();
-                
+
                 if (sf != null && sf.length != 0) {
-                    for (StaticFieldInfo fi : sf) 
-                        print (fi.getName ()); 
-                    
+                    for (StaticFieldInfo fi : sf)
+                        print (fi.getName ());
+
                     println ();
-                    
                     print (STATICHDR);
-                    
+
                     for (int ii = -3; ii < numNsf; ii++)
                         print ("");
-                    
-                    for (StaticFieldInfo fi : sf) 
+
+                    for (StaticFieldInfo fi : sf)
                         print (fi.getString ());
                 }
             }
-            
             println ();
         }
-                
+
         print ("%,d", count);
         printTime (rmsg.getNanoTime(), false);
         print (rmsg.getSymbol());
-                       
+
         rmsg.setUpMemoryDataInput (mdi);
         decoder.beginRead (mdi);
 
         while (decoder.nextField ()) {
             if (decoder.isNull ())
                 print (NULLSTR);
-            else 
-                print (decoder);            
-        }        
-        
+            else
+                print (decoder);
+        }
         println ();
-    }           
+    }
 }

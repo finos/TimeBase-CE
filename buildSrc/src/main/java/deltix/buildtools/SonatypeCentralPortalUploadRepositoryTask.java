@@ -134,7 +134,7 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
 
         JSONArray repositories = new JSONObject(body).getJSONArray("repositories");
         if (repositories.isEmpty()) {
-            throw new IllegalStateException("No open repositories found!");
+            throw new IllegalStateException("Open repositories is empty!");
         }
 
         String repositoryKey = null;
@@ -151,7 +151,7 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
         }
 
         if (null == repositoryKey) {
-            throw new IllegalStateException("No open repositories found!");
+            throw new IllegalStateException("No open repositories found with groupId=" + group);
         }
         return repositoryKey;
     }

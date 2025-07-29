@@ -137,6 +137,8 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
             throw new IllegalStateException("Open repositories is empty!");
         }
 
+        System.out.println(repositories);
+
         String repositoryKey = null;
         String group = groupId.get();
         for (int i = 0; i < repositories.length(); i++) {

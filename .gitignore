@@ -11,7 +11,6 @@ lib/**
 *.iml
 *.ipr
 *.iws
-#*.vcxproj.user
 
 /installer/
 /temp/

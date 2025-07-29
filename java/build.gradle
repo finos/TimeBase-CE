@@ -558,7 +558,7 @@ ext {
 tasks.register('uploadArtifactsToMaven', SonatypeCentralPortalUploadRepositoryTask) {
     portalUsername.set(sonaUser)
     portalPassword.set(sonaPass)
-    groupId.set('org.finos.timebase-ce')
+    groupId.set('org.finos')
     snapshotRelease.set(false)
 }
 

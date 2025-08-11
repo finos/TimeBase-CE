@@ -74,12 +74,11 @@ public class QBFloatType extends QBNumericType<QFloatType> {
         else if (javaBaseType == double.class)
             return (CTXT.staticVarRef (Double.class, "NaN"));
         else if (javaBaseType == long.class)
-            return (CTXT.staticVarRef (Decimal64Utils.class, "NaN"));
+            return (CTXT.staticVarRef (Decimal64Utils.class, "NULL"));
         else if (javaBaseType == Decimal64.class)
             return CTXT.nullLiteral();
 
         throw new RuntimeException ("unknown bound type = " + javaBaseType);
-
     }
 
     @Override

@@ -30,7 +30,6 @@ import com.epam.deltix.util.memory.MemoryDataInput;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -107,11 +106,16 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
         public boolean equals(Object obj) {
             boolean superEquals = super.equals(obj);
 
-            if (!superEquals) return false;
-            if (!(obj instanceof LongPriceTestMessage)) return false;
-            LongPriceTestMessage other =(LongPriceTestMessage)obj;
-            if (getPrice() != other.getPrice()) return false;
-            if (getSize() != other.getSize()) return false;
+            if (!superEquals)
+                return false;
+            if (!(obj instanceof LongPriceTestMessage))
+                return false;
+
+            LongPriceTestMessage other = (LongPriceTestMessage)obj;
+            if (getPrice() != other.getPrice())
+                return false;
+            if (getSize() != other.getSize())
+                return false;
 
             return true;
         }
@@ -214,7 +218,6 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
     public static class DoublePriceTestMessage extends InstrumentMessage {
 
         protected double price = TypeConstants.IEEE64_NULL;
-
         protected double size = TypeConstants.IEEE64_NULL;
 
         @SchemaElement(title = "Price")
@@ -242,7 +245,6 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
         public void setSize(double value) {
             this.size = value;
         }
-
         public boolean hasSize() {
             return size != TypeConstants.IEEE64_NULL;
         }
@@ -257,9 +259,18 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
             if (!superEquals) return false;
             if (!(obj instanceof DoublePriceTestMessage)) return false;
 
-            DoublePriceTestMessage other =(DoublePriceTestMessage)obj;
-            if (getPrice() != other.getPrice()) return false;
-            if (getSize() != other.getSize()) return false;
+            DoublePriceTestMessage other = (DoublePriceTestMessage)obj;
+            if (hasPrice() && other.hasPrice()) {
+                if (getPrice() != other.getPrice()) return false;
+            } else {
+                if (hasPrice() || other.hasPrice()) return false;
+            }
+
+            if (hasSize() && other.hasSize()) {
+                if (getSize() != other.getSize()) return false;
+            } else {
+                if (hasSize() || other.hasSize()) return false;
+            }
 
             return true;
         }
@@ -438,12 +449,12 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
     void testCodecs1() throws Exception {
         double price = 0.12345;
         double size = 123.456789;
+
         test2(new LongFlatPriceTestMessage(Decimal64Utils.fromDouble(price), Decimal64Utils.fromDouble(size)), price, size);
 
         test2(new LongFlatPriceTestMessage(Decimal64Utils.NaN, Decimal64Utils.NaN), Double.NaN, Double.NaN);
     }
 
-    @Ignore("Fails because of incorrect processing Decimal64Utils.NULL") //TODO:
     @Test
     public void testCodecsNulls() throws Exception {
 
@@ -520,8 +531,15 @@ public class Test_RecordCodecDecimals extends Test_RecordCodecsBase {
         DoublePriceTestMessage d = (DoublePriceTestMessage) factory.createFixedBoundDecoder(
                 cd -> DoublePriceTestMessage.class, LONG_RCD).decode(in);
 
-        Assert.assertEquals(price, d.getPrice(), 1E-16);
-        Assert.assertEquals(size, d.getSize(), 1E-16);
+        if (Double.isNaN(price))
+            Assert.assertTrue(Double.isNaN(d.getPrice()));
+        else
+            Assert.assertEquals(price, d.getPrice(), 1E-16);
+
+        if (Double.isNaN(size))
+            Assert.assertTrue(Double.isNaN(d.getSize()));
+        else
+            Assert.assertEquals(size, d.getSize(), 1E-16);
     }
 
     private void test2(double price, double size) throws Exception {

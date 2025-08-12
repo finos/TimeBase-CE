@@ -1411,7 +1411,7 @@ public class Test_QqlObjects extends TDBRunnerBase {
         importStream(db, "KRAKEN", "KRAKEN.30s.qsmsg.gz");
     }
 
-    private static void importStream(DXTickDB db, String streamKey, String file) throws IOException {
+    public static void importStream(DXTickDB db, String streamKey, String file) throws IOException {
         DXTickStream stream = db.getStream(streamKey);
         if (stream != null) {
             stream.delete();

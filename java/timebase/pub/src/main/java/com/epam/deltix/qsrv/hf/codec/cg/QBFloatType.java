@@ -42,7 +42,7 @@ public class QBFloatType extends QBNumericType<QFloatType> {
         else if (javaBaseType == double.class)
             checkNull = CTXT.staticCall (Double.class, "isNaN", value);
         else if (javaBaseType == long.class)
-            checkNull = CTXT.staticCall (Decimal64Utils.class, "isNaN", value);
+            checkNull = CTXT.staticCall (Decimal64Utils.class, "isNull", value);
         else if (javaBaseType == Decimal64.class)
             //checkNull = CTXT.binExpr(CTXT.binExpr(value, " == ", getNullLiteral()), " || ", value.call("isNaN"));
             checkNull = CTXT.binExpr(value, " == ", getNullLiteral());

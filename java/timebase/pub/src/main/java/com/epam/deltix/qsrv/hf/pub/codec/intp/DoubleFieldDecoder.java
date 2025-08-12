@@ -89,7 +89,7 @@ class DoubleFieldDecoder extends FieldDecoder {
     @Override
     protected void setNull(Object obj) throws IllegalAccessException, InvocationTargetException {
         if (fieldType == long.class) { // special case for decimals
-            setter.setLong(obj, IntegerDataType.INT64_NULL);
+            setter.setLong(obj, Decimal64Utils.NULL);
         } else if (fieldType == Decimal64.class) { // special case for decimals
             setter.set(obj, Decimal64.NULL);
         } else {

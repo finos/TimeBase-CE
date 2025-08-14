@@ -75,7 +75,7 @@ public interface VSChannel extends Disposable {
     /**
      * @return value previously set by {@link #setTag(String)}
      *
-     * @apiNote experimental
+     * experimental
      */
     @Nullable
     String getTag();
@@ -83,7 +83,7 @@ public interface VSChannel extends Disposable {
     /**
      * Sets an arbitrary tag that can be used for debugging purposes. It is not sent to the remote side.
      *
-     * @apiNote experimental
+     * experimental
      */
     void setTag(@Nullable String tag);
 }

@@ -44,7 +44,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
     public final static short      MAX_SOCKETS_PER_CONNECTION      = 8;
 
     private final Map <String, Connector>        dispatchers =
-            new HashMap <> ();
+        new HashMap <> ();
 
     private final QuickExecutor                 executor;
     private final ContextContainer contextContainer;
@@ -53,7 +53,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
     private final int                           connectionsLimit;
     private final short                         transportsLimit;
     private final long                          time;
-    private int                                 reconnectInterval;
+    private final int                           reconnectInterval;
     private final VSCompression                 compression;
 
     private TLSContext                          tlsContext;
@@ -149,7 +149,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         if (transportProperties != null) {
             transportType = transportProperties.transportType;
             if (transportType == TransportType.AERON_IPC) {
-                DXAeron.start(transportProperties.transportDir, false);
+                throw new RuntimeException("Legacy version of Aeron IPC is not supported");
             } else if (transportType == TransportType.OFFHEAP_IPC) {
                 OffHeap.start(transportProperties.transportDir, true);
             }
@@ -161,9 +161,9 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         s.setTcpNoDelay(true);
         s.setKeepAlive(true);
 
+        BufferedInputStream bis = new BufferedInputStream(s.getInputStream(), VSocketImpl.INPUT_STREAM_BUFFER_SIZE);
         return handleHandshake(
-                SocketConnectionFactory.createConnection(
-                        s, new BufferedInputStream(s.getInputStream()), s.getOutputStream())
+            SocketConnectionFactory.createConnection(s, bis, s.getOutputStream())
         );
     }
 
@@ -175,7 +175,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         s.setKeepAlive(true);
 
         return handleHandshake(
-                SocketConnectionFactory.createConnection(s, is, os)
+            SocketConnectionFactory.createConnection(s, is, os)
         );
     }
 
@@ -224,10 +224,10 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
         if (!isCompatible) {
             VSProtocol.LOGGER.severe (
-                    "Connection from " + clientId + " rejected due to incompatible protocol version #" +
-                            clientVersion + " (accepted: " +
-                            MIN_COMPATIBLE_CLIENT_VERSION + " .. " +
-                            MAX_COMPATIBLE_CLIENT_VERSION + ")"
+                "Connection from " + clientId + " rejected due to incompatible protocol version #" +
+                clientVersion + " (accepted: " +
+                MIN_COMPATIBLE_CLIENT_VERSION + " .. " +
+                MAX_COMPATIBLE_CLIENT_VERSION + ")"
             );
 
             dout.writeByte (VSProtocol.CONN_RESP_INCOMPATIBLE_CLIENT);
@@ -248,7 +248,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
         boolean             isNew = dis.readBoolean();
         int                 sCode = dis.readInt();
-        long                recieved = dis.readLong();
+        long                received = dis.readLong();
 
         Connector           connector = process(clientId);
         if (connector == null) {
@@ -272,6 +272,17 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
                     VSProtocol.LOGGER.fine("Recovery attempt failed because another attempt for this thread in progress");
                 }
             }
+        } else {
+            if (!isNew) {
+                // Client attempts to recover a connection but there are no connection with such "sCode" on the server side.
+                // That may happen if server was restarted. In such case we should reject the connection
+                // and force a client to do a full reconnect.
+                VSProtocol.LOGGER.warning("Connection restore failed for transport (" + sCode + ") for " + clientId + " because server side transport is not found");
+
+                dout.writeByte(VSProtocol.CONN_RESP_CONNECTION_REJECTED);
+                dout.flush();
+                return false;
+            }
         }
 
         boolean success = false;
@@ -280,7 +291,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
             String transportTag = sCode + " / " + Integer.toHexString(sCode);
             if (broken != null) {
                 VSProtocol.LOGGER.info("Restoring connection (" + transportTag + ") for " + clientId);
-                broken.getOutputStream().confirm(recieved);
+                broken.getOutputStream().confirm(received);
             } else {
                 if (!isNew) {
                     VSProtocol.LOGGER.warning("Connection restore failed for transport (" + transportTag + ") for " + clientId + " because server side transport is not found");
@@ -361,6 +372,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         int clientHeader = is.read();
         if (clientHeader == VSProtocol.SSL_HEADER && !enableSSL) {
             os.write(VSProtocol.CONN_RESP_SSL_NOT_SUPPORTED);
+            os.flush();
             throw new IOException("Client wants SSL but server have not prepared for handshake.");
         }
         os.write(VSProtocol.CONN_RESP_OK);
@@ -392,7 +404,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
         c.setTransportType(type);
         if (type == TransportType.AERON_IPC)
-            dout.writeUTF(DXAeron.getAeronDir());
+            throw new RuntimeException("Legacy version of Aeron IPC is not supported");
         else if (type == TransportType.OFFHEAP_IPC)
             dout.writeUTF(OffHeap.getOffHeapDir());
     }
@@ -413,7 +425,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
     @Override
     public void close() {
         if (transportType == TransportType.AERON_IPC)
-            DXAeron.shutdown();
+            throw new RuntimeException("Legacy version of Aeron IPC is not supported");
     }
 
     static class Connector extends ConnectionStateListener implements Closeable {
@@ -573,9 +585,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
         @Override
         public String toString() {
-            return "FakeVSocket{" +
-                    "" + label + '\'' +
-                    '}';
+            return "FakeVSocket{" + label + '}';
         }
     }
 }

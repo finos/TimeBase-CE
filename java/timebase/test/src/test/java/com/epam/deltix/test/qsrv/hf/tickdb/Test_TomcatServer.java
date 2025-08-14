@@ -47,27 +47,6 @@ public class Test_TomcatServer {
         runner.shutdown();
     }
 
-    @Test
-    public void testHomeServletSSL() throws Throwable {
-        File tb = new File(TDBRunner.getTemporaryLocation());
-        QSHome.set(tb.getParent());
-
-        File certificate = new File(tb.getParent(), "selfsigned.jks");
-        IOUtil.extractResource("com/epam/deltix/cert/selfsigned.jks", certificate);
-
-        StartConfiguration config = StartConfiguration.create(true, false, false);
-        SSLProperties ssl = new SSLProperties(true, false);
-        ssl.keystoreFile = certificate.getAbsolutePath();
-        config.tb.setSSLConfig(ssl);
-        TDBRunner runner = new TDBRunner(true, true, new TomcatServer(config));
-        runner.sslContext = SSLContextProvider.createSSLContext(ssl.keystoreFile, ssl.keystorePass, false);
-        runner.startup();
-
-        testHome("localhost", runner.getWebPort(), new File(runner.getLocation()).getParent());
-
-        runner.shutdown();
-    }
-
     public static void testHome(String host, int port, String home) throws IOException {
         String value = HomeServlet.get(host, port);
         assertEquals(home, value);

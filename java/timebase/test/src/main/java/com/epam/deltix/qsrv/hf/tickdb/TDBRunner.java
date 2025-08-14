@@ -17,6 +17,7 @@
 package com.epam.deltix.qsrv.hf.tickdb;
 
 import com.epam.deltix.qsrv.hf.tickdb.comm.client.TickDBClient;
+import com.epam.deltix.qsrv.servlet.HomeServlet;
 import com.epam.deltix.qsrv.test.messages.BarMessage;
 import com.epam.deltix.qsrv.test.messages.BestBidOfferMessage;
 import com.epam.deltix.qsrv.test.messages.TradeMessage;
@@ -51,6 +52,8 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.Random;
 
+import static junit.framework.Assert.assertEquals;
+
 public class TDBRunner {
 
     static {
@@ -74,7 +77,7 @@ public class TDBRunner {
     public String               pass = null;
     public TransportProperties  transportProperties;
     public boolean              useSSL;
-    public SSLContext           sslContext;
+    //public SSLContext           sslContext;
 
     private int port = 0;
 
@@ -147,7 +150,7 @@ public class TDBRunner {
             this.port = server.start();
 
             TickDBClient connection = createClient();
-            connection.setSslContext(sslContext);
+            //connection.setSslContext(sslContext);
             client = connection;
 
 //            // TODO: Find out what kind of workers we want to start.
@@ -175,6 +178,11 @@ public class TDBRunner {
 
         TickDBFactory.setApplicationName(result, "TBRunner");
         return result;
+    }
+
+    public static void testHome(String host, int port, String home) throws IOException {
+        String value = HomeServlet.get(host, port);
+        assertEquals(home, value);
     }
 
     public void                 shutdown() throws Exception {

@@ -33,9 +33,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class VSDispatcherTest {
 
-    /**
-     * Test for https://gitlab.deltixhub.com/Deltix/QuantServer/QuantServer/issues/43
-     */
     @Test (timeout = 5_000) // Note: test timeout must be greater than reconnectInterval + 2000ms
     public void testNoHangsOnConcurrentDisconnects() throws IOException, InterruptedException {
         int reconnectInterval = 2000;
@@ -132,7 +129,7 @@ public class VSDispatcherTest {
         boolean gotChanelClosedException = false;
         try {
             // Note: test may hang here if Dispatcher bug still present
-            vsChannel.getOutputStream().flushAvailable();
+            vsChannel.getOutputStream().flushAvailable(true);
         } catch (ConnectionAbortedException e) {
             gotChanelClosedException = true;
             System.out.println("Got ConnectionAbortedException as expected");

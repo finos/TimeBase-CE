@@ -16,7 +16,6 @@
  */
 package com.epam.deltix.util.vsocket;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.epam.deltix.util.ContextContainer;
 import com.epam.deltix.util.io.GUID;
 import com.epam.deltix.util.io.IOUtil;
@@ -29,6 +28,8 @@ import com.epam.deltix.util.lang.DisposableListener;
 import com.epam.deltix.util.time.GlobalTimer;
 import com.epam.deltix.util.time.TimeKeeper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -43,8 +44,13 @@ import java.util.logging.Level;
  *
  */
 public class VSClient extends ConnectionStateListener implements Disposable, DisposableListener<VSDispatcher> {
+    public static final int             MIN_ALLOWED_SERVER_VERSION = 1014;
+
     public static final int             MIN_COMP_SERVER_VERSION = VSProtocol.VERSION;
     public static final int             MAX_COMP_SERVER_VERSION = VSProtocol.VERSION;
+
+    public static final String          SSL_TERMINATION_PROPERTY = "TimeBase.network.VSClient.sslTermination";
+    public static final boolean         SSL_TERMINATION = Boolean.getBoolean(SSL_TERMINATION_PROPERTY);
 
     //private static final int MAX_TRANSPORT_RECONNECT_ATTEMPTS = Integer.getInteger("TimeBase.network.VSClient.maxTransportReconnectAttempts", 5);
     private static final int TRANSPORT_RECONNECT_ATTEMPT_INTERVAL = Integer.getInteger("TimeBase.network.VSClient.transportReconnectAttemptInterval", 1000);
@@ -59,8 +65,8 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
     // Protects "dispatcher" field and interactions with quick executor
     private final Object dispatcherLock = new Object();
 
-    private final String                clientId;
-    private long                        serverTime = -1;    
+    private String                      clientId;
+    private long                        serverTime = -1;
 
     private volatile DisconnectEventListener     listener;
     private int                         reconnectInterval;
@@ -70,12 +76,14 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
     private int                         timeout = Integer.getInteger("TimeBase.network.VSClient.timeout", 5000);
 
     private boolean                     enableSSL = false;
+    private final boolean               sslTermination;
     private int                         sslPort = 0;
     private SSLContext                  sslContext;
 
-    private boolean                     aeronEnabled = false;
 
     private final ContextContainer      contextContainer;
+
+    private int                         protocolVersion = VSProtocol.VERSION;
 
     private volatile boolean closed = false;
 
@@ -146,6 +154,10 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
                             } else {
                                 VSProtocol.LOGGER.log(Level.INFO, "Reconnect failed (no error), connection " + socket.getSocketIdStr() + ", address " + socket.getRemoteAddress() + ", attempt " + attemptNumber);
                             }
+                        } catch (ConnectionRejectedException e) {
+                            // Explicit reject from server. That means that we should not try to reconnect anymore.
+                            transportLost = true;
+                            VSProtocol.LOGGER.log(Level.INFO, "Reconnect rejected by server, connection " + socket.getSocketIdStr() + ", address " + socket.getRemoteAddress() + ", attempt " + attemptNumber);
                         } catch (IOException e) {
                             VSProtocol.LOGGER.log(Level.INFO, "Reconnect failed (" + e.getMessage() + "), connection " + socket.getSocketIdStr() + ", address " + socket.getRemoteAddress() + ", attempt " + attemptNumber);
                         } catch (TransportRecoveryFailre transportRecoveryFailre) {
@@ -204,20 +216,27 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
         }, new Date(nextAttemptTimestamp));
     }
 
-    @VisibleForTesting // Should by used in tests ONLY. TODO: Delete?
+    @org.jetbrains.annotations.VisibleForTesting // Should by used in tests ONLY. TODO: Delete?
     public VSClient (String host, int port, String ownerID) throws IOException {
         this(host, port, ownerID, false, ContextContainer.getContextContainerForClientTests());
     }
 
-    @VisibleForTesting // Should by used in tests ONLY. TODO: Create a factory method with name like "createClientForTests"
+    @VisibleForTesting
+    // Should by used in tests ONLY. TODO: Create a factory method with name like "createClientForTests"
     public VSClient (String host, int port) throws IOException {
         this(host, port, null, false, ContextContainer.getContextContainerForClientTests());
     }
 
     public VSClient(String host, int port, String ownerID, boolean enableSSL, ContextContainer contextContainer) throws IOException {
+        this(host, port, ownerID, enableSSL, SSL_TERMINATION, contextContainer);
+    }
+
+    public VSClient(String host, int port, String ownerID, boolean enableSSL, boolean sslTermination,
+                    ContextContainer contextContainer) throws IOException {
         this.host = host;
         this.port = port;
         this.enableSSL = enableSSL;
+        this.sslTermination = sslTermination;
         this.contextContainer = contextContainer;
         this.reconnector = createReconnectorTask(contextContainer.getQuickExecutor());
 
@@ -225,12 +244,10 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
             this.clientId = new GUID().toStringWithPrefix (InetAddress.getLocalHost().getHostAddress() + ":");
         else
             this.clientId = new GUID().toStringWithPrefix(InetAddress.getLocalHost().getHostAddress() + ":" + ownerID + ":");
+    }
 
-        /*
-        if (TRANSPORT_RECONNECT_ATTEMPT_INTERVAL < soTimeout) {
-            VSProtocol.LOGGER.warning("Reconnect interval (" + TRANSPORT_RECONNECT_ATTEMPT_INTERVAL + ") should not be less than socket open timeout (" + soTimeout + ")");
-        }
-        */
+    public void                     setClientAddress(String address, String ownerID) {
+        this.clientId = new GUID().toStringWithPrefix(address + ":" + ownerID + ":");
     }
 
     public int                      getSoTimeout () {
@@ -289,6 +306,21 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
         return dispatcher != null && dispatcher.hasAvailableTransport();
     }
 
+    /**
+     * Return true, if it has CONNECTED state.
+     * Return false, if it has DISCONNECTED state.
+     * Otherwise, waits at least {@link #reconnectInterval} until status gets CONNECTED or DISCONNECTED.
+     *
+     * @return true if connected, false if disconnected
+     */
+    public boolean                  tryGetConnectionStatus() {
+        if (dispatcher == null) {
+            return false;
+        } else {
+            return dispatcher.tryGetConnectionStatus();
+        }
+    }
+
     public void                     connect () throws IOException {
         if (dispatcher != null)
             throw new IllegalStateException("Already connected");
@@ -321,46 +353,108 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
             dispatcher.addTransportChannel (openTransport ());
     }
 
-    private Socket              processSSLHandshake(Socket socket) throws IOException {
-        InputStream     is = socket.getInputStream();
-        OutputStream    os = socket.getOutputStream();
+    @NotNull
+    private Socket setupSocket() throws IOException {
+        // If SSL termination is enabled, then we start with SSL socket and will NOT try to perform upgrade.
+        // This is necessary because intermediate proxies will get confused
+        // if we start with non-SSL socket and then upgrade to SSL after negotiation with TB.
+        boolean startWithSSL = enableSSL && sslTermination;
 
-        os.write(0); //first byte of VS protocol
-        os.write(VSProtocol.getHeader(enableSSL));
-        os.flush();
+        InetSocketAddress socketAddress = new InetSocketAddress(host, port);
 
-        int serverResponse = is.read();
-        if (serverResponse == VSProtocol.CONN_RESP_SSL_NOT_SUPPORTED)
-            throw new IOException("Server not supported SSL.");
+        Socket socket = null;
+        boolean success = false;
+        try {
+            if (startWithSSL) {
+                VSProtocol.LOGGER.info("SSL termination enabled: creating SSL socket on [" + host + ":" + port + "]");
+                socket = sslContext.getSocketFactory().createSocket();
+            } else {
+                socket = new Socket();
+            }
 
-        int serverHeader = is.read();
-        if (serverHeader == VSProtocol.SSL_HEADER) {
-            socket = sslContext.getSocketFactory().createSocket(
-                socket, socket.getInetAddress().getHostAddress(), socket.getPort(), false);
-            ((SSLSocket) socket).setUseClientMode(true);
-            ((SSLSocket) socket).startHandshake();
-            enableSSL = true;
-            VSProtocol.LOGGER.info("Socket upgraded to SSL socket! Now connection is secured.");
-        } else {
-            if (enableSSL)
-                VSProtocol.LOGGER.info("Connection isn't secured.");
-            enableSSL = false;
+            socket.setSoTimeout(soTimeout);
+            socket.setTcpNoDelay(true);
+
+            // Sets socket buffer sizes.
+            // Please note that later socket also will be additionally configured in VSocketImpl.setUpSocket() method.
+            // However, that happens only after socket gets connected.
+            // It's important to configure receive buffer size before connection is established
+            // to allow it to use TCP window size greater than 64kb.
+            // That's why we have to do that here.
+            VSocketImpl.configureBufferSizes(socket);
+
+            // Connect
+            socket.connect(socketAddress, timeout);
+
+            InputStream is = socket.getInputStream();
+            OutputStream os = socket.getOutputStream();
+
+            // We should not request SSL from TB server if SSL termination is enabled
+            boolean requestSSL = enableSSL && !sslTermination;
+
+            os.write(0); //first byte of VS protocol
+            os.write(VSProtocol.getHeader(requestSSL));
+            os.flush();
+
+            int serverResponse = is.read();
+            if (serverResponse == VSProtocol.CONN_RESP_SSL_NOT_SUPPORTED) {
+                assert !startWithSSL;
+                throw new IOException("Server not supported SSL.");
+            } else if (serverResponse != VSProtocol.CONN_RESP_OK) {
+                throw new RuntimeException("Unexpected server response: " + serverResponse);
+            }
+
+            int serverHeader = is.read();
+            if (serverHeader == VSProtocol.SSL_HEADER) {
+
+                if (startWithSSL) {
+                    throw new IllegalStateException("SSL termination is enabled but server attempts to upgrade to SSL");
+                }
+
+                // Upgrade non-SSL socket to SSL
+                socket = sslContext.getSocketFactory().createSocket(
+                        socket, socket.getInetAddress().getHostAddress(), socket.getPort(), true);
+                ((SSLSocket) socket).setUseClientMode(true);
+                ((SSLSocket) socket).startHandshake();
+                enableSSL = true; // We now use SSL socket, even if client have not requested it.
+                VSProtocol.LOGGER.info("Socket upgraded to SSL socket! Now connection is secured.");
+            } else if (serverHeader == VSProtocol.HEADER) {
+                if (enableSSL && !startWithSSL) {
+                    // Normally we should not get here:
+                    // 1. If SSL termination is enabled, then we don't request SSL from TB server
+                    // 2. If we have enableSSL = true, then we should request it from TB server and get explicit reject if it's not supported
+                    VSProtocol.LOGGER.info("Connection isn't secured.");
+                    enableSSL = false;
+                }
+            } else {
+                throw new RuntimeException("Unexpected server header: " + serverHeader);
+            }
+
+            success = true;
+            return socket;
+        } finally {
+            if (!success) {
+                IOUtil.close(socket);
+            }
         }
-
-        return socket;
     }
 
+    public void             setProtocolVersion(int version) {
+        if (version < VSClient.MIN_ALLOWED_SERVER_VERSION || version > VSClient.MAX_COMP_SERVER_VERSION)
+            throw new IllegalArgumentException("Protocol version should be in range [" +
+                    VSClient.MIN_ALLOWED_SERVER_VERSION + ", " + VSClient.MAX_COMP_SERVER_VERSION + "]");
+
+        this.protocolVersion = version;
+    }
+
+    /** Used for re-connecting existing VSocket */
     @SuppressFBWarnings(value = "UNENCRYPTED_SOCKET", justification = "Timebase ports should be protected from public access by SSL-terminating NLB")
     private VSocket                         openTransport (VSocket stopped) throws IOException, TransportRecoveryFailre {
-        Socket              s = new Socket();
+        Socket              s = null;
         boolean             ok = false;
 
         try {
-            s.setSoTimeout(soTimeout);
-            s.setTcpNoDelay(true);
-            s.connect(new InetSocketAddress(host, port), timeout);
-
-            s = processSSLHandshake(s);
+            s = setupSocket();
 
             ClientConnection cc = new ClientConnection(s);
 
@@ -368,18 +462,20 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
             DataInputStream     dis = new DataInputStream (cc.getBufferedInputStream());
 
             //check version compatibility
-            dos.writeInt (VSProtocol.VERSION);
+            dos.writeInt (protocolVersion);
             dos.writeUTF(clientId);
             dos.flush();
 
             int spv = dis.readInt ();
 
             String sid = dis.readUTF ();
-            if (spv < MIN_COMP_SERVER_VERSION || spv > MAX_COMP_SERVER_VERSION)
+            if (spv != protocolVersion && (spv < MIN_COMP_SERVER_VERSION || spv > MAX_COMP_SERVER_VERSION))
                 throw new IncompatibleClientException (sid, spv);
 
             sslPort = dis.readInt();
-            processTransportHandshake(dis);
+
+            if (protocolVersion > 1014)
+                processTransportHandshake(dis);
 
             //send other sync data
             dos.writeBoolean(false); // restore
@@ -430,33 +526,31 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
 
     @SuppressFBWarnings(value = "UNENCRYPTED_SOCKET", justification = "Timebase ports should be protected from public access by SSL-terminating NLB")
     VSocket                             openTransport () throws IOException {
-        Socket              s = new Socket();
+        Socket              s = null;
         boolean             ok = false;
         TransportType transportType;
         ClientConnection cc;
 
         try {
-            s.setSoTimeout(soTimeout);
-            s.setTcpNoDelay(true);
-            s.connect(new InetSocketAddress(host, port), timeout);
-
-            s = processSSLHandshake(s);
+            s = setupSocket();
             cc = new ClientConnection(s);
 
             DataOutputStream    dos = new DataOutputStream (cc.getOutputStream());
             DataInputStream     dis = new DataInputStream (cc.getBufferedInputStream());
 
             //check version compatibility
-            dos.writeInt (VSProtocol.VERSION);
+            dos.writeInt (protocolVersion);
             dos.writeUTF(clientId);
             dos.flush ();
             int spv = dis.readInt ();
             String sid = dis.readUTF ();
-            if (spv < MIN_COMP_SERVER_VERSION || spv > MAX_COMP_SERVER_VERSION)
+
+            if (spv != protocolVersion && (spv < MIN_COMP_SERVER_VERSION || spv > MAX_COMP_SERVER_VERSION))
                 throw new IncompatibleClientException (sid, spv);
 
             sslPort = dis.readInt();
-            transportType = processTransportHandshake(dis);
+
+            transportType = (protocolVersion > 1014) ? processTransportHandshake(dis) : TransportType.SOCKET_TCP;
 
             //send other sync data
             dos.writeBoolean(true);
@@ -484,7 +578,7 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
                 assert numBytesRecieved == 0; // new connections should have = 0;
                 this.serverCompression = Enum.valueOf(VSCompression.class, compression);
             }
-            
+
             ok = true;
         } finally {
             if (!ok)
@@ -497,11 +591,7 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
     private TransportType           processTransportHandshake(DataInputStream dis) throws IOException {
         TransportType transportType = TransportType.values()[dis.readInt()];
         if (transportType == TransportType.AERON_IPC) {
-            String aeronDir = dis.readUTF();
-            if (!aeronEnabled) {
-                DXAeron.start(aeronDir, false);
-                aeronEnabled = true;
-            }
+            throw new RuntimeException("Legacy version of Aeron IPC is not supported");
         } else if (transportType == TransportType.OFFHEAP_IPC) {
             OffHeap.start(dis.readUTF(), false);
         }
@@ -536,13 +626,14 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
     }
 
     private void close(boolean waitForChannelsToFinish) {
+        boolean triggerDisconnectEvent;
         synchronized (dispatcherLock) {
             closed = true;
 
-            if (aeronEnabled)
-                DXAeron.shutdown();
-
             VSDispatcher d = dispatcher;
+
+            // If dispatcher is null, then we already disconnected or even never were connected.
+            triggerDisconnectEvent = d != null;
 
             if (d != null) {
                 d.setStateListener(null);
@@ -553,6 +644,15 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
             }
 
             dispatcher = null;
+        }
+
+        // https://gitlab.deltixhub.com/Deltix/QuantServer/QuantServer/-/issues/1269
+        // Trigger a disconnect event, so any disconnect listeners can be notified.
+        if (triggerDisconnectEvent) {
+            DisconnectEventListener listenerRef = listener;
+            if (listenerRef != null) {
+                listenerRef.onDisconnected();
+            }
         }
     }
 
@@ -624,15 +724,14 @@ public class VSClient extends ConnectionStateListener implements Disposable, Dis
         synchronized (dispatcherLock) {
             closed = true;
 
-            if (aeronEnabled)
-                DXAeron.shutdown();
-
             if (d == dispatcher) {
                 d.setStateListener(null);
                 d.removeDisposableListener(this);
                 contextContainer.getQuickExecutor().shutdownInstance();
 
                 dispatcher = null;
+
+                onDisconnected();
             }
         }
     }

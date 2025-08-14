@@ -72,7 +72,7 @@ public class SocketConnection implements Connection {
     private VSocket                 create(int code, TransportType type) throws IOException {
         int socketNumber = VSocketFactory.nextSocketNumber();
         if (type == TransportType.AERON_IPC)
-            return new AeronIpcSocket(socket, code, true, socketNumber);
+            throw new RuntimeException("Legacy version of Aeron IPC is not supported");
         else if (type == TransportType.OFFHEAP_IPC)
             return new OffHeapIpcSocket(socket, code, true, socketNumber);
         else
@@ -115,7 +115,8 @@ public class SocketConnection implements Connection {
         ((SSLSocket) socket).startHandshake();
 
         //upgrade streams
-        in = new BufferedInputStream(socket.getInputStream());
+
+        in = new BufferedInputStream(socket.getInputStream(), VSocketImpl.INPUT_STREAM_BUFFER_SIZE);
         out = socket.getOutputStream();
     }
 }

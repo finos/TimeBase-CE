@@ -35,8 +35,11 @@ public abstract class VSOutputStream extends OutputStream {
 
     /*
      *  Flushes portion of data that can recieved on the remote side immediately.
+     *
+     * @param flushAll attempts to flush all available data, even if it requires multiple send operations
+     * and blocking for longer time.
      */
-    public abstract void    flushAvailable() throws IOException;
+    public abstract int flushAvailable(boolean flushAll) throws IOException;
 
     //public abstract int     available();
 }

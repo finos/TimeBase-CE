@@ -29,12 +29,21 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.logging.Level;
 
 class ChannelExecutor implements Runnable {
+    //@ApiStatus.Experimental // Temporary option for testing performance effect of using yield on Windows
+    private static final boolean USE_YIELD_ON_WINDOWS = Boolean.getBoolean("TimeBase.network.executor.windows.useYield");
+
     private static volatile ChannelExecutor INSTANCE;
 
     private static ChannelExecutor createInstance(AffinityConfig affinityConfig) {
         ChannelExecutor executor = create(affinityConfig);
         executor.thread.start();
         return executor;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    //@VisibleForTesting
+    static ChannelExecutor createNonSharedTestInstance(AffinityConfig affinityConfig) {
+        return createInstance(affinityConfig);
     }
 
     public static ChannelExecutor getInstance(AffinityConfig affinityConfig) {
@@ -51,11 +60,11 @@ class ChannelExecutor implements Runnable {
 
     private final QuickList<Entry>  channels = new QuickList<>();
     private boolean                 stopped = false;
-    private final CPUEater          cpuEater;
+    private final CPUEater          cpuEater; // Used only for Windows
     private final int               idleTime;
     private final Thread thread;
 
-    private static ChannelExecutor create(AffinityConfig affinityConfig) {
+    static ChannelExecutor create(AffinityConfig affinityConfig) {
         ThreadFactory factory = new AffinityThreadFactoryBuilder(affinityConfig)
                 .setNameFormat("ChannelExecutor Thread")
                 .setDaemon(true)
@@ -66,7 +75,7 @@ class ChannelExecutor implements Runnable {
 
     private ChannelExecutor(ThreadFactory factory) {
         idleTime = VSProtocol.getIdleTime();
-        cpuEater = new CPUEater(idleTime);
+        cpuEater = Util.IS_WINDOWS_OS ? new CPUEater(idleTime) : null;
 
         this.thread = factory.newThread(this);
     }
@@ -81,8 +90,33 @@ class ChannelExecutor implements Runnable {
     }
 
     public void                 addChannel(VSChannel channel) {
+        assert channel != null;
+
+        if (channel == null)
+            return;
+
         synchronized (channels) {
             channels.linkLast(new Entry(channel));
+        }
+
+        wakeup();
+    }
+
+    public void                 removeChannel(VSChannel channel) {
+        assert channel != null;
+
+
+        synchronized (channels) {
+            Entry entry = channels.getFirst();
+
+            while (entry != null) {
+                if (entry.channel.equals(channel)) {
+                    remove(entry);
+                    return;
+                } else {
+                    entry = entry.next();
+                }
+            }
         }
 
         wakeup();
@@ -94,52 +128,86 @@ class ChannelExecutor implements Runnable {
 
         while (!stopped) {
             Entry entry;
+            boolean isEmpty;
 
+            long bytesSent = 0;
             synchronized (channels) {
                 entry = channels.getFirst();
-            }
+                isEmpty = entry == null;
 
-            if (entry == null) {
-                LockSupport.park();
-
-                if (Thread.interrupted ()) {
-                    if (stopped)
-                        break;
-                }
-            }
-
-            synchronized (channels) {
-                entry = channels.getFirst();
                 while (entry != null) {
-
                     VSChannel channel = entry.channel;
                     try {
-                        if (channel != null && channel.getNoDelay() && channel.getState() == VSChannelState.Connected) {
-                            VSOutputStream out = channel.getOutputStream();
-                            out.flushAvailable();
-
-                            entry = entry.next();
-                        } else if (channel != null) {
-                            if (channel.getState() == VSChannelState.Removed || channel.getState() == VSChannelState.Closed)
+                        switch (channel.getState()) {
+                            case Connected: {
+                                if (channel.getNoDelay()) {
+                                    // Flush
+                                    VSOutputStream out = channel.getOutputStream();
+                                    // We do not want to send all at once, we will, re-try send shortly
+                                    bytesSent += out.flushAvailable(false);
+                                }
+                                break;
+                            }
+                            case Removed:
+                            case Closed: {
                                 entry = remove(entry);
+                                continue;
+                            }
                         }
                     } catch (ChannelClosedException e) {
                         // ignore
                         entry = remove(entry);
+                        continue;
                     } catch (IOException e) {
                         VSProtocol.LOGGER.log (Level.WARNING, "Exception while flushing data", e);
                     }
+
+                    // Move to the next channel
+                    entry = entry.next();
                 }
             }
 
-            if (!Util.IS_WINDOWS_OS) {
-                LockSupport.parkNanos (idleTime);
+            if (isEmpty) {
+                // No channels to process => Wait for channels to be added.
+                LockSupport.park();
+
+                if (Thread.interrupted ()) {
+                    if (stopped) {
+                        break;
+                    }
+                }
             } else {
-                if (TimeKeeper.getMode() == TimeKeeper.Mode.HIGH_RESOLUTION_SYNC_BACK)
-                    TimeKeeper.parkNanos(idleTime);
-                else
-                    cpuEater.run();
+                // Do not wait if we have sent any data.
+                // It's very likely that it's time to send more because the sending time is relatively long.
+                if (bytesSent == 0) {
+                    // Wait till next time to flush channels
+                    idleWait();
+                }
             }
+        }
+    }
+
+    private void idleWait() {
+        if (!Util.IS_WINDOWS_OS) {
+            if (USE_YIELD_ON_WINDOWS) {
+                waitWithYield(idleTime);
+            } else {
+                LockSupport.parkNanos(idleTime);
+            }
+        } else {
+            if (TimeKeeper.getMode() == TimeKeeper.Mode.HIGH_RESOLUTION_SYNC_BACK) {
+                TimeKeeper.parkNanos(idleTime);
+            } else {
+                cpuEater.run();
+            }
+        }
+    }
+
+    private static void waitWithYield(int idleTime) {
+        long start = System.nanoTime();
+        long end = start + idleTime;
+        while (System.nanoTime() < end) {
+            Thread.yield();
         }
     }
 
@@ -150,7 +218,7 @@ class ChannelExecutor implements Runnable {
     }
 
     private static class Entry extends QuickList.Entry<Entry> {
-        VSChannel channel;
+        final VSChannel channel;
 
         private Entry(VSChannel channel) {
             this.channel = channel;
@@ -162,7 +230,7 @@ class ChannelExecutor implements Runnable {
         private final long  cycles;
 
         private final MemoryDataOutput out = new MemoryDataOutput();
-        private final double value = 345.56787899;
+        private static final double value = 345.56787899;
 
         private CPUEater(long nanos) {
             this.avgCostOfNanoTimeCall = nanoTimeCost();

@@ -24,20 +24,21 @@ import com.epam.deltix.qsrv.hf.tickdb.comm.client.TickDBClient;
 import com.epam.deltix.qsrv.hf.tickdb.comm.server.TomcatServer;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.TickDBFactory;
+import com.epam.deltix.qsrv.servlet.HomeServlet;
+import com.epam.deltix.util.io.Home;
 import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.io.SSLClientContextProvider;
 import com.epam.deltix.util.net.SSLContextProvider;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
+import static com.epam.deltix.qsrv.hf.tickdb.TDBRunner.testHome;
 import static junit.framework.Assert.assertEquals;
 
 import org.junit.experimental.categories.Category;
 import com.epam.deltix.util.JUnitCategories.TickDBFast;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  *
@@ -49,6 +50,8 @@ public class Test_SSLTomcat {
 
     @BeforeClass
     public static void start() throws Throwable {
+        SSLClientContextProvider.useDynamicKeystore(true);
+
         File tb = new File(TDBRunner.getTemporaryLocation());
         QSHome.set(tb.getParent());
 
@@ -58,33 +61,40 @@ public class Test_SSLTomcat {
         StartConfiguration config = StartConfiguration.create(true, false, false);
         SSLProperties ssl = new SSLProperties(true, false);
         ssl.keystoreFile = certificate.getAbsolutePath();
+        ssl.keystorePass = "deltix";
 
         config.tb.setSSLConfig(ssl);
+
+        System.setProperty(SSLClientContextProvider.CLIENT_KEYSTORE_PROPNAME, certificate.getAbsolutePath());
+        System.setProperty(SSLClientContextProvider.CLIENT_KEYSTORE_PASS_PROPNAME, "deltix");
+
         runner = new TDBRunner(true, true, tb.getAbsolutePath(), new TomcatServer(config));
-        runner.sslContext = SSLContextProvider.createSSLContext(ssl.keystoreFile, ssl.keystorePass, false);
-        runner.useSSL = true;
         runner.startup();
+    }
+
+    @Test
+    public void testHomeServletSSL() throws Throwable {
+        testHome("localhost", runner.getWebPort(), new File(runner.getLocation()).getParent());
     }
 
     @AfterClass
     public static void stop() throws Throwable {
+        SSLClientContextProvider.useDynamicKeystore(false);
         runner.shutdown();
         runner = null;
     }
 
     @Test
-    @Ignore // TODO: 2/11/2025  @AK
     public void testConnectionToSSLTomcat() throws Throwable {
-        try (TickDBClient client = (TickDBClient) TickDBFactory.connect("localhost", runner.getPort(), false)) {
-            client.open(false);
-            assertEquals(client.isSSLEnabled(), false);
-        }
+        DXTickDB client = TickDBFactory.connect("localhost", runner.getPort(), false);
+        client.open(false);
+        Assert.assertEquals(((TickDBClient) client).isSSLEnabled(), false);
+        client.close();
 
         //connect with ssl
-        try (TickDBClient sslClient = (TickDBClient) TickDBFactory.connect("localhost", runner.getPort(), true)) {
-            sslClient.setSslContext(runner.sslContext);
-            sslClient.open(false);
-            assertEquals(sslClient.isSSLEnabled(), true);
-        }
+        DXTickDB sslClient = TickDBFactory.connect("localhost", runner.getPort(), true);
+        sslClient.open(false);
+        Assert.assertEquals(((TickDBClient) sslClient).isSSLEnabled(), true);
+        sslClient.close();
     }
 }

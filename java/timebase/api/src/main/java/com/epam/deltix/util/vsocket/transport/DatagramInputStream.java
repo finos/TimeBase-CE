@@ -50,11 +50,12 @@ public class DatagramInputStream extends InputStream {
                 connection.remotePort = pack.getPort();
 
         } catch (Exception e) {
-            VSProtocol.LOGGER.log (Level.WARNING, null, e);
+            e.printStackTrace(System.out);
             return false;
         }
 
         int s = DataExchangeUtils.readInt(pack.getData(), 0);
+        //System.out.println("sequence: " + s);
         buffer.offer(pack.getData(), 4, pack.getLength() - 4);
 
         return true;

@@ -539,7 +539,12 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         SelectionOptionsCodec.read(is, options, clientVersion);
         Parameter[] parameters = TDBProtocol.readParameters(is, clientVersion);
 
-        ClassSet set = db.describeQuery(query, options, parameters);
+        ClassSet set;
+        try {
+            set = db.describeQuery(query, options, parameters);
+        } catch (CompilationException e) {
+            throw new CompilationException(e.diag, e.location);
+        }
 
         out.writeInt(TDBProtocol.RESP_OK);
         TDBProtocol.writeClassSet(ds.getDataOutputStream(), set, clientVersion);

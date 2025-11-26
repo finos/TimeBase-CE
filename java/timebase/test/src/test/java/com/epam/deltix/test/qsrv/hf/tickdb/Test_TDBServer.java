@@ -1161,6 +1161,73 @@ public class Test_TDBServer {
     }
 
     @Test
+    public void testQuery() {
+        DXTickStream bars = getBars();
+        StreamOptions options = bars.getStreamOptions();
+        String name = options.name = "mybars";
+
+        //get schema of query
+        DXTickDB tickDb = runner.getTickDb();
+
+        ClassSet classSet = tickDb.describeQuery("select open, close from bars", new SelectionOptions());
+        RecordClassDescriptor[] descriptors = Arrays.stream(classSet.getContentClasses())
+                .filter(RecordClassDescriptor.class::isInstance)
+                .map(RecordClassDescriptor.class::cast)
+                .toArray(RecordClassDescriptor[]::new);
+
+        //get or create stream
+        options = new StreamOptions(StreamScope.DURABLE, "testQuery", "", 1);
+        options.setPolymorphic(descriptors);
+        DXTickStream stream = tickDb.createStream(options.name, options);
+
+        // get changes  between stream and query
+        StreamMetaDataChange change = new SchemaAnalyzer(new SchemaMapping()).getChanges(
+                stream.getStreamOptions().getMetaData(),
+                MetaDataChange.ContentType.Polymorphic,
+                new RecordClassSet(descriptors),
+                MetaDataChange.ContentType.Polymorphic
+        );
+
+        // NOTE: query was changed, but schema of query is the same
+        try (InstrumentMessageSource cursor = tickDb.executeQuery("select open, close from bars where symbol == 'GOOG'", new SelectionOptions(true, false));
+            TickLoader loader = stream.createLoader(new LoadingOptions(true))) {
+
+            while (cursor.next()) {
+                RawMessage message = (RawMessage) cursor.getMessage();
+                message.type = descriptors[0];
+                loader.send(message);
+            }
+        }
+
+    }
+
+    @Test
+    public void testDescribeExceptions() {
+        DXTickDB tickDb = runner.getTickDb();
+        try {
+            tickDb.describeQuery("select open, close from bars where hello", new SelectionOptions());
+            Assert.fail("Exception expected");
+        } catch (CompilationException e) {
+            // expected
+        } catch(Throwable t) {
+            Assert.fail("CompilationException expected");
+        }
+    }
+
+    @Test
+    public void testDescribeExceptions2() {
+        DXTickDB tickDb = runner.getTickDb();
+        try {
+            tickDb.describeQuery("selec t open, close from bars", new SelectionOptions());
+            Assert.fail("Exception expected");
+        } catch (CompilationException e) {
+            // expected
+        } catch(Throwable t) {
+            Assert.fail("CompilationException expected");
+        }
+    }
+
+    @Test
     public void test1SelectAPI() {
         DXTickDB db = getTickDb();
         DXTickStream stream = getBars();

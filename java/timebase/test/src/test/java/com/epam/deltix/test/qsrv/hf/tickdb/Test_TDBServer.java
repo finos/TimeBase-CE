@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
+import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
@@ -30,6 +31,7 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.task.StreamChangeTask;
 import com.epam.deltix.qsrv.hf.tickdb.pub.task.StreamCopyTask;
 import com.epam.deltix.qsrv.hf.tickdb.schema.MetaDataChange;
 import com.epam.deltix.qsrv.hf.tickdb.schema.SchemaAnalyzer;
+import com.epam.deltix.qsrv.hf.tickdb.schema.SchemaMapping;
 import com.epam.deltix.qsrv.hf.tickdb.schema.StreamMetaDataChange;
 import com.epam.deltix.qsrv.test.messages.AggressorSide;
 import com.epam.deltix.qsrv.test.messages.BarMessage;

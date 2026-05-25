@@ -41,6 +41,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
+          distribution: "corretto"
       - name: Build with gradle
         run: ./gradlew build checkLicense
       - name: Build docker
@@ -100,6 +101,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
+          distribution: "corretto"
       - name: Build with gradle
         run: ./gradlew build windowsTimebaseInstaller linuxTimebaseInstaller
       - name: Archive Linux installer

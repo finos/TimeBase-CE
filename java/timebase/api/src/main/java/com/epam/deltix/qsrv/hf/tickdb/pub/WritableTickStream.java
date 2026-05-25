@@ -51,6 +51,14 @@ public interface WritableTickStream extends TickStream {
     public void                             truncate(long time, IdentityKey... ids);
 
     /**
+     * Truncates stream data for the given entities from given time uder given space
+     * @param time  Timestamp. If time less than stream start time, then all stream data will be deleted.
+     * @param space Partition/space name.
+     * @param ids   A list of entities. If unknown, all stream entities will be used.
+     */
+    public void                             truncate(long time, String space, IdentityKey... ids);
+
+    /**
      * Deletes stream data for the given entities using specified time range
      * @param from  start timestamp (inclusive). Time is measured in milliseconds or nanoseconds that passed since January 1, 1970 UTC.
      * @param to    end timestamp (inclusive). Time is measured in milliseconds or nanoseconds that passed since January 1, 1970 UTC.

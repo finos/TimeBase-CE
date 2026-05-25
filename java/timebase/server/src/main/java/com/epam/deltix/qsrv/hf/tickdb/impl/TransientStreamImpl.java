@@ -245,22 +245,26 @@ public final class TransientStreamImpl
 
     @Override
     public void truncate(long time, IdentityKey... ids) {
-        notSupported();
+        notSupported("truncate");
     }
 
+    @Override
+    public void truncate(long time, String space, IdentityKey... ids) {
+        notSupported("truncate");
+    }
 
     @Override
     public void deleteSpaces(String... names) {
-        notSupported();
+        notSupported("deleteSpaces");
     }
 
     @Override
     public void renameSpace(String newName, String oldName) {
-        notSupported();
+        notSupported("renameSpace");
     }
 
-    private void notSupported() {
-        throw new UnsupportedOperationException("Not supported for TRANSIENT streams");
+    private void notSupported(String operation) {
+        throw new UnsupportedOperationException(operation + " is not supported for TRANSIENT streams");
     }
 
     @Override

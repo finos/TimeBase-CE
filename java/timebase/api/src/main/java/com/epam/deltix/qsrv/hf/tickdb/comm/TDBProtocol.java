@@ -176,6 +176,7 @@ public abstract class TDBProtocol extends SerializationUtils {
     public static final int     REQ_DELETE_SPACES = 147;
     public static final int     REQ_RENAME_SPACES = 148;
     public static final int     REQ_DESCRIBE_QUERY = 149;
+    public static final int     REQ_TRUNCATE_SPACE = 150;
 
     public static final int     REQ_CREATE_STREAM =     200;
     public static final int     REQ_DELETE_STREAM =     201;

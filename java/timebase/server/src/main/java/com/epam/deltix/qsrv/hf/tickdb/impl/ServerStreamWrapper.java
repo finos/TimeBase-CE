@@ -77,6 +77,13 @@ public class ServerStreamWrapper extends ServerStreamImpl implements Wrapper<DXT
     }
 
     @Override
+    public void truncate(long time, String space, IdentityKey... ids) {
+        context.checkWritable(this);
+
+        delegate.truncate(time, space, ids);
+    }
+
+    @Override
     public void                     delete(TimeStamp from, TimeStamp to, IdentityKey... ids) {
         context.checkWritable(this);
 

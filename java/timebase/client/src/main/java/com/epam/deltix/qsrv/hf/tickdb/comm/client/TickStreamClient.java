@@ -885,6 +885,36 @@ class TickStreamClient implements DXTickStream {
         }
     }
 
+    public void                     truncate(long time, String space, IdentityKey... ids) {
+        assertWritable();
+
+        VSChannel                  ds = null;
+
+        try {
+            ds = connect();
+
+            final DataOutputStream  out = ds.getDataOutputStream ();
+
+            out.writeInt (TDBProtocol.REQ_TRUNCATE_SPACE);
+            out.writeUTF (key);
+            out.writeLong (time);
+            out.writeUTF (space);
+            TDBProtocol.writeInstrumentIdentities (ids, out);
+            writeLock(out);
+            out.flush ();
+
+            checkResponse(ds);
+
+            setWriteMode(false);
+            invalidateProperties(TickStreamProperties.TIME_RANGE);
+
+        } catch (IOException iox) {
+            throw new com.epam.deltix.util.io.UncheckedIOException(iox);
+        } finally {
+            Util.close (ds);
+        }
+    }
+
     public void                     clear(IdentityKey... ids) {
 
         assertWritable();
@@ -1010,7 +1040,7 @@ class TickStreamClient implements DXTickStream {
     }
 
     @Override
-    public void purge(long time, String space) {
+    public void                 purge(long time, String space) {
         assertSupportsStreamSpaces();
 
         assertWritable();

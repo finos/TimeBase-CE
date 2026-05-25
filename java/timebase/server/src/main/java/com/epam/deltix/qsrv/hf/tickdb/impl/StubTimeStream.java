@@ -77,7 +77,12 @@ class StubTimeStream extends ServerStreamImpl implements Disposable {
 
     @Override
     public void truncate(long time, IdentityKey... ids) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("truncate");
+    }
+
+    @Override
+    public void truncate(long time, String space, IdentityKey... ids) {
+        throw new UnsupportedOperationException("truncate");
     }
 
     @Override

@@ -121,7 +121,7 @@ public interface DXTickStream extends WritableTickStream, AuthorizationControlle
     void                     purge(long time);
 
     /**
-     * Deletes stream data in specific space that is older than a specified time
+     * Deletes stream data in specific space/partition that is older than a specified time
      * @param time  Purge time in milliseconds
      * @param space Space to be purged
      */

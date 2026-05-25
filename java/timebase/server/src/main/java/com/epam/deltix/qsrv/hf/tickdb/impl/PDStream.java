@@ -608,6 +608,7 @@ public class PDStream extends TickStreamImpl {
             time = time - 1;
 
         String key = getKey();
+
         long startTime = System.currentTimeMillis();
         LOGGER.debug("Purge for stream %s space %s using time=%s started ... ").with(key).with(space).with(GMT.formatDateTimeMillis(time));
         try {
@@ -617,6 +618,25 @@ public class PDStream extends TickStreamImpl {
             long endTime = System.currentTimeMillis();
             LOGGER.debug("Purge for stream %s space %s was finished in %s ms").with(key).with(space).with(endTime - startTime);
         }
+    }
+
+    @Override
+    public void truncate(long timestamp, String space, IdentityKey... ids) {
+        long time = TimeStamp.getNanoTime(timestamp);
+
+        long startTime = System.currentTimeMillis();
+        boolean changed = false;
+        try {
+            TSRoot tsr = getRootBySpaceName(space);
+            if (deleteInternal(tsr, time, Long.MAX_VALUE, ids))
+                changed = true;
+        } finally {
+            long endTime = System.currentTimeMillis();
+            LOGGER.debug("Truncate for stream %s[space= %s] was finished in %s ms").with(getKey()).with(space).with(endTime - startTime);
+        }
+
+        if (changed)
+            onStreamTruncated(time, ids.length != 0 ? ids : listEntities());
     }
 
     @Override

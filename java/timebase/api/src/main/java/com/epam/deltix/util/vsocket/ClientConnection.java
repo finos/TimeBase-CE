@@ -37,7 +37,7 @@ public class ClientConnection {
         this.socket = socket;
         this.in = socket.getInputStream();
         this.os = socket.getOutputStream();
-        this.bin = new BufferedInputStream(this.in);
+        this.bin = new BufferedInputStream(this.in, VSocketImpl.INPUT_STREAM_BUFFER_SIZE);
     }
 
     public Socket getSocket() {

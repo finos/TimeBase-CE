@@ -23,16 +23,19 @@ import static com.epam.deltix.util.vsocket.VSProtocol.*;
 
 import com.epam.deltix.util.concurrent.QuickExecutor;
 import com.epam.deltix.util.lang.*;
+import com.epam.deltix.util.time.TimeKeeper;
 import com.epam.deltix.util.time.TimerRunner;
 import com.epam.deltix.util.memory.DataExchangeUtils;
+import net.jcip.annotations.GuardedBy;
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
-import java.io.*;
-import java.net.SocketException;
 
 /**
  *
@@ -46,15 +49,24 @@ public final class VSDispatcher implements Disposable {
     private final Date                              creationDate = new Date ();
     private Timer                                   timer;
 
+    @GuardedBy("transportChannels")
     private final ObjectHashSet<VSTransportChannel> transportChannels =
         new ObjectHashSet<> ();
 
+    /**
+     * Set to non-null value during transport channel recovery.
+     * If multiple transport channels are being recovered, this future will be completed with value "true" if all of
+     * them are recovered successfully, or "false" if at least one of them failed to recover.
+     */
+
+    @GuardedBy("freeChannels")
+    // TODO: Replace by Deque
     private final Stack <VSTransportChannel>        freeChannels =
         new Stack <> ();
 
     private final ArrayList <VSChannelImpl>         channels =
             new ArrayList <> (10);
-    private volatile boolean                        hasAvailableTransport = false;
+    //private volatile boolean                        hasAvailableTransport = false;
     
     volatile VSConnectionListener                   connectionListener = null;
     volatile ConnectionStateListener                stateListener;
@@ -63,6 +75,7 @@ public final class VSDispatcher implements Disposable {
     private int                                     reconnectInterval;
 
     private String                                  address;
+    private final String                            clientAddress;
     private String                                  applicationID;
 
     // State of Dispatcher on remote side 
@@ -71,6 +84,10 @@ public final class VSDispatcher implements Disposable {
     private volatile long                           totalBytes = 0; // number of bytes sent
     private final EMA                               average = new EMA(1000 * 60); // 1 minute
 
+    private volatile VSDispatcherState              state = VSDispatcherState.DISCONNECTED;
+
+    // Set to "true" once all operations related to closing the dispatcher are completed,
+    // just before calling notifyListeners()
     private final AtomicBoolean                     disposed = new AtomicBoolean(false);
 
     private TimerTask flusher = new TimerRunner() {
@@ -91,35 +108,44 @@ public final class VSDispatcher implements Disposable {
                 VSChannelImpl channel = list[i];
                 try {
                     if (channel != null && channel.isAutoflush()) {
-                        channel.getOutputStream().flushAvailable();
+                        // For low latency channels (noDelay==true) we do not want to flush all
+                        // the accumulated data at once because the remaining data will be sent
+                        // by ChannelExecutor shortly. This allows to get more steady rate.
+                        // For regular channels (noDelay==false) we want to send all the data
+                        // (there is nobody else to do that).
+                        channel.getOutputStream().flushAvailable(!channel.getNoDelay());
                     }
                 } catch (ChannelClosedException e) {
                     // ignore
                 } catch (ConnectionAbortedException e) {
                     VSProtocol.LOGGER.log (Level.WARNING, "Client unexpectedly drop connection. Remote address: " + channel.getRemoteAddress());
-                } catch (com.epam.deltix.util.io.UncheckedIOException | IOException e ) {
+                } catch (Exception e) {
                      VSProtocol.LOGGER.log (Level.WARNING, "Exception while flushing data. Remote address: " + channel.getRemoteAddress(), e);
                 }
             }
 
-            // do keep-alive assuming that this task runs every millisecond
-            if (runs++ % VSProtocol.KEEP_ALIVE_INTERVAL == 0) {
-                synchronized (transportChannels) {
-                    transports = transportChannels.toArray(transports);
-                    size = transportChannels.size();
-                }
+            try {
+                // do keep-alive assuming that this task runs every millisecond
+                if (runs++ % VSProtocol.KEEP_ALIVE_INTERVAL == 0) {
+                    synchronized (transportChannels) {
+                        transports = transportChannels.toArray(transports);
+                        size = transportChannels.size();
+                    }
 
-                long bytes = 0;
-                for (int i = 0; i < size; i++) {
-                    VSTransportChannel transport = transports[i];
-                    transport.keepAlive();
-                    bytes += transport.socket.getOutputStream().getBytesWritten();
-                    bytes += transport.socket.getInputStream().getBytesRead();
-                }
+                    long bytes = 0;
+                    for (int i = 0; i < size; i++) {
+                        VSTransportChannel transport = transports[i];
+                        transport.keepAlive();
+                        bytes += transport.socket.getOutputStream().getBytesWritten();
+                        bytes += transport.socket.getInputStream().getBytesRead();
+                    }
 
-                throughput = (bytes - totalBytes) / VSProtocol.KEEP_ALIVE_INTERVAL * 1000;
-                average.register(throughput);
-                totalBytes = bytes;
+                    throughput = (bytes - totalBytes) / VSProtocol.KEEP_ALIVE_INTERVAL * 1000;
+                    average.register(throughput);
+                    totalBytes = bytes;
+                }
+            } catch (Exception ex) {
+                VSProtocol.LOGGER.log (Level.WARNING, "Exception while sending transport keep-alive.", ex);
             }
         }
     };
@@ -136,11 +162,14 @@ public final class VSDispatcher implements Disposable {
      */
     public VSDispatcher(String clientId, boolean isClient, ContextContainer contextContainer) {
         this.clientId = clientId;
+
+        String[] parts = clientId.split(":");
+        this.clientAddress = parts.length > 1 ? parts[0] : null;
+
         this.isClient = isClient;
         this.contextContainer = contextContainer;
 
         timer = new Timer ("Flush Timer (" + this + ")", true);
-
         timer.scheduleAtFixedRate (flusher, 1L, 1L);
 
         this.transportChannelThreadFactory = new AffinityThreadFactoryBuilder(contextContainer.getAffinityConfig())
@@ -172,10 +201,14 @@ public final class VSDispatcher implements Disposable {
 
     public String               getApplicationID() {
         if (applicationID == null) {
-            String[] parts = clientId.split(":");
-            applicationID = parts.length == 4 ? parts[2] : "<none>";
+            applicationID = getApplicationID(clientId);
         }
         return applicationID;
+    }
+
+    public static String getApplicationID(String clientId) {
+        String[] parts = clientId.split(":");
+        return parts.length == 4 ? parts[2] : "<none>";
     }
 
     public void                 setApplicationID(String applicationID) {
@@ -202,25 +235,25 @@ public final class VSDispatcher implements Disposable {
 
     public boolean              hasTransportChannels() {
         synchronized (transportChannels) {
-            return transportChannels.size() > 0;
+            return !transportChannels.isEmpty();
         }
     }
 
     public boolean              hasAvailableTransport() {
-        return hasAvailableTransport;
+        return state == VSDispatcherState.CONNECTED;
     }
 
     public void                 addTransportChannel (VSocket socket)
         throws IOException
     {
-        boolean hasTransport = hasAvailableTransport;
+        boolean hasTransport = state == VSDispatcherState.CONNECTED;
 
         VSTransportChannel          tc = new VSTransportChannel(this, socket, transportChannelThreadFactory);
         tc.checkedOut = true; // Initially this channel is not in "freeChannels" so it is effectively "checked out"
 
         // set that we have transport before starting transport channel thread
         if (!hasTransport)
-            hasAvailableTransport = true;
+            state = VSDispatcherState.CONNECTED;
 
         // start transport
         tc.start ();
@@ -259,16 +292,14 @@ public final class VSDispatcher implements Disposable {
         long startTime = System.currentTimeMillis();
         long endTime = startTime + reconnectInterval;
 
-        boolean transportIsUnrecoverablyBroken = false;
-
         boolean wasCheckedIn;
+
         synchronized (transportChannels) {
             if (transportChannels.isEmpty()) // already closed
                 return;
 
-            if (!transportChannels.remove (channel)) // check that channel already removed
+            if (!transportChannels.remove(channel)) // check that channel already removed
                 return;
-
 
             synchronized (freeChannels) {
                 wasCheckedIn = freeChannels.remove(channel);
@@ -286,14 +317,17 @@ public final class VSDispatcher implements Disposable {
                 }
             }
 
-            hasAvailableTransport = transportChannels.size() > 0;
+            state = VSDispatcherState.CONNECTING;
         }
 
+        boolean transportIsUnrecoverablyBroken = false;
+
+        // trying to recover transport
         VSocketRecoveryInfo recoveryInfo = new VSocketRecoveryInfo(channel.socket, startTime);
 
         long now = System.currentTimeMillis();
         if (wasCheckedIn && (now < endTime)) {
-            // notify state listener that transport lost
+
             if (stateListener != null) {
                 if (stateListener.onTransportStopped(recoveryInfo)) {
                     transportIsUnrecoverablyBroken = true;
@@ -304,8 +338,8 @@ public final class VSDispatcher implements Disposable {
                 // System.out.println("WAITED: remoteConnected=" + remoteConnected + " transportIsUnrecoverablyBroken=" + transportIsUnrecoverablyBroken);
                 try {
                     // Try to wait for connection restore
+                    state = VSDispatcherState.CONNECTING;
 
-                    //noinspection SynchronizationOnLocalVariableOrMethodParameter
                     synchronized (recoveryInfo) {
                         long timeToWait;
                         while ((timeToWait = endTime - now) > 0 && recoveryInfo.isWaitingForRecovery() && remoteConnected) {
@@ -340,20 +374,25 @@ public final class VSDispatcher implements Disposable {
         }
 
         if (transportIsUnrecoverablyBroken) {
+            // We lost this transport channel and were unable to recover it.
+            // This means that we lost at least some data and can't recover from this state.
+            // We need to close all remaining connections and explicitly notify use about that.
+
             boolean wasConnected = remoteConnected;
 
             // mark that we lost transport completely
-            hasAvailableTransport = false;
+            state = VSDispatcherState.DISCONNECTED;
 
             // notify all waiting for transport that connection is lost
             onRemoteClosed();
 
             if (ex instanceof SocketException || ex instanceof EOFException || ex instanceof SocketTimeoutException) {
                 if (VSProtocol.LOGGER.isLoggable(Level.FINE))
-                    VSProtocol.LOGGER.log (Level.FINE, "Exception on transport channel. Remote address: " + getRemoteAddress(), ex);
+                    VSProtocol.LOGGER.log(Level.FINE, "Exception on transport channel. Remote address: " + getRemoteAddress(), ex);
             } else {
-                VSProtocol.LOGGER.log (Level.SEVERE, "Exception on transport channel. Remote address: " + getRemoteAddress(), ex);
+                VSProtocol.LOGGER.log(Level.SEVERE, "Exception on transport channel. Remote address: " + getRemoteAddress(), ex);
             }
+
             if (wasConnected) {
                 VSProtocol.LOGGER.log(Level.WARNING, "Disconnecting due to unrecoverable transport channel loss. Remote address: " + getRemoteAddress(), ex);
             } else {
@@ -372,23 +411,62 @@ public final class VSDispatcher implements Disposable {
                 stateListener.onDisconnected();
 
             close();
+        } else {
+           state = VSDispatcherState.CONNECTED;
         }
     }
 
     /**
-     * Waits for the specified channed to become checked in.
+     * Return true, if it has CONNECTED state.
+     * Return false, if it has DISCONNECTED state.
+     * Otherwise, waits at least {@link #reconnectInterval} until status gets CONNECTED or DISCONNECTED.
+     *
+     * @return true if connected, false if disconnected
+     */
+    public boolean tryGetConnectionStatus() {
+
+        // set timeout > reconnectInterval
+        int timeout = reconnectInterval * 2;
+
+        long timeLimit = TimeKeeper.currentTime + timeout;
+        if (timeLimit < 0) // overflow check
+            timeLimit = Long.MAX_VALUE;
+
+        long period = Math.min(timeout, 1000);
+        try {
+            while (TimeKeeper.currentTime < timeLimit) {
+                if (state == VSDispatcherState.CONNECTED)
+                    return true;
+                else if (state == VSDispatcherState.DISCONNECTED)
+                    return false;
+                Thread.sleep(period);
+            }
+        } catch (InterruptedException e) {
+        }
+
+        if (state == VSDispatcherState.CONNECTED)
+            return true;
+        else if (state == VSDispatcherState.DISCONNECTED)
+            return false;
+
+        return false;
+    }
+
+    /**
+     * Waits for the specified channel to become checked in.
      *
      * @param channel channel to wait for
      * @param now current time
      * @param endTime completion deadline (will stop after this time even if channel still checked out)
      * @return true if channel was checked in
      */
+    @GuardedBy("transportChannels")
     private boolean waitForTransportCheckIn(VSTransportChannel channel, long now, long endTime) {
         assert Thread.holdsLock(transportChannels);
 
         boolean checkedIn = false;
         try {
-            while (now < endTime && !checkedIn) {
+            while (now < endTime && !checkedIn && !disposed.get()) {
                 transportChannels.wait(endTime - now);
                 now = System.currentTimeMillis();
                 synchronized (freeChannels) {
@@ -439,7 +517,7 @@ public final class VSDispatcher implements Disposable {
     {
         synchronized (freeChannels) {
             for (;;) {
-                if (!hasAvailableTransport && !remoteConnected)
+                if (state != VSDispatcherState.CONNECTED && !remoteConnected)
                     throw new ConnectionAbortedException("Connection aborted from remote side [" + getRemoteAddress() + "]");
 
                 if (!freeChannels.isEmpty ()) {
@@ -495,7 +573,7 @@ public final class VSDispatcher implements Disposable {
     }
 
     private void                sendClosing() {
-        if (!remoteConnected || !hasAvailableTransport)
+        if (!remoteConnected || state != VSDispatcherState.CONNECTED)
             return;
         
         VSTransportChannel    channel = null;
@@ -524,7 +602,8 @@ public final class VSDispatcher implements Disposable {
             transportChannels.notify();
         }
 
-        remoteConnected = hasAvailableTransport = false;
+        state = VSDispatcherState.DISCONNECTED;
+        remoteConnected = false;
 
         // disable free channels to prevent locking on code below
         synchronized (freeChannels) {
@@ -558,6 +637,7 @@ public final class VSDispatcher implements Disposable {
 
     VSChannelImpl               newChannel (int inCapacity, int outCapacity, boolean compressed) {
         VSChannelImpl               vsc;
+
         if (!remoteConnected) {
             throw new IllegalStateException("Attempt to create new channel after disconnect");
         }
@@ -600,6 +680,10 @@ public final class VSDispatcher implements Disposable {
         return address;
     }
 
+    public String               getClientAddress() {
+        return "/" + clientAddress + ":";
+    }
+
     VSChannelImpl               getChannel (int id) {
         synchronized (channels) {
             if (id >= channels.size() ) {
@@ -632,17 +716,18 @@ public final class VSDispatcher implements Disposable {
         int id = vsc.getLocalId();
 
         synchronized (channels) {
-            if (vsc.equals(channels.get(id)))
-                channels.set (id, null);
-            else
-                VSProtocol.LOGGER.log (Level.SEVERE, "Trying to remove wrong channel.");
+            if (vsc.equals(channels.get(id))) {
+                channels.set(id, null);
 
-            activeChannels--;
-            channels.notify();
+                activeChannels--;
+                channels.notify();
+            } else {
+                VSProtocol.LOGGER.log(Level.SEVERE, "Trying to remove wrong channel.");
+            }
         }
     }
 
-    public void                     addDisposableListener(DisposableListener listener) {
+    public void                     addDisposableListener(DisposableListener<?> listener) {
         synchronized (listeners) {
             if (!listeners.contains(listener))
                 listeners.add(listener);

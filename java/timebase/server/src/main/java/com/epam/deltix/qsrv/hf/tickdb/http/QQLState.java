@@ -26,4 +26,8 @@ public class QQLState {
 
     @XmlElement()
     public long             errorLocation = -1; // -1 if qql is valid
+
+    @XmlElement()
+    public String           errorText;
+
 }

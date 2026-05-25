@@ -17,6 +17,8 @@
 package com.epam.deltix.util.vsocket;
 
 import com.epam.deltix.util.lang.Disposable;
+import com.epam.deltix.util.lang.DisposableListener;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 
@@ -30,6 +32,8 @@ public interface VSChannel extends Disposable {
     public int                  getRemoteId ();
 
     public String               getRemoteAddress();
+
+    public String               getClientAddress();
 
     public String               getRemoteApplication();
 
@@ -62,4 +66,24 @@ public interface VSChannel extends Disposable {
     public String               encode(String value);
 
     public String               decode(String value);
+
+    void                        addDisposableListener(DisposableListener<VSChannel> listener);
+
+    void                        removeDisposableListener(DisposableListener<VSChannel> listener);
+
+
+    /**
+     * @return value previously set by {@link #setTag(String)}
+     *
+     * experimental
+     */
+    @Nullable
+    String getTag();
+
+    /**
+     * Sets an arbitrary tag that can be used for debugging purposes. It is not sent to the remote side.
+     *
+     * experimental
+     */
+    void setTag(@Nullable String tag);
 }

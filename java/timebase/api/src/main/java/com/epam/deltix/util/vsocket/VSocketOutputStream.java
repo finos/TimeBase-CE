@@ -28,8 +28,12 @@ import java.util.logging.Level;
 public class VSocketOutputStream extends OutputStream {
     private final String socketIdStr;
 
-    public static int           CAPACITY = 1024 * 512;
+    //@ApiStatus.Experimental
+    public static int           CAPACITY = Integer.getInteger("TimeBase.network.socketOutputStream.bufferCapacity", 1024 * 512);
     public static int           INCREMENT = CAPACITY / 4;
+    /** Controls how often {@link VSProtocol#BYTES_RECIEVED} message will be sent from {@link VSTransportChannel} */
+    //@ApiStatus.Experimental
+    public static int           REPORT_THRESHOLD = Integer.getInteger("TimeBase.network.socketOutputStream.reportThreshold", CAPACITY / 4);
 
     private final ByteQueue     buffer;
     private final OutputStream  out;

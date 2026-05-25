@@ -94,11 +94,11 @@ public class Test_SpaceReading {
         Assert.assertArrayEquals(new String[]{""}, stream.listSpaces());
 
         String space1 = "spaceOne";
-        writeBars(space1, stream, 100);
+        writeBars(space1, stream, 100, "MSFT", "IBM");
         assertEquals(asSet("", space1), asSet(stream.listSpaces()));
 
         String space2 = "space2_tWo";
-        writeBars(space2, stream, 200);
+        writeBars(space2, stream, 200, "ORCL", "GOOG");
         assertEquals(asSet("", space1, space2), asSet(stream.listSpaces()));
 
         int count1 = countMessages(stream, space1);
@@ -114,8 +114,8 @@ public class Test_SpaceReading {
 
         Assert.assertArrayEquals(new IdentityKey[]
                 {
-                        new ConstantIdentityKey("MSFT"),
-                        new ConstantIdentityKey("IBM")
+                        new ConstantIdentityKey("GOOG"),
+                        new ConstantIdentityKey("ORCL")
                 }, stream.listEntities(space2));
 
 
@@ -127,7 +127,57 @@ public class Test_SpaceReading {
             stream.purge(Long.MAX_VALUE, space);
         }
 
-        stream.delete();
+        assertEquals(0,  countMessages(stream, null));
+    }
+
+    @Test
+    public void testSpaceReadingAndTruncate() throws Exception {
+        String name = "test-spaces-truncate";
+
+        StreamOptions options = new StreamOptions(StreamScope.DURABLE, name, null, 0);
+        options.version = "5.0";
+        options.setFixedType(StreamConfigurationHelper.mkUniversalBarMessageDescriptor());
+
+        final DXTickStream stream = runner.getTickDb().createStream(name, options);
+
+        Assert.assertArrayEquals(new String[]{""}, stream.listSpaces());
+
+        String space1 = "space1";
+        writeBars(space1, stream, 100, "MSFT", "IBM");
+        assertEquals(asSet("", space1), asSet(stream.listSpaces()));
+
+        String space2 = "space2";
+        writeBars(space2, stream, 200, "ORCL", "GOOG");
+        assertEquals(asSet("", space1, space2), asSet(stream.listSpaces()));
+
+        int count1 = countMessages(stream, space1);
+        assertEquals(100, count1);
+
+        int count2 = countMessages(stream, space2);
+        assertEquals(200, count2);
+
+        Assert.assertArrayEquals(new IdentityKey[]
+                {
+                        new ConstantIdentityKey("MSFT"),
+                        new ConstantIdentityKey("IBM")
+                }, stream.listEntities(space1));
+
+        Assert.assertArrayEquals(new IdentityKey[]
+                {
+                        new ConstantIdentityKey("GOOG"),
+                        new ConstantIdentityKey("ORCL")
+                }, stream.listEntities(space2));
+
+
+        Assert.assertNotNull(stream.getTimeRange(space1));
+        Assert.assertNotNull(stream.getTimeRange(space2));
+        Assert.assertNull(stream.getTimeRange(""));
+
+        stream.truncate(Long.MIN_VALUE, space2);
+
+        int result = countMessages(stream, null);
+
+        assertEquals(100, result);
     }
 
     @NotNull
@@ -135,7 +185,7 @@ public class Test_SpaceReading {
         return new HashSet<>(Arrays.asList(spaces));
     }
 
-    private void writeBars(String space, DXTickStream stream, int count) {
+    private void writeBars(String space, DXTickStream stream, int count, String ... symbols) {
         LoadingOptions o1 = new LoadingOptions();
         o1.space = space;
         o1.writeMode = LoadingOptions.WriteMode.APPEND;
@@ -151,7 +201,7 @@ public class Test_SpaceReading {
             loader.addEventListener(listener);
 
             TDBRunner.BarsGenerator gn =
-                    new TDBRunner.BarsGenerator(null, (int) BarMessage.BAR_MINUTE, count, "MSFT", "IBM");
+                    new TDBRunner.BarsGenerator(null, (int) BarMessage.BAR_MINUTE, count, symbols);
 
             while (gn.next())
                 loader.send(gn.getMessage());

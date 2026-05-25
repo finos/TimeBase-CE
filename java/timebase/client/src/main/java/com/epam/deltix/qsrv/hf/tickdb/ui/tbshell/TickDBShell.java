@@ -42,6 +42,7 @@ import com.epam.deltix.util.io.IOUtil;
 import com.epam.deltix.util.lang.StringUtils;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.progress.ConsoleProgressIndicator;
+import com.epam.deltix.util.time.GMT;
 import com.epam.deltix.util.time.TimeKeeper;
 import com.epam.deltix.util.time.Interval;
 
@@ -541,9 +542,22 @@ public class TickDBShell extends AbstractShell {
 
             final long ts = TimeKeeper.currentTime;
 
-            for (TickStream stream : dbmgr.getStreams ()) {
-                ((DXTickStream)stream).truncate(argTime);
-            }
+            String[] spaces = selector.listSpaces();
+
+            for (DXTickStream stream : dbmgr.getStreams ()) {
+                if (spaces != null) {
+                    for (String space : spaces) {
+                         if (space != null) {
+                             System.out.println("Truncating stream: [" + stream.getKey() + "] + using space = (" + space + ")" +
+                                     " with time= " + GMT.formatDateTimeMillis(argTime));
+                             stream.truncate(argTime, space);
+                         }
+                     }
+                } else {
+                    System.out.println("Truncating stream: [" + stream.getKey() + "] with time= " + GMT.formatDateTimeMillis(argTime));
+                    stream.truncate(argTime);
+                }
+             }
 
             if (!Util.QUIET)
                 System.out.println("total time (ms): " + (TimeKeeper.currentTime - ts));
@@ -562,8 +576,21 @@ public class TickDBShell extends AbstractShell {
 
             final long ts = TimeKeeper.currentTime;
 
+            String[] spaces = selector.listSpaces();
+
             for (DXTickStream stream : dbmgr.getStreams ()) {
-                stream.purge(argTime); // now synchronous
+                if (spaces != null) {
+                    for (String space : spaces) {
+                        if (space != null) {
+                            System.out.println("Purge stream: [" + stream.getKey() + "] + using space = (" + space + ")" +
+                                    " with time= " + GMT.formatDateTimeMillis(argTime));
+                            stream.purge(argTime, space); // now synchronous
+                        }
+                    }
+                } else {
+                    System.out.println("Purge stream: [" + stream.getKey() + "] with time= " + GMT.formatDateTimeMillis(argTime));
+                    stream.purge(argTime); // now synchronous
+                }
             }
 
             if (!Util.QUIET)

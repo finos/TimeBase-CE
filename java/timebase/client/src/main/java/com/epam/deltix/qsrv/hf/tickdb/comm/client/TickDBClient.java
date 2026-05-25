@@ -21,6 +21,7 @@ import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.qsrv.hf.tickdb.comm.*;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
 import com.epam.deltix.qsrv.hf.topic.DirectProtocol;
+import com.epam.deltix.timebase.messages.InstrumentKey;
 import com.epam.deltix.util.io.SSLClientContextProvider;
 import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.streaming.MessageChannel;
@@ -84,6 +85,7 @@ import com.epam.deltix.util.vsocket.VSChannel;
 import com.epam.deltix.util.vsocket.VSClient;
 import com.epam.deltix.util.vsocket.VSProtocol;
 import io.aeron.Aeron;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -116,6 +118,14 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
     public static final Log LOGGER = LogFactory.getLog("tickdb.client");
 
+    @ApiStatus.Experimental
+    private static final int MAX_REVERSE_BUFFER_SIZE = Integer.getInteger("TimeBase.transport.channel.maxReverseBufferSize", 64 * 1024);
+    @ApiStatus.Experimental
+    private static final int DEFAULT_LOCAL_CHANNEL_SIZE = Integer.getInteger("TimeBase.transport.channel.local.defaultSize", VSProtocol.CHANNEL_BUFFER_SIZE);
+    @ApiStatus.Experimental
+    private static final int DEFAULT_REMOTE_CHANNEL_SIZE = Integer.getInteger("TimeBase.transport.channel.remote.defaultSize", VSProtocol.CHANNEL_MAX_BUFFER_SIZE);
+
+
     private static int                           getConnectionsNumber(boolean isRemote) {
         int value = 2;
 
@@ -127,28 +137,22 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         }
     }
 
-    private UserPrincipal                       user;
+    private volatile UserPrincipal              user;
 
     private final String                        host;
     private final int                           port;
     private int                                 timeout;
-    private SSLContext                          sslContext;
 
     private boolean                             isOpen = false;
     private boolean                             isReadOnly = false;
-    private int                                 serverProtocolVersion;
+    private int                                 serverProtocolVersion = -1;
     private String                              serverVersion = "";
 
     private long[]                              latency;
     private long                                availableBandwidth = 0;
 
-    private final ReconnectableImpl             connMgr = new ReconnectableImpl("TickDBClient");
-    private final Runnable                      updater =
-        new Runnable () {
-            public void         run () {
-                sendMetaDataUpdate ();
-            }
-        };
+    private final ReconnectableImpl             connMgr;
+    private final Runnable                      updater = this::sendMetaDataUpdate;
 
     private VSClient                            connection;
     //
@@ -167,10 +171,10 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     private boolean                             secured = false;
 
     private final CodecFactory                  intpCodecFactory =
-        CodecFactory.newInterpretingCachingFactory();
+            CodecFactory.newInterpretingCachingFactory();
 
     private final CodecFactory                  compCodecFactory =
-        CodecFactory.newCompiledCachingFactory ();
+            CodecFactory.newCompiledCachingFactory ();
 
     private boolean                             useCompression = false;
     private boolean                             isRemoteConnection = false;
@@ -179,10 +183,10 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
     protected final boolean                     enableSSL;
 
-    protected Boolean                           sslTermination; // null stands for default value from VSClient.SSL_TERMINATION
+    protected Boolean sslTermination; // null stands for default value from VSClient.SSL_TERMINATION
 
-    private final ContextContainer      contextContainer;
-    private final DXClientAeronContext  aeronContext;
+    private final ContextContainer contextContainer;
+    private final DXClientAeronContext aeronContext;
 
     private static final ThreadFactory topicNoAffinityConsumerThreadFactory = new TopicConsumerThreadFactory();
     private ThreadFactory topicConsumerThreadFactory;
@@ -218,6 +222,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
         this.timeout = isRemoteConnection ? 5000 : 1000;
 
+        connMgr = new ReconnectableImpl("TickDBClient", this);
         //connMgr.setLazyLogger(LOGGER);
 //        connMgr.setLogger(LOGGER);
 //        connMgr.setLogLevel (Level.INFO);
@@ -282,19 +287,16 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     public boolean                      getSslTermination() {
-        return false;
-        // TODO: @MERGE
-
-//        if (this.sslTermination != null) {
-//            return this.sslTermination;
-//        } else {
-//            return VSClient.SSL_TERMINATION;
-//        }
+        if (this.sslTermination != null) {
+            return this.sslTermination;
+        } else {
+            return VSClient.SSL_TERMINATION;
+        }
     }
 
     /*
-            Tests round-trip latency (in nanoseconds)
-         */
+     * Tests round-trip latency (in nanoseconds)
+     */
     public long[]                       testConnectLatency(int iterations) throws IOException {
         long[] times = new long[iterations];
 
@@ -323,7 +325,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     public VSChannel               connect(ChannelType type, boolean autoCommit, boolean noDelay, ChannelCompression c, int channelBufferSize)
-        throws IOException
+            throws IOException
     {
         UserPrincipal user = userPrincipalResolver.resolve(getUser());
         VSChannel channel = createChannel(type, autoCommit, noDelay, c, channelBufferSize);
@@ -335,58 +337,93 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         return user;
     }
 
+    /**
+     * Returns a VSClient instance, ensuring that it is connected.
+     * <p>
+     * Will wait for transport recovery to complete, if necessary.
+     * Will re-create a VSClient, if previous is not connected.
+     * Will throw an exception if fails to connect.
+     */
+    private VSClient getConnectedVSClient() throws IOException {
+        // This loop is expected to eventually stop as soon as recovery succeeds or fails.
+
+        while (true) {
+            // Connection instance may be changed from other thread. We have to ensure that we use the correct connection instance.
+            VSClient connectionRef;
+            synchronized (this) {
+                connectionRef = connection;
+            }
+
+            boolean isConnected = connectionRef != null && connectionRef.tryGetConnectionStatus();
+
+            synchronized (this) {
+                if (connection != connectionRef) {
+                    // Connection instance was changed from other thread. Retry.
+                    continue;
+                }
+
+                if (!isConnected) {
+                    // It's necessary to create a new instance
+                    Util.close(connection);
+
+                    String idd = (applicationId != null ? id + ":" + applicationId : id);
+
+                    if (sslTermination == null)
+                        connection = new VSClient(host, port, idd, enableSSL, contextContainer);
+                    else
+                        connection = new VSClient(host, port, idd, enableSSL, sslTermination, contextContainer);
+
+                    if (address != null)
+                        connection.setClientAddress(address, idd);
+
+                    connection.setNumTransportChannels(isRemoteConnection ? 1 : getConnectionsNumber(isRemoteConnection));
+                    connection.setTimeout(timeout);
+                    connection.setDisconnectedListener(listener);
+                    connection.setSslContext(SSLClientContextProvider.getSSLContext());
+                    connection.connect();
+                } else if (isRemoteConnection) {
+                    // lazy initialization of additional sockets transports
+                    int number = getConnectionsNumber(true);
+                    if (connection.getNumTransportChannels() < number)
+                        connection.increaseNumTransportChannels();
+                }
+                return connection;
+            }
+        }
+    }
+
     protected VSChannel          createChannel(ChannelType type, boolean autoCommit, boolean noDelay, ChannelCompression c, int channelBufferSize)
             throws IOException
     {
-        synchronized (this) {
-            if (connection == null || !connection.isConnected()) {
-                Util.close(connection);
-
-                //int connectionPort = port;
-                String idd = (applicationId != null ? id + ":" + applicationId : id);
-
-                if (sslTermination == null) {
-                    connection = new VSClient(host, port, idd, enableSSL, contextContainer);
-                } else {
-                    connection = new VSClient(host, port, idd, enableSSL, contextContainer);
-                }
-
-//                if (address != null)
-//                    connection.setClientAddress(address, idd);
-
-                connection.setNumTransportChannels(isRemoteConnection ? 1 : getConnectionsNumber(isRemoteConnection));
-                connection.setTimeout(timeout);
-                connection.setDisconnectedListener(listener);
-                connection.setSslContext(SSLClientContextProvider.getSSLContext());
-                connection.connect();
-            } else if (isRemoteConnection) {
-                // lazy initialization of additional sockets transports
-                int number = getConnectionsNumber(true);
-                if (connection.getNumTransportChannels() < number)
-                    connection.increaseNumTransportChannels();
-            }
-        }
+        VSClient vsClient = getConnectedVSClient();
 
         boolean compressed = c == ChannelCompression.AUTO ? useCompression : (c == ChannelCompression.ON);
 
         int inCapacity;
         int outCapacity;
 
-        int capacity = isRemoteConnection ? VSProtocol.CHANNEL_MAX_BUFFER_SIZE : VSProtocol.CHANNEL_BUFFER_SIZE;
+        int defaultCapacity = isRemoteConnection ? DEFAULT_REMOTE_CHANNEL_SIZE : DEFAULT_LOCAL_CHANNEL_SIZE;
 
-        if (channelBufferSize > 0) {
-            // Override ChannelType
-            inCapacity = channelBufferSize;
-            outCapacity = channelBufferSize;
-        } else if (type == ChannelType.Input) {
-            inCapacity = capacity;
-            outCapacity = capacity / 4;
-        } else if (type == ChannelType.Output) {
-            inCapacity = capacity / 4;
-            outCapacity = capacity;
-        } else {
-            inCapacity = capacity;
-            outCapacity = capacity / 2;
+        int configuredCapacity = channelBufferSize > 0 ? channelBufferSize : defaultCapacity;
+
+        switch (type) {
+            case Input:
+                inCapacity = configuredCapacity;
+                outCapacity = Math.max(configuredCapacity / 4, MAX_REVERSE_BUFFER_SIZE);
+                break;
+            case Output:
+                inCapacity = Math.max(configuredCapacity / 4, MAX_REVERSE_BUFFER_SIZE);
+                outCapacity = configuredCapacity;
+                break;
+            default:
+                inCapacity = configuredCapacity;
+                // By default, set output capacity as half of input capacity.
+                // However, if explicit channel size is provided, we use it "as is", without changes.
+                if (channelBufferSize > 0) {
+                    outCapacity = configuredCapacity;
+                } else {
+                    outCapacity = configuredCapacity / 2;
+                }
         }
 
 //        int inCapacity = isRemoteConnection ?
@@ -397,7 +434,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 //            (type == ChannelType.Output ? VSProtocol.CHANNEL_MAX_BUFFER_SIZE : VSProtocol.CHANNEL_BUFFER_SIZE) :
 //            (type == ChannelType.Output ? VSProtocol.CHANNEL_BUFFER_SIZE: VSProtocol.CHANNEL_BUFFER_SIZE / 4);
 
-        VSChannel channel = connection.openChannel(inCapacity, outCapacity, compressed);
+        VSChannel channel = vsClient.openChannel(inCapacity, outCapacity, compressed);
         channel.setAutoflush(autoCommit);
         channel.setNoDelay(noDelay);
         channel.getDataOutputStream().writeInt (TDBProtocol.VERSION);
@@ -422,9 +459,9 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
     public CodecFactory         getCodecFactory (ChannelQualityOfService qos) {
         return (
-            CodecFactory.useInterpretedCodecs (qos == ChannelQualityOfService.MIN_INIT_TIME) ?
-                intpCodecFactory :
-                compCodecFactory
+                CodecFactory.useInterpretedCodecs (qos == ChannelQualityOfService.MIN_INIT_TIME) ?
+                        intpCodecFactory :
+                        compCodecFactory
         );
     }
 
@@ -452,32 +489,8 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         this.timeout = timeout;
     }
 
-    public SSLContext           getSslContext() {
-        return sslContext;
-    }
-
-    public void                 setSslContext(SSLContext sslContext) {
-        this.sslContext = sslContext;
-    }
-
-    protected SSLContext        getOrCreateContext() {
-        if (enableSSL) {
-            if (sslContext == null)
-                sslContext = SSLClientContextProvider.getSSLContext();
-            return sslContext;
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns server protocol version if client is already connected.
-     * @return server version
-     * @throws IllegalStateException if is not open
-     */
     @Override
     public int                  getServerProtocolVersion() {
-        assertOpen();
         return serverProtocolVersion;
     }
 
@@ -498,7 +511,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
     private synchronized boolean            syncOpen (boolean readOnly) {
 
-        if (isOpen && connMgr.isConnected())
+        if (isOpen && isConnected())
             throw new IllegalStateException("Database already opened & connected.");
 
         if (!connMgr.isConnected()) {
@@ -580,9 +593,9 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     void                         checkResponse (VSChannel ds)
-        throws IOException
+            throws IOException
     {
-      checkResponse(ds, serverProtocolVersion);
+        checkResponse(ds, serverProtocolVersion);
     }
 
     static void                         checkResponse (VSChannel ds, int protocolVersion)
@@ -715,7 +728,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     public DXTickStream                   createAnonymousStream (
-        StreamOptions                           options
+            StreamOptions                           options
     )
     {
         throw new UnsupportedOperationException();
@@ -725,23 +738,23 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     public TickStreamClient     createStream (
-        String                      key,
-        String                      name,
-        String                      description,
-        int                         distributionFactor
+            String                      key,
+            String                      name,
+            String                      description,
+            int                         distributionFactor
     )
     {
         return (
-            createStream (
-                key,
-                new StreamOptions (StreamScope.DURABLE, name, description, distributionFactor)
-            )
+                createStream (
+                        key,
+                        new StreamOptions (StreamScope.DURABLE, name, description, distributionFactor)
+                )
         );
     }
 
     public synchronized TickStreamClient  createStream (
-        String                      key,
-        StreamOptions               options
+            String                      key,
+            StreamOptions               options
     )
     {
         assertOpen();
@@ -958,6 +971,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         //Direct
         Aeron aeron = aeronContext.getAeronInstance(response.getAeronDir(), response.getTransferType());
 
+
         return loaderFactory.create(
                 aeron, pref.raw, response.getPublisherChannel(), response.getDataStreamId(),
                 response.getTypes(),
@@ -985,10 +999,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         DirectReaderFactory factory = new DirectReaderFactory(compCodecFactory, pref.getTypeLoader());
 
         Aeron aeron = aeronContext.getAeronInstance(response.getAeronDir(), response.getTransferType());
-        SubscriptionWorker subscriptionWorker = factory.createListener(aeron, pref.raw, response.getChannel(),
-                response.getDataStreamId(), response.getTypes(), processor,
-                pref.getEffectiveIdleStrategy(idleStrategy), pref.getTopicDataLossHandler());
-
+        SubscriptionWorker subscriptionWorker = factory.createListener(aeron, pref.raw, response.getChannel(), response.getDataStreamId(), response.getTypes(), processor, pref.getEffectiveIdleStrategy(idleStrategy), pref.getTopicDataLossHandler());
         if (threadFactory == null) {
             threadFactory = topicConsumerThreadFactory;
         }
@@ -1040,8 +1051,8 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
     @Override
     public TickCursor           createCursor (
-        SelectionOptions            options,
-        TickStream ...              streams
+            SelectionOptions            options,
+            TickStream ...              streams
     )
     {
         assertOpen();
@@ -1117,13 +1128,12 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         synchronized (this) {
 
             // free locks
-            if (session != null) {
+            if (session != null && connection.tryGetConnectionStatus()) {
                 TickStreamClient[] streams = session.getStreams();
                 for (TickStreamClient stream : streams) {
                     try {
                         stream.unlock();
                     } catch (Throwable e) {
-                    
                         LOGGER.warn("Cannot unlock stream [%s]. Error: %s").with(stream.getKey()).with(e);
                     }
                 }
@@ -1189,13 +1199,13 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
     public long                 getMetaDataVersion () {
         assertOpen();
-        
+
         return (getLongProperty (TDBProtocol.REQ_GET_MD_VERSION));
     }
 
     private void                sendMetaDataUpdate () {
         assertOpen();
-        
+
         VSChannel                  ds = null;
 
         try {
@@ -1245,7 +1255,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     public synchronized MetaData            getMetaData () {
         refreshMetaData ();
         return (md);
-    }   
+    }
 
     // DisconnectableImpl.Reconnector impl.
     @Override
@@ -1402,33 +1412,33 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     public InstrumentMessageSource          executeQuery (
-        String                                  qql,
-        Parameter ...                           params
+            String                                  qql,
+            Parameter ...                           params
     )
-        throws CompilationException
+            throws CompilationException
     {
         return (executeQuery (qql, null, null, params));
     }
 
     @Override
     public InstrumentMessageSource          executeQuery (
-        String                                  qql,
-        SelectionOptions                        options,
-        Parameter ...                           params
+            String                                  qql,
+            SelectionOptions                        options,
+            Parameter ...                           params
     )
-        throws CompilationException
+            throws CompilationException
     {
         return (executeQuery (qql, options, null, params));
     }
 
     @Override
     public InstrumentMessageSource          executeQuery (
-        String                                  qql,
-        SelectionOptions                        options,
-        CharSequence []                         ids,
-        Parameter ...                           params
+            String                                  qql,
+            SelectionOptions                        options,
+            CharSequence[]                          ids,
+            Parameter ...                           params
     )
-        throws CompilationException
+            throws CompilationException
     {
         return (executeQuery (qql, options, null, ids, Long.MIN_VALUE, params));
     }
@@ -1467,14 +1477,14 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     public InstrumentMessageSource          executeQuery (
-        String                                  qql,
-        SelectionOptions                        options,
-        TickStream []                           streams,
-        CharSequence []                         ids,
-        long                                    time,
-        Parameter ...                           params
+            String                                  qql,
+            SelectionOptions                        options,
+            TickStream []                           streams,
+            CharSequence []                          ids,
+            long                                    time,
+            Parameter ...                           params
     )
-        throws CompilationException
+            throws CompilationException
     {
         assertOpen();
         return TickCursorClientFactory.create(this, options, time, Long.MAX_VALUE, qql, params, ids, null, getAeronContext(), streams);

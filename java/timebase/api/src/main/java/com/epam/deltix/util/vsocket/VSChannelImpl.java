@@ -20,9 +20,12 @@ import com.epam.deltix.util.ContextContainer;
 import com.epam.deltix.util.concurrent.QuickExecutor;
 import static com.epam.deltix.util.vsocket.VSProtocol.*;
 import com.epam.deltix.util.io.*;
+import com.epam.deltix.util.lang.DisposableListener;
 import com.epam.deltix.util.lang.Util;
 import com.epam.deltix.util.memory.DataExchangeUtils;
 import com.epam.deltix.util.memory.MemoryDataOutput;
+import net.jcip.annotations.GuardedBy;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.CheckReturnValue;
 import java.io.*;
@@ -36,6 +39,9 @@ import java.util.zip.Inflater;
  *
  */
 final class VSChannelImpl implements VSChannel {
+    //@ApiStatus.Experimental // Configurable option for testing optimal value of notifyThreshold in different setups
+    private static final int MAX_NOTIFY_THRESHOLD = Integer.getInteger("TimeBase.network.channel.maxNotifyThreshold", VSProtocol.MAXSIZE);
+
     private final ContextContainer contextContainer;
     private volatile VSChannelState         state = VSChannelState.NotConnected;
     
@@ -47,11 +53,11 @@ final class VSChannelImpl implements VSChannel {
     private final int                       inCapacity; // = 1 << 15;
     private final int                       outCapacity; // = 1 << 14;
 
-    private GapQueueInputStream             in;
-    private CountingInputStream             cin;
+    private final GapQueueInputStream in;
+    private final CountingInputStream cin;
     private DataInputStream                 din;
     
-    private ChannelOutputStream             out;
+    private final ChannelOutputStream       out;
     private DataOutputStream                dout;
     
     private boolean                         autoFlush = false;
@@ -67,14 +73,24 @@ final class VSChannelImpl implements VSChannel {
 
     private final boolean                   compressed;
 
+    @GuardedBy("inflater")
     private final Inflater                  inflater;
+    @GuardedBy("inflater")
     private final MemoryDataOutput          infOut;
 
+    // Previously was protected by "deflater" itself however this was redundant as we always sync on "this"
+    @GuardedBy("this")
     private final Deflater                  deflater;
+    @GuardedBy("this")
     private final MemoryDataOutput          defOut;
 
     private volatile long                   numBytesSend; // synchronized by "this"
     private final Counter                   numBytesRead = new Counter();
+
+    private String tag; // Arbitrary tag for debugging purposes. It is not sent to the remote side.
+
+    @GuardedBy("listeners")
+    private final HashSet<DisposableListener<VSChannel>> listeners = new HashSet<>();
 
 //    private final StringBuffer              sendLog = new StringBuffer();
 //    private final StringBuffer              recievedLog = new StringBuffer();
@@ -165,7 +181,10 @@ final class VSChannelImpl implements VSChannel {
         this.out = new ChannelOutputStream(this, outCapacity);
         this.in = new GapQueueInputStream (inCapacity);
 
-        this.cin = new CountingInputStream(this.in, inCapacity / 4) {
+        // In case of big buffer we want to notify sender as soon as a full packet can be sent
+        // or 1/4 of max capacity accumulated
+        int notifyThreshold = Math.min(inCapacity / 4, MAX_NOTIFY_THRESHOLD);
+        this.cin = new CountingInputStream(this.in, notifyThreshold) {
 
             @Override
             protected boolean bytesRead(long change) {
@@ -206,6 +225,11 @@ final class VSChannelImpl implements VSChannel {
         return dispatcher != null ? dispatcher.getRemoteAddress() : null;
     }
 
+    @Override
+    public String               getClientAddress() {
+        return dispatcher != null ? dispatcher.getClientAddress() : null;
+    }
+
     public String               getRemoteApplication() {
         return dispatcher != null ? dispatcher.getApplicationID() : null;
     }
@@ -238,15 +262,15 @@ final class VSChannelImpl implements VSChannel {
         return (dout);
     }
 
-    public synchronized VSChannelState  getState() {
+    public VSChannelState  getState() {
         return state;
     }
 
-    public synchronized boolean         isClosed () {
-        return state == VSChannelState.Closed || state == VSChannelState.Removed;
-    }
+//    public boolean         isClosed () {
+//        return state == VSChannelState.Closed || state == VSChannelState.Removed;
+//    }
     
-    private synchronized boolean isRemoteConnected() {
+    private boolean isRemoteConnected() {
         return state == VSChannelState.Connected;
     }
 
@@ -298,6 +322,8 @@ final class VSChannelImpl implements VSChannel {
 
             state = VSChannelState.Closed;
         }
+
+        notifyListeners();
     }
 
     public void processCommand(int cmd, long position) {
@@ -352,6 +378,8 @@ final class VSChannelImpl implements VSChannel {
         synchronized (this) {
             state = VSChannelState.Removed;
         }
+
+        notifyListeners();
     }
 
     void                        onRemoteClosing() {
@@ -374,6 +402,8 @@ final class VSChannelImpl implements VSChannel {
                     break;
             }
         }
+
+        notifyListeners();
     }
 
     void                        onDisconnected(IOException error) {
@@ -396,6 +426,9 @@ final class VSChannelImpl implements VSChannel {
 
         // notify availability listener after input close
         notifyDataAvailable();
+
+        // notify disposable listeners
+        notifyListeners();
     }
 
 //    void                        onRemoteClosing() {
@@ -482,6 +515,11 @@ final class VSChannelImpl implements VSChannel {
 
         if (available) {
             notifyDataAvailable();
+        }
+        // It's necessary to still process commands when "in" gets closed to properly complete
+        // the channel closing process. Otherwise, commands may stuck in queue and the channel may leak.
+        // See https://gitlab.deltixhub.com/Deltix/QuantServer/QuantServer/-/issues/1264
+        if (available || in.isClosed()) {
             checkCommands();
         }
     }
@@ -494,24 +532,26 @@ final class VSChannelImpl implements VSChannel {
     void                   sendBytesRead (long bytes)
         throws InterruptedException, IOException
     {
-        VSChannelState state = this.state;
+        VSChannelState state = getState();
+
         if (state != VSChannelState.Connected && state != VSChannelState.RemoteClosed) {
-            if (LOGGER.isLoggable(Level.FINE)) {
+            if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "Skipping BYTES_AVAILABLE_REPORT report: " + bytes + " because channel state is " + state);
-            }
             return;
         }
-        if (state == VSChannelState.RemoteClosed && LOGGER.isLoggable(Level.FINE)) {
+
+        state = getState();
+
+        if (state == VSChannelState.RemoteClosed && LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Sending BYTES_AVAILABLE_REPORT report: " + bytes + " at state " + state + " with remoteIndex=" + remoteIndex);
-        }
 
         DataExchangeUtils.writeInt (buffer8, 4, (int)bytes);
         DataExchangeUtils.writeInt (buffer8, 8, remoteIndex);
 
-        final VSTransportChannel    tc = dispatcher.checkOut ();
-        if (LOGGER.isLoggable(Level.FINEST)) {
+        VSTransportChannel    tc = dispatcher.checkOut ();
+        if (LOGGER.isLoggable(Level.FINEST))
             LOGGER.log(Level.FINEST, "Sending BYTES_AVAILABLE_REPORT report: " + ((int)bytes) + " from " + tc.getSocketIdStr());
-        }
+
         try {
             tc.write (buffer8, 0, buffer8.length);
         } finally {
@@ -539,6 +579,7 @@ final class VSChannelImpl implements VSChannel {
         }
     }
 
+    @GuardedBy("this")
     void                    sendClosing()
         throws InterruptedException, IOException
     {
@@ -554,15 +595,17 @@ final class VSChannelImpl implements VSChannel {
         final VSTransportChannel    tc = dispatcher.checkOut ();
         try {
             tc.write (data, 0, data.length);
+            //noinspection NonAtomicOperationOnVolatileField This is safe because writes always happen with lock on "this"
             numBytesSend += 2;
         } finally {
             dispatcher.checkIn (tc);
         }
-        if (LOGGER.isLoggable(Level.FINEST)) {
+
+        if (LOGGER.isLoggable(Level.FINEST))
             LOGGER.log(Level.FINEST, "Sending CLOSING: remoteIndex=" + remoteIndex + " numBytesSend=" + numBytesSend);
-        }
     }
 
+    @GuardedBy("this")
     void                    sendClosed ()
         throws InterruptedException, IOException
     {
@@ -578,13 +621,14 @@ final class VSChannelImpl implements VSChannel {
         final VSTransportChannel    tc = dispatcher.checkOut ();
         try {
             tc.write (data, 0, data.length);
+            //noinspection NonAtomicOperationOnVolatileField This is safe because writes always happen with lock on "this"
             numBytesSend += 2;
         } finally {
             dispatcher.checkIn (tc);
         }
-        if (LOGGER.isLoggable(Level.FINEST)) {
+
+        if (LOGGER.isLoggable(Level.FINEST))
             LOGGER.log(Level.FINEST, "Sending CLOSED: remoteIndex=" + remoteIndex + " numBytesSend=" + numBytesSend);
-        }
     }
 
     synchronized void           send(byte [] data, int offset, int length)
@@ -595,20 +639,15 @@ final class VSChannelImpl implements VSChannel {
                 VSTransportChannel tc = null;
 
                 try {
+                    tc = dispatcher.checkOut ();
                     if (compressed) {
-                        tc = dispatcher.checkOut ();
-
-                        synchronized (deflater) {
-                            int compressed = compress(data, offset, length);
-                            tc.write(remoteId, remoteIndex, numBytesSend, defOut.getBuffer(), 0, compressed, length);
-                            numBytesSend += length;
-                        }
+                        int compressed = compress(data, offset, length);
+                        tc.write(remoteId, remoteIndex, numBytesSend, defOut.getBuffer(), 0, compressed, length);
                     } else {
-                        tc = dispatcher.checkOut ();
                         tc.write(remoteId, remoteIndex, numBytesSend, data, offset, length, length);
-                        numBytesSend += length;
-                        //sendLog.append("sending bytes: ").append(numBytesSend);
                     }
+                    numBytesSend += length;
+                    //sendLog.append("sending bytes: ").append(numBytesSend);
 
                 } finally {
                     if (tc != null)
@@ -701,15 +740,10 @@ final class VSChannelImpl implements VSChannel {
         DataExchangeUtils.writeUnsignedShort (buffer8, 0, remoteId);
         DataExchangeUtils.writeUnsignedShort (buffer8, 2, BYTES_AVAILABLE_REPORT);
 
-        boolean wasClosed;
-        
-        synchronized (this) {
-            //assert state == VSChannelState.NotConnected; //TODO: check this
+        boolean wasClosed = state == VSChannelState.Closed;
+        //assert state == VSChannelState.NotConnected; //TODO: check this
 
-            wasClosed = state == VSChannelState.Closed;
-            state = VSChannelState.Connected;
-        }
-
+        state = VSChannelState.Connected;
         out.setRemoteCapacity(remoteCapacity);
 
         if (wasClosed) {
@@ -780,6 +814,7 @@ final class VSChannelImpl implements VSChannel {
         return new String(output);
     }
 
+    @GuardedBy("this")
     private int compress(byte[] data, int offset, int length) {
 
         deflater.reset();
@@ -802,6 +837,7 @@ final class VSChannelImpl implements VSChannel {
         return count;
     }
 
+    @GuardedBy("inflater")
     private int decompress(byte[] data, int offset, int length) {
 
         inflater.reset();
@@ -828,5 +864,43 @@ final class VSChannelImpl implements VSChannel {
 
     int getIndex() {
         return index;
+    }
+
+    @Override
+    public void addDisposableListener(DisposableListener<VSChannel> listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    @Override
+    public void removeDisposableListener(DisposableListener<VSChannel> listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    private void                    notifyListeners() {
+        DisposableListener<VSChannel>[] list;
+
+        synchronized (listeners) {
+            //noinspection unchecked,ToArrayCallWithZeroLengthArrayArgument
+            list = listeners.toArray(new DisposableListener[listeners.size()]);
+        }
+
+        for (DisposableListener<VSChannel> dl : list) {
+            dl.disposed(this);
+        }
+    }
+
+    @Override
+    @Nullable
+    public String getTag() {
+        return tag;
+    }
+
+    @Override
+    public void setTag(@Nullable String tag) {
+        this.tag = tag;
     }
 }

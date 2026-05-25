@@ -19,6 +19,7 @@ package com.epam.deltix.qsrv.hf.tickdb.http;
 import com.epam.deltix.qsrv.hf.pub.md.Introspector;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
+import com.epam.deltix.qsrv.hf.pub.md.StandardTypes;
 import com.epam.deltix.qsrv.hf.pub.md.json.SchemaBuilder;
 import com.epam.deltix.qsrv.hf.tickdb.comm.UnknownStreamException;
 import com.epam.deltix.qsrv.hf.tickdb.http.download.*;
@@ -28,6 +29,9 @@ import com.epam.deltix.qsrv.hf.tickdb.impl.TickDBWrapper;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.TopicTransferType;
 import com.epam.deltix.qsrv.hf.tickdb.impl.topic.topicregistry.LoaderSubscriptionResult;
 import com.epam.deltix.qsrv.hf.tickdb.lang.parser.QQLParser;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.CompilerUtil;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.Expression;
+import com.epam.deltix.qsrv.hf.tickdb.lang.pub.QuantQueryCompiler;
 import com.epam.deltix.qsrv.hf.tickdb.lang.pub.TextMap;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickStream;
@@ -119,7 +123,7 @@ public class TimebaseServlet extends HttpServlet {
                     HTTPProtocol.validateVersion(((XmlRequest) body).version);
 
                 if (body instanceof ValidateQQLRequest) {
-                    validateQQL((ValidateQQLRequest)body, resp);
+                    validateQQL(db, (ValidateQQLRequest)body, resp);
                 } else if (body instanceof CreateStreamRequest) {
                     StreamHandler.createStream(db, (CreateStreamRequest) body, resp);
                 } else if (body instanceof ListStreamsRequest) {
@@ -367,12 +371,18 @@ public class TimebaseServlet extends HttpServlet {
         }
     }
 
-    static void     validateQQL(ValidateQQLRequest request, HttpServletResponse response) throws IOException {
+    static void     validateQQL(DXTickDB db, ValidateQQLRequest request, HttpServletResponse response) throws IOException {
         TextMap map = QQLParser.createTextMap();
         QQLState state = new QQLState();
 
         try {
-            QQLParser.parse(request.qql, map);
+            Object sx = QQLParser.parse(request.qql, map);
+            if (sx instanceof Expression) {
+                // TODO: Optimize - creating compiler takes a lot of time
+                QuantQueryCompiler compiler = CompilerUtil.createCompiler(db);
+                compiler.compile((Expression) sx, StandardTypes.CLEAN_QUERY);
+            }
+
             state.tokens = new ArrayList<>();
 
             for (com.epam.deltix.qsrv.hf.tickdb.lang.pub.Token token : map.getTokens())
@@ -380,6 +390,7 @@ public class TimebaseServlet extends HttpServlet {
 
         } catch (CompilationException e) {
             state.errorLocation = e.location;
+            state.errorText = e.diag;
         }
 
         final ValidateQQLResponse r = new ValidateQQLResponse(state);

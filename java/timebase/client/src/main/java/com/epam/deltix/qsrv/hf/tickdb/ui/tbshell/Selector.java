@@ -102,6 +102,7 @@ public class Selector {
 
     private CharSequenceSet                 types = null;
     private boolean                         printJson = false;
+	private String[]                        spaces;											   
 
     public Selector (TickDBShell shell) {
         this.shell = shell;
@@ -160,6 +161,18 @@ public class Selector {
         return endtime == TimeConstants.TIMESTAMP_UNKNOWN ? Long.MAX_VALUE : endtime;
     }
     
+    public Interval             getTimeOffset() {
+        return timeOffset;
+    }
+
+    public Interval             getEndTimeOffset() {
+        return endTimeOffset;
+    }
+
+    public ChannelQualityOfService getQos() {
+        return qos;
+    }
+												 
     public void                 setDecodeRaw (boolean decodeRaw) {
         this.decodeRaw = decodeRaw;
     }
@@ -267,6 +280,18 @@ public class Selector {
         if (option.equalsIgnoreCase("printjson")) {
             printJson = Boolean.parseBoolean(value);
             shell.confirm("Print JSON: " + printJson);
+            return true;
+        }
+
+        if (option.equalsIgnoreCase("spaces")) {
+            spaces = value.split ("\\s", 3);
+
+            if (spaces.length == 0) {
+                spaces = null;
+                shell.confirm("Selecting all stream spaces");
+            } else {
+                shell.confirm("Select next spaces: " + Arrays.toString(spaces));
+            }
             return true;
         }
 
@@ -724,6 +749,7 @@ public class Selector {
             
             return (true);
         }
+
         return (false);
     }
     
@@ -923,6 +949,14 @@ public class Selector {
         opts.typeLoader = getTypeLoader();
         
         return (opts);
+    }
+	
+	String[]                        listSpaces() {
+        return spaces;
+    }
+
+    String[]                        listSpaces(DXTickStream stream) {
+        return spaces != null ? spaces : stream.listSpaces();
     }
 
     public TypeLoader               getTypeLoader() {

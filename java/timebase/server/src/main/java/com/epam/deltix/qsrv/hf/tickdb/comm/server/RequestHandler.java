@@ -239,6 +239,7 @@ public class RequestHandler extends QuickExecutor.QuickTask {
                         case TDBProtocol.REQ_LIST_ENTITIES:             doListEntities (ds); break;
                         case TDBProtocol.REQ_CLEAR_DATA:                doClearData(ds); break;
                         case TDBProtocol.REQ_TRUNCATE_DATA:             doTruncateData(ds); break;
+                        case TDBProtocol.REQ_TRUNCATE_SPACE:            doTruncateSpace(ds); break;
                         case TDBProtocol.REQ_PURGE_STREAM:              doPurge(ds); break;
                         case TDBProtocol.REQ_PURGE_STREAM_SPACE:        doPurgeSpace(ds); break;
                         case TDBProtocol.REQ_DELETE_RANGE:              doDeleteStreamRange(ds); break;
@@ -539,7 +540,12 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         SelectionOptionsCodec.read(is, options, clientVersion);
         Parameter[] parameters = TDBProtocol.readParameters(is, clientVersion);
 
-        ClassSet set = db.describeQuery(query, options, parameters);
+        ClassSet set;
+        try {
+            set = db.describeQuery(query, options, parameters);
+        } catch (CompilationException e) {
+            throw new CompilationException(e.diag, e.location);
+        }
 
         out.writeInt(TDBProtocol.RESP_OK);
         TDBProtocol.writeClassSet(ds.getDataOutputStream(), set, clientVersion);
@@ -917,6 +923,22 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         out.flush();
     }
 
+    private void               doTruncateSpace(VSChannel ds) throws IOException {
+        final DXTickStream            stream = getStream (ds);
+
+        DataInputStream din = ds.getDataInputStream();
+
+        long time = din.readLong();
+        String space = din.readUTF();
+        final IdentityKey [] ids = TDBProtocol.readInstrumentIdentities (din);
+
+        ((LockVerifier) stream).checkExclusiveWrite(readLock(ds));
+
+        stream.truncate(time, space, ids);
+        out.writeInt (TDBProtocol.RESP_OK);
+        out.flush();
+    }
+
     private void                doRunTransformation(VSChannel ds)
             throws IOException
     {
@@ -946,7 +968,6 @@ public class RequestHandler extends QuickExecutor.QuickTask {
         DataInputStream dis = ds.getDataInputStream();
         long time = dis.readLong();
         String space = dis.readUTF();
-
 
         ServerLock lock = readLock(ds); // do not verify lock for the purge
         //stream.verify(readLock(ds), LockType.WRITE);

@@ -55,7 +55,7 @@ public class DatagramOutputStream extends OutputStream {
         try {
             ds.send(packet);
         } catch (Exception e) {
-            VSProtocol.LOGGER.log (Level.WARNING, null, e);
+            e.printStackTrace(System.out);
         }
     }
 
@@ -78,7 +78,7 @@ public class DatagramOutputStream extends OutputStream {
             ds.send(packet);
             //System.out.println("Send packet, size = " + out.getSize());
         } catch (Exception e) {
-            VSProtocol.LOGGER.log (Level.WARNING, null, e);
+            e.printStackTrace(System.out);
         }
     }
 }

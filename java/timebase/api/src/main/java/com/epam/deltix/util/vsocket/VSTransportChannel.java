@@ -53,7 +53,9 @@ class VSTransportChannel implements Runnable, Disposable {
     private volatile boolean            closed = false;
     volatile long                       latency = Long.MAX_VALUE;
 
-    private volatile long               reported;
+    // Value at which the "completeTask" should be triggered next time.
+    // Checked and updated by transport thread.
+    private long                        nextReportValue = VSocketOutputStream.REPORT_THRESHOLD;
 
     private final Thread                thread;
 
@@ -62,6 +64,9 @@ class VSTransportChannel implements Runnable, Disposable {
     @Nonnull
     private QuickExecutor.QuickTask createCompleteTask(QuickExecutor quickExecutor) {
         return new QuickExecutor.QuickTask(quickExecutor) {
+            // Bytes that already reported. Checked and updated by completeTask.
+            private long reported = 0;
+
             @Override
             public void run() throws InterruptedException {
                 long bytesRead;
@@ -71,8 +76,9 @@ class VSTransportChannel implements Runnable, Disposable {
                         // We already reported this value
                         return;
                     }
-                    DataExchangeUtils.writeLong(bytesReport, 2, (reported = bytesRead));
+                    DataExchangeUtils.writeLong(bytesReport, 2, bytesRead);
                     out.write(bytesReport, 0, bytesReport.length);
+                    reported = bytesRead;
                 }
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.log(Level.FINEST, "Sent BYTES_RECIEVED report: " + bytesRead + " from " + socket.getSocketIdStr());
@@ -166,9 +172,12 @@ class VSTransportChannel implements Runnable, Disposable {
                 if (currentThread.isInterrupted())
                     throw new InterruptedException();
 
-                if (vin.getBytesRead() - reported > VSocketOutputStream.CAPACITY / 4)
+                long bytesRead = vin.getBytesRead();
+                if (bytesRead >= nextReportValue) {
+                    nextReportValue = bytesRead + VSocketOutputStream.REPORT_THRESHOLD;
                     completeTask.submit();
-                
+                }
+
                 int destId = din.readUnsignedShort ();
                 //System.out.println(this.socket + ": signal = " + destId);
 

@@ -63,7 +63,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
-          distribution: "corretto"
+          distribution: 'temurin'
       - name: Build with gradle
         run: ./gradlew build
 
@@ -92,7 +92,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
-          distribution: "corretto"
+          distribution: 'temurin'
       - name: Build with gradle
         run: ./gradlew build windowsTimebaseInstaller linuxTimebaseInstaller
       - name: Archive Linux installer
@@ -150,7 +150,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: 11
-          distribution: "corretto"
+          distribution: 'temurin'
       - name: Publish jars
         run: >
           ./gradlew :java:timebase:aerondirect:publish :java:timebase:commons:publish :java:timebase:s3:publish
@@ -183,7 +183,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: 11
-          distribution: "corretto"
+          distribution: 'temurin'
       - name: Publish docker
         run: ./gradlew :java:timebase:server:dockerPublishImageAll :java:timebase:client:dockerPublishImageAll
         env:

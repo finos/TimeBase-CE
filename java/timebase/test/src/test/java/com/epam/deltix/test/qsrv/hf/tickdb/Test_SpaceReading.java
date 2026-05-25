@@ -132,7 +132,7 @@ public class Test_SpaceReading {
 
     @Test
     public void testSpaceReadingAndTruncate() throws Exception {
-        String name = "testSpacesStream1";
+        String name = "test-spaces-truncate";
 
         StreamOptions options = new StreamOptions(StreamScope.DURABLE, name, null, 0);
         options.version = "5.0";

@@ -24,6 +24,7 @@ import com.epam.deltix.qsrv.hf.pub.TypeLoaderImpl;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 import com.epam.deltix.timebase.messages.SchemaElement;
 import com.epam.deltix.timebase.messages.SchemaIgnore;
+import com.epam.deltix.util.annotations.TimestampNs;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
 import com.epam.deltix.util.lang.Util;
 
@@ -217,7 +218,7 @@ public class FieldLayout <T extends DataField> implements DataFieldInfo {
                 // setter/getter for the nanoseconds precision has suffix "Ns"
                 try {
                     if (field.getType() instanceof DateTimeDataType && ((DateTimeDataType) field.getType()).hasNanosecondPrecision()) {
-                        if (!method.getName().endsWith(fieldName + "Ns"))
+                        if (method.getAnnotation(TimestampNs.class) == null)
                             method = cls.getMethod(method.getName() + "Ns");
                     }
                 } catch (NoSuchMethodException e) {
@@ -240,8 +241,10 @@ public class FieldLayout <T extends DataField> implements DataFieldInfo {
                 if (schemaElement != null && isValidGetterJavaBeanNotation(method, fieldName, isBooleanField)) {
                     // setter/getter for the nanoseconds precision has suffix "Ns"
                     try {
-                        if (field.getType() instanceof DateTimeDataType && ((DateTimeDataType) field.getType()).hasNanosecondPrecision())
-                            method = cls.getMethod(method.getName() + "Ns");
+                        if (field.getType() instanceof DateTimeDataType && ((DateTimeDataType) field.getType()).hasNanosecondPrecision()) {
+                            if (method.getAnnotation(TimestampNs.class) == null)
+                                method = cls.getMethod(method.getName() + "Ns");
+                        }
                     } catch (NoSuchMethodException e) {
                         LOG.warn("Nanosecond getter with name \"" + (method.getName() + "Ns") + "\" is not found in class " + cls);
                     }

@@ -16,6 +16,7 @@ package deltix.buildtools;
  * limitations under the License.
  */
 
+import org.apache.http.HttpStatus;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -113,7 +115,12 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
         URI apiUri = URI.create(CENTRAL_PORTAL_OSSRH_API_URI);
 
         String repositoryKey = findOpenRepository(apiUri, bearer);
-        uploadRepositoryToPortal(apiUri, bearer, repositoryKey);
+        System.out.println("Found published repository: " + repositoryKey);
+
+        int status = uploadRepository(apiUri, bearer, repositoryKey);
+        if (status == HttpURLConnection.HTTP_CLIENT_TIMEOUT)
+            uploadRepository(apiUri, bearer, repositoryKey);
+
         dropRepository(apiUri, bearer, repositoryKey);
     }
 
@@ -137,8 +144,6 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
             throw new IllegalStateException("Open repositories is empty!");
         }
 
-        System.out.println(repositories);
-
         String repositoryKey = null;
         String group = groupId.get();
         for (int i = 0; i < repositories.length(); i++) {
@@ -158,21 +163,30 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
         return repositoryKey;
     }
 
-    private static void uploadRepositoryToPortal(URI apiUri, String bearer, String repositoryKey) throws IOException {
-        String endpoint = apiUri.resolve("/manual/upload/repository/" + repositoryKey + "?publishing_type=user_managed").toString();
-        HttpURLConnection conn = (HttpURLConnection) new URL(endpoint).openConnection();
-        conn.setConnectTimeout(CONNECTION_TIMEOUT);
-        conn.setReadTimeout(CONNECTION_TIMEOUT);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Authorization", "Bearer " + bearer);
-        conn.setDoOutput(true);
-        conn.getOutputStream().close();
+    private static int uploadRepository(URI apiUri, String bearer, String repositoryKey) throws IOException {
+        String response = null;
+        int status = -1;
+        HttpURLConnection conn = null;
+        try {
+            String endpoint = apiUri.resolve("/manual/upload/repository/" + repositoryKey + "?publishing_type=automatic").toString();
+            conn = (HttpURLConnection) new URL(endpoint).openConnection();
+            conn.setConnectTimeout(CONNECTION_TIMEOUT);
+            conn.setReadTimeout(CONNECTION_TIMEOUT);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization", "Bearer " + bearer);
+            conn.setDoOutput(true);
 
-        int status = conn.getResponseCode();
-        String body = readBody(conn);
-        if (status != 200) {
-            throw new IllegalStateException("Failed to upload repository: repository_key=" + repositoryKey + ", status=" + status + ", response=" + body);
+            status = conn.getResponseCode();
+            response = readBody(conn);
+        } catch (SocketTimeoutException ex) {
+            return HttpURLConnection.HTTP_CLIENT_TIMEOUT;
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to upload repository: repository_key=" + repositoryKey + ", status=" + status + ", response=" + response);
+        } finally {
+            conn.disconnect();
         }
+
+        return status;
     }
 
     private static void dropRepository(URI apiUri, String bearer, String repositoryKey) throws IOException {
@@ -185,7 +199,7 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
 
         int status = conn.getResponseCode();
         String body = readBody(conn);
-        if (status != 204) {
+        if (status != HttpURLConnection.HTTP_NO_CONTENT) {
             throw new IllegalStateException("Failed to drop repository: repository_key=" + repositoryKey + ", status=" + status + ", response=" + body);
         }
     }

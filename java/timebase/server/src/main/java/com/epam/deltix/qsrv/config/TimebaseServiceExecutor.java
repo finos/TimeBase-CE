@@ -308,12 +308,45 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
         return publicAddressForAeron;
     }
 
+    static String getString(QuantServiceConfig config, String key, String defaultValue) {
+        String name = config.getFullName(key);
+
+        String value = System.getProperty(name, null);
+        if (value != null)
+            return value;
+
+        return config.getString(key, defaultValue);
+    }
+
+    static boolean getBoolean(QuantServiceConfig config, String key, boolean defaultValue) {
+        String name = config.getFullName(key);
+
+        String value = System.getProperty(name, null);
+        if (value == null) {
+            return config.getBoolean(key, defaultValue);
+        }
+
+        return Boolean.getBoolean(name);
+    }
+
+    static int getInteger(QuantServiceConfig config, String key, int defaultValue) {
+        String name = config.getFullName(key);
+
+        String value = System.getProperty(name, null);
+        if (value == null) {
+            return config.getInt(key, defaultValue);
+        }
+
+        return Integer.getInteger(name);
+    }
+
     @Nonnull
     public static FSOptions getFsOptionsFromConfig(QuantServiceConfig config) {
         FSOptions options = new FSOptions();
-        options.compression = config.getString("fileSystem.compression", options.compression);
-        options.maxFolderSize = config.getInt("fileSystem.maxFolderSize", options.maxFolderSize);
-        options.maxFileSize = config.getInt("fileSystem.maxFileSize", options.maxFileSize);
+
+        options.compression = getString(config, "fileSystem.compression", options.compression);
+        options.maxFolderSize = getInteger(config, "fileSystem.maxFolderSize", options.maxFolderSize);
+        options.maxFileSize = getInteger(config, "fileSystem.maxFileSize", options.maxFileSize);
 
         FSType fs = getFSType(config);
         if (fs == FSType.HDFS) {

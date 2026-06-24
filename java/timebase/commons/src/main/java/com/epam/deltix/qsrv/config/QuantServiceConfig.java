@@ -193,8 +193,26 @@ public class QuantServiceConfig {
         return (getString(key, null));
     }
 
+    /**
+     *
+     * @param key property key
+     * @param defaultValue default value
+     * @return String value of the property, null if property is not present.
+     */
     public String               getString (String key, String defaultValue) {
+        String fullName = prefix(myType) + key;
         return (getString(myType, key, defaultValue));
+    }
+
+    /**
+     *
+     * @param key property key
+     * @param useSystemDefault use system variable with same name as default value
+     * @return String value of the property, null if property is not present.
+     */
+    public String               getString (String key, boolean useSystemDefault) {
+        String fullName = prefix(myType) + key;
+        return (getString(myType, key, useSystemDefault ? System.getProperty(fullName) : null));
     }
 
     public int                  getInt (String key, int defaultValue) {
@@ -330,10 +348,19 @@ public class QuantServiceConfig {
         }
     }
 
-    /** @return property bu full key */
-    public String               getExactProperty (String key) {
-        return props.getProperty(key);
+    /**
+     * Return fully-qualified name of the property
+     * @param key property key
+     * @return fully-qualified property name
+     */
+    public String               getFullName(String key) {
+        return prefix (myType) + key;
     }
+
+//    /** @return property by full key */
+//    public String               getExactProperty (String key) {
+//        return props.getProperty(key);
+//    }
 
     public String               getString (Type type, String key, String defaultValue) {
         return StringUtils.trim((props.getProperty (prefix (type) + key, defaultValue)));

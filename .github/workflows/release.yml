@@ -152,12 +152,12 @@ jobs:
           java-version: 11
           distribution: 'temurin'
       - name: Build with gradle
-        run: ./gradlew build
+        run: ./gradlew build --no-daemon
       - name: Publish jars
-        run: >
-          ./gradlew :java:timebase:aerondirect:publish :java:timebase:commons:publish :java:timebase:s3:publish
-          :java:timebase:pub:publish :java:timebase:api:publish :java:timebase:computations-api:publish 
-          :java:timebase:computations-std:publish :java:timebase:qql:publish :java:timebase:client:publish :java:uploadArtifactsToMaven
+        run: |
+          ./gradlew --no-daemon --parallel :java:timebase:aerondirect:publish :java:timebase:commons:publish :java:timebase:s3:publish \
+                    :java:timebase:pub:publish :java:timebase:api:publish :java:timebase:computations-api:publish \
+                    :java:timebase:computations-std:publish :java:timebase:qql:publish :java:timebase:client:publish :java:uploadArtifactsToMaven
         env:
           SONATYPE_REPOSITORY:      ${{ secrets.SONATYPE_REPOSITORY }}
           SONATYPE_NEXUS_USERNAME:  ${{ secrets.SONATYPE_NEXUS_USERNAME }}
@@ -187,7 +187,7 @@ jobs:
           java-version: 11
           distribution: 'temurin'
       - name: Publish docker
-        run: ./gradlew :java:timebase:server:dockerPublishImageAll :java:timebase:client:dockerPublishImageAll
+        run: ./gradlew --no-daemon :java:timebase:server:dockerPublishImageAll :java:timebase:client:dockerPublishImageAll
         env:
           DOCKER_REGISTRY_URL:      ${{ secrets.DOCKER_REGISTRY_URL }}
           DOCKER_REGISTRY_USERNAME:  ${{ secrets.DOCKER_HUB_USER }}

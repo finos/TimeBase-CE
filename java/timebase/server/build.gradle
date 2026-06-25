@@ -128,7 +128,9 @@ task prepareFilesForDocker {
     dependsOn copyTimebaseServerContainerDependensies
 }
 
-task copyMonitorWebapp(type: Copy) {
+tasks.register('copyMonitorWebapp', Copy) {
+    outputs.file(sourceSets.main.output.resourcesDir.absolutePath + '/webapp/timebase-webmonitor.war')
+
     description 'Copy timebase monitor webapp war file into timebase server resources'
     dependsOn ':java:timebase:webmonitor:war'
     mustRunAfter processResources
@@ -141,35 +143,4 @@ task copyMonitorWebapp(type: Copy) {
     into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
 }
 
-jar.dependsOn copyMonitorWebapp
-
-//
-//def generatedMainDir = file('build/generated-src/main/src')
-//def lexerAndParserPackage = "com/epam/deltix/qsrv/hf/tickdb/lang/parser"
-//def lexerAndParserDir = file("src/main/java/com/epam/deltix/qsrv/hf/tickdb/lang/parser")
-//
-//sourceSets.main.java.srcDirs generatedMainDir
-//
-//task generateQqlLexer(type: JavaExec) {
-//    group = "QQL"
-//    description = "Generates QQL lexer via flex library"
-//    classpath = configurations.compileOnly
-//    main = "JFlex.Main"
-//    workingDir = lexerAndParserDir
-//    args = ["qql.flex", "-d", "$generatedMainDir/$lexerAndParserPackage"]
-//}
-//
-//task generateQqlParser(type: JavaExec, dependsOn: generateQqlLexer) {
-//    group = "QQL"
-//    description = "Generates QQL parser via java_cup library"
-//    classpath = configurations.compile
-//    main = "java_cup.Main"
-//    workingDir = "$generatedMainDir/$lexerAndParserPackage"
-//    args = ["-package", lexerAndParserPackage,
-//            "-parser", "Parser",
-//            "-symbols", "Symbols",
-//            "$lexerAndParserDir/qql.cup"
-//    ]
-//}
-//
-//compileJava.dependsOn generateQqlParser
+//jar.dependsOn copyMonitorWebapp

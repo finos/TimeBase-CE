@@ -151,6 +151,8 @@ jobs:
         with:
           java-version: 11
           distribution: 'temurin'
+      - name: Build with gradle
+        run: ./gradlew build
       - name: Publish jars
         run: >
           ./gradlew :java:timebase:aerondirect:publish :java:timebase:commons:publish :java:timebase:s3:publish

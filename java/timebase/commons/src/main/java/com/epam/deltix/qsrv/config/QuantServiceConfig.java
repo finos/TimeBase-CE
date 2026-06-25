@@ -189,32 +189,28 @@ public class QuantServiceConfig {
         setPropertySoft (myType, key, value);
     }
 
+    /**
+     * @param key property key
+     * @return String value of the property, null if value is not present.
+     */
     public String               getString (String key) {
         return (getString(key, null));
     }
 
     /**
-     *
      * @param key property key
      * @param defaultValue default value
-     * @return String value of the property, null if property is not present.
+     * @return String value of the property, defaultValue if property is not present.
      */
     public String               getString (String key, String defaultValue) {
-        String fullName = prefix(myType) + key;
         return (getString(myType, key, defaultValue));
     }
 
     /**
-     *
      * @param key property key
-     * @param useSystemDefault use system variable with same name as default value
-     * @return String value of the property, null if property is not present.
+     * @param defaultValue default value
+     * @return Integer value of the property, defaultValue if property is not present.
      */
-    public String               getString (String key, boolean useSystemDefault) {
-        String fullName = prefix(myType) + key;
-        return (getString(myType, key, useSystemDefault ? System.getProperty(fullName) : null));
-    }
-
     public int                  getInt (String key, int defaultValue) {
         return (getInt(myType, key, defaultValue));
     }

@@ -168,7 +168,7 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
         int status = -1;
         HttpURLConnection conn = null;
         try {
-            String endpoint = apiUri.resolve("/manual/upload/repository/" + repositoryKey + "?publishing_type=automatic").toString();
+            String endpoint = apiUri.resolve("/manual/upload/repository/" + repositoryKey + "?publishing_type=user_managed").toString();
             conn = (HttpURLConnection) new URL(endpoint).openConnection();
             conn.setConnectTimeout(CONNECTION_TIMEOUT);
             conn.setReadTimeout(CONNECTION_TIMEOUT);

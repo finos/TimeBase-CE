@@ -43,9 +43,9 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'temurin'
       - name: Build with gradle
-        run: ./gradlew build checkLicense
+        run: ./gradlew build --no-daemon checkLicense
       - name: Build docker
-        run: ./gradlew :java:timebase:server:dockerBuildImageAll :java:timebase:client:dockerBuildImageAll
+        run: ./gradlew :java:timebase:server:dockerBuildImageAll :java:timebase:client:dockerBuildImageAll --no-daemon
         env:
           DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
           DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_HUB_USER }}

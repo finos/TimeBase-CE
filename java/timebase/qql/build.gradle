@@ -49,11 +49,11 @@ def lexerAndParserDir = file("src/main/java/com/epam/deltix/qsrv/hf/tickdb/lang/
 
 sourceSets.main.java.srcDirs generatedMainDir
 
-task generateQqlLexer(type: JavaExec) {
+tasks.register('generateQqlLexer', JavaExec) {
     group = "QQL"
     description = "Generates QQL lexer via flex library"
     classpath = configurations.qqlLexerGenerator
-    main = "JFlex.Main"
+    mainClass = "JFlex.Main"
     workingDir = lexerAndParserDir
     args = ["qql.flex", "-d", "$generatedMainDir/$lexerAndParserPackage"]
 
@@ -65,11 +65,12 @@ task generateQqlLexer(type: JavaExec) {
             .withPropertyName("outputDir")
 }
 
-task generateDdlParser(type: JavaExec, dependsOn: generateQqlLexer) {
+tasks.register('generateDdlParser', JavaExec) {
+    dependsOn 'generateQqlLexer'
     group = "QQL"
     description = "Generates DDL parser via java_cup library"
     classpath = configurations.qqlParserGenerator
-    main = "java_cup.Main"
+    mainClass = "java_cup.Main"
     workingDir = "$generatedMainDir/$lexerAndParserPackage"
 
     args = ["-package", lexerAndParserPackage,
@@ -86,13 +87,13 @@ task generateDdlParser(type: JavaExec, dependsOn: generateQqlLexer) {
             .withPropertyName("outputDir")
 }
 
-task generateQqlParser(type: JavaExec, dependsOn: [generateDdlParser]) {
+tasks.register('generateQqlParser', JavaExec) {
+    dependsOn 'generateQqlLexer', 'generateDdlParser'
     group = "QQL"
     description = "Generates QQL parser via java_cup library"
     classpath = configurations.qqlParserGenerator
-    main = "java_cup.Main"
+    mainClass = "java_cup.Main"
     workingDir = "$generatedMainDir/$lexerAndParserPackage"
-
     args = ["-package", lexerAndParserPackage,
             "-parser", "Parser",
             "-symbols", "Symbols",
@@ -107,5 +108,9 @@ task generateQqlParser(type: JavaExec, dependsOn: [generateDdlParser]) {
             .withPropertyName("outputDir")
 }
 
- processResources.dependsOn generateQqlParser
-compileJava.dependsOn generateQqlParser
+tasks.named('processResources') {
+    dependsOn 'generateQqlParser'
+}
+tasks.named('compileJava') {
+    dependsOn 'generateQqlParser'
+}

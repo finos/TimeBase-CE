@@ -5,7 +5,6 @@ description = "Timebase Commons Server API Library"
 
 dependencies {
     api project(':java:timebase:pub')
-    //implementation project(':java:timebase:snmpagent')
 
     api ('com.epam.deltix:timebase-lang')
     api ('com.epam.deltix:timebase-util')
@@ -57,32 +56,44 @@ import org.apache.tools.ant.filters.ReplaceTokens
 // TODO: Copy to same folder in not the best idea. We should
 // 1) move template to a separate source set (we don't want it in the output)
 // 2) move generated class to a separate source path
-task versionClass(type: Copy) {
+tasks.register('versionClass', Copy) {
     inputs.property("version", project.version)
     inputs.property("revision", rootProject.ext.revision)
     inputs.property("commitsAfterTag", String.valueOf(rootProject.ext.commitsAfterTag)) // Note: Gradle is supposed to accept null values but as for now (Gradle 5.4.1) it fails if value is null
     inputs.property("commitTimestamp", rootProject.ext.commitTimestamp)
 
+    outputs.file("$project.projectDir/src/main/java/com/epam/deltix/util/Version.java")
+
     def parsedVersion = project.version.split('\\.')
     //outputs.file("$project.projectDir/src/main/java/deltix/util/Version.java")
 
-    from "$project.projectDir/src/main/java/deltix/util"
-    into "$project.projectDir/src/main/java/deltix/util"
+    from "$project.projectDir/src/main/java/com/epam/deltix/util"
+    into "$project.projectDir/src/main/java/com/epam/deltix/util"
     include '**/Version-VCS.txt'
     rename 'Version-VCS.txt', 'Version.java'
     filter(ReplaceTokens, tokens: [MAJOR: parsedVersion[0], MINOR: parsedVersion[1], BUILDNAME: parsedVersion[2], WCREV: rootProject.ext.revision, COMMITS_AFTER_TAG: String.valueOf(rootProject.ext.commitsAfterTag), BUILD_DATE: rootProject.ext.commitTimestamp])
 }
 
-project.tasks.getByName('compileJava').dependsOn(versionClass)
+tasks.named('compileJava') {
+    dependsOn 'versionClass'
+}
+tasks.named('processResources') {
+    dependsOn 'versionClass'
+}
 // Note: Right now Gradle caches outputs of "compileJava" even if file "Version.java" was changed.
 // TODO: We should explicitly tell Gradle that task "compileJava" depends on outputs of "versionClass" talk.
 
-clean.doFirst {
-    delete file("$project.projectDir/src/main/java/deltix/util/Version.java")
+tasks.register('deleteVersionFile', Delete) {
+    delete "$project.projectDir/src/main/java/deltix/util/Version.java"
+}
+tasks.named('clean') {
+    dependsOn 'deleteVersionFile'
 }
 
-task copyWebapp(type: Copy) {
-    description 'Copy default webapp war file into quantserver pub resources'
+tasks.register('copyWebapp', Copy) {
+    outputs.file(sourceSets.main.output.resourcesDir.absolutePath + '/webapp/timebase-web.war')
+
+    description 'Copy default webapp war file into timebase pub resources'
     dependsOn ':java:timebase:web:war'
     mustRunAfter clean
     mustRunAfter processResources
@@ -94,4 +105,12 @@ task copyWebapp(type: Copy) {
     into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
 }
 
-jar.dependsOn copyWebapp
+//
+//tasks.named('jar') {
+//    dependsOn 'copyWebapp'
+//}
+
+tasks.named('compileTestJava') {
+    mustRunAfter 'copyWebapp' // build fix
+}
+

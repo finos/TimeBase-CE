@@ -21,16 +21,19 @@ def webappXml = file("$webappDir/WEB-INF/web.xml")
 def generatedXml = file("$generatedJsps/generated_web.xml")
 def mergedXml = file("$generatedJsps/web.xml")
 
-task compileJsps {
-    description 'Build java classes from jsp webapp'
+tasks.register('compileJsps') {
+    description = 'Build java classes from jsp webapp'
 
     doFirst {
+        generatedJsps.deleteDir() // Delete existing files to perform a clean build
         generatedJsps.mkdirs()
         mergedXml.createNewFile()
     }
 
+    // Input
+    def compileClasspath = configurations.compileClasspath.asPath
     doLast {
-        ant.taskdef(classname: 'org.apache.jasper.JspC', name: 'jasper', classpath: configurations.compileOnly.asPath)
+        ant.taskdef(classname: 'org.apache.jasper.JspC', name: 'jasper', classpath: compileClasspath)
         ant.jasper(validateXml: false, uriroot: webappDir, webXmlFragment: generatedXml, outputDir: generatedJsps)
     }
 
@@ -38,13 +41,34 @@ task compileJsps {
         // Merge the generated XML with the original
         mergedXml.text = webappXml.text.replaceFirst('(?s)(<web-app.*?>)', '$1' + generatedXml.text)
     }
+
+    inputs.file(webappXml).withPropertyName("webappXml")
+    inputs.dir(webappDir)
+            .withPropertyName("webappDir")
+
+    outputs.file(generatedXml)
+            .withPropertyName("generatedXml")
+    outputs.file(mergedXml)
+            .withPropertyName("mergedXml")
+    outputs.dir(generatedJsps)
+            .withPropertyName("generatedJsps")
 }
 
-war {
+tasks.named('war') {
+    dependsOn 'compileJsps', 'jar'
     duplicatesStrategy = "EXCLUDE"
-    webXml mergedXml
+    webXml = mergedXml
 }
 
 sourceSets.main.java.srcDirs generatedJsps
-compileJava.dependsOn compileJsps
-war.dependsOn jar
+tasks.named('compileJava') {
+    dependsOn 'compileJsps'
+}
+
+tasks.named('processResources') {
+    dependsOn 'compileJsps'
+}
+
+tasks.named('jar') {
+    duplicatesStrategy = "WARN"
+}

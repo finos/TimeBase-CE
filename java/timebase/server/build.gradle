@@ -128,19 +128,31 @@ task prepareFilesForDocker {
     dependsOn copyTimebaseServerContainerDependensies
 }
 
+def generatedResources = layout.buildDirectory.dir("generated-resources").get().asFile
+
 tasks.register('copyMonitorWebapp', Copy) {
-    outputs.file(sourceSets.main.output.resourcesDir.absolutePath + '/webapp/timebase-webmonitor.war')
+    outputs.file(sourceSets.main.output.resourcesDir.absolutePath + "/webapp/timebase-webmonitor-$version" + ".war")
 
     description 'Copy timebase monitor webapp war file into timebase server resources'
     dependsOn ':java:timebase:webmonitor:war'
-    mustRunAfter processResources
-    mustRunAfter clean
 
     from (project(':java:timebase:webmonitor').file('build/libs')) {
         include '*.war'
-        rename 'timebase-webmonitor(.*).war', 'timebase-webmonitor.war'
+        rename "timebase-webmonitor-$version" + ".war", 'timebase-webmonitor.war'
     }
-    into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
+    into(new File(generatedResources, "webapp"))
 }
 
-//jar.dependsOn copyMonitorWebapp
+sourceSets.main.resources.srcDirs generatedResources
+
+tasks.named('processResources') {
+    dependsOn 'copyMonitorWebapp'
+}
+
+tasks.named('javadoc', Javadoc) {
+    // Javadoc only needs compiled classes, not processed resources (webapp war from copyWebapp).
+    // Default 'classes' dependency pulls in copyWebapp and adds resource outputs to the classpath,
+    // which prevents incremental javadoc builds.
+    dependsOn compileJava
+    classpath = sourceSets.main.compileClasspath + compileJava.outputs.files
+}

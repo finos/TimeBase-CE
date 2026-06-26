@@ -79,6 +79,7 @@ tasks.named('compileJava') {
 }
 tasks.named('processResources') {
     dependsOn 'versionClass'
+    dependsOn 'copyWebapp'
 }
 // Note: Right now Gradle caches outputs of "compileJava" even if file "Version.java" was changed.
 // TODO: We should explicitly tell Gradle that task "compileJava" depends on outputs of "versionClass" talk.
@@ -90,27 +91,34 @@ tasks.named('clean') {
     dependsOn 'deleteVersionFile'
 }
 
+def generatedResources = layout.buildDirectory.dir("generated-resources").get().asFile
+
 tasks.register('copyWebapp', Copy) {
-    outputs.file(sourceSets.main.output.resourcesDir.absolutePath + '/webapp/timebase-web.war')
+
+    inputs.file(project(':java:timebase:web').file("build/libs/timebase-web-$version" + ".war"))
+    inputs.property("buildVersion", version)
 
     description 'Copy default webapp war file into timebase pub resources'
     dependsOn ':java:timebase:web:war'
     mustRunAfter clean
-    mustRunAfter processResources
 
     from (project(':java:timebase:web').file('build/libs')) {
         include '*.war'
-        rename 'timebase-web(.*).war', 'timebase-web.war'
+        rename "timebase-web-$version" + ".war", 'timebase-web.war'
     }
-    into sourceSets.main.output.resourcesDir.absolutePath + '/webapp'
+
+    into(new File(generatedResources, "webapp"))
+
+    outputs.dir(generatedResources)
+            .withPropertyName("outputDir")
 }
 
-//
-//tasks.named('jar') {
-//    dependsOn 'copyWebapp'
-//}
+sourceSets.main.resources.srcDirs generatedResources
 
-tasks.named('compileTestJava') {
-    mustRunAfter 'copyWebapp' // build fix
+tasks.named('javadoc', Javadoc) {
+    // Javadoc only needs compiled classes, not processed resources (webapp war from copyWebapp).
+    // Default 'classes' dependency pulls in copyWebapp and adds resource outputs to the classpath,
+    // which prevents incremental javadoc builds.
+    dependsOn compileJava
+    classpath = sourceSets.main.compileClasspath + compileJava.outputs.files
 }
-

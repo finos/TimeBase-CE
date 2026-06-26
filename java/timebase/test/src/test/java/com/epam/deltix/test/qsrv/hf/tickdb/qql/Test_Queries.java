@@ -61,7 +61,7 @@ public class Test_Queries {
     }
 
     @Test
-    @Ignore // TODO: 2/12/2025 @AK need add source for computations/000-prepare.q.txt
+//    @Ignore // TODO: 2/12/2025 @AK need add source for computations/000-prepare.q.txt
     public void testComputations() throws Exception {
         test("${home}/java/timebase/test/src/test/resources/qql/computations/*.q.txt");
     }

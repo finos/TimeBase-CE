@@ -32,6 +32,7 @@ import com.epam.deltix.qsrv.hf.tickdb.lang.runtime.selectors.InstancePool;
 import com.epam.deltix.qsrv.hf.tickdb.pub.DXTickDB;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.FixedMessageSource;
 import com.epam.deltix.qsrv.hf.tickdb.pub.query.InstrumentMessageSource;
+import com.epam.deltix.qsrv.util.json.DateFormatter;
 import com.epam.deltix.util.collections.IndexedArrayList;
 
 import java.util.Arrays;
@@ -86,6 +87,8 @@ public abstract class FilterIMSImpl
     private long firstMessageTimestamp = Long.MIN_VALUE;
 
     protected long aggregatedMessages;
+
+    private final DateFormatter datetimeFormatter = new DateFormatter();
     
     protected FilterIMSImpl (
         InstrumentMessageSource             source,
@@ -551,6 +554,10 @@ public abstract class FilterIMSImpl
 
     private int getParamIndex(int n) {
         return n & ~(TimestampLimits.EXCLUSIVE_BIT | TimestampLimits.NANOS_BIT);
+    }
+
+    public DateFormatter datetimeFormatter() {
+        return datetimeFormatter;
     }
 
 }

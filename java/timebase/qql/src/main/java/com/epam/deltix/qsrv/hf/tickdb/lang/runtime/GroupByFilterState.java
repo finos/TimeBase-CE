@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
  */
 public abstract class GroupByFilterState extends FilterState implements Serializer<GroupByFilterState> {
 
-    protected final MemoryDataOutput mdo = new MemoryDataOutput();
+    protected final MemoryDataOutput mdo = new MemoryDataOutput(16);
     protected final MemoryDataInput mdi = new MemoryDataInput();
 
     public GroupByFilterState(FilterIMSImpl filter) {

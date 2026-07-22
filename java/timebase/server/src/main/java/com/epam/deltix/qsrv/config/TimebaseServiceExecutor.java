@@ -183,15 +183,16 @@ public class TimebaseServiceExecutor implements ServiceExecutor {
 
         String compression = config.getString("compression", VSCompression.AUTO.toString());
         int maxConnections = config.getInt("maxConnections", VSServerFramework.MAX_CONNECTIONS);
-        short maxSocketsPerConnection = (short) config.getInt("maxSocketsPerConnection", VSServerFramework.MAX_SOCKETS_PER_CONNECTION);
+        short maxChannels = (short) config.getInt("maxChannelsPerConnection", -1);
+        short maxSocketsPerConnection = (short) config.getInt("maxSocketsPerConnection", Runtime.getRuntime().availableProcessors() * 2);
 
         contextContainer.getQuickExecutor().reuseInstance();
 
         VSServerFramework framework = new VSServerFramework(contextContainer.getQuickExecutor(),
                 (int) interval.toMilliseconds(),
                 Enum.valueOf(VSCompression.class, compression),
-                maxConnections,
-                maxSocketsPerConnection, contextContainer, DefaultConnectionAcceptor.INSTANCE);
+                maxConnections, maxSocketsPerConnection, maxChannels,
+                contextContainer, DefaultConnectionAcceptor.INSTANCE);
 
         if (framework.getCompression() == VSCompression.OFF)
             LOGGER.info("Timebase communication compression disabled.");

@@ -85,8 +85,10 @@ import com.epam.deltix.util.vsocket.VSChannel;
 import com.epam.deltix.util.vsocket.VSClient;
 import com.epam.deltix.util.vsocket.VSProtocol;
 import io.aeron.Aeron;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -103,13 +105,15 @@ import java.security.AccessControlException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
  */
-public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, ReconnectableImpl.Reconnector, TopicDB {
+public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, TickDBReconnectableImpl.Reconnector, TopicDB {
 
     // Verifying, that we are under JDK, not JRE.
     static {
@@ -118,12 +122,18 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
     public static final Log LOGGER = LogFactory.getLog("tickdb.client");
 
+
     @ApiStatus.Experimental
     private static final int MAX_REVERSE_BUFFER_SIZE = Integer.getInteger("TimeBase.transport.channel.maxReverseBufferSize", 64 * 1024);
     @ApiStatus.Experimental
     private static final int DEFAULT_LOCAL_CHANNEL_SIZE = Integer.getInteger("TimeBase.transport.channel.local.defaultSize", VSProtocol.CHANNEL_BUFFER_SIZE);
     @ApiStatus.Experimental
     private static final int DEFAULT_REMOTE_CHANNEL_SIZE = Integer.getInteger("TimeBase.transport.channel.remote.defaultSize", VSProtocol.CHANNEL_MAX_BUFFER_SIZE);
+    @ApiStatus.Experimental
+    private static final int DEFAULT_HANDLER_WAIT_TIMEOUT = Integer.getInteger("TimeBase.client.eventHandler.waitTimeout", 5_000);
+
+    // Will contain "true" if current thread is inside connect/disconnect event handler
+    private static final ThreadLocal<MutableBoolean> insideOfEventHandler = ThreadLocal.withInitial(() -> new MutableBoolean(false));
 
 
     private static int                           getConnectionsNumber(boolean isRemote) {
@@ -151,7 +161,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     private long[]                              latency;
     private long                                availableBandwidth = 0;
 
-    private final ReconnectableImpl             connMgr;
+    private final TickDBReconnectableImpl       connMgr;
     private final Runnable                      updater = this::sendMetaDataUpdate;
 
     private VSClient                            connection;
@@ -168,6 +178,8 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     private String                              applicationId;
     private String                              address;
 
+    private Integer                             numTransportChannels = null; // Null means auto-configure
+
     private boolean                             secured = false;
 
     private final CodecFactory                  intpCodecFactory =
@@ -176,6 +188,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     private final CodecFactory                  compCodecFactory =
             CodecFactory.newCompiledCachingFactory ();
 
+    private int                                 defaultChannelCapacity;
     private boolean                             useCompression = false;
     private boolean                             isRemoteConnection = false;
 
@@ -192,7 +205,10 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     private ThreadFactory topicConsumerThreadFactory;
     private final TimeSource timeSource;
 
+    private int eventHandlerWaitTimeout = DEFAULT_HANDLER_WAIT_TIMEOUT;
+
     private final CopyOnWriteArrayList<DBStateListener> stateListeners = new CopyOnWriteArrayList<>();
+    private final ConnectionNotificationTask connectionNotifier;
 
     private final DisconnectEventListener       listener = new DisconnectEventListener() {
         @Override
@@ -221,8 +237,9 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         }
 
         this.timeout = isRemoteConnection ? 5000 : 1000;
+        this.defaultChannelCapacity = isRemoteConnection ? DEFAULT_REMOTE_CHANNEL_SIZE : DEFAULT_LOCAL_CHANNEL_SIZE;
 
-        connMgr = new ReconnectableImpl("TickDBClient", this);
+        connMgr = new TickDBReconnectableImpl("TickDBClient", this);
         //connMgr.setLazyLogger(LOGGER);
 //        connMgr.setLogger(LOGGER);
 //        connMgr.setLogLevel (Level.INFO);
@@ -235,7 +252,8 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         this.topicConsumerThreadFactory = createTopicConsumerThreadFactory();
 
         this.timeSource = null;
-        // DefaultTimeSourceProvider.getTimeSourceForApp("TickDBClient"); TODO: @MERGE
+
+        this.connectionNotifier = new ConnectionNotificationTask(TickDBClient.this.getQuickExecutor());
     }
 
     public TickDBClient (String host, int port, String user, String pass) {
@@ -260,12 +278,49 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         return session;
     }
 
+    /**
+     * Assigns an {@link Oauth2Client} to the current TimeBase connection.
+     * <p>
+     * The {@code TickDBClient} takes ownership of the provided {@code Oauth2Client}
+     * and will automatically close it when the TimeBase connection is closed.
+     * <p>
+     * This method must be called before opening the connection.
+     *
+     * @param oauth2Client the OAuth2 client to associate with this connection
+     */
     public void                         setOauth2Client(Oauth2Client oauth2Client) {
-        this.userPrincipalResolver.setOauth2Client(oauth2Client);
+        this.setOauth2Client(oauth2Client, false);
     }
 
     /**
-     * Sets user access token to login to the Timebase server when OAUTH type of authentication defined on server.
+     * Assigns an {@link Oauth2Client} to the current TimeBase connection.
+     * <p>
+     * If {@code external} is {@code false}, the {@code TickDBClient} takes ownership
+     * of the provided client and will automatically close it when the TimeBase
+     * connection is closed.
+     * <p>
+     * If {@code external} is {@code true}, the {@code TickDBClient} will use the
+     * provided client but will <b>not</b> manage its lifecycle. In this case, the
+     * caller is responsible for closing the {@code Oauth2Client}.
+     * <p>
+     * This method must be called before opening the connection.
+     *
+     * @param oauth2Client the OAuth2 client to associate with this connection
+     * @param external     {@code true} if the client is managed externally and should
+     *                     not be closed by {@code TickDBClient}; {@code false} if
+     *                     ownership should be transferred to {@code TickDBClient}
+     */
+    public void                         setOauth2Client(Oauth2Client oauth2Client, boolean external) {
+        this.userPrincipalResolver.setOauth2Client(oauth2Client, external);
+    }
+
+    @VisibleForTesting
+    UserPrincipalResolver getUserPrincipalResolver() {
+        return userPrincipalResolver;
+    }
+
+    /**
+     * Sets user access token for login into Timebase server when OAUTH type of authentication defined on server.
      * @param token Access token
      */
     public void                         setAccessToken(String token) {
@@ -376,7 +431,12 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
                     if (address != null)
                         connection.setClientAddress(address, idd);
 
-                    connection.setNumTransportChannels(isRemoteConnection ? 1 : getConnectionsNumber(isRemoteConnection));
+                    // Use explicitly configured number of transport channels or determine it automatically
+                    int transportChannels = numTransportChannels != null ?
+                            numTransportChannels :
+                            (isRemoteConnection ? 1 : getConnectionsNumber(true));
+
+                    connection.setNumTransportChannels(transportChannels);
                     connection.setTimeout(timeout);
                     connection.setDisconnectedListener(listener);
                     connection.setSslContext(SSLClientContextProvider.getSSLContext());
@@ -402,9 +462,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         int inCapacity;
         int outCapacity;
 
-        int defaultCapacity = isRemoteConnection ? DEFAULT_REMOTE_CHANNEL_SIZE : DEFAULT_LOCAL_CHANNEL_SIZE;
-
-        int configuredCapacity = channelBufferSize > 0 ? channelBufferSize : defaultCapacity;
+        int configuredCapacity = channelBufferSize > 0 ? channelBufferSize : defaultChannelCapacity;
 
         switch (type) {
             case Input:
@@ -507,6 +565,24 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     public void                             open(boolean readOnly) {
         if (syncOpen(readOnly))
             onReconnected();
+
+        boolean insideOfEventHandler = TickDBClient.insideOfEventHandler.get().isTrue();
+        if (insideOfEventHandler) {
+            LOGGER.warn("open() is called from inside of event handler. This is not intended API usage. "
+                    + "This can lead to unexpected deadlocks "
+                    + "and revokes guaranties on handler event order execution. "
+                    + "Please make sure that TickDBClient.open() is called outside of it's own event handlers. "
+                    + "Event handler thread: %s").with(Thread.currentThread().getName());
+        } else {
+            // Wait for existing events to be processed before we return from open() method.
+            //  This is necessary to avoid situation when a listener that added after open() method call,
+            //  receives events that were generated during the connection recovery process.
+            if (!this.connectionNotifier.waitForSubmittedEvents(eventHandlerWaitTimeout)) {
+                LOGGER.warn("Some of connection listener events were not processed within timeout after open() method call. " +
+                        "Please make sure that event handlers are processing events in a timely manner and do not block. " +
+                        "Thread for open(): %s").with(Thread.currentThread().getName());
+            }
+        }
     }
 
     private synchronized boolean            syncOpen (boolean readOnly) {
@@ -1120,6 +1196,14 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     public void    close () {
+        boolean insideOfEventHandler = TickDBClient.insideOfEventHandler.get().isTrue();
+        if (insideOfEventHandler) {
+            LOGGER.warn("close() is called from inside of event handler. This is not intended API usage. "
+                    + "This can lead to unexpected deadlocks "
+                    + "and revokes guaranties on handler event order execution. "
+                    + "Please make sure that TickDBClient.close() is called outside of it's own event handlers. "
+                    + "Event handler thread: %s").with(Thread.currentThread().getName());
+        }
 
         connMgr.cancelReconnect();
 
@@ -1154,17 +1238,63 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
             isOpen = false;
         }
 
+        int eventId = -1;
+        synchronized (this) {
+            boolean wasConnected = connMgr.isConnected();
+            if (wasConnected) {
+                connMgr.disconnected();
+                // Warning: here we submit a task for QuickExecutor
+                eventId = connectionNotifier.addDisconnectEvent();
+            }
+        }
+
+        if (eventId >= 0) {
+            // Wait for disconnect event to be processed, by event handlers,
+            //  so we can guarantee that any handler installed by client before close()
+            //  will be executed before close() returns.
+
+            // However if we are inside of event handler right now,
+            //  then the client code called close() from the handler,
+            //  so waiting for event to be processed is pointless (and will cause a deadlock)
+            if (!insideOfEventHandler) {
+                if (!connectionNotifier.waitForEventProcessing(eventId, eventHandlerWaitTimeout)) {
+                    LOGGER.warn("Some of connection listener events were not processed within timeout after close() method call. " +
+                            "Please make sure that event handlers are processing events in a timely manner and do not block. " +
+                            "Thread for close(): %s").with(Thread.currentThread().getName());
+                }
+            }
+        }
+
+        userPrincipalResolver.close();
+
+        boolean asyncExecutorShutdown = false;
+        QuickExecutor quickExecutor = contextContainer.getQuickExecutor();
+
         // shutdown QuickExecutor only if 'open'
         if (shutdown) {
-            contextContainer.getQuickExecutor().shutdownInstance();
+            // This have to be done after notifying listeners, as we use QE to execute callbacks
+
+            if (insideOfEventHandler) {
+                // Warning: if we are inside of event handler right now,
+                //  then this call will basically mean interruption of THIS thread.
+                // So to avoid the deadlock and waiting for executor to interrupt this thread,
+                //  we delegate the shutdown call to another thread,
+                //  so current thead can be able to be stopped properly by the executor.
+                asyncExecutorShutdown = true;
+            } else {
+                quickExecutor.shutdownInstance();
+            }
+
             // We can be already stopped due to a connection loss
             aeronContext.stopIfStarted();
         }
 
-        if (connMgr.isConnected())
-            connMgr.disconnected();
-
         userPrincipalResolver.close();
+
+        if (asyncExecutorShutdown) {
+            LOGGER.warn("Shutting down QuickExecutor from inside of event handler unsing separate thread");
+            new Thread(quickExecutor::shutdownInstance, "TickDBClient-QE-Shutdown").start();
+        }
     }
 
     public File[]               getDbDirs() {
@@ -1259,7 +1389,7 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
 
     // DisconnectableImpl.Reconnector impl.
     @Override
-    public boolean tryReconnect(int numAttempts, long timeSinceDisconnected, ReconnectableImpl helper) throws Exception {
+    public boolean tryReconnect(int numAttempts, long timeSinceDisconnected, TickDBReconnectableImpl helper) {
         if (isOpen)
             open(isReadOnly);
 
@@ -1267,15 +1397,21 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     // Disconnectable impl.
+    /**
+     * Warning: code that installs this listener is also responsible to remove it eventually
+     * using {@link #removeDisconnectEventListener(DisconnectEventListener)}, otherwise it can cause memory leaks.
+     * Usually this is should be done just before closing the client or immediately after closing it.
+     */
     @Override
     public void         addDisconnectEventListener(DisconnectEventListener listener) {
-        connMgr.addDisconnectEventListener(listener);
+        connectionNotifier.disconnectListeners.addDisconnectEventListener(listener);
     }
 
     @Override
     public void         removeDisconnectEventListener(DisconnectEventListener listener) {
-        connMgr.removeDisconnectEventListener(listener);
+        connectionNotifier.disconnectListeners.removeDisconnectEventListener(listener);
     }
+
 
     @Override
     public boolean      isSecured() {
@@ -1298,6 +1434,8 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     void                                    onSessionDisconnected() {
+        // TODO: This isConnected() check should be done under lock.
+        //  For now it's left as is to find out instability source of Test_Reconnect.
         if (connMgr.isConnected()) {
             synchronized (this) {
                 session = new SessionClient(this, serverProtocolVersion);
@@ -1310,27 +1448,36 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
     }
 
     private void                            onDisconnected() {
-        if (connMgr.isConnected()) {
-            connMgr.scheduleReconnect();
-            // listeners can actually stop reconnecting using "close"
-            connMgr.disconnected();
+        synchronized (this) {
+            boolean wasConnected = connMgr.isConnected();
 
-            // closing session
-            synchronized (this) {
-                session = Util.close(session);
+            if (wasConnected) {
+                connMgr.scheduleReconnect();
+                // listeners can actually stop reconnecting using "close"
+                connMgr.disconnected();
+
+                // closing session
+                if (session != null) {
+                    LOGGER.info("Closing session due to disconnection");
+                }
+                Util.close(session);
+                session = null;
+                connectionNotifier.addDisconnectEvent();
             }
         }
     }
 
     private void                             onReconnected() {
-        if (!connMgr.isConnected()) {
+        synchronized (this) {
+            boolean wasConnected = connMgr.isConnected();
 
-            synchronized (this) {
-                if (session == null)
+            if (!wasConnected) {
+                if (session == null) {
                     session = new SessionClient(this, serverProtocolVersion);
+                }
+                connMgr.connected();
+                connectionNotifier.addConnectEvent();
             }
-
-            connMgr.connected();
         }
     }
 
@@ -1666,6 +1813,28 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
         return this;
     }
 
+    /**
+     * Allows to explicitly set number of transport channels used by the client.
+     * Must be set before connecting to the server.
+     */
+    public void setNumTransportChannels(Integer numTransportChannels) {
+        this.numTransportChannels = numTransportChannels;
+    }
+
+    @VisibleForTesting
+    Integer getNumTransportChannels() {
+        return numTransportChannels;
+    }
+
+    public void setReconnectIntervalAdjuster(ReconnectableImpl.ReconnectIntervalAdjuster adjuster) {
+        connMgr.setAdjuster(adjuster);
+    }
+
+    @VisibleForTesting
+    ReconnectableImpl.ReconnectIntervalAdjuster getReconnectIntervalAdjuster() {
+        return connMgr.getAdjuster();
+    }
+
     @Override
     public boolean isTopicDBSupported() {
         return true;
@@ -1682,6 +1851,112 @@ public class TickDBClient implements DXRemoteDB, DBStateNotifier, RemoteTickDB, 
             String name = String.format(Locale.ROOT, "topic-consumer-%d", index);
             thread.setName(name);
             return thread;
+        }
+    }
+
+    private enum ConnectionUpdateEvent {
+        CONNECT,
+        DISCONNECT
+    }
+
+    /**
+     * Enforces sequential processing of connection status change events.
+     * So even if client event handlers are slow/block we still guarantee correct order of events.
+     * <p>
+     * Expected behavior of TickDBClient:
+     * <ul>
+     *     <li>Disconnect/connect events are processed sequentially in the order they were added</li>
+     *     <li>Last event published to listeners must match actual connection status of the client</li>
+     *     <li>User clode should not call .close() on the TB client from an event handler,
+     *     but if it does, we should not deadlock and close used resources properly</li>
+     *     <li>If event listener gets added before .open() then that event listener should receive event generated during that open()</li>
+     *     <li>If event listener gets added after .open() then that event listener should not receive event generated during that open()</li>     *
+     *     <li>If event listener gets removed before .close() then that event listener should not receive event generated during that close()</li>
+     *     <li>If event listener gets removed after .close() then that event listener should receive event generated during that close()</li>
+     * </ul>
+     */
+    private class ConnectionNotificationTask extends QuickExecutor.QuickTask {
+        private final Queue<ConnectionUpdateEvent> taskQueue = new LinkedBlockingDeque<>();
+        private final SafeDisconnectableEventHandler disconnectListeners = new com.epam.deltix.qsrv.hf.tickdb.comm.client.SafeDisconnectableEventHandler();
+        private final AtomicInteger eventsAdded = new AtomicInteger(0);
+        private final AtomicInteger eventsProcessed = new AtomicInteger(0);
+        private final Object waitLock = new Object();
+
+        public ConnectionNotificationTask(QuickExecutor quickExecutor) {
+            super(quickExecutor);
+        }
+
+        public int addConnectEvent() {
+            return addEvent(ConnectionUpdateEvent.CONNECT);
+        }
+
+        public int addDisconnectEvent() {
+            return addEvent(ConnectionUpdateEvent.DISCONNECT);
+        }
+
+        private int addEvent(ConnectionUpdateEvent connect) {
+            int eventId = eventsAdded.incrementAndGet();
+            taskQueue.add(connect);
+            this.submit();
+            return eventId;
+        }
+
+        /** @return true if event with eventId is processed, false if timeout happened before that */
+        public boolean waitForEventProcessing(int eventId, int eventHandlerWaitTimeout) {
+            long deadline = System.currentTimeMillis() + eventHandlerWaitTimeout;
+
+            while (eventsProcessed.get() < eventId) {
+                long now = System.currentTimeMillis();
+                if (now >= deadline) {
+                    return false;
+                }
+                synchronized (waitLock) {
+                    try {
+                        // No need for precise wait here
+                        waitLock.wait(deadline - now);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        /** Waits till currently submitted events will be processed */
+        public boolean waitForSubmittedEvents(int eventHandlerWaitTimeout) {
+            return waitForEventProcessing(eventsAdded.get(), eventHandlerWaitTimeout);
+        }
+
+        @Override
+        public void run() {
+            ConnectionUpdateEvent poll;
+            while ((poll = taskQueue.poll()) != null) {
+                MutableBoolean handlerCallFlag = insideOfEventHandler.get();
+                handlerCallFlag.setTrue();
+                try {
+                    switch (poll) {
+                        case CONNECT: {
+                            disconnectListeners.onReconnected();
+                            break;
+                        }
+                        case DISCONNECT: {
+
+                            disconnectListeners.onDisconnected();
+                            break;
+                        }
+                        default: {
+                            LOGGER.error("Unknown connection event: " + poll);
+                        }
+                    }
+                } finally {
+                    handlerCallFlag.setFalse();
+                    eventsProcessed.incrementAndGet();
+                    synchronized (waitLock) {
+                        waitLock.notifyAll();
+                    }
+                }
+            }
         }
     }
 }

@@ -19,6 +19,7 @@ package com.epam.deltix.util.vsocket;
 import com.epam.deltix.util.ContextContainer;
 import com.epam.deltix.util.concurrent.QuickExecutor;
 import com.epam.deltix.util.io.IOUtil;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.net.*;
 import java.io.*;
@@ -92,6 +93,11 @@ public class VSServer extends Thread {
         serverSocket.setSoTimeout(readTimeout);
     }
 
+    @VisibleForTesting
+    public void                 setTransportsLimit(short transportsLimit) {
+        this.framework.setTransportsLimit(transportsLimit);
+    }
+
     @Override
     public void                 run () {
         Socket          s = null;
@@ -124,6 +130,11 @@ public class VSServer extends Thread {
 
         if (serverSocket != null && !serverSocket.isClosed())
             IOUtil.close (serverSocket);
+    }
+
+    @VisibleForTesting
+    VSDispatcher[]              getDispatchers() {
+        return framework.getDispatchers();
     }
 
     public void                 close () {

@@ -42,23 +42,31 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
     public final static int        MAX_CONNECTIONS                = 100;
     public final static short      MAX_SOCKETS_PER_CONNECTION      = 8;
+    public final static short      MAX_CHANNELS_PER_CONNECTION     = 1000;
 
     private final Map <String, Connector>        dispatchers =
-        new HashMap <> ();
+            new HashMap <> ();
 
     private final QuickExecutor                 executor;
-    private final ContextContainer contextContainer;
+    private final ContextContainer              contextContainer;
 
     private volatile VSConnectionListener       connectionListener;
+
+    // max number of connections (VSDispatchers)
     private final int                           connectionsLimit;
-    private final short                         transportsLimit;
+    // max number of sockets per connection (VSTransportChannels)
+    private short                               transportsLimit;
+    // max number channels per connection (VSChannels)
+    private final int                           channelsLimit;
     private final long                          time;
-    private final int                           reconnectInterval;
+    private final int lingerInterval;
     private final VSCompression                 compression;
 
     private TLSContext                          tlsContext;
 
     private TransportType                       transportType = TransportType.SOCKET_TCP;
+
+
 
     private final DBConnectionAcceptor          connectionAcceptor;
 
@@ -70,16 +78,15 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         }
     };
 
-    public VSServerFramework(QuickExecutor executor,
-                             int reconnectInterval,
-                             VSCompression compression,
-                             int connectionsLimit,
-                             short socketsPerConnection,
+    public VSServerFramework(QuickExecutor executor, int lingerInterval,
+                             VSCompression compression, int connectionsLimit,
+                             short socketsPerConnection, int channelsPerConnection,
                              ContextContainer contextContainer,
                              DBConnectionAcceptor connectionAcceptor) {
+        this.channelsLimit = channelsPerConnection;
         this.connectionAcceptor = connectionAcceptor;
         this.executor = executor;
-        this.reconnectInterval = reconnectInterval;
+        this.lingerInterval = lingerInterval;
         this.time = System.currentTimeMillis();
         this.compression = compression;
         this.connectionsLimit = connectionsLimit;
@@ -88,8 +95,8 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         INSTANCE = this;
     }
 
-    public VSServerFramework(QuickExecutor executor, int reconnectInterval, VSCompression compression, ContextContainer contextContainer) {
-        this(executor, reconnectInterval, compression, MAX_CONNECTIONS, MAX_SOCKETS_PER_CONNECTION, contextContainer, DefaultConnectionAcceptor.INSTANCE);
+    public VSServerFramework(QuickExecutor executor, int lingerInterval, VSCompression compression, ContextContainer contextContainer) {
+        this(executor, lingerInterval, compression, MAX_CONNECTIONS, MAX_SOCKETS_PER_CONNECTION, -1, contextContainer, DefaultConnectionAcceptor.INSTANCE);
     }
 
     public QuickExecutor getExecutor () {
@@ -163,7 +170,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
         BufferedInputStream bis = new BufferedInputStream(s.getInputStream(), VSocketImpl.INPUT_STREAM_BUFFER_SIZE);
         return handleHandshake(
-            SocketConnectionFactory.createConnection(s, bis, s.getOutputStream())
+                SocketConnectionFactory.createConnection(s, bis, s.getOutputStream())
         );
     }
 
@@ -175,7 +182,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         s.setKeepAlive(true);
 
         return handleHandshake(
-            SocketConnectionFactory.createConnection(s, is, os)
+                SocketConnectionFactory.createConnection(s, is, os)
         );
     }
 
@@ -224,10 +231,10 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
         if (!isCompatible) {
             VSProtocol.LOGGER.severe (
-                "Connection from " + clientId + " rejected due to incompatible protocol version #" +
-                clientVersion + " (accepted: " +
-                MIN_COMPATIBLE_CLIENT_VERSION + " .. " +
-                MAX_COMPATIBLE_CLIENT_VERSION + ")"
+                    "Connection from " + clientId + " rejected due to incompatible protocol version #" +
+                            clientVersion + " (accepted: " +
+                            MIN_COMPATIBLE_CLIENT_VERSION + " .. " +
+                            MAX_COMPATIBLE_CLIENT_VERSION + ")"
             );
 
             dout.writeByte (VSProtocol.CONN_RESP_INCOMPATIBLE_CLIENT);
@@ -300,7 +307,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
             dout.writeByte(VSProtocol.CONN_RESP_OK);
             dout.writeLong(time);
-            dout.writeInt(reconnectInterval);
+            dout.writeInt(lingerInterval);
             dout.writeUTF(compression.toString());
 
             // writing -1 means socket wasn't found
@@ -325,9 +332,10 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
                 synchronized (brokenSocketRecoveryInfo) {
                     brokenSocketRecoveryInfo.stopRecoveryAttempt();
                     if (success) {
-                        brokenSocketRecoveryInfo.markRecoverySucceeded();
+                        if (brokenSocketRecoveryInfo.tryMarkRecoverySucceeded()) {
+                            brokenSocketRecoveryInfo.notifyAll();
+                        }
                     }
-                    brokenSocketRecoveryInfo.notifyAll();
                 }
             }
         }
@@ -348,8 +356,9 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
 
             if (connector == null) {
                 VSDispatcher dispatcher = new VSDispatcher (clientId, false, contextContainer);
+                dispatcher.setChannelsLimit(channelsLimit);
                 dispatcher.setConnectionListener(connectionListener);
-                dispatcher.setLingerInterval(reconnectInterval);
+                dispatcher.setLingerInterval(lingerInterval);
                 dispatcher.addDisposableListener(this);
                 dispatchers.put (clientId, (connector = new Connector(dispatcher, transportsLimit)));
             }
@@ -428,6 +437,10 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
             throw new RuntimeException("Legacy version of Aeron IPC is not supported");
     }
 
+    void setTransportsLimit(short transportsLimit) {
+        this.transportsLimit = transportsLimit;
+    }
+
     static class Connector extends ConnectionStateListener implements Closeable {
         // May contain null values. Null value indicates that transport is still considered active (not stopped).
         private final IntegerToObjectHashMap<VSocketRecoveryInfo>   stopped =
@@ -460,7 +473,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         }
 
         @Override
-        boolean onTransportStopped(VSocketRecoveryInfo recoveryInfo) {
+        boolean onTransportRecoveryStart(VSocketRecoveryInfo recoveryInfo) {
             VSocket socket = recoveryInfo.getSocket();
 
             int code = socket.getCode();
@@ -482,7 +495,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         }
 
         @Override
-        boolean onTransportBroken(VSocketRecoveryInfo recoveryInfo) {
+        boolean onTransportRecoveryStop(VSocketRecoveryInfo recoveryInfo) {
             try {
                 synchronized (recoveryInfo) {
                     while (recoveryInfo.isRecoveryAttemptInProgress()) {
@@ -563,7 +576,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         }
 
         @Override
-        void onReconnected() {
+        void onConnected() {
         }
     }
 
@@ -579,7 +592,7 @@ public class VSServerFramework implements ConnectionHandshakeHandler, Disposable
         private final String label;
 
         FakeRecoveryInfo(String label) {
-            super(null, Long.MIN_VALUE);
+            super(null, Long.MAX_VALUE);
             this.label = label;
         }
 

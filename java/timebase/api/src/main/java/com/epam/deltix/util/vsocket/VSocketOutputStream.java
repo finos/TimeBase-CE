@@ -17,6 +17,8 @@
 package com.epam.deltix.util.vsocket;
 
 import com.epam.deltix.util.collections.ByteQueue;
+import net.jcip.annotations.GuardedBy;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,14 +30,16 @@ import java.util.logging.Level;
 public class VSocketOutputStream extends OutputStream {
     private final String socketIdStr;
 
-    //@ApiStatus.Experimental
+    @ApiStatus.Experimental
     public static int           CAPACITY = Integer.getInteger("TimeBase.network.socketOutputStream.bufferCapacity", 1024 * 512);
     public static int           INCREMENT = CAPACITY / 4;
     /** Controls how often {@link VSProtocol#BYTES_RECIEVED} message will be sent from {@link VSTransportChannel} */
-    //@ApiStatus.Experimental
+    @ApiStatus.Experimental
     public static int           REPORT_THRESHOLD = Integer.getInteger("TimeBase.network.socketOutputStream.reportThreshold", CAPACITY / 4);
 
+    @GuardedBy("buffer")
     private final ByteQueue     buffer;
+    @GuardedBy("out")
     private final OutputStream  out;
     long                        confirmed;
 
@@ -64,7 +68,7 @@ public class VSocketOutputStream extends OutputStream {
             }
         } catch (IOException e) {
             broken = true;
-            //throw new com.epam.deltix.util.io.UncheckedIOException(e);
+            //throw new deltix.util.io.UncheckedIOException(e);
         } finally {
             dump(b);
         }
@@ -78,7 +82,7 @@ public class VSocketOutputStream extends OutputStream {
             }
         } catch (IOException e) {
             broken = true;
-            //throw new com.epam.deltix.util.io.UncheckedIOException(e);
+            //throw new deltix.util.io.UncheckedIOException(e);
         } finally {
             dump(b, off, len);
         }
@@ -96,7 +100,7 @@ public class VSocketOutputStream extends OutputStream {
             }
         } catch (IOException e) {
             broken = true;
-            //throw new com.epam.deltix.util.io.UncheckedIOException(e);
+            //throw new deltix.util.io.UncheckedIOException(e);
         } finally {
             dumpTwoArrays(b1, off1, len1, b2, off2, len2);
         }
@@ -113,11 +117,24 @@ public class VSocketOutputStream extends OutputStream {
      */
     private void    dumpTwoArrays(byte[] b1, int off1, int len1, byte[] b2, int off2, int len2) {
         synchronized (buffer) {
-            dumpInternal(b1, off1, len1);
-            dumpInternal(b2, off2, len2);
+            dumpInternal(b1, off1, len1, b2, off2, len2);
         }
     }
 
+    /** Same as {@link #dumpInternal(byte[], int, int)} but for two arrays. */
+    @GuardedBy("buffer")
+    private void dumpInternal(byte[] b1, int off1, int len1, byte[] b2, int off2, int len2) {
+        int overflow = buffer.size() + len1 + len2 - buffer.capacity();
+        if (overflow > 0) {
+            int incrementsToAdd = divideRoundUp(overflow, INCREMENT);
+            buffer.addCapacity(INCREMENT * incrementsToAdd);
+        }
+
+        buffer.offer(b1, off1, len1);
+        buffer.offer(b2, off2, len2);
+    }
+
+    @GuardedBy("buffer")
     private void dumpInternal(byte[] b, int off, int len) {
         // assert Thread.holdsLock(buffer);
         int overflow = buffer.size() + len - buffer.capacity();

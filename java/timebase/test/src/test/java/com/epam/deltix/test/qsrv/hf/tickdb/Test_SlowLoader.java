@@ -17,6 +17,7 @@
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
 
+import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.comm.client.TickDBClient;
@@ -46,6 +47,8 @@ public class Test_SlowLoader {
 
     @Test
     public void         go () throws InterruptedException {
+        QSHome.set(dbFile.getParent());
+
         DXTickDB                db = TickDBFactory.create (dbFile);
 
         db.format ();

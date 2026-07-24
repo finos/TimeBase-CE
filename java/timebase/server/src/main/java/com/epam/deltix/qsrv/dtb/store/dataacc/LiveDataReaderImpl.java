@@ -17,9 +17,11 @@
 package com.epam.deltix.qsrv.dtb.store.dataacc;
 
 import com.epam.deltix.qsrv.dtb.store.pub.*;
+import com.epam.deltix.util.collections.IntegerRingedList;
 import com.epam.deltix.util.collections.generated.IntegerEnumeration;
 import com.epam.deltix.util.collections.generated.IntegerToObjectHashMap;
 import com.epam.deltix.util.concurrent.*;
+import net.jcip.annotations.GuardedBy;
 
 /**
  *
@@ -37,15 +39,18 @@ public final class LiveDataReaderImpl
 
     // incoming updated blocks
     private final IntegerToObjectHashMap<DataBlock> waiting = new IntegerToObjectHashMap<>();
-    private final IntegerEnumeration                e = waiting.keys();
+
+    // Keys of "waiting" map. Must be updated together with "waiting" map.
+    @GuardedBy("waiting")
+    private final IntegerRingedList             waitingList = new IntegerRingedList();
 
     private volatile Runnable                   listener;
     private final QuickExecutor.QuickTask       notifier;
 
     public LiveDataReaderImpl(QuickExecutor exe) {
-        notifier =  new QuickExecutor.QuickTask (exe) {
+        notifier = new QuickExecutor.QuickTask (exe) {
             @Override
-            public void     run () {
+            public void run() {
                 Runnable consistent = listener;
 
                 if (consistent != null) {
@@ -84,7 +89,7 @@ public final class LiveDataReaderImpl
         currentTimestamp = Long.MAX_VALUE;
 
         synchronized (waiting) {
-            waiting.clear();
+            clearWaiting();
         }
 
         super.close ();
@@ -385,19 +390,23 @@ public final class LiveDataReaderImpl
 
     private void                offerWaiting(DataBlock db) {
         synchronized (waiting) {
-            waiting.put(db.getEntity(), db);
+            int key = db.getEntity();
+            boolean added = waiting.put(key, db);
+            if (added) {
+                waitingList.add(key);
+            }
         }
     }
 
     private DataBlock           pollWaiting() {
         synchronized (waiting) {
-            e.reset();
+            if (waitingList.isEmpty()) {
+                return null;
+            }
+            int key = waitingList.pop();
 
-            if (e.hasMoreElements())
-                return waiting.remove(e.nextIntElement(), null);
+            return waiting.remove(key, null);
         }
-
-        return null;
     }
 
     private void              clearCurrent() {
@@ -407,10 +416,31 @@ public final class LiveDataReaderImpl
         }
 
         synchronized (waiting) {
-            waiting.clear();
+            clearWaiting();
         }
 
         clearLinks();
+    }
+
+    /**
+     * Cleans "waiting" map.
+     */
+    @GuardedBy("waiting")
+    private void clearWaiting() {
+        int count = waitingList.size();
+        if (count * 16 < waiting.getCapacity()) {
+            // This means that map's hash table is sparse,
+            // and we can clean it faster by looking up individual keys instead of iterating over all entries.
+            while (!waitingList.isEmpty()) {
+                int key = waitingList.pop();
+                waiting.remove(key, null);
+            }
+            assert waiting.isEmpty();
+        } else {
+            // Use regular clear (iterates over all hash table cells, but this is faster when map is dense).
+            waiting.clear();
+        }
+        waitingList.clear();
     }
 
     @Override
@@ -428,6 +458,11 @@ public final class LiveDataReaderImpl
     @Override
     public void                 checkoutForRead(TimeSlice slice) {
 
+    }
+
+    @Override
+    public void                 onClosed(TimeSlice slice) {
+        notifier.submit();
     }
 
     //

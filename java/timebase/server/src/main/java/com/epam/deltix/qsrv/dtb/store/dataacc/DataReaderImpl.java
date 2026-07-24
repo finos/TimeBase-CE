@@ -423,6 +423,11 @@ public final class DataReaderImpl
 
     }
 
+    @Override
+    public void                 onClosed(TimeSlice slice) {
+        notifier.submit();
+    }
+
     //
     //  DAPrivate IMPLEMENTATION
     //

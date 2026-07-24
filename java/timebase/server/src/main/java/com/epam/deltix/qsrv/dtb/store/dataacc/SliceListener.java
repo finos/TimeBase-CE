@@ -18,7 +18,21 @@ package com.epam.deltix.qsrv.dtb.store.dataacc;
 
 public interface SliceListener {
 
+    /**
+     * Invoked when new slice is checked out for inserting data
+     * @param slice slice
+     */
     void        checkoutForInsert(TimeSlice slice);
 
+    /**
+     * Invoked when new slice is checked out for reading data
+     * @param slice slice
+     */
     void        checkoutForRead(TimeSlice slice);
+
+    /**
+     * Invoked by TSRoot when slice is removed.
+     * @param slice slice that was changed, null if whole TSRoot is removed
+     */
+    void        onClosed(TimeSlice slice);
 }

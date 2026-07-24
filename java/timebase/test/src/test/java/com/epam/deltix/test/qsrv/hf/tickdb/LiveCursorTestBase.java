@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.test.qsrv.hf.tickdb;
 
+import com.epam.deltix.qsrv.QSHome;
 import com.epam.deltix.qsrv.hf.tickdb.StreamConfigurationHelper;
 import com.epam.deltix.qsrv.hf.tickdb.TDBRunner;
 import com.epam.deltix.qsrv.hf.tickdb.pub.*;
@@ -28,6 +29,7 @@ import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.util.collections.*;
 import com.epam.deltix.util.lang.Util;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -58,8 +60,15 @@ public abstract class LiveCursorTestBase
             SYMBOLS [ii] = "DLX" + ii;  // Deltix' subsidiaries :)
     }
 
-    protected final DXTickDB        localDB = TickDBFactory.create (TDBRunner.getTemporaryLocation());
-    private TradeMessage generatorMessage = new TradeMessage();
+    protected final DXTickDB        localDB;
+    protected final String location;
+
+    {
+        location = TDBRunner.getTemporaryLocation();
+        localDB = TickDBFactory.create (location);
+    }
+
+    private TradeMessage            generatorMessage = new TradeMessage();
     private int                     generatorCount;
 
     public static long              countToTime (int count) {
@@ -68,7 +77,7 @@ public abstract class LiveCursorTestBase
 
     public static class Reader extends TestThread {
         private final TickStream            stream;
-        private IdentityKey[]        entities;
+        private IdentityKey[]               entities;
         //private final FeedFilter            filter;
         private final int                   cursorOpenDelay;
         private final int                   initialReadDelay;
@@ -200,6 +209,8 @@ public abstract class LiveCursorTestBase
 
     @Before
     public void             setup () {
+        QSHome.set(new File(location).getParent());
+
         localDB.format ();
         
         DXTickStream        ds =

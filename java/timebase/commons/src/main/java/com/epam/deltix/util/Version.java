@@ -17,9 +17,9 @@ public abstract class Version {
     public static final int             MAJOR = 6;
     public static final int             MINOR = 2;
     public static final String          NAME = "18-SNAPSHOT";
-    public static final String          BUILD = "2c3be72f";
+    public static final String          BUILD = "f9c92576";
     public static final Integer         COMMITS_AFTER_TAG = null;
-    public static final String          BUILD_DATE = "2026-06-25 21:23:51 +0300";
+    public static final String          BUILD_DATE = "2026-07-17 14:24:22 +0300";
 
     public static final String          VERSION_STRING;
     public static final String          MAJOR_VERSION_STRING;

@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class VSDispatcherTest {
 
-    @Test (timeout = 5_000) // Note: test timeout must be greater than reconnectInterval + 2000ms
+    @Test (timeout = 10_000) // Note: test timeout must be greater than reconnectInterval + 2000ms
     public void testNoHangsOnConcurrentDisconnects() throws IOException, InterruptedException {
         int reconnectInterval = 2000;
 
@@ -45,16 +45,16 @@ public class VSDispatcherTest {
             }
 
             @Override
-            void onReconnected() {
+            void onConnected() {
             }
 
             @Override
-            boolean onTransportStopped(VSocketRecoveryInfo recoveryInfo) {
+            boolean onTransportRecoveryStart(VSocketRecoveryInfo recoveryInfo) {
                 return false;
             }
 
             @Override
-            boolean onTransportBroken(VSocketRecoveryInfo recoveryInfo) {
+            boolean onTransportRecoveryStop(VSocketRecoveryInfo recoveryInfo) {
                 return true;
             }
         });
@@ -115,14 +115,22 @@ public class VSDispatcherTest {
             out.write(buffer, 0, buffer.length);
         }
 
-        assertTrue(dispatcher.hasAvailableTransport());
+        assertTrue(dispatcher.isConnectedOrReconnecting());
 
         System.out.println("Emulating broken transports...");
         startBarrier.countDown();
-        Thread.sleep(100); // Let threads get into blocked state
+
+        // Let threads get into waiting for recovery state,
+        // but maximum of 1sec, which is half of the waiting time for recovery
+        for (int i = 0; i < 10; i++) {
+            Thread.sleep(100);
+            if (errorThreads.stream().allMatch(thread -> thread.getState() == Thread.State.TIMED_WAITING)) {
+                break;
+            }
+        }
 
         // Now no transports should be available
-        assertFalse(dispatcher.hasAvailableTransport());
+        assertFalse(dispatcher.isConnectedAndNotReconnecting());
 
         // Emulate Flusher thread
         VSChannelImpl vsChannel = channels.get(0);
@@ -140,5 +148,8 @@ public class VSDispatcherTest {
         for (Thread thread : errorThreads) {
             thread.join();
         }
+
+        Test_ClientReconnect.waitUntil(5000, "Dispatcher did not reach DISCONNECTED state in time",
+                () -> dispatcher.getInternalState() == VSDispatcherState.DISCONNECTED);
     }
 }

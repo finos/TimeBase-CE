@@ -23,7 +23,7 @@ import com.epam.deltix.util.vsocket.util.TestVServerSocketFactory;
 import java.io.*;
 
 public class Test_VSocketEcho {
-    public static void      main (String args []) throws Throwable {
+    public static void      main (String[] args) throws Throwable {
         int port = SocketTestUtilities.parsePort(args);
 
         VSServer server = TestVServerSocketFactory.createEchoVServer(port);

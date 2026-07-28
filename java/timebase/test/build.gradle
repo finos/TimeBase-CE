@@ -45,4 +45,6 @@ dependencies {
 
     //testImplementation 'org.f1x:f1x'
     testImplementation 'org.jetbrains:annotations'
+
+    testImplementation 'com.github.netcrusherorg:netcrusher-core:0.10'
 }

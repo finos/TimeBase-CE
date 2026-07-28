@@ -315,6 +315,7 @@ final class VSChannelImpl implements VSChannel {
             } catch (ConnectionAbortedException x) {
                 LOGGER.log (Level.FINE, "Error sending disconnect.", x);
             } catch (InterruptedException x) {
+                Thread.currentThread().interrupt();
                 LOGGER.log (Level.FINE, "Sending disconnect interrupted.", x);
             } catch (Exception x) {
                 LOGGER.log (Level.WARNING, "Error sending disconnect", x);

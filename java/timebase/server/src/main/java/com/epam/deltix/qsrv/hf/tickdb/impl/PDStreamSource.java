@@ -471,7 +471,21 @@ class PDStreamSource extends AbstractStreamSource implements DisposableListener<
         if (!isSubscribed(space))
             return false;
 
-        long timestamp = mx.getCurrentTime();
+        long timestamp = options.reversed ? Long.MIN_VALUE : Long.MAX_VALUE;
+
+        if (options.allowLateOutOfOrder) {
+
+            // find timestamp from sources
+            for (SourceSubscription source : sources)
+                timestamp = options.reversed ? Math.max(timestamp, source.timestamp) : Math.min(timestamp, source.timestamp);
+
+            if (TimeStamp.isUndefined(timestamp))
+                timestamp = mx.getCurrentTime();
+
+        } else {
+            timestamp = mx.getCurrentTime();
+        }
+
         long nstime = TimeStamp.getNanoTime(timestamp);
 
         SourceSubscription sub = isSubscribedToAllEntities ?

@@ -157,7 +157,8 @@ jobs:
         run: |
           ./gradlew --no-daemon --parallel :java:timebase:aerondirect:publish :java:timebase:commons:publish :java:timebase:s3:publish \
                     :java:timebase:pub:publish :java:timebase:api:publish :java:timebase:computations-api:publish \
-                    :java:timebase:computations-std:publish :java:timebase:qql:publish :java:timebase:client:publish :java:uploadArtifactsToMaven
+                    :java:timebase:computations-std:publish :java:timebase:qql:publish :java:timebase:client:publish
+          ./gradlew --no-daemon :java:uploadArtifactsToMaven
         env:
           SONATYPE_REPOSITORY:      ${{ secrets.SONATYPE_REPOSITORY }}
           SONATYPE_NEXUS_USERNAME:  ${{ secrets.SONATYPE_NEXUS_USERNAME }}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 EPAM Systems, Inc
+ * Copyright 2026 EPAM Systems, Inc
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Licensed under the Apache License,
@@ -17,7 +17,6 @@
 package com.epam.deltix.qsrv.hf.tickdb.comm.server;
 
 import com.epam.deltix.qsrv.hf.pub.ChannelPerformance;
-import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.RawMessage;
 import com.epam.deltix.qsrv.hf.tickdb.comm.SelectionOptionsCodec;
 import com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol;
@@ -43,6 +42,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol.TRANSPORT_TYPE_AERON;
 import static com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol.TRANSPORT_TYPE_SOCKET;
@@ -53,9 +54,44 @@ import static com.epam.deltix.qsrv.hf.tickdb.comm.TDBProtocol.TRANSPORT_TYPE_SOC
  * @author Alexei Osipov
  */
 public class DownloadHandlerFactory {
+
+    public static final int CURSORS_PER_CONNECTION = Integer.getInteger("TimeBase.maxCursorsPerConnection", -1);
+
+    private static final ConcurrentHashMap<String, AtomicInteger> limits = new ConcurrentHashMap<>();
+
+    static boolean    checkLimits(SelectionOptions options, VSChannel ds) {
+
+        if (options.live || CURSORS_PER_CONNECTION < 0)
+            return false;
+
+        // limits check
+        AtomicInteger actual = new AtomicInteger(0);
+
+        AtomicInteger value = limits.putIfAbsent(ds.getClientId(), actual);
+        if (value == null)
+            value = actual;
+
+        if (value.incrementAndGet() >= CURSORS_PER_CONNECTION) {
+            value.decrementAndGet();
+            throw new RuntimeException("Unable to create cursor due to limits: " + CURSORS_PER_CONNECTION);
+        }
+
+        ds.addDisposableListener(DownloadHandlerFactory::cursorClosed);
+        return true;
+    }
+
+    static void    cursorClosed(VSChannel c) {
+        AtomicInteger value = limits.get(c.getClientId());
+        if (value != null) {
+            if (value.decrementAndGet() < 0)
+                value.incrementAndGet();
+        }
+    }
+
     public static void start(Principal user, VSChannel ds, DXTickDB db, QuickExecutor executor, TimebaseAccessController ac, int clientVersion, AeronThreadTracker aeronThreadTracker, DXServerAeronContext aeronContext) throws IOException {
         boolean aeronSupported = clientVersion >= TDBProtocol.AERON_SUPPORT_VERSION;
         int requestedTransportType = TRANSPORT_TYPE_SOCKET;
+
         if (aeronSupported) {
             DataInputStream din = ds.getDataInputStream();
             requestedTransportType = din.read();
@@ -106,6 +142,8 @@ public class DownloadHandlerFactory {
                 UserLogger.trace(user, ds.getRemoteAddress(), ds.getRemoteApplication(), UserLogger.CREATE_CURSOR_PATTERN, qql);
 
             try {
+                boolean limited = checkLimits(options, ds);
+
                 cursor = db.executeQuery (qql, options, streams, ids, initTime, endTimestamp, params);
             } catch (CompilationException x) {
                 UserLogger.warn(user, ds.getRemoteAddress(), ds.getRemoteApplication(), "Query stream error: ", x);
@@ -125,6 +163,8 @@ public class DownloadHandlerFactory {
         } else {
 
             try {
+                boolean limited = checkLimits(options, ds);
+
                 if (streams == null)
                     cursor = tcursor = db.select (initTime, options, messageTypes, ids);
                 else

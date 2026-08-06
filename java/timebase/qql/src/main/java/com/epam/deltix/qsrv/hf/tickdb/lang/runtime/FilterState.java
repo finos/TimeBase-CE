@@ -48,8 +48,6 @@ public abstract class FilterState {
 
     private final FilterIMSImpl filter;
 
-    private final DateFormatter datetimeFormatter = new DateFormatter();
-
     private final Introspector introspector = Introspector.createEmptyMessageIntrospector();
 
     public FilterState(FilterIMSImpl filter) {
@@ -126,7 +124,7 @@ public abstract class FilterState {
     }
 
     public DateFormatter datetimeFormatter() {
-        return datetimeFormatter;
+        return filter.datetimeFormatter();
     }
 
     public void setHavingAccepted(boolean havingAccepted) {

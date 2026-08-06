@@ -27,26 +27,37 @@ public class UserPrincipalResolver {
     public static final Log LOGGER = LogFactory.getLog("tickdb.client");
 
     private volatile Oauth2Client oauth2Client;
+    private volatile boolean isExternal;
 
     void setOauth2Client(Oauth2Client oauth2Client) {
+        this.setOauth2Client(oauth2Client, false);
+    }
+
+    void setOauth2Client(Oauth2Client oauth2Client, boolean external) {
+        if (this.oauth2Client != null && !isExternal) {
+            throw new RuntimeException("OAuth2 client is not empty.");
+        }
+
         this.oauth2Client = oauth2Client;
+        this.isExternal = external;
     }
 
     UserPrincipal resolve(UserPrincipal user) {
         if (SecretsStorage.isSecretsStorageValue(user.getPass())) {
             try {
                 return new UserPrincipal(
-                    user.getName(),
-                    SecretsStorage.INSTANCE.getSecret(user.getPass())
+                        user.getName(),
+                        SecretsStorage.INSTANCE.getSecret(user.getPass())
                 );
             } catch (Throwable t) {
                 LOGGER.warn().append("Failed to resolve SecretsStorage value for user ").append(user.getName()).append(t).commit();
             }
         }
 
-        if (oauth2Client != null) {
-            String clientId = oauth2Client.clientId();
-            String token = oauth2Client.token();
+        Oauth2Client currentOauth2Client = oauth2Client;
+        if (currentOauth2Client != null) {
+            String clientId = currentOauth2Client.clientId();
+            String token = currentOauth2Client.token();
             return new UserPrincipal(clientId, token);
         }
 
@@ -54,8 +65,9 @@ public class UserPrincipalResolver {
     }
 
     void close() {
-        if (oauth2Client != null) {
-            oauth2Client.close();
+        Oauth2Client currentOauth2Client = oauth2Client;
+        if (currentOauth2Client != null && !isExternal) {
+            currentOauth2Client.close();
         }
     }
 }

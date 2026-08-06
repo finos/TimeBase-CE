@@ -62,8 +62,9 @@ public class Test_MultipleLoaders extends TDBTestBase {
 
     public void runTest(DXTickDB db) {
 
-        DXTickStream stream = db.createStream("test",
-                StreamOptions.fixedType(StreamScope.DURABLE, "test", "test", 0, 
+        String name = "test";
+        DXTickStream stream = db.createStream(name,
+                StreamOptions.fixedType(StreamScope.DURABLE, name, name, 0,
                         StreamConfigurationHelper.mkBarMessageDescriptor(null, null, null,
                                 "DECIMAL(4)", "DECIMAL(0)")));
 
@@ -123,8 +124,10 @@ public class Test_MultipleLoaders extends TDBTestBase {
     public void runTest2(DXTickDB db) throws InterruptedException {
         final AtomicInteger     expected = new AtomicInteger (199);
 
-        DXTickStream stream = db.createStream("test",
-                StreamOptions.fixedType(StreamScope.DURABLE, "test", "test", 0,
+        String name = "test2";
+
+        DXTickStream stream = db.createStream(name,
+                StreamOptions.fixedType(StreamScope.DURABLE, name, name, 0,
                         StreamConfigurationHelper.mkBarMessageDescriptor(null, null, null, 
                                 "DECIMAL(4)", "DECIMAL(0)")));
 

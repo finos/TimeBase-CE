@@ -19,6 +19,7 @@ package com.epam.deltix.util.vsocket;
 import com.epam.deltix.util.concurrent.UncheckedInterruptedException;
 import com.epam.deltix.util.lang.Util;
 import net.jcip.annotations.GuardedBy;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -28,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Date: Mar 25, 2010
  */
 public class ChannelOutputStream extends VSOutputStream {
-    //@ApiStatus.Experimental // Temporary option for testing performance effect of flushing single packet
+    @ApiStatus.Experimental // Temporary option for testing performance effect of flushing single packet
     private static final boolean SINGLE_SEND_ON_PARTIAL_FLUSH = Boolean.getBoolean("TimeBase.network.channel.singleSendOnPartialFlush");
 
     private final int                       maxCapacity;
@@ -87,12 +88,12 @@ public class ChannelOutputStream extends VSOutputStream {
             // However, if we are above 75% capacity, we should flush all data
             // and block till all accumulated data is sent.
             // Otherwise, if the consumer too slow, the buffer will start to grow indefinitely.
-            // See https://gitlab.deltixhub.com/Deltix/QuantServer/QuantServer/-/issues/1298
             int buffer75percent = halfCapacity + (halfCapacity >> 1);
             boolean partialOk = size < buffer75percent;
             try {
                 flushInternal(partialOk, false);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new UncheckedInterruptedException(e);
             }
         }
@@ -269,6 +270,7 @@ public class ChannelOutputStream extends VSOutputStream {
                     send (b, off, len);
                 }
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new UncheckedInterruptedException (e);
             }
         }
@@ -290,6 +292,7 @@ public class ChannelOutputStream extends VSOutputStream {
 
             buffer [size++] = (byte) b;
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new UncheckedInterruptedException (e);
         }
     }

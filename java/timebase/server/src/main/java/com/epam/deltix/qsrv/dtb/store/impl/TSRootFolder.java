@@ -242,16 +242,23 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     }
 
     @Override
-    public synchronized void forceClose() {
+    public void forceClose() {
         if (!isOpen)
             return;
 
-        if (isActive())
-            LOGGER.warn().append("FORCE-Closing ").append(this).append(" while in active state").commit();
+        synchronized (sliceListeners) {
+            for (int i = 0; i < sliceListeners.size(); i++)
+                sliceListeners.get(i).onClosed(null);
+        }
 
-        storeRegistry();
-        symRegistry.close();
-        isOpen = false;
+        synchronized (this) {
+            if (isActive())
+                LOGGER.warn().append("FORCE-Closing ").append(this).append(" while in active state").commit();
+
+            storeRegistry();
+            symRegistry.close();
+            isOpen = false;
+        }
     }
 
     @Override
@@ -877,7 +884,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         return file;
     }
 
-    public final ArrayList<SliceListener> sliceListeners = new ArrayList<SliceListener>(5);
+    public final ArrayList<SliceListener> sliceListeners = new ArrayList<>(5);
 
     @Override
     public void addSliceListener(SliceListener listener) {

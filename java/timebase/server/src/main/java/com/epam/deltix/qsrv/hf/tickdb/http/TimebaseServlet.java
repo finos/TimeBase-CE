@@ -61,6 +61,10 @@ import java.util.logging.Level;
 import static com.epam.deltix.qsrv.hf.tickdb.http.AbstractHandler.*;
 import static com.epam.deltix.qsrv.hf.tickdb.http.HTTPProtocol.*;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+
 /**
  *
  */
@@ -101,6 +105,11 @@ public class TimebaseServlet extends HttpServlet {
                 final Unmarshaller um = TBJAXBContext.createUnmarshaller();
                 final Object body;
 
+                XMLInputFactory xif = XMLInputFactory.newFactory();
+                xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+                xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+                XMLStreamReader xsr = null;
+
                 if (DEBUG) {
                     try {
                         final String xml = BasicIOUtil.readFromStream(req.getInputStream());
@@ -111,13 +120,24 @@ public class TimebaseServlet extends HttpServlet {
                             LOGGER.fine("request: " + xml);
                         }
 
-                        body = um.unmarshal(new StringReader(xml));
+                        try {
+                            xsr = xif.createXMLStreamReader(new StringReader(xml));
+                        } catch(XMLStreamException e) {
+                            throw new RuntimeException(e);
+                        }
+                        body = um.unmarshal(xsr);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                 }
-                else
-                    body = um.unmarshal(req.getInputStream());
+                else {
+                    try {
+                        xsr = xif.createXMLStreamReader(req.getInputStream());
+                    } catch(XMLStreamException e) {
+                        throw new RuntimeException(e);
+                    }
+                    body = um.unmarshal(xsr);
+                }
 
                 if (body instanceof XmlRequest)
                     HTTPProtocol.validateVersion(((XmlRequest) body).version);

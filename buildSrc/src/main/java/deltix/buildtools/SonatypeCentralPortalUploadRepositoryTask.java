@@ -32,8 +32,14 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
+
+import static java.nio.charset.StandardCharsets.US_ASCII;
 
 /**
  * This task performs manual steps to publish artifacts to Central Portal via OSSRH Staging API.
@@ -110,16 +116,29 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
             return;
         }
 
-        String userNameAndPassword = portalUsername.get() + ":" + portalPassword.get();
-        String bearer = Base64.getEncoder().encodeToString(userNameAndPassword.getBytes(StandardCharsets.US_ASCII));
+        final HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(CONNECTION_TIMEOUT))
+                .build();
+
+        final String userNameAndPassword = portalUsername.get() + ":" + portalPassword.get();
+        final String bearer = new String(
+                Base64.getEncoder().encode(userNameAndPassword.getBytes(US_ASCII)), US_ASCII);
+
+        final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .header("Authorization", "Bearer " + bearer);
+
         URI apiUri = URI.create(CENTRAL_PORTAL_OSSRH_API_URI);
 
         String repositoryKey = findOpenRepository(apiUri, bearer);
         System.out.println("Found published repository: " + repositoryKey);
 
-        int status = uploadRepository(apiUri, bearer, repositoryKey);
+        int status = uploadRepositoryToPortal(apiUri, httpClient, requestBuilder, repositoryKey);
         if (status == HttpURLConnection.HTTP_CLIENT_TIMEOUT)
-            uploadRepository(apiUri, bearer, repositoryKey);
+            uploadRepositoryToPortal(apiUri, httpClient, requestBuilder, repositoryKey);
+
+//        int status = uploadRepository(apiUri, bearer, repositoryKey);
+//        if (status == HttpURLConnection.HTTP_CLIENT_TIMEOUT)
+//            uploadRepository(apiUri, bearer, repositoryKey);
 
         dropRepository(apiUri, bearer, repositoryKey);
     }
@@ -187,6 +206,28 @@ public class SonatypeCentralPortalUploadRepositoryTask extends DefaultTask {
         }
 
         return status;
+    }
+
+    private static int uploadRepositoryToPortal(
+            final URI apiUri,
+            final HttpClient httpClient,
+            final HttpRequest.Builder requestBuilder,
+            final String repositoryKey) throws IOException, InterruptedException {
+
+        HttpRequest request = requestBuilder
+                .copy()
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .uri(apiUri.resolve("/manual/upload/repository/" + repositoryKey + "?publishing_type=automatic"))
+                .build();
+        HttpResponse<String> response = httpClient.send(
+                request, (HttpResponse.ResponseInfo responseInfo) -> HttpResponse.BodySubscribers.ofString(US_ASCII));
+
+        return response.statusCode();
+
+//        if (200 != response.statusCode()) {
+//            throw new IllegalStateException("Failed to upload repository: repository_key=" + repositoryKey +
+//                    ", status=" + response.statusCode() + ", response=" + response.body());
+//        }
     }
 
     private static void dropRepository(URI apiUri, String bearer, String repositoryKey) throws IOException {

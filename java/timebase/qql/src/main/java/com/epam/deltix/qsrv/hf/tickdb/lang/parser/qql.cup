@@ -42,7 +42,7 @@ action code {:
 :};
 
 /* Punctuation. */
-terminal            SEMICOLON,  PLUS,       MINUS,      STAR;
+terminal            SEMICOLON,  PLUS,       MINUS,      UMINUS, STAR;
 terminal            LPAREN,     RPAREN,     LBRACKET,   RBRACKET, LBRACE, RBRACE;
 terminal            COLON,      SLASH,      PERCENT,    DOT;
 terminal            BIT_AND,    BIT_OR,     BIT_XOR,    BIT_NOT,  RSHIFT, LSHIFT;
@@ -150,26 +150,30 @@ non terminal Expression[]           Selector;
 
 /* Precedences */
 precedence left SEMICOLON;
-precedence left UNION;
-precedence left DISTINCT, SELECT, RECORD, FROM, WHERE, HAVING, GROUP, ARRAY, JOIN, LEFT, TYPE, WITH;
-precedence left TRIGGER, RESET, OVER, EVERY, OFFSET, LIMIT;
 precedence left COMMA;
+precedence left UNION;
+precedence left SELECT, RECORD, FROM, WHERE, HAVING, GROUP, ARRAY, JOIN, LEFT, TYPE, WITH, DISTINCT;
+precedence left TRIGGER, RESET, OVER, EVERY, OFFSET, LIMIT;
 precedence left IF, CASE, WHEN, THEN, ELSE, END, EXISTS;
+precedence right ASSIGN;
 precedence right AS, FIELD;
 precedence left COLON;
-precedence left OR, AND;
-precedence left BETWEEN;
-precedence right NOT, BIT_NOT;
-precedence left IN;
-precedence left EQ, NEQ, STRICT_EQ, STRICT_NEQ, ASSIGN, LE, GE, LT, GT;
-precedence left LIKE;
+precedence left OR;
+precedence left AND;
+precedence right NOT;
+precedence nonassoc BETWEEN;
+precedence nonassoc IN;
+precedence nonassoc LIKE;
+precedence nonassoc IS;
+precedence nonassoc EQ, NEQ, STRICT_EQ, STRICT_NEQ, LE, GE, LT, GT;
 precedence left PLUS, MINUS;
+precedence left STAR, SLASH, PERCENT;
 precedence left BIT_OR;
 precedence left BIT_XOR;
 precedence left BIT_AND;
+precedence right BIT_NOT;
 precedence left RSHIFT, LSHIFT;
-precedence left STAR, SLASH, PERCENT;
-precedence left IS;
+precedence right UMINUS;
 precedence left DOT, QUESTION;
 precedence left LPAREN, LBRACKET;
 
@@ -200,8 +204,17 @@ Select_Union_Expression ::=
 Expression ::=
     Arithmetic_Expression:s
         {: RESULT = s; :} |
+
     Expression:e1 BETWEEN Arithmetic_Expression:e2 AND Arithmetic_Expression:e3
         {: RESULT = new BetweenExpression (lx (e1left, e3right), e1, e2, e3); :} |
+    Expression:e NOT IN LPAREN Expression_List:args RPAREN:rp
+        {: RESULT = new InExpression (lx (eleft, rpright), false, e, args); :} |
+    Expression:e IN LPAREN Expression_List:args RPAREN:rp
+        {: RESULT = new InExpression (lx (eleft, rpright), true, e, args); :} |
+    Expression:e1 LIKE Expression:e2
+        {: RESULT = new LikeExpression (lx (e1left, e2right), e1, e2, false); :} |
+    Expression:e1 NOT LIKE Expression:e2
+        {: RESULT = new LikeExpression (lx (e1left, e2right), e1, e2, true); :} |
 
     // cast and named expressions
     Expression:e1 AS Cast_Type_Expression:ct
@@ -231,14 +244,6 @@ Expression ::=
         {: RESULT = new RelationExpression (lx (e1left, e2right), OrderRelation.LT, e1, e2); :} |
     Expression:e1 LE Expression:e2
         {: RESULT = new RelationExpression (lx (e1left, e2right), OrderRelation.LE, e1, e2); :} |
-    Expression:e NOT IN LPAREN Expression_List:args RPAREN:rp
-        {: RESULT = new InExpression (lx (eleft, rpright), false, e, args); :} |
-    Expression:e IN LPAREN Expression_List:args RPAREN:rp
-        {: RESULT = new InExpression (lx (eleft, rpright), true, e, args); :} |
-    Expression:e1 LIKE Expression:e2
-        {: RESULT = new LikeExpression (lx (e1left, e2right), e1, e2, false); :} |
-    Expression:e1 NOT LIKE Expression:e2
-        {: RESULT = new LikeExpression (lx (e1left, e2right), e1, e2, true); :} |
     Expression:e1 IF Expression:cond [ ELSE Expression:e {: RESULT = e; :} ]:e2
         {: RESULT = new IfExpression(lx(e1left, e2right), cond, e1, (Expression) e2); :} |
     CASE [ Expression:e1 {: RESULT = e1; :} ]:case_expr
@@ -271,6 +276,11 @@ Arithmetic_Expression ::=
     Arithmetic_Expression:e1 LBRACKET Array_Slicing_Expression:e2 RBRACKET
         {: RESULT = new PredicateExpression(lx(e1left, e2right + 1), e1, e2); :} |
 
+    MINUS:m Arithmetic_Expression:e
+        {: RESULT = new UnaryMinusExpression (lx (mleft, eright), e); :} %prec UMINUS |
+    BIT_NOT:m Arithmetic_Expression:e
+        {: RESULT = new BitwiseNotExpression(lx(mleft, eright), e); :} |
+
     Arithmetic_Expression:e1 PLUS Arithmetic_Expression:e2
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
     Arithmetic_Expression:e1 MINUS Arithmetic_Expression:e2
@@ -284,10 +294,10 @@ Arithmetic_Expression ::=
 
     Arithmetic_Expression:e1 BIT_AND Arithmetic_Expression:e2
         {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.AND, e1, e2); :} |
-    Arithmetic_Expression:e1 BIT_OR Arithmetic_Expression:e2
-        {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.OR, e1, e2); :} |
     Arithmetic_Expression:e1 BIT_XOR Arithmetic_Expression:e2
         {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.XOR, e1, e2); :} |
+    Arithmetic_Expression:e1 BIT_OR Arithmetic_Expression:e2
+        {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.OR, e1, e2); :} |
     Arithmetic_Expression:e1 RSHIFT Arithmetic_Expression:e2
         {: RESULT = new BitwiseExpression(lx (e1left, e2right), BitwiseFunction.RSHIFT, e1, e2); :} |
     Arithmetic_Expression:e1 LSHIFT Arithmetic_Expression:e2
@@ -297,11 +307,6 @@ Arithmetic_Expression ::=
         {: RESULT = t; :} |
     Call_Expression:c
         {: RESULT = c; :} |
-
-    MINUS:m Arithmetic_Expression:e
-        {: RESULT = new UnaryMinusExpression (lx (mleft, eright), e); :} |
-    BIT_NOT:m Arithmetic_Expression:e
-        {: RESULT = new BitwiseNotExpression(lx(mleft, eright), e); :} |
 
     Arithmetic_Expression:e IS Type_Id:t
         {: RESULT = new TypeCheckExpression (lx (eleft, tright), e, t); :} |
@@ -408,7 +413,21 @@ Int_Constant ::=
     Int_Literal:c
         {: RESULT = c; :} |
     MINUS:m Int_Constant:n
-        {: RESULT = new UnaryMinusExpression(lx(mleft, nright), n); :} |
+        {: RESULT = new UnaryMinusExpression(lx(mleft, nright), n); :} %prec UMINUS |
+    BIT_NOT:m Int_Constant:n
+        {: RESULT = new BitwiseNotExpression(lx(mleft, nright), n); :} |
+
+    Int_Constant:e1 RSHIFT Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.RSHIFT, e1, e2); :} |
+    Int_Constant:e1 LSHIFT Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.LSHIFT, e1, e2); :} |
+    Int_Constant:e1 BIT_AND Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.AND, e1, e2); :} |
+    Int_Constant:e1 BIT_XOR Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.XOR, e1, e2); :} |
+    Int_Constant:e1 BIT_OR Int_Constant:e2
+        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.OR, e1, e2); :} |
+
     Int_Constant:e1 PLUS Int_Constant:e2
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
     Int_Constant:e1 MINUS Int_Constant:e2
@@ -419,19 +438,6 @@ Int_Constant ::=
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.DIV, e1, e2); :} |
     Int_Constant:e1 PERCENT Int_Constant:e2
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.MOD, e1, e2); :} |
-
-    BIT_NOT:m Int_Constant:n
-        {: RESULT = new BitwiseNotExpression(lx(mleft, nright), n); :} |
-    Int_Constant:e1 BIT_AND Int_Constant:e2
-        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.AND, e1, e2); :} |
-    Int_Constant:e1 BIT_OR Int_Constant:e2
-        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.OR, e1, e2); :} |
-    Int_Constant:e1 BIT_XOR Int_Constant:e2
-        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.XOR, e1, e2); :} |
-    Int_Constant:e1 RSHIFT Int_Constant:e2
-        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.RSHIFT, e1, e2); :} |
-    Int_Constant:e1 LSHIFT Int_Constant:e2
-        {: RESULT = new BitwiseExpression(lx(e1left, e2right), BitwiseFunction.LSHIFT, e1, e2); :} |
 
     LPAREN Int_Constant:e RPAREN
         {: RESULT = e; :};
@@ -446,7 +452,7 @@ Float_Constant ::=
     Float_Literal:c
         {: RESULT = c; :} |
     MINUS:m Float_Constant:n
-        {: RESULT = new UnaryMinusExpression(lx(mleft, nright), n); :} |
+        {: RESULT = new UnaryMinusExpression(lx(mleft, nright), n); :} %prec UMINUS |
     Float_Constant:e1 PLUS Float_Constant:e2
         {: RESULT = new ArithmeticExpression (lx (e1left, e2right), ArithmeticFunction.ADD, e1, e2); :} |
     Float_Constant:e1 MINUS Float_Constant:e2

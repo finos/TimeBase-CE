@@ -80,11 +80,20 @@ public class Test_TickDBClient_Reconnect {
 
         try (TickDBClient client = (TickDBClient) connectClient()) {
             client.setNumTransportChannels(transports);
+            client.setTimeout(10_000); // More connection time to allow the test to pass on GitHub (slow server)
             client.setReconnectIntervalAdjuster((numAttempts, timeSinceDisconnected, lastInterval) -> {
                 // Effectively disable further reconnections
                 return java.util.concurrent.TimeUnit.DAYS.toMillis(1);
             });
-            client.open(false);
+            long connectStrt = System.currentTimeMillis();
+            try {
+                client.open(false);
+            } finally {
+                long connectEnd = System.currentTimeMillis();
+                String logLine = "Client .open() took " + (connectEnd - connectStrt) + " ms";
+                LOG.info(logLine);
+                System.out.println(logLine); // Log directly to console, so it can be observed on GitHub
+            }
             assertTrue(client.isConnected());
             assertEquals(transports, getConnectedClientCount());
 

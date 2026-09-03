@@ -39,9 +39,7 @@ class SafeDisconnectableEventHandler implements Disconnectable {
             try {
                 listener.onReconnected();
             } catch (Throwable t) {
-                LOGGER.error("Error processing reconnect event: %s")
-                        .with(t)
-                        .with(t);
+                LOGGER.error("Error processing reconnect event: %s").with(t);
                 if (!(t instanceof Exception)) {
                     throw t;
                 }
@@ -54,9 +52,7 @@ class SafeDisconnectableEventHandler implements Disconnectable {
             try {
                 listener.onDisconnected();
             } catch (Throwable t) {
-                LOGGER.error("Error processing reconnect event: %s")
-                        .with(t)
-                        .with(t);
+                LOGGER.error("Error processing reconnect event: %s").with(t);
                 if (!(t instanceof Exception)) {
                     throw t;
                 }

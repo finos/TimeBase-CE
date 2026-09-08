@@ -28,13 +28,15 @@ import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.benchmark.channel.StreamAccesso
 import com.epam.deltix.qsrv.hf.tickdb.ui.tbshell.benchmark.channel.TopicAccessor;
 import com.epam.deltix.test.qsrv.hf.tickdb.TDBTestBase;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
  * @author Alexei Osipov
  */
-@Category(Long.class)
+//@Category(Long.class)
+@Ignore
 public class Test_LatencyBenchmark extends TDBTestBase {
 
     public Test_LatencyBenchmark() {

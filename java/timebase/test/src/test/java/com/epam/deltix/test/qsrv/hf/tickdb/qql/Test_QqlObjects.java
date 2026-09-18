@@ -802,6 +802,25 @@ public class Test_QqlObjects extends TDBRunnerBase {
 
     };
 
+    private static Pair<String, MappingInfo>[] QQL_ALL_MISC3 = new Pair[] {
+            QUERY_RAW("SELECT enumField, byteField, TestEnum:TWO, 33, ~33 FROM alltypesrand "),
+            QUERY_RAW("SELECT 33, ~33 | 5, (~33) | 5, ~(33 | 5) FROM alltypesrand "),
+            QUERY_RAW("SELECT byteField, ~byteField | 5, (~byteField) | 5, ~(byteField | 5) FROM alltypesrand"),
+            QUERY_RAW("SELECT enumField, byteField, TestEnum:THREE, TestEnum:THREE | 5, 5 | TestEnum:THREE, enumField | 5, 5 | enumField, byteField | 5, 5 | byteField FROM alltypesrand"),
+            QUERY_RAW("SELECT enumField, byteField, TestEnum:THREE, TestEnum:THREE | enumField, TestEnum:THREE | byteField, enumField | byteField FROM alltypesrand"),
+
+            QUERY_RAW("SELECT enumField, byteField, TestEnum:THREE, enumField | enumField, TestEnum:THREE | TestEnum:TWO FROM alltypesrand"),
+            QUERY_RAW("SELECT enumField, byteField, enumField | TestEnum:FIVE & byteField, enumField | 5 & byteField, 5 & byteField | enumField FROM alltypesrand"),
+            QUERY_RAW("SELECT enumField, byteField, enumField | TestEnum:FIVE & byteField, enumField | 5 & byteField, 5 & byteField | enumField, 5 & (byteField | enumField) FROM alltypesrand"),
+            QUERY_RAW("SELECT enumField, byteField, enumField | TestEnum:FIVE & byteField, enumField | 5 & byteField, 5 & byteField | enumField, 5 & (byteField | enumField) FROM alltypesrand"),
+            QUERY_RAW("SELECT enumField, byteField, enumField ^ TestEnum:FIVE & byteField, enumField ^ 5 & byteField, 5 & byteField ^ enumField, 5 & (byteField ^ enumField) FROM alltypesrand"),
+            QUERY_RAW("SELECT enumField, byteField, enumField | TestEnum:FIVE ^ byteField, byteField ^ enumField | TestEnum:FIVE, enumField | (TestEnum:FIVE ^ byteField), (enumField | TestEnum:FIVE) ^ byteField FROM alltypesrand"),
+            QUERY_RAW("SELECT enumField, enumField ^ -1, -1 ^ enumField, (-1) ^ enumField FROM alltypesrand"),
+            QUERY_RAW("SELECT byteField, byteField ^ -1, -1 ^ byteField, (-1) ^ byteField, -(1 ^ byteField) FROM alltypesrand"),
+            QUERY_RAW("SELECT byteField, byteField * -1, -1 * byteField, (-1) * byteField, -(1 * byteField) FROM alltypesrand"),
+
+    };
+
     private static Pair<String, MappingInfo>[] QQL_ALL_UNIONS = new Pair[] {
             QUERY_RAW("select * from (binance union bitfinex union kraken) limit 10 offset 30"),
             QUERY_RAW("select this.entries from (binance union bitfinex union kraken) limit 10 offset 30"),
@@ -1108,6 +1127,21 @@ public class Test_QqlObjects extends TDBRunnerBase {
         } else {
             Assert.assertTrue(
                     qql(db, QQL_ALL_MISC, readExpectedResults(Home.getPath(EXPECTED_PATH + "misc.txt")))
+            );
+        }
+    }
+
+    @Test
+    public void Test_AllMisc3() throws Exception {
+        if (!remote) {
+            throw new RuntimeException("Test is available only in remote mode: use -Drunner.remote=true");
+        }
+
+        if (GENERATE_EXPECTED) {
+            qqlWriteExpected(db, QQL_ALL_MISC3, Home.getPath(EXPECTED_GENERATE_PATH + "misc3.txt"));
+        } else {
+            Assert.assertTrue(
+                    qql(db, QQL_ALL_MISC3, readExpectedResults(Home.getPath(EXPECTED_PATH + "misc3.txt")))
             );
         }
     }

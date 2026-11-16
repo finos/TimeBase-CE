@@ -31,7 +31,7 @@ class QueryStatusMessageProvider {
 
     private final RawMessage queryStatusMessage;
     private final FixedBoundEncoder queryStatusMessageEncoder;
-    private final MemoryDataOutput mdo = new MemoryDataOutput();
+    private final MemoryDataOutput mdo = new MemoryDataOutput(64);
     private final QueryStatusMessage object = new QueryStatusMessage();
 
     QueryStatusMessageProvider(RecordClassDescriptor[] outputTypes) {

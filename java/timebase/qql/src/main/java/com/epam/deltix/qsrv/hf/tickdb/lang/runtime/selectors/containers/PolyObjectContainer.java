@@ -28,7 +28,7 @@ public class PolyObjectContainer extends Instance {
 
     protected final PolyInstanceCodec codec;
     protected final MemoryDataInput in = new MemoryDataInput();
-    protected final MemoryDataOutput out = new MemoryDataOutput();
+    protected final MemoryDataOutput out = new MemoryDataOutput(64);
 
     protected Object message;
     protected boolean changed = false;

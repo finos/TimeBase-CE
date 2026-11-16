@@ -33,7 +33,7 @@ public class Instance {
     private int offset = NULL;
     private int typeId = NULL_TYPE;
 
-    private final MemoryDataOutput out = new MemoryDataOutput();
+    private final MemoryDataOutput out = new MemoryDataOutput(64);
 
     public Instance() {
     }

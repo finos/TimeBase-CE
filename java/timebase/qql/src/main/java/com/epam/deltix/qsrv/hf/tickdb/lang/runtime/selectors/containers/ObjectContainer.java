@@ -38,7 +38,7 @@ public class ObjectContainer<T> extends Instance {
     protected final BoundDecoder decoder;
     protected final FixedBoundEncoder encoder;
     protected final MemoryDataInput in = new MemoryDataInput();
-    protected final MemoryDataOutput out = new MemoryDataOutput();
+    protected final MemoryDataOutput out = new MemoryDataOutput(64);
 
     protected T message;
     protected boolean changed = false;

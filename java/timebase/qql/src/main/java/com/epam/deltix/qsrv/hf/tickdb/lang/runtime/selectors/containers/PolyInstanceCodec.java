@@ -27,13 +27,14 @@ import com.epam.deltix.qsrv.hf.pub.md.RecordClassDescriptor;
 import com.epam.deltix.util.memory.MemoryDataInput;
 import com.epam.deltix.util.memory.MemoryDataOutput;
 
+import java.util.Arrays;
+
 public class PolyInstanceCodec {
 
     private static final CodecFactory COMPILED_FACTORY = CodecFactory.newCompiledCachingFactory();
     private static final Introspector INTROSPECTOR = Introspector.createEmptyMessageIntrospector();
 
     private final Class<?>[] classes;
-    private final RecordTypeMap<Class<?>> classToTypeId;
     private final TypeLoader typeLoader;
     private final BoundDecoder[] decoders;
     private final FixedBoundEncoder[] encoders;
@@ -41,9 +42,12 @@ public class PolyInstanceCodec {
     private RecordClassDescriptor[] descriptors;
 
     public PolyInstanceCodec(Class<?> ... classes) {
+        if (classes.length > 256) {
+            throw new IllegalArgumentException("Too many classes: " + classes.length + " (max 256)");
+        }
+
         this.classes = classes;
         this.typeLoader = new TypeLoaderImpl(Thread.currentThread().getContextClassLoader());
-        this.classToTypeId = new RecordTypeMap<>(classes);
         this.decoders = new BoundDecoder[classes.length];
         this.encoders = new FixedBoundEncoder[classes.length];
     }
@@ -56,9 +60,21 @@ public class PolyInstanceCodec {
     }
 
     public int encode(Object object, MemoryDataOutput out) {
-        int typeId = classToTypeId.getCode(object.getClass());
+        int typeId = getCode(object.getClass());
         encoder(typeId).encode(object, out);
         return typeId;
+    }
+
+    private int getCode(Class<?> type) {
+        for (int code = 0; code < classes.length; code++) {
+            if (type.equals(classes[code])) {
+                return code;
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "Message type [" + type + "] is not allowed. Expected: " + Arrays.toString(classes)
+        );
     }
 
     private BoundDecoder decoder(int typeId) {

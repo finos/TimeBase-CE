@@ -40,7 +40,7 @@ public class PolyArrayCodec {
     private final TypeLoader typeLoader;
     private final RecordClassDescriptor[] descriptors;
 
-    private final MemoryDataOutput temp = new MemoryDataOutput();
+    private final MemoryDataOutput temp = new MemoryDataOutput(64);
 
     private PolyBoundEncoder encoder;
     private final BoundExternalDecoder[] decoders;

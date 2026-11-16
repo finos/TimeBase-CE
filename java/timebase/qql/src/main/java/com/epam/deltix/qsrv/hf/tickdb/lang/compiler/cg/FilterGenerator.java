@@ -399,7 +399,7 @@ class FilterGenerator {
 
         // generate encoder code
         if (selector != null) {
-            JInitMemberVariable mdoVar = generateVar(stateClass, MemoryDataOutput.class, "out");
+            JInitMemberVariable mdoVar = generateVar(stateClass, MemoryDataOutput.class, "out", CTXT.intLiteral(128));
             JExpr outMsgInState = msgVar.access();
             JExpr mdoAccess = mdoVar.access(typedState);
             JMethod getOut = stateClass.addMethod(PROTECTED, MemoryDataOutput.class, "getOut");
@@ -461,7 +461,7 @@ class FilterGenerator {
             generateSymbolInit(symbolInit, outMsgInFilter);
             //generateInstrumentTypeInit(typeInit, outMsgInFilter);
 
-            JInitMemberVariable mdoVar = generateVar(stateClass, MemoryDataOutput.class, "out");
+            JInitMemberVariable mdoVar = generateVar(stateClass, MemoryDataOutput.class, "out", CTXT.intLiteral(128));
             JExpr outMsgInState = msgVar.access();
             JMethod getLastMessage = stateClass.addMethod (Modifier.PROTECTED, RawMessage.class, "getLastMessage");
             getLastMessage.addAnnotation(CTXT.annotation(Override.class));

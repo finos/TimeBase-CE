@@ -31,7 +31,7 @@ public abstract class BaseInstanceArray<V, T extends List<V>> extends Instance i
 
     protected final T tempArray;
     protected final MemoryDataInput in = new MemoryDataInput();
-    protected final MemoryDataOutput out = new MemoryDataOutput();
+    protected final MemoryDataOutput out = new MemoryDataOutput(64);
 
     protected T array;
     protected boolean changed = false;

@@ -5,7 +5,19 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.owasp:dependency-check-gradle:8.1.2'
+        classpath 'org.owasp:dependency-check-gradle:10.0.3'
+    }
+    configurations.classpath {
+        resolutionStrategy {
+            // Guava 32.1+ has Gradle module metadata that Gradle 6.x cannot resolve (needs Gradle 7+)
+            force 'com.google.guava:guava:32.0.1-jre'
+            // Gradle 6.x ASM can't instrument multi-release jars with Java 17+ classes (jackson 2.15+ has them)
+            eachDependency { d ->
+                if (d.requested.group.startsWith('com.fasterxml.jackson')) {
+                    d.useVersion '2.13.5'
+                }
+            }
+        }
     }
 }
 
@@ -45,9 +57,26 @@ allprojects {
             failBuildOnCVSS = 7
         }
         skipProjects = [ ":java:installer"]
-        suppressionFile = file("$rootDir/dependency-check-suppression-file.xml")
+        // Override with -PsuppressionFile=path to try another suppression file; -PdcOut=dir to change report directory
+        suppressionFile = file(findProperty('suppressionFile') ?: "$rootDir/dependency-check-suppression-file.xml")
+        if (findProperty('dcOut')) {
+            outputDirectory = file(findProperty('dcOut')).absolutePath + '/' + project.path.replace(':', '_')
+        }
+        // NVD API key (https://nvd.nist.gov/developers/request-an-api-key). Do NOT commit it.
+        // Pass it with -PNVD_API_KEY=... or env NVD_API_KEY. Without key the NVD download is very slow.
+        def nvdKey = findProperty('NVD_API_KEY') ?: System.getenv('NVD_API_KEY')
+        // Note: plugin is written in newer Groovy than Gradle 6.x has, so DSL closures (nvd {}, data {}) fail.
+        // Explicit setter calls work.
+        nvd.setApiKey(nvdKey ?: null)
+        nvd.setDelay(nvdKey ? 1500 : 8000) // ms between NVD API requests (avoid HTTP 403/429)
+        data.setDirectory(file("$rootDir/nvddata").absolutePath) // cache of the vulnerability database
+        scanConfigurations = ['runtimeClasspath']
         analyzers {
             assemblyEnabled = false
+            nodeAuditEnabled = false
+            ossIndex {
+                enabled = false
+            }
         }
     }
 }

@@ -58,7 +58,7 @@ dependencies {
 
     implementation group: 'org.ehcache', name: 'ehcache', version: '3.9.3'
 
-    implementation 'org.lz4:lz4-java:1.8.0' // LZH codec
+    implementation 'at.yawk.lz4:lz4-java:1.14.1' // LZH codec
     implementation 'org.xerial.snappy:snappy-java'
 
     //implementation('org.glassfish:javax.json')

@@ -12,10 +12,9 @@ import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.binder.system.UptimeMetrics;
 import io.micrometer.core.instrument.binder.tomcat.TomcatMetrics;
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.exporter.common.TextFormat;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 
 import java.util.function.ToDoubleFunction;
 
@@ -34,6 +33,8 @@ public class MetricsService implements Disposable {
 
     private static final MetricsService INSTANCE = new MetricsService();
 
+    public static final String METRICS_FORMAT = "application/openmetrics-text; version=1.0.0; charset=utf-8";
+
     public static MetricsService getInstance() {
         return INSTANCE;
     }
@@ -42,7 +43,7 @@ public class MetricsService implements Disposable {
         MetricsService metrics = getInstance();
         if (metrics.registry == null) {
             metrics.registry = new PrometheusMeterRegistry(
-                PrometheusConfig.DEFAULT, CollectorRegistry.defaultRegistry,
+                PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry,
                 new Clock() {
                     @Override
                     public long wallTime() {
@@ -107,7 +108,7 @@ public class MetricsService implements Disposable {
 
     public String scrape() {
         checkIsNotConfigured();
-        return registry.scrape(TextFormat.CONTENT_TYPE_OPENMETRICS_100);
+        return registry.scrape(METRICS_FORMAT);
     }
 
     private void checkIsNotConfigured() {

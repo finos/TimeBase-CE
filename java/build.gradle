@@ -276,7 +276,7 @@ configure(leafProjects) {
                 entry 'parquet-hadoop'
             }
 
-            dependencySet(group: 'org.bouncycastle', version: '1.68') {
+            dependencySet(group: 'org.bouncycastle', version: '1.85') {
                 entry 'bcpkix-jdk15on'
                 entry 'bcprov-jdk15on'
                 entry 'bcprov-ext-jdk15on'
@@ -322,8 +322,8 @@ configure(leafProjects) {
 
             dependency 'net.java.dev.jna:jna-platform:5.6.0' // azure sdk requires jna 5.6.0
 
-            dependency 'io.micrometer:micrometer-core:1.12.13'
-            dependency 'io.micrometer:micrometer-registry-prometheus:1.12.13'
+            dependency 'io.micrometer:micrometer-core:1.15.12'
+            dependency 'io.micrometer:micrometer-registry-prometheus:1.15.12'
         }
     }
 

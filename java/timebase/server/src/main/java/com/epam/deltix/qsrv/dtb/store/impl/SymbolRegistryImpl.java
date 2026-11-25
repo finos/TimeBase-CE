@@ -354,11 +354,25 @@ public class SymbolRegistryImpl implements SymbolRegistry {
         isDirty = false;
 
         // try to restore symbols from temp path
+        CharSequenceToIntegerMap            tempSymbolToIdMap = null;
+        ObjectArrayList <SymbolEntry>       tempSymbols = null;
+
         AbstractPath tmpFile = folder.append(TSNames.TMP_PREFIX + TSNames.SYM_REGISTRY_NAME);
         if (tmpFile.exists()) {
             try {
-                loadData(tmpFile);
+                tempSymbols = new ObjectArrayList<>();
+                tempSymbolToIdMap = new CharSequenceToIntegerMap();
+
+                loadData(tmpFile, tempSymbols, tempSymbolToIdMap);
                 TreeOps.finalize(tmpFile);
+
+                // At this point we consider that the temp file is valid, and we can use it,
+                // and we do not need to check the main file (because we have just overridden it).
+
+                this.symbols = tempSymbols;
+                this.symbolToIdMap = tempSymbolToIdMap;
+                // We read all data from the temp file
+                return true;
             } catch (IOException ex) {
                 format();
                 LOGGER.info("Skipping invalid temp file: %s").with(tmpFile);
@@ -367,7 +381,12 @@ public class SymbolRegistryImpl implements SymbolRegistry {
 
         AbstractPath        fp = folder.append (TSNames.SYM_REGISTRY_NAME);
         if (fp.exists()) {
-            loadData(fp);
+            loadData(fp, symbols, symbolToIdMap);
+
+            if (tempSymbols != null) {
+                // This means that we read some data from the tmp.file but encountered an exception.
+                compareDataWithTempData(tempSymbols, tempSymbolToIdMap, tmpFile);
+            }
         } else {
             fp = folder.append("symbols.txt");
             if (fp.exists())
@@ -377,13 +396,37 @@ public class SymbolRegistryImpl implements SymbolRegistry {
         return fp.exists();
     }
 
-    synchronized void               loadData (AbstractPath fp)
+    /**
+     * It's possible that the temp file has more data than the main file.
+     * Here we decide what data to use by checking the max index value.
+     */
+    private void compareDataWithTempData(ObjectArrayList<SymbolEntry> tempSymbols,
+                                         CharSequenceToIntegerMap tempSymbolToIdMap,
+                                         AbstractPath tmpFile) {
+
+        int mainSize = symbols.size();
+        int tempSize = tempSymbols.size();
+        int maxMainIndex = mainSize > 0 ? symbols.get(mainSize - 1).index : -1;
+        int maxTempIndex = tempSize > 0 ? tempSymbols.get(tempSize - 1).index : -1;
+        if (maxTempIndex > maxMainIndex) {
+            // We have more data in the temp file, so we use it
+            this.symbols = tempSymbols;
+            this.symbolToIdMap = tempSymbolToIdMap;
+            LOGGER.info("Using data from a partial temp file: %s. Symbols in main file: size=%s, maxIndex=%s; symbols in temp file: size=%s, maxIndex=%s")
+                    .with(tmpFile)
+                    .with(mainSize)
+                    .with(maxMainIndex)
+                    .with(tempSize)
+                    .with(maxTempIndex);
+        }
+    }
+
+    private synchronized void       loadData (AbstractPath fp, ObjectArrayList<SymbolEntry> outSymbols, CharSequenceToIntegerMap outSymbolToIdMap)
             throws IOException
     {
-
-        try (InputStream    is = fp.openInput (0)) {
-            DataInputStream     dis = new DataInputStream (BufferedStreamUtil.wrapWithBuffered(is));
-
+        try (InputStream    is = fp.openInput (0);
+             DataInputStream dis = new DataInputStream (BufferedStreamUtil.wrapWithBuffered(is))
+        ) {
             int version = dis.readInt();
 
             assert version == VERSION;
@@ -399,10 +442,24 @@ public class SymbolRegistryImpl implements SymbolRegistry {
                 if ("<NULL>".equals(data))
                     data = null;
 
-                symbols.add (new SymbolEntry(name, data, index, active));
-                symbolToIdMap.put (name, index);
+                outSymbols.add (new SymbolEntry(name, data, index, active));
+                outSymbolToIdMap.put (name, index);
 
                 assert i == index;
+            }
+
+            // Verify if we have duplicate symbols in loaded data
+            int listSize = outSymbols.size();
+            int mapSize = outSymbolToIdMap.size();
+
+            // Fail here if assertions are enabled
+            assert listSize == mapSize : "Symbol registry size mismatch: symbols.size=" + listSize + " vs symbolToIdMap.size=" + mapSize;
+
+            //noinspection ConstantValue
+            if (listSize != mapSize) {
+                LOGGER.warn("Symbol registry size mismatch: symbols.size=%s vs symbolToIdMap.size=%s")
+                        .with(listSize)
+                        .with(mapSize);
             }
         }
     }
@@ -450,8 +507,9 @@ public class SymbolRegistryImpl implements SymbolRegistry {
         if (LOGGER.isDebugEnabled())
             LOGGER.debug().append("Storing symbol registry: ").append(tmp.getPathString()).commit();
 
-        try (OutputStream os = new BufferedOutputStream(tmp.openOutput(0))) {
-            DataOutputStream out = new DataOutputStream(os);
+        try (OutputStream os = new BufferedOutputStream(tmp.openOutput(0));
+             DataOutputStream out = new DataOutputStream(os)
+        ) {
             out.writeInt(VERSION);
 
             int n = symbols.size();

@@ -2,6 +2,8 @@ name: Build CI
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # nightly run of long tests (see "long-tests" job)
   push:
     branches: [main*]
   pull_request:
@@ -14,7 +16,9 @@ env:
 jobs:
   build:
     name: Build Java ${{ matrix.java }} (${{ matrix.os }})
+    if: github.event_name != 'schedule'
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -64,17 +68,56 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM'    
       - name: Run tests
+        timeout-minutes: 60
         run: ./gradlew junitTest
       - name: Upload test results
-        if: ${{ failure() }}
+        # always(): the report is needed for failures, hangs and cancellations (timeout) as well
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           path: build/reports/junit
           name: Test Report
+          if-no-files-found: ignore
+
+  long-tests:
+    # Long-running tests (@Category(Long.class): throughput benchmarks etc.). Not executed on push/PR.
+    name: Long tests
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Cache gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-caches-
+      - name: Setup java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      - name: Run long tests
+        timeout-minutes: 75
+        run: ./gradlew junitLongTest
+      - name: Upload long test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          path: build/reports/junit-long
+          name: Long Test Report
+          if-no-files-found: ignore
 
   build-installer:
     name: Build Windows and Linux TimeBase Installer (Java version ${{ matrix.java }} (${{ matrix.os }}))
+    if: github.event_name != 'schedule'
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:

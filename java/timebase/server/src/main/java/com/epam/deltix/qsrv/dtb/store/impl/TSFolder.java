@@ -212,6 +212,13 @@ abstract class TSFolder extends TSFolderEntry {
     }
 
     void                            format() {
+        format(true);
+    }
+
+    /**
+     * @param removeFilesFromWriteQueue may be set to false if write queue is already cleared by the caller
+     */
+    void                            format(boolean removeFilesFromWriteQueue) {
         assert root.currentThreadHoldsWriteLock ();
 
         isDirty = false;
@@ -220,10 +227,12 @@ abstract class TSFolder extends TSFolderEntry {
             TSFolderEntry e = children.get(i);
 
             if (e instanceof TSFolder) {
-                ((TSFolder) e).format();
+                ((TSFolder) e).format(removeFilesFromWriteQueue);
             } else if (e instanceof TSFile) {
                 TSFile file = (TSFile) e;
-                root.getCache().removeFromWriteQueue(file);
+                if (removeFilesFromWriteQueue) {
+                    root.getCache().removeFromWriteQueue(file);
+                }
                 file.deactivate();
             }
             e.destroy(true);

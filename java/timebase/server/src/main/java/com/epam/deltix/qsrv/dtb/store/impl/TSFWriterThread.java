@@ -48,41 +48,58 @@ class TSFWriterThread extends Thread {
 
         try {
             for (;;) {
-                boolean logThisOne = LOGGER.isDebugEnabled();
-
-                final TSFile          tsf = pds.getTSFToWrite (index);
-                final TSRootFolder    root = tsf.root;
-
-                if (!StringUtils.equals(root.getCompression(), compression)) {
-                    compression = root.getCompression();
-                    compressor = root.createCompressor(buffer);
-                }
-
-                // file destroyed
-                if (tsf.getState() == null) {
-                    LOGGER.warn().append("File was closed: ").append(tsf).commit();
-                    pds.fileHasFailed(tsf, null);
-                    continue;
-                }
-
-                boolean lockAcquired = false;
-
+                var task = pds.pollNextWriteTask();
                 try {
-                    // should be under try/catch to not crash WriterThread
-                    try {
-                        lockAcquired = root.acquireSharedLock();
-                    } catch (IllegalStateException ex) {
-                        // root is invalid
-                        LOGGER.warn().append("Cannot get lock on ").append(root).commit();
-                        continue;
-                    }
+                    processFile(task.file);
+                } finally {
+                    pds.completeWriteTask(task);
+                }
+            }
+        } catch (InterruptedException x) {
+            LOGGER.debug().append(getName()).append(" is interrupted. Terminating.").commit();
+        } catch (Throwable x) {
+            LOGGER.error().append(getName()).append(" is crashed.").append(x).commit();
+            pds.writerFailed(this);
+        }
+    }
 
-                    // if file was checked out again, it's fine to store it assuming we have locks on method
-                    // DataAccessorBase.getBlockLink(int, long) and data won't be corrupted
+    private void processFile(TSFile tsf) {
+        boolean logThisOne = LOGGER.isDebugEnabled();
 
-                    if (tsf.getState() == TSFState.DIRTY_CHECKED_OUT) {
-                        LOGGER.info().append("Storing ").append(tsf).append(" with DIRTY_CHECKED_OUT state." ).commit();
-                    }
+        final TSRootFolder root = tsf.root;
+
+        String rootCompression = root.getCompression();
+        if (!StringUtils.equals(rootCompression, compression)) {
+            compression = rootCompression;
+            compressor = root.createCompressor(buffer);
+        }
+
+        // file destroyed
+        if (tsf.getState() == null) {
+            LOGGER.warn().append("File was closed: ").append(tsf).commit();
+            pds.fileHasFailed(tsf, null);
+            return;
+        }
+
+        boolean lockAcquired = false;
+
+        try {
+            // should be under try/catch to not crash WriterThread
+            try {
+                lockAcquired = root.acquireSharedLock();
+            } catch (IllegalStateException ex) {
+                // root is invalid
+                LOGGER.warn().append("Cannot get lock on ").append(root).commit();
+                pds.fileHasFailed(tsf, ex);
+                return;
+            }
+
+            // if file was checked out again, it's fine to store it assuming we have locks on method
+            // DataAccessorBase.getBlockLink(int, long) and data won't be corrupted
+
+            if (tsf.getState() == TSFState.DIRTY_CHECKED_OUT) {
+                LOGGER.info().append("Storing ").append(tsf).append(" with DIRTY_CHECKED_OUT state.").commit();
+            }
 
 //                    if (tsf.getState() == TSFState.DIRTY_CHECKED_OUT) {
 //                        pds.fileWasStored(tsf);
@@ -92,49 +109,53 @@ class TSFWriterThread extends Thread {
 //                        LOGGER.warn().append("Storing ").append(tsf).append(" with wrong state: ").append(tsf.getState()).commit();
 //                    }
 
-                    root.storeAdditionalDirtyData ();
-                    TreeOps.storeIndexFile(tsf.getParent());
+            root.storeAdditionalDirtyData();
+            TreeOps.storeIndexFile(tsf.getParent());
 
-                    if (tsf.isDropped()) {
-                        if (logThisOne)
-                            LOGGER.debug().append("Dropping ").append(tsf.getPath().getPathString()).append(" ...").commit();
+            if (tsf.isDropped()) {
+                if (logThisOne)
+                    LOGGER.debug().append("Dropping ").append(tsf.getPath().getPathString()).append(" ...").commit();
 
-                        // finalize index before deleting file, while folder is still "used"
-                        TreeOps.finalizeIndex(tsf.getParent());
+                // finalize index before deleting file, while folder is still "used"
+                TreeOps.finalizeIndex(tsf.getParent());
 
-                        // delete file, because we can have last usage here
-                        TreeOps.tryDrop(tsf);
+                // delete file, because we can have last usage here
+                TreeOps.tryDrop(tsf);
 
-                        pds.fileWasDropped (tsf);
-                    } else {
-                        if (logThisOne)
-                            LOGGER.debug().append("Storing ").append(tsf).append(" ...").commit();
+                pds.fileWasDropped(tsf);
+            } else {
+                if (logThisOne)
+                    LOGGER.debug().append("Storing ").append(tsf).append(" ...").commit();
 
-                        if (tsf.store(compressor)) {
-                            if (logThisOne)
-                                LOGGER.debug().append(tsf).append(" was stored [").append(tsf.getState()).append("]").commit();
-                        } else {
-                            if (logThisOne)
-                                LOGGER.debug().append(tsf).append(" wasn't stored [").append(tsf.getState()).append("]").commit();
-                        }
-
-                        // finalize index in any case
-                        TreeOps.finalizeIndex(tsf.getParent());
-
-                        pds.fileWasStored(tsf);
-                    }
-                } catch (Throwable x) {
-                    pds.fileHasFailed (tsf, x);
-                } finally {
-                    if (lockAcquired)
-                        root.releaseSharedLock ();
+                if (tsf.store(compressor)) {
+                    if (logThisOne)
+                        LOGGER.debug().append(tsf).append(" was stored [").append(tsf.getState()).append("]").commit();
+                } else {
+                    if (logThisOne)
+                        LOGGER.debug().append(tsf).append(" wasn't stored [").append(tsf.getState()).append("]").commit();
                 }
+
+                // finalize index in any case
+                TreeOps.finalizeIndex(tsf.getParent());
+
+                pds.fileWasStored(tsf);
             }
-        } catch (InterruptedException x) {
-            LOGGER.debug().append(getName()).append(" is interrupted. Terminating.").commit();
         } catch (Throwable x) {
-            LOGGER.error().append(getName()).append(" is crashed.").append(x).commit();
-            pds.writerFailed(this);
+            pds.fileHasFailed(tsf, x);
+            // TODO: Do not swallow Throwable, we have to propagate major errors
+            if (x instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+        } finally {
+            if (lockAcquired)
+                root.releaseSharedLock();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "TSFWriterThread{" +
+                "index=" + index +
+                '}';
     }
 }

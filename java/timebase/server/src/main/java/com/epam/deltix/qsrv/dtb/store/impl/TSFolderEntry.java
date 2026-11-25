@@ -16,6 +16,7 @@
  */
 package com.epam.deltix.qsrv.dtb.store.impl;
 
+import com.epam.deltix.qsrv.dtb.store.pub.TSRoot;
 import com.epam.deltix.gflog.api.*;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 import com.epam.deltix.util.lang.MathUtil;
@@ -37,6 +38,14 @@ abstract class TSFolderEntry
     private static final int        DESTROYED = -199;
     
     protected final TSRootFolder    root;
+
+    /**
+     * Returns the root of this entry. Package-private accessor (instead of direct field access)
+     * to make it possible to mock {@link TSFile} in unit tests.
+     */
+    TSRoot                          getRoot() {
+        return root;
+    }
 
     // Structure version on which this file were created, changes or deleted
     // also stored in index file to recover from any errors

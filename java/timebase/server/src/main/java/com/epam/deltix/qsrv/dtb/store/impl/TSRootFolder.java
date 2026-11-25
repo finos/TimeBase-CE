@@ -117,9 +117,8 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
         acquireWriteLock();
         try {
-            isOpen = false;
-
             super.format();
+            forceClose();
             FSUtils.removeRecursive(getPath(), true, null);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
@@ -136,7 +135,10 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         acquireWriteLock();
 
         try {
-            super.format();
+            // Remove all files for the entire root from the WriteQueue to avoid ineffectively removing them one by one
+            root.getCache().removeRootFromWriteQueue(root);
+            super.format(false);
+
             FSUtils.removeRecursive(getPath(), false, null);
 
             use(this);
@@ -498,7 +500,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
                         break;
 
                     // should be out of structure lock
-                    getCache().checkWriteQueueLimit(getMaxFileSize());
+                    getCache().checkWriteQueueLimit();
 
                     locked = acquireWriteLock();
 
@@ -667,8 +669,6 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             long timestamp,
             EntityFilter filter
     ) {
-        // check that we have enough memory
-        root.getCache().checkWriteQueueLimit(root.getMaxFileSize());
 
         acquireSharedLock();
 
@@ -747,10 +747,11 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     }
 
     @Override
-    public TimeSlice checkOutTimeSliceForInsert(
-            DAPrivate accessor,
-            long timestamp
-    ) {
+    public TimeSlice checkOutTimeSliceForInsert(DAPrivate accessor, long timestamp) {
+
+        // check that we have enough memory. should be out of 'write lock'
+        root.getCache().checkWriteQueueLimit();
+
         acquireWriteLock();
 
         TSFile tsf;

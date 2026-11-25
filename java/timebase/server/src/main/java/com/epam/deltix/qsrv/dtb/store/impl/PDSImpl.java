@@ -69,7 +69,10 @@ class PDSImpl implements PersistentDataStore {
     //private final ObjectArrayList <TSFile>  dirtyFiles = new ObjectArrayList <> ();
     private int                             numWriters = NUMBER_OF_WRITERS;
     private final List<TSFWriterThread>     writers = new ObjectArrayList<>(numWriters);
-    private final WriteQueue                queue = new WriteQueue(numWriters);
+    private final WriteQueue                queue = new WriteQueue();
+
+    // future allocations - not included into write queue yet
+    private final AtomicLong                pendingAllocations = new AtomicLong(0);
 
     private final Object                    cleanLock = new Object ();
     private int                             numDirtyFiles = 0;
@@ -198,19 +201,51 @@ class PDSImpl implements PersistentDataStore {
                     try {
                         cleanLock.wait(ttw);
                     } catch (InterruptedException x) {
+                        Thread.currentThread().interrupt();
                         throw new UncheckedInterruptedException(x);
                     }
                 }
             }
         } finally {
-            assert queue.getUsedMemory() == 0 : "Remains: " + queue.getUsedMemory();
+            assert getUsedMemoryForAssert() == 0 : "Allocated memory is not 0, remains: " + getUsedMemoryForAssert() + " bytes.";
         }
     }
 
-    void             checkWriteQueueLimit (long maxFileSize) {
+    /**
+     * Reserves memory for a pending file allocation.
+     * The reserved memory must be released by calling {@link #releaseAllocation(long)}
+     * when the file is added to the write queue to avoid double calculations.
+     *
+     * @param size The size to reserve
+     */
+    void            reserveAllocation(long size) {
+        pendingAllocations.addAndGet(size);
+    }
+
+    /**
+     * Releases previously reserved memory.
+     * @param size The size to release
+     */
+    void            releaseAllocation(long size) {
+        pendingAllocations.addAndGet(-size);
+        assert pendingAllocations.get() >= 0;
+    }
+
+    private long        getUsedMemoryForAssert() {
+        // We check for queue memory instead of total memory because it's possible that processing
+        //  is almost complete and numDirtyFiles == 0 but processing is not marked as finished, so queue.getUsedTotalMemory() > 0
+        return queue.getUsedQueueMemory() + pendingAllocations.get();
+    }
+
+    private long        getUsedMemory() {
+        return queue.getUsedTotalMemory() + pendingAllocations.get();
+    }
+
+    void             checkWriteQueueLimit () {
+
         boolean logged = false;
 
-        long usedMemory = queue.getUsedMemory();
+        long usedMemory = getUsedMemory();
         if (usedMemory < RUNTIME.maxMemory() * ALLOCATED_MEMORY_RATIO / 100.0)
             return;
 
@@ -220,19 +255,22 @@ class PDSImpl implements PersistentDataStore {
                 if (numDirtyFiles == 0)
                     return;
 
-                usedMemory = queue.getUsedMemory();
-                if (usedMemory < RUNTIME.maxMemory() * ALLOCATED_MEMORY_RATIO / 100.0)
+                usedMemory = getUsedMemory();
+                double capacity = RUNTIME.maxMemory() * ALLOCATED_MEMORY_RATIO / 100.0;
+                if (usedMemory < capacity)
                     return;
 
                 try {
                     if (!logged) {
                         long freeMemory = RUNTIME.maxMemory() - RUNTIME.totalMemory() + RUNTIME.freeMemory();
-                        LOGGER.warn("Low available memory: %s bytes. Write Queue size = %s. Waiting ... ").with(freeMemory).with(numDirtyFiles);
+                        LOGGER.warn("Low available memory in WriteQueue. Used %s of %s bytes. Files: %s. Waiting ... ").
+                                with(usedMemory).with((long)capacity).with(numDirtyFiles);
                         logged = true;
                     }
 
                     cleanLock.wait (5000);
                 } catch (InterruptedException x) {
+                    Thread.currentThread().interrupt();
                     throw new UncheckedInterruptedException (x);
                 }
             }
@@ -257,6 +295,7 @@ class PDSImpl implements PersistentDataStore {
                 try {
                     wt.join (ttw);
                 } catch (InterruptedException x) {
+                    Thread.currentThread().interrupt();
                     throw new UncheckedInterruptedException (x);
                 }
             }
@@ -352,6 +391,18 @@ class PDSImpl implements PersistentDataStore {
         return removed;
     }
 
+    /**
+     * Removes all files of the root from write queue.
+     */
+    void removeRootFromWriteQueue(TSRoot root) {
+        List<TSFile> removedFiles = queue.removeRoot(root);
+        synchronized (cleanLock) {
+            numDirtyFiles -= removedFiles.size();
+            updateDirtyFilesGauge();
+            cleanLock.notifyAll();
+        }
+    }
+
     void                    fileWasCheckedInClean (TSFile tsf) {
     }
 
@@ -369,7 +420,7 @@ class PDSImpl implements PersistentDataStore {
                         queue.addFailed(tsf);
                     } else {
                         // Add it into regular list to avoid a situation when high writer load effectively prevents re-processing the file at all
-                        queue.add(tsf);
+                        addToQueue(tsf);
                     }
                 } else {
                     discardFile = true;
@@ -454,7 +505,7 @@ class PDSImpl implements PersistentDataStore {
                 throw new IllegalStateException ("This PDS is running in read-only mode");
         }
 
-        maxFileSize = Math.max(maxFileSize, tsf.getUncompressedSize());
+        //maxFileSize = Math.max(maxFileSize, tsf.getUncompressedSize());
 
         assert !queue.contains(tsf);
 
@@ -465,15 +516,24 @@ class PDSImpl implements PersistentDataStore {
         }
         assert !queue.contains(tsf);
 
-        queue.add (tsf);
+        addToQueue(tsf);
 
         if (shutdownInProgress && LOGGER.isInfoEnabled()) {
             LOGGER.info("Added file to be saved during shutdown: %s").with(tsf.getPathString());
         }
     }
+
+    void                addToQueue(TSFile tsf) {
+        releaseAllocation(tsf.getAndClearPreAllocationSize());
+        queue.add (tsf);
+    }
     
-    TSFile                  getTSFToWrite (int index) throws InterruptedException {
-        return queue.poll(index);
+    WriteQueue.FileTask pollNextWriteTask() throws InterruptedException {
+        return queue.pollTask();
+    }
+
+    void completeWriteTask(WriteQueue.FileTask task) {
+        queue.reportTaskCompleted(task);
     }
 
     private void            checkIsStarted () throws IllegalStateException {

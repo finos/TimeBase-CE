@@ -11,8 +11,8 @@ dependencies {
     // todo: update version
     implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.1034'
 
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.5'
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.13.5'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.1'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.22.1'
 
     implementation 'de.undercouch:gradle-download-task:3.4.3'
     implementation 'org.json:json:20240303'

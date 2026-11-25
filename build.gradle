@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.owasp:dependency-check-gradle:10.0.3'
+        classpath 'org.owasp:dependency-check-gradle:13.0.0'
     }
 }
 
@@ -46,18 +46,20 @@ allprojects {
         }
         skipProjects = [ ":java:installer"]
         // Override with -PsuppressionFile=path to try another suppression file; -PdcOut=dir to change report directory
-        suppressionFile = file(findProperty('suppressionFile') ?: "$rootDir/dependency-check-suppression-file.xml")
+        suppressionFile = file(findProperty('suppressionFile') ?: "$rootDir/dependency-check-suppression-file.xml").absolutePath
         if (findProperty('dcOut')) {
             outputDirectory = file(findProperty('dcOut')).absolutePath + '/' + project.path.replace(':', '_')
         }
         // NVD API key (https://nvd.nist.gov/developers/request-an-api-key). Do NOT commit it.
         // Pass it with -PNVD_API_KEY=... or env NVD_API_KEY. Without key the NVD download is very slow.
         def nvdKey = findProperty('NVD_API_KEY') ?: System.getenv('NVD_API_KEY')
-        // Note: plugin is written in newer Groovy than Gradle 6.x has, so DSL closures (nvd {}, data {}) fail.
-        // Explicit setter calls work.
-        nvd.setApiKey(nvdKey ?: null)
-        nvd.setDelay(nvdKey ? 1500 : 8000) // ms between NVD API requests (avoid HTTP 403/429)
-        data.setDirectory(file("$rootDir/nvddata").absolutePath) // cache of the vulnerability database
+        nvd {
+            apiKey = nvdKey ?: null
+            delay = nvdKey ? 1500 : 8000 // ms between NVD API requests (avoid HTTP 403/429)
+        }
+        data {
+            directory = file("$rootDir/nvddata").absolutePath // cache of the vulnerability database
+        }
         scanConfigurations = ['runtimeClasspath']
         analyzers {
             assemblyEnabled = false

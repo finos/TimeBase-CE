@@ -16,7 +16,7 @@
  */
 package com.epam.deltix.qsrv.dtb.store.pub;
 
-public class EntityTimeRange extends TimeRange {
+public class EntityTimeRange extends TimeRangeNs {
 
     public EntityTimeRange(int entity) {
         this.entity = entity;

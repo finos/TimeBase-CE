@@ -22,7 +22,7 @@ import com.epam.deltix.qsrv.hf.tickdb.pub.lock.LockType;
 import com.epam.deltix.qsrv.hf.tickdb.pub.lock.WriteLockOptions;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.qsrv.hf.pub.TimeInterval;
-import com.epam.deltix.timebase.messages.TimeStamp;
+import com.epam.deltix.util.annotations.TimestampMs;
 import com.epam.deltix.qsrv.hf.pub.md.DataType;
 import com.epam.deltix.qsrv.hf.pub.md.RecordClassSet;
 import com.epam.deltix.qsrv.hf.pub.md.UHFJAXBContext;
@@ -484,7 +484,7 @@ public abstract class TDBProtocol extends SerializationUtils {
         }
     }
 
-    public static void                  writeTimeRange (long[] range, DataOutputStream out) throws IOException {
+    public static void                  writeTimeRange (@TimestampMs long[] range, DataOutputStream out) throws IOException {
         boolean isNull = (range == null);
         out.writeBoolean(isNull);
         if (!isNull) {
@@ -493,12 +493,12 @@ public abstract class TDBProtocol extends SerializationUtils {
         }
     }
 
-    public static void                  writeTimeRange (TimeInterval range, DataOutputStream out) throws IOException {
+    public static void                  writeTimeRange (@TimestampMs TimeInterval range, DataOutputStream out) throws IOException {
         boolean isNull = range == null || range.isUndefined();
         out.writeBoolean(isNull);
         if (!isNull) {
-            out.writeLong(TimeStamp.getMilliseconds(range.getFromTime()));
-            out.writeLong(TimeStamp.getMilliseconds(range.getToTime()));
+            out.writeLong(range.getFromTime());
+            out.writeLong(range.getToTime());
         }
     }
 
@@ -714,7 +714,7 @@ public abstract class TDBProtocol extends SerializationUtils {
 //                    }
 
                 writeIdentityKey(ids[i], out);
-                TimeInterval interval = intervals != null ? intervals[i] : null;
+                @TimestampMs TimeInterval interval = intervals != null ? intervals[i] : null;
                 writeTimeRange(interval, out);
 
                 if (interval != null && !interval.isUndefined())

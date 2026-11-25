@@ -20,6 +20,7 @@ import com.epam.deltix.data.stream.DXChannel;
 import com.epam.deltix.timebase.messages.IdentityKey;
 import com.epam.deltix.timebase.messages.InstrumentMessage;
 import com.epam.deltix.qsrv.hf.pub.TimeInterval;
+import com.epam.deltix.util.annotations.TimestampMs;
 import com.epam.deltix.qsrv.hf.pub.md.*;
 
 /**
@@ -189,22 +190,24 @@ public interface TickStream extends DXChannel<InstrumentMessage> {
     IdentityKey []                  listEntities();
     
     /**
-     *  Return an inclusive range of times for which the specified entities
+     *  Return an inclusive range of times (in milliseconds) for which the specified entities
      *  have data in the database.
      * 
      *  @param entities     A list of entities. If empty, return for all.
      *  @return             An array consisting of two long timestamps (from and to), 
      *                      or <code>null</code> if no data was found.
      */
+    @TimestampMs
     long []                          getTimeRange(IdentityKey... entities);
 
     /**
-     *  Return an range of times for which the specified entities
+     *  Return a range of times (in milliseconds) for which the specified entities
      *  have data in the database.
      *
      *  @param entities     A list of entities. If empty, return for each entity in the stream.
      *  @return             Array of TimeInterval objects for the specified entities.
      */
+    @TimestampMs
     TimeInterval[]                   listTimeRange(IdentityKey... entities);
 
     /**

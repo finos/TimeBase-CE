@@ -20,7 +20,7 @@ import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 import com.epam.deltix.qsrv.dtb.store.codecs.TSNames;
 import com.epam.deltix.qsrv.dtb.store.pub.SymbolRegistry;
-import com.epam.deltix.qsrv.dtb.store.pub.TimeRange;
+import com.epam.deltix.qsrv.dtb.store.pub.TimeRangeNs;
 import com.epam.deltix.util.collections.CharSequenceToIntegerMap;
 import com.epam.deltix.util.collections.generated.IntegerArrayList;
 import com.epam.deltix.util.collections.generated.ObjectArrayList;
@@ -69,7 +69,7 @@ public class SymbolRegistryImpl implements SymbolRegistry {
         boolean         active;
 
         // cached time range
-        TimeRange       range;
+        TimeRangeNs       range;
     }
 
     public SymbolRegistryImpl () {
@@ -214,12 +214,12 @@ public class SymbolRegistryImpl implements SymbolRegistry {
         isDirty = true;
     }
     
-    public synchronized void          setTimeRange (int id, TimeRange range) {
+    public synchronized void          setTimeRange (int id, TimeRangeNs range) {
         if (id >= 0 && id < symbols.size ())
             symbols.get(id).range = range;
     }
 
-    public synchronized TimeRange     getTimeRange (int id) {
+    public synchronized TimeRangeNs     getTimeRange (int id) {
         if (id < 0 || id >= symbols.size ())
             return (null);
 
@@ -230,15 +230,15 @@ public class SymbolRegistryImpl implements SymbolRegistry {
      * Returns global time range.
      * Return null, if at least one symbol range is not cached.
      */
-    public synchronized TimeRange     getTimeRange () {
+    public synchronized TimeRangeNs     getTimeRange () {
         assert symbols != null;
 
         int n = symbols.size();
 
-        TimeRange global = new TimeRange();
+        TimeRangeNs global = new TimeRangeNs();
 
         for (int id = 0; id < n; id++) {
-            TimeRange range = symbols.getObjectNoRangeCheck(id).range;
+            TimeRangeNs range = symbols.getObjectNoRangeCheck(id).range;
             if (range == null)
                 return null;
             else if (!range.isUndefined())

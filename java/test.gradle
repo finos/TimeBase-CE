@@ -99,10 +99,10 @@ configure(ext.leafProjects) {
 
             def projectDir = project.path.substring(6).replaceAll(':', '.')
             def reportSuffix = longTests ? "-long" : ""
-            reports.html.enabled = true
-            reports.html.setDestination(new File("$rootDir/build/reports/junit${reportSuffix}/html/${projectDir}"))
-            reports.junitXml.enabled = true
-            reports.junitXml.setDestination(new File("$rootDir/build/reports/junit${reportSuffix}/xml/${projectDir}"))
+            reports.html.required = true
+            reports.html.outputLocation.set(new File("$rootDir/build/reports/junit${reportSuffix}/html/${projectDir}"))
+            reports.junitXml.required = true
+            reports.junitXml.outputLocation.set(new File("$rootDir/build/reports/junit${reportSuffix}/xml/${projectDir}"))
 
             maxParallelForks = (Integer) forksToUse
             if (maxParallelForks > 1) {
@@ -137,7 +137,7 @@ configure(ext.leafProjects) {
             }
 
             doLast {
-                def xmlpath = reports.junitXml.destination
+                def xmlpath = reports.junitXml.outputLocation.get().asFile
                 copy {
                     from xmlpath include {"*.xml"}
                     into file("$rootDir/build/reports/junit${reportSuffix}/xml")
@@ -174,6 +174,6 @@ def testTasks = ext.leafProjects*.junitTest
 task generateTestReport(type: TestReport) {
     reportOn testTasks
     description "Executes tests for all Java projects and generates merged test report"
-    destinationDir = file("$rootDir/build/reports/junit/html/all_reports_merged") // TODO: Pick better name for merged report
+    destinationDirectory = file("$rootDir/build/reports/junit/html/all_reports_merged") // TODO: Pick better name for merged report
 }
 task allJunitTests(dependsOn: generateTestReport)

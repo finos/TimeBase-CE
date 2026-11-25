@@ -53,11 +53,11 @@ dependencies {
 task buildTestJar(type: Jar, dependsOn: testClasses) {
 
     description 'Generates JAR with test classes'
-    classifier 'tests'
+    archiveClassifier = 'tests'
     from sourceSets.test.output
 
     manifest {
-        attributes.putAt('Class-Path', configurations.testRuntime.collect {it.getName()}.join(' '))
+        attributes.putAt('Class-Path', configurations.testRuntimeClasspath.collect {it.getName()}.join(' '))
     }
 }
 

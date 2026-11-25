@@ -79,7 +79,7 @@ dependencies {
     testImplementation 'org.openjdk.jmh:jmh-core'
     testImplementation 'org.openjdk.jmh:jmh-generator-annprocess'
 
-    compile 'org.owasp.encoder:encoder'
+    implementation 'org.owasp.encoder:encoder'
 }
 
 // Docker
@@ -155,4 +155,9 @@ tasks.named('javadoc', Javadoc) {
     // which prevents incremental javadoc builds.
     dependsOn compileJava
     classpath = sourceSets.main.compileClasspath + compileJava.outputs.files
+}
+
+tasks.named('sourcesJar') {
+    // sources include generated-resources (copyMonitorWebapp)
+    dependsOn 'copyMonitorWebapp'
 }

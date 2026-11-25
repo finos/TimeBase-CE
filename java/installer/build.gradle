@@ -140,7 +140,7 @@ timebaseScripts.each() { row ->
     def startInNew = row[4]
 
     generateScriptsTimebase.dependsOn += tasks.create(name: 'make-' + script + '-installer-script', type: CreateStartScripts, dependsOn: tasks.getByPath(":java:build")) {
-        mainClassName = clazz
+        mainClass = clazz
         applicationName = script
 
         defaultJvmOpts = jvmOpts

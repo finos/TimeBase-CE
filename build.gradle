@@ -7,25 +7,13 @@ buildscript {
     dependencies {
         classpath 'org.owasp:dependency-check-gradle:10.0.3'
     }
-    configurations.classpath {
-        resolutionStrategy {
-            // Guava 32.1+ has Gradle module metadata that Gradle 6.x cannot resolve (needs Gradle 7+)
-            force 'com.google.guava:guava:32.0.1-jre'
-            // Gradle 6.x ASM can't instrument multi-release jars with Java 17+ classes (jackson 2.15+ has them)
-            eachDependency { d ->
-                if (d.requested.group.startsWith('com.fasterxml.jackson')) {
-                    d.useVersion '2.13.5'
-                }
-            }
-        }
-    }
 }
 
 plugins {
     id 'java-library'
     id 'base'
     id 'idea'
-    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
 //// Allows to use "--scan" option without manual interactive confirmation. So it can be used on CI.

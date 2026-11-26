@@ -1,9 +1,9 @@
 description = "Timebase JDBC API"
 
 dependencies {
-    compile project(':java:timebase:pub')
-    compile project(':java:timebase:client')
-    compile project(':java:timebase:api')
+    implementation project(':java:timebase:pub')
+    implementation project(':java:timebase:client')
+    implementation project(':java:timebase:api')
 
     implementation ('com.epam.deltix:timebase-lang')
     implementation ('com.epam.deltix:timebase-util')

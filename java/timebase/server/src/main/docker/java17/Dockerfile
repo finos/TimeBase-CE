@@ -1,4 +1,4 @@
-FROM amazoncorretto:17-alpine3.18
+FROM amazoncorretto:17-alpine3.24
 
 RUN addgroup -S deltix --gid 1666 && adduser -S deltix -G deltix -u 1666 && \
     mkdir -p /timebase-home && \

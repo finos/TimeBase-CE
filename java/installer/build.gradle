@@ -1,7 +1,7 @@
 import com.epam.deltix.gradle.tasks.installer.BuildTimebaseInstallerTask
 
 plugins {
-    id 'com.ullink.msbuild' version '3.12'
+    id 'com.ullink.msbuild' version '5.0'
 }
 
 apply from: "$rootDir/distribution/scripts.gradle"
@@ -116,7 +116,7 @@ task copyTimebaseJars
         mustRunAfter clean
         mustRunAfter ':clean' // Root clean
         from rootProject.project(projectName).configurations.runtimeClasspath
-        from projectJar
+        from rootProject.project(projectName).tasks.jar // task as source => implicit dependency on the jar task
         into generatedDir.absolutePath + '/lib'
         rename 'tools.*.jar', 'tools.jar'
     }
@@ -140,7 +140,7 @@ timebaseScripts.each() { row ->
     def startInNew = row[4]
 
     generateScriptsTimebase.dependsOn += tasks.create(name: 'make-' + script + '-installer-script', type: CreateStartScripts, dependsOn: tasks.getByPath(":java:build")) {
-        mainClassName = clazz
+        mainClass = clazz
         applicationName = script
 
         defaultJvmOpts = jvmOpts

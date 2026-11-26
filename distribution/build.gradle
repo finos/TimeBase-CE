@@ -42,7 +42,7 @@ ext.scripts.each() { row ->
 //        def windowsScriptText = windowsStartScriptGenerator.template.asString().replace('set CLASSPATH=$classpath', 'set CLASSPATH=$classpath;%APP_HOME%\\\\lib\\\\custom\\\\*')
 //        def unixScriptText = unixStartScriptGenerator.template.asString().replace('CLASSPATH=$classpath', 'CLASSPATH=$classpath:\\$APP_HOME/lib/custom/*')
 
-        mainClassName = clazz
+        mainClass = clazz
         applicationName = script
 
         defaultJvmOpts = jvmOpts
@@ -70,7 +70,7 @@ ext.scripts.each() { row ->
 //        def windowsScriptText = windowsStartScriptGenerator.template.asString().replace('set CLASSPATH=$classpath', 'set CLASSPATH=$classpath;%APP_HOME%\\\\lib\\\\custom\\\\*')
 //        def unixScriptText = unixStartScriptGenerator.template.asString().replace('CLASSPATH=$classpath', 'CLASSPATH=$classpath:\\$APP_HOME/lib/custom/*')
 
-        mainClassName = clazz
+        mainClass = clazz
         applicationName = script
 
         defaultJvmOpts = jvmOpts
@@ -144,9 +144,9 @@ task copyBins(type: Copy, dependsOn: renameFiles) {
 }
 
 task zip(type: Zip, dependsOn: [copyLibs, renameFiles]) {
-    baseName = 'deltix-quantserver'
-    version = project.version
-    destinationDir = distDirectory
+    archiveBaseName = 'deltix-quantserver'
+    archiveVersion = project.version
+    destinationDirectory = distDirectory
     fileMode = 0444
 
     from(tempDirectory) {

@@ -7,9 +7,9 @@ plugins {
     // Supports functionality similar to Maven BOM.
     // Helps to avoid re-declaring dependency version in each subproject.
     // See https://github.com/spring-gradle-plugins/dependency-management-plugin
-    id "io.spring.dependency-management" version "1.0.11.RELEASE"
-    id "com.github.spotbugs" version "4.2.3" apply false
-    id "com.github.hierynomus.license-report" version "0.15.0"
+    id "io.spring.dependency-management" version "1.1.7"
+    id "com.github.spotbugs" version "6.1.3" apply false
+    id "com.github.hierynomus.license-report" version "0.16.1"
 
     id 'com.github.jk1.dependency-license-report' version '1.17'
     id "com.vanniktech.dependency.graph.generator" version "0.5.0"
@@ -113,7 +113,7 @@ configure(leafProjects) {
     spotbugsMain {
         enabled = false
         reports {
-            html.enabled = true
+            html.required = true
         }
         reportLevel = "high"
     }
@@ -121,7 +121,7 @@ configure(leafProjects) {
     spotbugsTest {
         enabled = false
         reports {
-            html.enabled = true
+            html.required = true
         }
         reportLevel = "high"
     }
@@ -132,12 +132,13 @@ configure(leafProjects) {
     // https://github.com/spring-gradle-plugins/dependency-management-plugin#dependency-management-dsl
     dependencyManagement {
         imports {
-            mavenBom 'com.fasterxml.jackson:jackson-bom:2.13.5'
-            mavenBom 'io.netty:netty-bom:4.1.118.Final'
+            mavenBom 'org.junit:junit-bom:5.13.4'
+            mavenBom 'com.fasterxml.jackson:jackson-bom:2.22.4'
+            mavenBom 'io.netty:netty-bom:4.1.141.Final'
         }
 
         dependencies {
-            dependencySet(group: 'com.epam.deltix', version: '3.0.3') {
+            dependencySet(group: 'com.epam.deltix', version: "${gflogVersion}") {
                 entry 'gflog-api'
                 entry 'gflog-core'
                 entry 'gflog-jul'
@@ -166,7 +167,7 @@ configure(leafProjects) {
             dependency 'com.sun.activation:javax.activation:1.2.0'
             dependency 'javax.activation:javax.activation-api:1.2.0'
 
-            dependency 'com.google.guava:guava:32.0.1-jre'
+            dependency 'com.google.guava:guava:33.7.2-jre'
             dependency 'com.google.code.gson:gson:2.8.9'
             dependency 'com.google.code.findbugs:jsr305:3.0.2'
             dependency 'com.google.code.findbugs:annotations:3.0.1'
@@ -184,9 +185,9 @@ configure(leafProjects) {
 
             dependency 'org.codehaus.groovy:groovy:2.5.3'
 
-            dependency 'org.hdrhistogram:HdrHistogram:2.1.10'
+            dependency 'org.hdrhistogram:HdrHistogram:2.2.2'
 
-            dependencySet(group: 'com.amazonaws', version: '1.12.740') {
+            dependencySet(group: 'com.amazonaws', version: '1.12.797') {
                 entry 'aws-java-sdk-s3'
                 entry 'aws-java-sdk-core'
                 entry 'aws-java-sdk-sts'
@@ -202,7 +203,9 @@ configure(leafProjects) {
 
             dependency 'org.apache.tomcat.embed:tomcat-embed-logging-juli:8.5.2'
 
-            dependencySet(group: 'io.aeron', version: '1.38.1') {
+            // Aeron 1.46+ / Agrona 1.23+ require Java 17. Last Java 11 compatible: Aeron 1.45.x + Agrona 1.22.0
+            dependency 'org.agrona:agrona:1.22.0'
+            dependencySet(group: 'io.aeron', version: '1.45.2') {
                 entry 'aeron-client'
                 entry 'aeron-driver'
                 entry 'aeron-archive'
@@ -211,12 +214,12 @@ configure(leafProjects) {
             dependency 'com.lmax:disruptor:3.3.6'
 
             // JMH
-            dependencySet(group: 'org.openjdk.jmh', version: '1.23') {
+            dependencySet(group: 'org.openjdk.jmh', version: '1.37') {
                 entry 'jmh-core'
                 entry 'jmh-generator-annprocess'
             }
 
-            dependency 'org.jetbrains:annotations:24.1.0'
+            dependency 'org.jetbrains:annotations:26.0.2'
 
             // Fix for conflicting versions
             // This section enlists only dependencies that are not directly used by our code but used by our dependencies
@@ -227,15 +230,15 @@ configure(leafProjects) {
             dependency 'org.hamcrest:hamcrest-core:1.3'
 
             dependency 'commons-lang:commons-lang:2.6'
-            dependency 'commons-logging:commons-logging:1.1.1'
+            dependency 'commons-logging:commons-logging:1.3.5'
             dependency 'commons-collections:commons-collections:3.2.2'
-            dependency 'commons-io:commons-io:2.15.1'
-            dependency 'commons-codec:commons-codec:1.13'
-            dependency 'commons-net:commons-net:3.9.0'
+            dependency 'commons-io:commons-io:2.18.0'
+            dependency 'commons-codec:commons-codec:1.16.1'
+            dependency 'commons-net:commons-net:3.11.1'
 
-            dependency 'org.apache.commons:commons-compress:1.26.1'
-            dependency 'org.apache.commons:commons-lang3:3.7'
-            dependency 'org.apache.commons:commons-math3:3.6'
+            dependency 'org.apache.commons:commons-compress:1.28.0'
+            dependency 'org.apache.commons:commons-lang3:3.19.0'
+            dependency 'org.apache.commons:commons-math3:3.6.1'
             dependency 'org.apache.commons:commons-text:1.10.0'
 
             dependency 'org.reflections:reflections:0.9.11'
@@ -262,13 +265,6 @@ configure(leafProjects) {
 
             dependency 'org.objenesis:objenesis:2.2'
 
-            dependencySet(group: 'com.fasterxml.jackson.core', version: '2.13.5') {
-                entry 'jackson-core'
-                entry 'jackson-annotations'
-                entry 'jackson-databind'
-            }
-            dependency 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.5'
-
             dependencySet(group: 'com.squareup.okhttp3', version: '3.3.1') {
                 entry 'okhttp'
             }
@@ -280,16 +276,15 @@ configure(leafProjects) {
                 entry 'parquet-hadoop'
             }
 
-            dependencySet(group: 'org.bouncycastle', version: '1.68') {
-                entry 'bcpkix-jdk15on'
-                entry 'bcprov-jdk15on'
-                entry 'bcprov-ext-jdk15on'
-                entry 'bcmail-jdk15on'
+            dependencySet(group: 'org.bouncycastle', version: '1.85') {
+                entry 'bcpkix-jdk18on'
+                entry 'bcprov-jdk18on'
+                entry 'bcutil-jdk18on'
             }
 
             dependency 'log4j:log4j:1.2.17'
 
-            dependency 'javax.xml.bind:jaxb-api:2.2.8'
+            dependency 'javax.xml.bind:jaxb-api:2.3.1'
             dependency 'com.sun.xml.bind:jaxb-impl:2.3.0'
             dependency 'com.sun.xml.bind:jaxb-core:2.3.0'
 
@@ -297,14 +292,14 @@ configure(leafProjects) {
                 entry 'jackson-mapper-asl'
                 entry 'jackson-core-asl'
             }
-            dependency 'org.xerial.snappy:snappy-java:1.1.10.4'
+            dependency 'org.xerial.snappy:snappy-java:1.1.10.12'
             dependency 'org.slf4j:slf4j-log4j12:1.7.10'
 
             dependency 'com.sun.xml.bind:jaxb-impl:2.3.0'
 
             dependency "junit:junit:4.13.2"
 
-            dependency 'com.nimbusds:nimbus-jose-jwt:9.40'
+            dependency 'com.nimbusds:nimbus-jose-jwt:10.9'
 
             dependency 'org.apache.bcel:bcel:6.6.0'
 
@@ -312,12 +307,13 @@ configure(leafProjects) {
             dependency 'org.wildfly.openssl:wildfly-openssl-java:1.1.3.Final'
             // End of version conflict resolution
 
-            dependency 'com.azure:azure-core:1.49.1'
-            dependency 'com.azure:azure-core-http-netty:1.15.1'
-            dependency 'com.azure:azure-identity:1.12.2'
-            dependency 'com.azure:azure-security-keyvault-secrets:4.8.3'
+            dependency 'com.azure:azure-core:1.59.0'
+            dependency 'com.azure:azure-core-http-netty:1.16.8'
+            dependency 'com.azure:azure-identity:1.18.4'
+            dependency 'com.azure:azure-json:1.5.1'
+            dependency 'com.azure:azure-security-keyvault-secrets:4.11.2'
 
-            dependency 'com.microsoft.azure:msal4j:1.15.1'
+            dependency 'com.microsoft.azure:msal4j:1.22.0'
             dependency 'com.microsoft.azure:azure-data-lake-store-sdk:2.3.9'
             dependency 'net.minidev:json-smart:2.5.2'
 
@@ -325,7 +321,8 @@ configure(leafProjects) {
 
             dependency 'net.java.dev.jna:jna-platform:5.6.0' // azure sdk requires jna 5.6.0
 
-            dependency 'io.micrometer:micrometer-registry-prometheus:1.7.12'
+            dependency 'io.micrometer:micrometer-core:1.15.12'
+            dependency 'io.micrometer:micrometer-registry-prometheus:1.15.12'
         }
     }
 
@@ -358,11 +355,11 @@ configure(leafProjects) {
         testImplementation 'org.mockito:mockito-inline:4.11.0'
 
         testImplementation 'junit:junit'
-        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.12.2'
+        testImplementation 'org.junit.jupiter:junit-jupiter-api'
 
-        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.12.2'
-        testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.12.2'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+        testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 
     spotbugs {
@@ -374,7 +371,6 @@ configure(leafProjects) {
 
     jar {
         manifest {
-            baseName archivesBaseName
             description description
             attributes 'Manifest-Version': "1.0",
                     'Created-By': vendor,
@@ -437,7 +433,7 @@ configure(leafProjects) {
 
     task generateTestJar(type: Jar) {
         description 'Generates JAR with test classes'
-        classifier 'tests'
+        archiveClassifier = 'tests'
         from sourceSets.test.output
     }
 
@@ -450,9 +446,9 @@ configure(leafProjects) {
         into allTestJarsPath
     }
 
-    task logJars { doLast { configurations.compile.each { File file -> println '\t' + file.name } } }
-    task logJarFiles { doLast { configurations.compile.each { File file -> println '\t' + file } } }
-    task logTestJarsFiles { doLast { configurations.testCompile.each { File file -> println '\t' + file } } }
+    task logJars { doLast { configurations.runtimeClasspath.each { File file -> println '\t' + file.name } } }
+    task logJarFiles { doLast { configurations.runtimeClasspath.each { File file -> println '\t' + file } } }
+    task logTestJarsFiles { doLast { configurations.testRuntimeClasspath.each { File file -> println '\t' + file } } }
 
     tasks.withType(Javadoc) {
         // "Xdoclint:all,-reference" - disables fail on missing JavaDoc reference. TODO: Consider removing this.

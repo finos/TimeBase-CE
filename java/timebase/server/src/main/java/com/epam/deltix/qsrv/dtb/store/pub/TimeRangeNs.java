@@ -17,26 +17,33 @@
 package com.epam.deltix.qsrv.dtb.store.pub;
 
 import com.epam.deltix.qsrv.hf.pub.TimeInterval;
+import com.epam.deltix.timebase.messages.TimeStamp;
+import com.epam.deltix.util.annotations.TimestampNs;
 import com.epam.deltix.util.time.GMT;
 
 /**
  *  An inclusive range of timestamps. All times are in nanoseconds.
+ *  <p>
+ *  Warning: this class does not implement {@link TimeInterval} because the interface
+ *  is for milliseconds and this class uses nanoseconds.
  */
-public class TimeRange implements TimeInterval {
+public class TimeRangeNs {
     public static final long UNDEFINED = Long.MIN_VALUE;
 
+    @TimestampNs
     public long             from = Long.MAX_VALUE;
+    @TimestampNs
     public long             to = Long.MIN_VALUE;
     
-    public TimeRange () {
+    public TimeRangeNs () {
     }
     
-    public TimeRange (TimeRange that) {
+    public TimeRangeNs (TimeRangeNs that) {
         this.from = that.from; 
         this.to = that.to;
     }
     
-    public TimeRange (long from, long to) {
+    public TimeRangeNs (long from, long to) {
         this.from = from; 
         this.to = to;
     }
@@ -50,7 +57,7 @@ public class TimeRange implements TimeInterval {
         to = Long.MIN_VALUE;
     }
 
-    public void             set (TimeRange that) {
+    public void             set (TimeRangeNs that) {
         this.from = that.from;
         this.to = that.to;
     }
@@ -90,24 +97,43 @@ public class TimeRange implements TimeInterval {
         return (changed);
     }
 
-    @Override
     public boolean isUndefined() {
         return (from == UNDEFINED || to == UNDEFINED);
     }
 
-    @Override
     public long getFromTime() {
         return from;
     }
 
-    @Override
     public long getToTime() {
         return to;
     }
 
+    /**
+     * Converts this range (nanoseconds) to a {@link TimeInterval} in milliseconds.
+     */
+    public TimeInterval toTimeIntervalMs() {
+        return new com.epam.deltix.qsrv.hf.pub.TimeRange(
+                TimeStamp.getMilliseconds(this.from),
+                TimeStamp.getMilliseconds(this.to)
+        );
+    }
+
+    /**
+     * Converts an array of ranges (nanoseconds) to an array of {@link TimeInterval} in milliseconds.
+     * Null elements are preserved.
+     */
+    public static TimeInterval[] toTimeIntervalsMs(TimeRangeNs[] rangesNs) {
+        TimeInterval[] results = new TimeInterval[rangesNs.length];
+        for (int i = 0; i < rangesNs.length; i++) {
+            results[i] = rangesNs[i] != null ? rangesNs[i].toTimeIntervalMs() : null;
+        }
+        return results;
+    }
+
     @Override
     public String toString() {
-        return "TimeRange{" +
+        return "TimeRangeNs{" +
                 "from=" + GMT.formatNanos(from) +
                 ", to=" + GMT.formatNanos(to) +
                 '}';

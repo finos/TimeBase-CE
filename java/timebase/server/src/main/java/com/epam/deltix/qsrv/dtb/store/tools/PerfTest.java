@@ -97,7 +97,7 @@ public class PerfTest implements Disposable {
             
         System.out.println ("Symbols:");
         
-        TimeRange           tr = new TimeRange ();
+        TimeRangeNs           tr = new TimeRangeNs ();
         
         for (int ii= 0; ii < n; ii++) {
             if (ii == 10) {

@@ -19,7 +19,6 @@ package com.epam.deltix.qsrv.dtb.store.pub;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractFileSystem;
 import com.epam.deltix.qsrv.dtb.fs.pub.AbstractPath;
 
-import com.epam.deltix.qsrv.hf.pub.TimeInterval;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -52,13 +51,13 @@ public interface TSRoot {
 
     public void                     setCompression(String compression);
     
-    public void                     getTimeRange (int id, TimeRange out);
+    public void                     getTimeRange (int id, TimeRangeNs out);
 
-    public void                     getTimeRange (TimeRange out);
+    public void                     getTimeRange (TimeRangeNs out);
 
     public AbstractFileSystem       getFileSystem();
 
-    public TimeInterval[]           getTimeRanges (int[] ids);
+    public TimeRangeNs[]            getTimeRanges (int[] ids);
     
     /**
      *  Close this root gracefully. It must not be in active state.
@@ -73,7 +72,7 @@ public interface TSRoot {
     public void                     forceClose ();   
     
     public void                     selectTimeSlices (
-        TimeRange                       timeRange,
+        TimeRangeNs                       timeRange,
         EntityFilter                    filter,
         Collection <TSRef>              addTo
     );
@@ -85,9 +84,9 @@ public interface TSRoot {
      * @param range time range to delete
      * @return true, if any data was deleted. otherwise false.
      */
-    public boolean                  drop (TimeRange range);
+    public boolean                  drop (TimeRangeNs range);
 
-    public  void                    iterate(TimeRange range, EntityFilter filter, TimeSliceIterator it);
+    public  void                    iterate(TimeRangeNs range, EntityFilter filter, TimeSliceIterator it);
 
     public TSRef                    associate(String path);
 

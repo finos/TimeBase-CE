@@ -72,3 +72,7 @@ tasks.named('processResources') {
 tasks.named('jar') {
     duplicatesStrategy = "WARN"
 }
+tasks.named('sourcesJar') {
+    // sources include generated JSP classes
+    dependsOn 'compileJsps'
+}

@@ -32,6 +32,7 @@ task prepareEnvironment() {
         file("$rootDir/temp/testhome").deleteDir()
         file("$rootDir/temp/testhome").mkdirs()
         file("$rootDir/build/reports/junit").deleteDir()
+        file("$rootDir/build/reports/junit-long").deleteDir()
 
 //        copy {
 //            from project(':java:quantserver:all').sourceSets.main.resources.srcDirs
@@ -55,65 +56,104 @@ task printTestSettings {
     }
 }
 
+// Tests marked with @Category(Long.class) (throughput benchmarks, long stress scenarios) are NOT part of the regular
+// "junitTest" run. Run them separately: gradlew junitLongTest
+def LONG_CATEGORY = 'java.lang.Long'
+
+// Console output is kept short on purpose: only failed/skipped tests and a summary per project are printed.
+// Full stdout/stderr of every test is stored in the XML reports (build/reports/junit/xml), which CI uploads as an artifact.
+// Add -PtestOutput=true to stream test output into the console (useful for local debugging).
+boolean streamTestOutput = project.findProperty("testOutput") == "true"
+
 configure(ext.leafProjects) {
 
-    task junitTest(type: Test, dependsOn: [prepareEnvironment, printTestSettings]) {
-        maxHeapSize = "1024m"
-        minHeapSize = "512m"
+    def configureJunitTask = { Test t, boolean longTests ->
+        t.with {
+            systemProperty 'quiet', 'true'
+            systemProperty 'deltix.test.mode', 'true'
 
-        systemProperty 'quiet', 'true'
-        systemProperty 'deltix.test.mode', 'true'
+            systemProperty 'deltix.home', rootDir
+            systemProperty 'deltix.qsrv.home', "$rootDir/temp/testhome"
 
-        systemProperty 'deltix.home', rootDir
-        systemProperty 'deltix.qsrv.home', "$rootDir/temp/testhome"
+            maxHeapSize = "2048m"
+            minHeapSize = "1024m"
 
-        maxHeapSize = "2048m"
-        minHeapSize = "1024m"
+            include '**/*Test_*'
 
-        include '**/*Test_*'
+            testLogging {
+                showStandardStreams = streamTestOutput
+                events 'failed', 'skipped'
+                exceptionFormat 'full'
+                showCauses true
+                showStackTraces true
+            }
 
-        testLogging.showStandardStreams = true
-        reports.html.enabled = true;
-        reports.html.setDestination(new File("$rootDir/build/reports/junit/html/${project.path.substring(6).replaceAll(':','.')}"))
-        reports.junitXml.enabled = true;
-        def xmlpath = new File("$rootDir/build/reports/junit/xml/${project.path.substring(6).replaceAll(':','.')}")
-        reports.junitXml.setDestination(xmlpath)
-
-        maxParallelForks = (Integer) forksToUse
-        if (maxParallelForks > 1) {
-            systemProperty 'unique.qsrv.home', 'true'
-        }
-
-        if (testTimeBaseEngineVersion) {
-            systemProperty 'TimeBase.version', testTimeBaseEngineVersion
-        }
-        
-        if (categorySet != null) {
-            afterEvaluate {
-                boolean hasCategoriesJar = isProjectHasCategories(project)
-                if (!hasCategoriesJar) {
-                    // We disable execution for this project because it has no test categories (deltix.util.JUnitCategories is not in classpath)
-                    enabled = false
-                    //println("Skipping test execution for project " + project.getIdentityPath() + " because it has no test categories")
+            afterSuite { desc, result ->
+                // Print only the root suite of the project
+                if (!desc.parent) {
+                    println("Tests of ${project.path}: ${result.resultType} " +
+                            "(${result.testCount} tests, ${result.successfulTestCount} passed, " +
+                            "${result.failedTestCount} failed, ${result.skippedTestCount} skipped)")
                 }
             }
-        }
 
-        useJUnit {
+            def projectDir = project.path.substring(6).replaceAll(':', '.')
+            def reportSuffix = longTests ? "-long" : ""
+            reports.html.required = true
+            reports.html.outputLocation.set(new File("$rootDir/build/reports/junit${reportSuffix}/html/${projectDir}"))
+            reports.junitXml.required = true
+            reports.junitXml.outputLocation.set(new File("$rootDir/build/reports/junit${reportSuffix}/xml/${projectDir}"))
+
+            maxParallelForks = (Integer) forksToUse
+            if (maxParallelForks > 1) {
+                systemProperty 'unique.qsrv.home', 'true'
+            }
+
+            if (testTimeBaseEngineVersion) {
+                systemProperty 'TimeBase.version', testTimeBaseEngineVersion
+            }
+
             if (categorySet != null) {
-                setIncludeCategories categorySet
-            } else {
-                includeCategories 'java.lang.Object'
+                afterEvaluate {
+                    boolean hasCategoriesJar = isProjectHasCategories(project)
+                    if (!hasCategoriesJar) {
+                        // We disable execution for this project because it has no test categories (deltix.util.JUnitCategories is not in classpath)
+                        enabled = false
+                    }
+                }
+            }
+
+            useJUnit {
+                if (longTests) {
+                    includeCategories LONG_CATEGORY
+                } else {
+                    if (categorySet != null) {
+                        setIncludeCategories categorySet
+                    } else {
+                        includeCategories 'java.lang.Object'
+                    }
+                    excludeCategories LONG_CATEGORY
+                }
+            }
+
+            doLast {
+                def xmlpath = reports.junitXml.outputLocation.get().asFile
+                copy {
+                    from xmlpath include {"*.xml"}
+                    into file("$rootDir/build/reports/junit${reportSuffix}/xml")
+                }
             }
         }
     }
 
-    junitTest.doLast {
-        def xmlpath = new File("$rootDir/build/reports/junit/xml/${project.path.substring(6).replaceAll(':','.')}")
-        copy {
-            from xmlpath include {"*.xml"}
-            into file("$rootDir/build/reports/junit/xml")
-        }
+    task junitTest(type: Test, dependsOn: [prepareEnvironment, printTestSettings]) {
+        description 'Runs regular JUnit tests (without @Category(Long.class))'
+        configureJunitTask(delegate, false)
+    }
+
+    task junitLongTest(type: Test, dependsOn: [prepareEnvironment, printTestSettings]) {
+        description 'Runs long-running JUnit tests marked with @Category(Long.class), e.g. throughput benchmarks'
+        configureJunitTask(delegate, true)
     }
 }
 
@@ -134,6 +174,6 @@ def testTasks = ext.leafProjects*.junitTest
 task generateTestReport(type: TestReport) {
     reportOn testTasks
     description "Executes tests for all Java projects and generates merged test report"
-    destinationDir = file("$rootDir/build/reports/junit/html/all_reports_merged") // TODO: Pick better name for merged report
+    destinationDirectory = file("$rootDir/build/reports/junit/html/all_reports_merged") // TODO: Pick better name for merged report
 }
 task allJunitTests(dependsOn: generateTestReport)

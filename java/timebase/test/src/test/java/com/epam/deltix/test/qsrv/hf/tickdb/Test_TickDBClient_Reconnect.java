@@ -71,7 +71,10 @@ public class Test_TickDBClient_Reconnect {
 
     private void testLockReleasedOnPartialReconnectIteration() throws Exception {
         String streamKey = "stream1";
-        int transports = 16; // Current TB transport limit
+        // The server limits the number of transports per connection to "maxSocketsPerConnection",
+        // which defaults to (available processors * 2). Asking for more makes the server reject extra transports
+        // during connect (that is what happened on 4-core GitHub runners with 16 transports).
+        int transports = Math.min(16, Runtime.getRuntime().availableProcessors() * 2);
 
         int halfTransports = transports / 2;
         if (halfTransports == 0) {

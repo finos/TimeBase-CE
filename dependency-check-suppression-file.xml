@@ -10,4 +10,116 @@
         ]]></notes>
         <cvssBelow>7</cvssBelow>
     </suppress>
+
+    <!-- ===== Azure SDK ===== -->
+    <suppress>
+        <notes><![CDATA[
+        File name: azure-identity-1.18.4.jar; |
+        Reason: False Positive. CVE-2024-35255 affects the Java Azure Identity SDK before 1.12.2; 1.18.4 includes the fix. Dependency-Check ignores the CPE target_sw discriminator and compares 1.18.4 with other language ranges (e.g. JavaScript before 4.2.1); |
+        Reference: https://github.com/dependency-check/DependencyCheck/issues/7000
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-identity@1\.18\.4$</packageUrl>
+        <cve>CVE-2024-35255</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: azure-identity-1.18.4.jar; |
+        Reason: False Positive. CVE-2023-36415 affects the Java Azure Identity SDK before 1.10.2; 1.18.4 includes the fix. Dependency-Check compares 1.18.4 with other language ranges (e.g. JavaScript before 3.3.1); |
+        Reference: https://github.com/dependency-check/DependencyCheck/issues/7245
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-identity@1\.18\.4$</packageUrl>
+        <cve>CVE-2023-36415</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: msal4j-1.22.0.jar; |
+        Reason: False Positive. CVE-2024-35255 affects com.microsoft.azure:msal4j before 1.15.1; 1.22.0 includes the fix. Dependency-Check compares 1.22.0 with the .NET (before 4.61.3) and Node.js (up to 2.9.2) ranges of microsoft:authentication_library; |
+        Reference: https://github.com/dependency-check/DependencyCheck/issues/7050
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.azure/msal4j@1\.22\.0$</packageUrl>
+        <cve>CVE-2024-35255</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: azure-identity-1.18.4.jar; |
+        Reason: False Positive. CVE-2026-33117 affects com.azure:azure-security-keyvault-keys before 4.10.6 (local cryptography tag comparison). The Key Vault Keys library is not used by the project (only azure-security-keyvault-secrets). NVD matches it only through the broad CPE microsoft:azure_sdk_for_java < 4.10.6, which compares unrelated Azure SDK versions.; |
+        Reference: https://github.com/dependency-check/DependencyCheck/issues/8553
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-identity@1\.18\.4$</packageUrl>
+        <cve>CVE-2026-33117</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: azure-core-1.59.0.jar; |
+        Reason: False Positive. CVE-2026-33117 affects com.azure:azure-security-keyvault-keys before 4.10.6 (local cryptography tag comparison). The Key Vault Keys library is not used by the project (only azure-security-keyvault-secrets). NVD matches it only through the broad CPE microsoft:azure_sdk_for_java < 4.10.6, which compares unrelated Azure SDK versions.; |
+        Reference: https://github.com/dependency-check/DependencyCheck/issues/8553
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-core@1\.59\.0$</packageUrl>
+        <cve>CVE-2026-33117</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: azure-core-http-netty-1.16.8.jar; |
+        Reason: False Positive. CVE-2026-33117 affects com.azure:azure-security-keyvault-keys before 4.10.6 (local cryptography tag comparison). The Key Vault Keys library is not used by the project (only azure-security-keyvault-secrets). NVD matches it only through the broad CPE microsoft:azure_sdk_for_java < 4.10.6, which compares unrelated Azure SDK versions.; |
+        Reference: https://github.com/dependency-check/DependencyCheck/issues/8553
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-core-http-netty@1\.16\.8$</packageUrl>
+        <cve>CVE-2026-33117</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: azure-json-1.5.1.jar; |
+        Reason: False Positive. CVE-2026-33117 affects com.azure:azure-security-keyvault-keys before 4.10.6 (local cryptography tag comparison). The Key Vault Keys library is not used by the project (only azure-security-keyvault-secrets). NVD matches it only through the broad CPE microsoft:azure_sdk_for_java < 4.10.6, which compares unrelated Azure SDK versions.; |
+        Reference: https://github.com/dependency-check/DependencyCheck/issues/8553
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-json@1\.5\.1$</packageUrl>
+        <cve>CVE-2026-33117</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: azure-data-lake-store-sdk-2.3.9.jar; |
+        Reason: False Positive. CVE-2026-33117 affects com.azure:azure-security-keyvault-keys before 4.10.6 (local cryptography tag comparison). The Key Vault Keys library is not used by the project (only azure-security-keyvault-secrets). NVD matches it only through the broad CPE microsoft:azure_sdk_for_java < 4.10.6, which compares unrelated Azure SDK versions.; |
+        Reference: https://github.com/dependency-check/DependencyCheck/issues/8553
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.azure/azure-data-lake-store-sdk@2\.3\.9$</packageUrl>
+        <cve>CVE-2026-33117</cve>
+    </suppress>
+
+    <!-- ===== Other false positives ===== -->
+    <suppress>
+        <notes><![CDATA[
+        File name: hd-date-time-0.2.11.jar; |
+        Reason: False Positive. CVE-2020-26235 is a segfault in the Rust crate time 0.2.7-0.2.22. com.epam.deltix:hd-date-time is a Java date library; it is matched only because of the artifact name and version range; |
+        Reference: https://github.com/time-rs/time/security/advisories/GHSA-wcg3-cvx6-7396
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.epam\.deltix/hd-date-time@0\.2\.11$</packageUrl>
+        <cve>CVE-2020-26235</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: micrometer-registry-prometheus-1.12.13.jar; |
+        Reason: False Positive. CVE-2026-42154 is a memory exhaustion in the remote read endpoint of the Prometheus SERVER (fixed in 3.5.3 / 3.11.3). The Java client / Micrometer registry does not contain that endpoint (Timebase only exposes metrics for scraping); |
+        Reference: https://nvd.nist.gov/vuln/detail/CVE-2026-42154
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/io\.micrometer/micrometer-registry-prometheus@1\.12\.13$</packageUrl>
+        <cve>CVE-2026-42154</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: simpleclient*-0.16.0.jar; |
+        Reason: False Positive. CVE-2026-42154 is a memory exhaustion in the remote read endpoint of the Prometheus SERVER (fixed in 3.5.3 / 3.11.3). These are Prometheus Java client libraries (simpleclient, simpleclient_common, simpleclient_tracer_*), which do not contain the server; |
+        Reference: https://nvd.nist.gov/vuln/detail/CVE-2026-42154
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/io\.prometheus/simpleclient(_common|_tracer_common|_tracer_otel|_tracer_otel_agent)?@0\.16\.0$</packageUrl>
+        <cve>CVE-2026-42154</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        File name: jmespath-java-1.12.797.jar; |
+        Reason: False Positive. CVE-2026-54133 is a code injection in the PHP library jmespath.php (before 2.9.1). com.amazonaws:jmespath-java is a Java library (transitive dependency of aws-java-sdk); it is matched only by name; |
+        Reference: https://nvd.nist.gov/vuln/detail/CVE-2026-54133
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.amazonaws/jmespath-java@1\.12\.797$</packageUrl>
+        <cve>CVE-2026-54133</cve>
+    </suppress>
 </suppressions>

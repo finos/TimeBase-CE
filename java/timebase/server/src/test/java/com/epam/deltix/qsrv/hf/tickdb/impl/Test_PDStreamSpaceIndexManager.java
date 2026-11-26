@@ -24,9 +24,8 @@ import com.epam.deltix.qsrv.dtb.store.pub.PersistentDataStore;
 import com.epam.deltix.qsrv.dtb.store.pub.SymbolRegistry;
 import com.epam.deltix.qsrv.dtb.store.pub.TSRef;
 import com.epam.deltix.qsrv.dtb.store.pub.TSRoot;
-import com.epam.deltix.qsrv.dtb.store.pub.TimeRange;
+import com.epam.deltix.qsrv.dtb.store.pub.TimeRangeNs;
 import com.epam.deltix.qsrv.dtb.store.pub.TimeSliceIterator;
-import com.epam.deltix.qsrv.hf.pub.TimeInterval;
 import com.epam.deltix.util.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -206,12 +205,12 @@ public class Test_PDStreamSpaceIndexManager {
         }
 
         @Override
-        public void getTimeRange(int id, TimeRange out) {
+        public void getTimeRange(int id, TimeRangeNs out) {
 
         }
 
         @Override
-        public void getTimeRange(TimeRange out) {
+        public void getTimeRange(TimeRangeNs out) {
 
         }
 
@@ -221,8 +220,8 @@ public class Test_PDStreamSpaceIndexManager {
         }
 
         @Override
-        public TimeInterval[] getTimeRanges(int[] ids) {
-            return new TimeInterval[0];
+        public TimeRangeNs[] getTimeRanges(int[] ids) {
+            return new TimeRangeNs[0];
         }
 
         @Override
@@ -241,7 +240,7 @@ public class Test_PDStreamSpaceIndexManager {
         }
 
         @Override
-        public void selectTimeSlices(TimeRange timeRange, EntityFilter filter, Collection<TSRef> addTo) {
+        public void selectTimeSlices(TimeRangeNs timeRange, EntityFilter filter, Collection<TSRef> addTo) {
 
         }
 
@@ -251,12 +250,12 @@ public class Test_PDStreamSpaceIndexManager {
         }
 
         @Override
-        public boolean drop(TimeRange range) {
+        public boolean drop(TimeRangeNs range) {
             return false;
         }
 
         @Override
-        public void iterate(TimeRange range, EntityFilter filter, TimeSliceIterator it) {
+        public void iterate(TimeRangeNs range, EntityFilter filter, TimeSliceIterator it) {
 
         }
 

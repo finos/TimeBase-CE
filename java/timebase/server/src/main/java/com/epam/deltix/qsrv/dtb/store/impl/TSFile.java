@@ -99,6 +99,9 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
     private int                                 uncompressedSize = -1;
     private final AtomicLong                    allocatedSize = new AtomicLong();
 
+    // pre-allocation size to track write queue memory limits
+    private final AtomicLong                    preAllocation = new AtomicLong(0);
+
     private ObjectArrayList <DataBlockInfo>     dbs = null;
 
     /**
@@ -182,6 +185,23 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         } finally {
             root.releaseSharedLock ();
         }
+    }
+
+    /*
+     Set pre-allocation size if it equals 0.
+     Return false, if pre-allocation size  already > 0, otherwise true.
+     */
+    boolean    setPreAllocationSize(long size) {
+        if (preAllocation.get() == 0) {
+            preAllocation.set(size);
+            return true;
+        }
+
+        return false;
+    }
+
+    long    getAndClearPreAllocationSize() {
+        return preAllocation.getAndSet(0);
     }
 
     public synchronized TSFState    getState() {
@@ -408,21 +428,25 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         if (strategy == null)
             return;
 
-        // should be out of structure lock to prevent dead-lock on waiting
-        root.getCache().checkWriteQueueLimit(Math.max(getUncompressedSize(), root.getMaxFileSize()));
+        long fileSize = Math.max(getUncompressedSize(), root.getMaxFileSize());
+        root.getCache().reserveAllocation(fileSize);
 
+        // should be out of structure lock to prevent dead-lock on waiting
+        root.getCache().checkWriteQueueLimit();
         root.acquireWriteLock();
+
+        TSFile next = null;
 
         try {
             // double check strategy under lock
             strategy = checkInsert (timestamp, addlLength);
-            if (strategy == null)
+            if (strategy == null) {
+                root.getCache().releaseAllocation(fileSize);
                 return;
+            }
 
             switch (strategy) {
                 case MOVE_FORWARD: {
-                    TSFile next;
-
                     try {
                         next = root.getNextTimeSliceToWrite(timestamp, accessor, this);
                         next.ensureIndexAndDataLoaded(EntityFilter.ALL, null);
@@ -430,33 +454,44 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
                         throw new com.epam.deltix.util.io.UncheckedIOException(iox);
                     }
 
+                    if (!next.setPreAllocationSize(fileSize))
+                        root.getCache().releaseAllocation(fileSize);
+
                     throw new SwitchTimeSliceException(next);
                 }
 
                 case MOVE_BACKWARD: {
-                    TSFile previous;
 
                     try {
-                        previous = root.getPreviousTimeSliceToWrite(timestamp, accessor, this);
-                        previous.ensureIndexAndDataLoaded(EntityFilter.ALL, null);
+                        next = root.getPreviousTimeSliceToWrite(timestamp, accessor, this);
+                        next.ensureIndexAndDataLoaded(EntityFilter.ALL, null);
                     } catch (IOException iox) {
                         throw new com.epam.deltix.util.io.UncheckedIOException(iox);
                     }
 
-                    throw new SwitchTimeSliceException(previous);
+                    if (!next.setPreAllocationSize(fileSize))
+                        root.getCache().releaseAllocation(fileSize);
+
+                    throw new SwitchTimeSliceException(next);
                 }
 
                 case SPLIT:
-                    TSFile next;
                     try {
                         next = root.split(timestamp, this, accessor);
                     } catch (IOException iox) {
                         throw new com.epam.deltix.util.io.UncheckedIOException(iox);
                     }
-                    if (next != this)
-                        throw new SwitchTimeSliceException(next);
 
-                    break;
+                    if (next != this) {
+                        if (!next.setPreAllocationSize(fileSize))
+                            root.getCache().releaseAllocation(fileSize);
+
+                        throw new SwitchTimeSliceException(next);
+                    } else {
+                        // free lease in case we stay on same file
+                        root.getCache().releaseAllocation(fileSize);
+                        break;
+                    }
 
                 default:
                     throw new IllegalStateException("Unknown strategy: " + strategy);
@@ -847,6 +882,7 @@ final class TSFile extends TSFolderEntry implements TimeSlice {
         dbs = null;
         checkouts = null;
         uncompressedSize = -1;
+        root.getCache().releaseAllocation(getAndClearPreAllocationSize());
 
         setState(null);
 

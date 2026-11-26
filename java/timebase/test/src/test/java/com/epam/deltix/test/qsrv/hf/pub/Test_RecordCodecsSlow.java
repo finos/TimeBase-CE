@@ -69,7 +69,7 @@ public class Test_RecordCodecsSlow extends Test_RecordCodecsBase {
         values.add(10000);
         values.add(9000000000L);
         values.add("Hi Nicolia!");
-        final byte[] bin1 = new byte[0x10000000]; // 16MB
+        final byte[] bin1 = new byte[0x1000000]; // 16MB (was 0x10000000 = 256MB: the test holds ~5 copies of it and caused OOM)
         for (int i = 0; i < bin1.length; i++) {
             bin1[i] = (byte)i;
         }

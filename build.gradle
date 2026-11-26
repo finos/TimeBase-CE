@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.owasp:dependency-check-gradle:8.1.2'
+        classpath 'org.owasp:dependency-check-gradle:13.0.0'
     }
 }
 
@@ -13,7 +13,7 @@ plugins {
     id 'java-library'
     id 'base'
     id 'idea'
-    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
 //// Allows to use "--scan" option without manual interactive confirmation. So it can be used on CI.
@@ -45,9 +45,28 @@ allprojects {
             failBuildOnCVSS = 7
         }
         skipProjects = [ ":java:installer"]
-        suppressionFile = file("$rootDir/dependency-check-suppression-file.xml")
+        // Override with -PsuppressionFile=path to try another suppression file; -PdcOut=dir to change report directory
+        suppressionFile = file(findProperty('suppressionFile') ?: "$rootDir/dependency-check-suppression-file.xml").absolutePath
+        if (findProperty('dcOut')) {
+            outputDirectory = file(findProperty('dcOut')).absolutePath + '/' + project.path.replace(':', '_')
+        }
+        // NVD API key (https://nvd.nist.gov/developers/request-an-api-key). Do NOT commit it.
+        // Pass it with -PNVD_API_KEY=... or env NVD_API_KEY. Without key the NVD download is very slow.
+        def nvdKey = findProperty('NVD_API_KEY') ?: System.getenv('NVD_API_KEY')
+        nvd {
+            apiKey = nvdKey ?: null
+            delay = nvdKey ? 1500 : 8000 // ms between NVD API requests (avoid HTTP 403/429)
+        }
+        data {
+            directory = file("$rootDir/nvddata").absolutePath // cache of the vulnerability database
+        }
+        scanConfigurations = ['runtimeClasspath']
         analyzers {
             assemblyEnabled = false
+            nodeAuditEnabled = false
+            ossIndex {
+                enabled = false
+            }
         }
     }
 }

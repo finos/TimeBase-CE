@@ -24,7 +24,7 @@ task compileJsps {
     }
 
     doLast {
-        ant.taskdef(classname: 'org.apache.jasper.JspC', name: 'jasper', classpath: configurations.compileOnly.asPath)
+        ant.taskdef(classname: 'org.apache.jasper.JspC', name: 'jasper', classpath: configurations.compileClasspath.asPath)
         ant.jasper(validateXml: false, uriroot: webappDir, webXmlFragment: generatedXml, outputDir: generatedJsps)
     }
 
@@ -42,3 +42,7 @@ war {
 sourceSets.main.java.srcDirs generatedJsps
 compileJava.dependsOn compileJsps
 war.dependsOn jar
+tasks.named('sourcesJar') {
+    // sources include generated JSP classes
+    dependsOn 'compileJsps'
+}

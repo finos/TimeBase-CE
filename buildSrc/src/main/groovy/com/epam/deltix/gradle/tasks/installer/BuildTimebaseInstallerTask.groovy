@@ -2,6 +2,7 @@ package com.epam.deltix.gradle.tasks.installer
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
@@ -23,7 +24,7 @@ class BuildTimebaseInstallerTask extends DefaultTask {
     @Input
     String[] customPacks
 
-    @Input
+    @Internal
     File generatedDirectory
 
     @Input

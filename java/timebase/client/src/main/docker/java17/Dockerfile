@@ -1,4 +1,4 @@
-FROM amazoncorretto:17-alpine3.18
+FROM amazoncorretto:17-alpine3.24
 
 ENV DELTIX_HOME /timebase-client
 ENV DEFAULT_JVM_OPTS --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED --add-opens=java.desktop/com.sun.java.swing.plaf.windows=ALL-UNNAMED

@@ -1,4 +1,4 @@
-FROM amazoncorretto:11-alpine3.18
+FROM amazoncorretto:11-alpine3.24
 
 ENV DELTIX_HOME /timebase-client
 

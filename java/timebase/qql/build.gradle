@@ -114,3 +114,8 @@ tasks.named('processResources') {
 tasks.named('compileJava') {
     dependsOn 'generateQqlParser'
 }
+
+tasks.named('sourcesJar') {
+    // sources include generated lexer/parser sources
+    dependsOn 'generateQqlParser'
+}

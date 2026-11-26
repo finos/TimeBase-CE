@@ -20,7 +20,6 @@ import com.epam.deltix.qsrv.dtb.fs.pub.*;
 import com.epam.deltix.qsrv.dtb.store.codecs.*;
 import com.epam.deltix.qsrv.dtb.store.dataacc.*;
 import com.epam.deltix.qsrv.dtb.store.pub.*;
-import com.epam.deltix.qsrv.hf.pub.TimeInterval;
 import com.epam.deltix.qsrv.hf.tickdb.impl.PDStreamSpaceIndexManager;
 import com.epam.deltix.util.collections.generated.ByteArrayList;
 import com.epam.deltix.util.concurrent.*;
@@ -117,9 +116,8 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
 
         acquireWriteLock();
         try {
-            isOpen = false;
-
             super.format();
+            forceClose();
             FSUtils.removeRecursive(getPath(), true, null);
         } catch (IOException iox) {
             throw new com.epam.deltix.util.io.UncheckedIOException(iox);
@@ -136,7 +134,10 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         acquireWriteLock();
 
         try {
-            super.format();
+            // Remove all files for the entire root from the WriteQueue to avoid ineffectively removing them one by one
+            root.getCache().removeRootFromWriteQueue(root);
+            super.format(false);
+
             FSUtils.removeRecursive(getPath(), false, null);
 
             use(this);
@@ -324,8 +325,8 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     }
 
     @Override
-    public void getTimeRange(int id, TimeRange out) {
-        TimeRange range = symRegistry.getTimeRange(id);
+    public void getTimeRange(int id, TimeRangeNs out) {
+        TimeRangeNs range = symRegistry.getTimeRange(id);
 
         if (range != null && writing.intValue() == 0) {
             out.from = range.from;
@@ -336,7 +337,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             try {
                 out.from = TreeOps.getFromTimestamp(this, id);
                 out.to = TreeOps.getToTimestamp(this, id);
-                symRegistry.setTimeRange(id, new TimeRange(out));
+                symRegistry.setTimeRange(id, new TimeRangeNs(out));
             } catch (IOException iox) {
                 throw new com.epam.deltix.util.io.UncheckedIOException(iox);
             } finally {
@@ -346,9 +347,9 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     }
 
     @Override
-    public void getTimeRange(TimeRange out) {
+    public void getTimeRange(TimeRangeNs out) {
 
-        TimeRange range = symRegistry.getTimeRange();
+        TimeRangeNs range = symRegistry.getTimeRange();
 
         if (range != null && writing.intValue() == 0) {
             out.from = range.from;
@@ -378,14 +379,14 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     }
 
     @Override
-    public TimeInterval[] getTimeRanges(int[] ids) {
+    public TimeRangeNs[] getTimeRanges(int[] ids) {
         ArrayList<EntityTimeRange> out = new ArrayList<EntityTimeRange>();
         ArrayList<EntityTimeRange> ask = new ArrayList<EntityTimeRange>();
 
         for (int id : ids) {
             if (id != -1) {
                 EntityTimeRange e = new EntityTimeRange(id);
-                TimeRange r = symRegistry.getTimeRange(id);
+                TimeRangeNs r = symRegistry.getTimeRange(id);
                 if (r != null && writing.intValue() == 0) {
                     e.to = r.to;
                     e.from = r.from;
@@ -413,17 +414,17 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
                 // apply changes
                 for (EntityTimeRange e : out) {
                     if (e != null)
-                        symRegistry.setTimeRange(e.entity, new TimeRange(e));
+                        symRegistry.setTimeRange(e.entity, new TimeRangeNs(e));
                 }
             }
         }
 
-        return out.toArray(new TimeInterval[out.size()]);
+        return out.toArray(new TimeRangeNs[out.size()]);
     }
 
     @Override
     public void selectTimeSlices(
-            TimeRange range,
+            TimeRangeNs range,
             EntityFilter filter,
             Collection<TSRef> addTo
     ) {
@@ -463,7 +464,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     }
 
     @Override
-    public void iterate(TimeRange range, EntityFilter filter, TimeSliceIterator it) {
+    public void iterate(TimeRangeNs range, EntityFilter filter, TimeSliceIterator it) {
 
         sequence.incrementAndGet();
         boolean writingStarted = false;
@@ -498,7 +499,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
                         break;
 
                     // should be out of structure lock
-                    getCache().checkWriteQueueLimit(getMaxFileSize());
+                    getCache().checkWriteQueueLimit();
 
                     locked = acquireWriteLock();
 
@@ -554,7 +555,7 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
         }
     }
 
-    public boolean drop(TimeRange range) {
+    public boolean drop(TimeRangeNs range) {
 
         long from = range != null ? range.from : Long.MIN_VALUE;
         long to = range != null ? range.to : Long.MAX_VALUE;
@@ -667,8 +668,6 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
             long timestamp,
             EntityFilter filter
     ) {
-        // check that we have enough memory
-        root.getCache().checkWriteQueueLimit(root.getMaxFileSize());
 
         acquireSharedLock();
 
@@ -747,10 +746,11 @@ final class TSRootFolder extends TSFolder implements TSRoot, TimeSliceStore {
     }
 
     @Override
-    public TimeSlice checkOutTimeSliceForInsert(
-            DAPrivate accessor,
-            long timestamp
-    ) {
+    public TimeSlice checkOutTimeSliceForInsert(DAPrivate accessor, long timestamp) {
+
+        // check that we have enough memory. should be out of 'write lock'
+        root.getCache().checkWriteQueueLimit();
+
         acquireWriteLock();
 
         TSFile tsf;

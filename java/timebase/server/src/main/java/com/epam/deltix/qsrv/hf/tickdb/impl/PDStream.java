@@ -36,7 +36,7 @@ import com.epam.deltix.qsrv.dtb.store.pub.EntityFilter;
 import com.epam.deltix.qsrv.dtb.store.pub.SymbolRegistry;
 import com.epam.deltix.qsrv.dtb.store.pub.TSRef;
 import com.epam.deltix.qsrv.dtb.store.pub.TSRoot;
-import com.epam.deltix.qsrv.dtb.store.pub.TimeRange;
+import com.epam.deltix.qsrv.dtb.store.pub.TimeRangeNs;
 import com.epam.deltix.qsrv.dtb.store.pub.TimeSliceIterator;
 import com.epam.deltix.qsrv.hf.pub.ChannelQualityOfService;
 import com.epam.deltix.timebase.messages.ConstantIdentityKey;
@@ -346,7 +346,7 @@ public class PDStream extends TickStreamImpl {
 //            if (live) {
 //
 //            } else {
-//                TimeRange out = new TimeRange();
+//                TimeRangeNs out = new TimeRangeNs();
 //                for (int i = 0, activeLength = active.length; i < activeLength; i++) {
 //                    TSRoot tsr = active[i];
 //                    tsr.getTimeRange(out);
@@ -478,12 +478,12 @@ public class PDStream extends TickStreamImpl {
                         " using time range [" + GMT.formatNanos(from) + "," + GMT.formatNanos(to) + "; instruments = ALL");
 
             // drop files first
-            dataChanged.set(root.drop(new TimeRange(from, to)));
+            dataChanged.set(root.drop(new TimeRangeNs(from, to)));
 
             try (DataWriter writer = getDBImpl().store.createWriter ()) {
                 writer.associate(root);
 
-                root.iterate(new TimeRange(from, to), null, new TimeSliceIterator() {
+                root.iterate(new TimeRangeNs(from, to), null, new TimeSliceIterator() {
 
                     @Override
                     public DataAccessor getAccessor() {
@@ -525,7 +525,7 @@ public class PDStream extends TickStreamImpl {
                 try (final DataWriter writer = getDBImpl().store.createWriter()) {
                     writer.associate(root);
 
-                    root.iterate(new TimeRange(from, to), null, new TimeSliceIterator() {
+                    root.iterate(new TimeRangeNs(from, to), null, new TimeSliceIterator() {
 
                         @Override
                         public DataAccessor getAccessor() {
@@ -758,7 +758,7 @@ public class PDStream extends TickStreamImpl {
     @Override
     public long[]           getTimeRange(IdentityKey... entities) {
 
-        com.epam.deltix.qsrv.dtb.store.pub.TimeRange all = new com.epam.deltix.qsrv.dtb.store.pub.TimeRange();
+        TimeRangeNs all = new TimeRangeNs();
 
         TSRoot[] active = getActiveRoots();
         for (TSRoot tsr : active)
@@ -767,17 +767,17 @@ public class PDStream extends TickStreamImpl {
         return !all.isUndefined() ? new long[] {TimeStamp.getMilliseconds(all.from), TimeStamp.getMilliseconds(all.to)} : null;
     }
 
-    public void           getTimeRange(TSRoot root, com.epam.deltix.qsrv.dtb.store.pub.TimeRange all, IdentityKey... entities) {
+    public void           getTimeRange(TSRoot root, TimeRangeNs all, IdentityKey... entities) {
 
         if (entities.length == 0) {
-            com.epam.deltix.qsrv.dtb.store.pub.TimeRange next = new com.epam.deltix.qsrv.dtb.store.pub.TimeRange();
+            TimeRangeNs next = new TimeRangeNs();
             root.getTimeRange(next);
             if (!next.isUndefined())
                 all.unionInPlace(next.from, next.to);
 
         } else {
             SymbolRegistry sr = root.getSymbolRegistry();
-            com.epam.deltix.qsrv.dtb.store.pub.TimeRange range = new com.epam.deltix.qsrv.dtb.store.pub.TimeRange();
+            TimeRangeNs range = new TimeRangeNs();
 
             for (IdentityKey entity : entities) {
                 int id = sr.symbolToId(entity.getSymbol());
@@ -793,12 +793,12 @@ public class PDStream extends TickStreamImpl {
     @Override
     public TimeInterval[]       listTimeRange(IdentityKey ... ids) {
 
-        TimeInterval[] intervals = listTimeRange(root, ids);
+        TimeRangeNs[] intervals = listTimeRange(root, ids);
 
         TSRoot[] active = getActiveRoots();
 
         for (int ii = 0; ii < active.length - 1; ii++) {
-            TimeInterval[] range = listTimeRange(active[ii], ids);
+            TimeRangeNs[] range = listTimeRange(active[ii], ids);
             // merge with main
             for (int i = 0; i < intervals.length; i++) {
                 if (intervals[i] == null)
@@ -809,16 +809,17 @@ public class PDStream extends TickStreamImpl {
 
         }
 
-        return intervals;
+        // Internally all times are stored in nanoseconds, but the public API (TimeInterval) uses milliseconds.
+        return TimeRangeNs.toTimeIntervalsMs(intervals);
     }
 
-    public TimeInterval         union(TimeInterval t1, TimeInterval t2) {
-        TimeRange range = new TimeRange(t1.getFromTime(), t2.getToTime());
+    public TimeRangeNs          union(TimeRangeNs t1, TimeRangeNs t2) {
+        TimeRangeNs range = new TimeRangeNs(t1.getFromTime(), t2.getToTime());
         range.unionInPlace(t2.getFromTime(), t2.getToTime());
         return range;
     }
 
-    private TimeInterval[]       listTimeRange(TSRoot root, IdentityKey ... ids) {
+    private TimeRangeNs[]         listTimeRange(TSRoot root, IdentityKey ... ids) {
 
         SymbolRegistry sr = root.getSymbolRegistry();
 
@@ -1931,7 +1932,7 @@ public class PDStream extends TickStreamImpl {
     public long[]           getTimeRange(String space) {
         TSRoot tsr = getRootBySpaceName(space);
 
-        TimeRange out = new TimeRange();
+        TimeRangeNs out = new TimeRangeNs();
         tsr.getTimeRange(out);
 
         return out.isUndefined() ? null : new long[]{TimeStamp.getMilliseconds(out.from), TimeStamp.getMilliseconds(out.to)};

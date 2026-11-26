@@ -277,10 +277,9 @@ configure(leafProjects) {
             }
 
             dependencySet(group: 'org.bouncycastle', version: '1.85') {
-                entry 'bcpkix-jdk15on'
-                entry 'bcprov-jdk15on'
-                entry 'bcprov-ext-jdk15on'
-                entry 'bcmail-jdk15on'
+                entry 'bcpkix-jdk18on'
+                entry 'bcprov-jdk18on'
+                entry 'bcutil-jdk18on'
             }
 
             dependency 'log4j:log4j:1.2.17'
